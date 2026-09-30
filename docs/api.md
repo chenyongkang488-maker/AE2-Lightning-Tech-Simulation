@@ -125,3 +125,11 @@ NeoForge.EVENT_BUS 的事件：
 自动弹出只移动输出，最多每次 64 件，默认每 10 tick 尝试；六面可分别开关，按接收方真实余量扣除，未加载区块不访问。频率接口实现闪电科技公开的 FrequencyBindingHost，并使用其共享界面和记忆卡处理。
 
 GuideME 页面位于 `assets/overload_sim/ae2guide/overload-simulation.md`，中文覆盖位于 `_zh_cn`，item_ids 绑定三种水晶与模拟室。替换资源包可以进一步扩写或翻译。
+
+## 谐振雷鸣线圈 API
+
+`dev.overloadsim.tool.CoilModules` 提供 `install`、`uninstall`、`entries`、`has`、`setCore` 和 `capacity`。返回的物品为副本，安装不扣除传入物品，调用者负责扣除一件；安装检查重复类型和拟态前置，仍有依赖模块时拒绝卸载拟态。只接受本模组线圈和六个指定模块，以及闪电科技 T1/T2/T3 能量模块。
+
+`CoilSettings` 保存不可变配置，效果访问器会检查当前模块和核心；精准优先于时运。核心、模块、配置与 long FE 分别使用 `coil_core`、`coil_modules`、`coil_settings`、`coil_fe` Data Component。`CoilEnergy.INSTANCE` 暴露标准 FE item capability，`refill` 按工具绑定的在线工作站网络充电；持有工具或把它留在在线工作站时持续充电，默认 10,000 FE/tick。支持最多 20,000,000,000 FE 的组件缓存，int FE capability 查询按 Integer.MAX_VALUE 钳制。
+
+`CoilLightning.target(player,self)` 计算服务器端有效目标；`fire(player,stack,self)` 校验核心、绑定、冷却和目标，严格支付 10 个所选 HV/EHV，生成失败返还。EHV 使用上游自然雷标记，不修改全局天气。COMMON 配置 `resonanceCoil` 可调整射程、蓄力、冷却、采矿 FE 和充电速率；六个模块及工具使用标准 crafting 配方，可通过数据包覆盖。G 配置是服务器校验的专用菜单；指南 `resonance-coil.md` 对应工具及全部模块。

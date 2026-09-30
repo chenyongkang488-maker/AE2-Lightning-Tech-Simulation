@@ -97,3 +97,6 @@ def tag(t,n,p):return bytes([t])+utf(n)+p
 payload=tag(3,'DataVersion',struct.pack('>i',3955))+tag(9,'size',bytes([3])+struct.pack('>i',3)+struct.pack('>iii',12,8,12))+tag(9,'palette',bytes([10])+struct.pack('>i',1)+tag(8,'Name',utf('minecraft:air'))+b'\0')+tag(9,'blocks',bytes([10])+struct.pack('>i',0))+tag(9,'entities',bytes([10])+struct.pack('>i',0))+b'\0'
 path=ROOT/'data/overload_sim/structure/empty.nbt';path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(gzip.compress(b'\x0a\x00\x00'+payload,mtime=0))
 print('Generated 17 profiles, 4 recipe types, crafting, models, languages and guides.')
+# Restore the tool translations/recipes after regenerating the base resources.
+import runpy
+runpy.run_path(str(pathlib.Path(__file__).with_name('generate-coil-resources.py')))

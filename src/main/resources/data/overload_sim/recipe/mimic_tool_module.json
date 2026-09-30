@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "IFI",
+    "FCF",
+    "IRI"
+  ],
+  "key": {
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "F": {
+      "item": "ae2:fluix_crystal"
+    },
+    "C": {
+      "item": "minecraft:netherite_ingot"
+    },
+    "R": {
+      "item": "ae2:engineering_processor"
+    }
+  },
+  "result": {
+    "id": "overload_sim:mimic_tool_module",
+    "count": 1
+  }
+}

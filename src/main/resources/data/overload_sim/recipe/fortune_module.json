@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "IFI",
+    "FCF",
+    "IRI"
+  ],
+  "key": {
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "F": {
+      "item": "ae2:fluix_crystal"
+    },
+    "C": {
+      "item": "minecraft:lapis_block"
+    },
+    "R": {
+      "item": "ae2:engineering_processor"
+    }
+  },
+  "result": {
+    "id": "overload_sim:fortune_module",
+    "count": 1
+  }
+}

@@ -1,8 +1,8 @@
 # 过载模拟 Overload Simulation
 
-Minecraft **1.21.1 / NeoForge 21.1.252** 的 AE2 闪电科技附属模组。当前版本为 **0.1.0-alpha.5 测试原型**。
+Minecraft **1.21.1 / NeoForge 21.1.252** 的 AE2 闪电科技附属模组。当前版本为 **0.1.0-alpha.6 测试原型**。
 
-项目在 `D:\MinecraftDev\OverloadSimulation`，独立 Git 仓库的 `codex/ui-hv-network-energy` 分支上。原来的 1.19.2 工程不参与构建。
+项目在 `D:\MinecraftDev\OverloadSimulation`，独立 Git 仓库的 `codex/resonance-coil` 分支上。原来的 1.19.2 工程不参与构建。
 
 ## 游戏内容
 
@@ -15,6 +15,8 @@ Minecraft **1.21.1 / NeoForge 21.1.252** 的 AE2 闪电科技附属模组。当�
 - 批次开始时按实际并行扣费并固定随机产物。任务、剩余时间和待输出物品随区块保存；网络离线暂停，输出堵塞等待。
 - 标准物品与 FE 接口、六面自动弹出、闪电科技共享过载频率界面及记忆卡设置。
 - 长按 G 打开 AE2/GuideME 的对应指南页面。
+- 谐振雷鸣线圈：水平悬浮的粉白线圈头与八帧粉色电弧。原生过载装备工作站安装核心和模块并绑定网络；短按右键松开劈目标，蓄力 1.5 秒松开劈自己，默认消耗 10 HV 人工雷，极高压模块开启后消耗 10 EHV 自然雷。
+- 拟态模块提供下界合金采集等级和电流挖掘；前置满足后可安装终极破坏、效率 X、时运 V、精准采集模块。在 G 界面配置，精准开启时优先于时运。支持原生 T1/T2/T3 能量模块、手持及工作站持续 AE FE 充电。挖掘与近战默认消耗 200 FE。
 
 默认档案为铁、铜、金、钻石、下界合金，小麦、胡萝卜、马铃薯、甜菜根，七种树苗及生物战利品。默认排除凋灵和末影龙，可通过数据包覆盖。
 
@@ -33,7 +35,7 @@ Minecraft **1.21.1 / NeoForge 21.1.252** 的 AE2 闪电科技附属模组。当�
 .\scripts\install-test.ps1
 ```
 
-本机脚本优先使用 D 盘已有的 Gradle 8.8；其他机器可使用 Gradle Wrapper 下载 8.8。常规构建产物为 `build/libs/overload_sim-0.1.0-alpha.5.jar`，sources jar 提供源码。
+本机脚本优先使用 D 盘已有的 Gradle 8.8；其他机器可使用 Gradle Wrapper 下载 8.8。常规构建产物为 `build/libs/overload_sim-0.1.0-alpha.6.jar`，sources jar 提供源码。
 
 前置版本固定为 AE2 19.2.17、AE2 Lightning Tech Reborn 2.1.0、Thunderbolt Core Reborn 2.0.0、GuideME 21.1.19。升级前置后需要复测 collector 的两处 Mixin 和 高压闪电桥接接口。
 
@@ -44,6 +46,8 @@ Minecraft **1.21.1 / NeoForge 21.1.252** 的 AE2 闪电科技附属模组。当�
 `art/overload_simulation_chamber_hollow.bbmodel` 保存原创粉白框架、四角磁场发生器、六面透明玻璃护罩和预览水晶。玻璃保留透明中心与少量反光，并具有对应的薄层碰撞；底部玻璃覆盖原金属平台。预览水晶不导出到静态方块模型；游戏中由客户端渲染器根据槽 0 同步状态显示悬浮、旋转的完美水晶和电弧，取出水晶即消失。
 
 本地插件 `art/overload_sim_visuals.js` 可在 Blockbench → 文件 → 插件 → 从文件加载，然后选择工具菜单 → 绘制模拟水晶与镂空模拟室。它会覆盖当前素材和分层工程，手绘修改前请先用 Git 保存。旧版 `art/overload_sim_pink_white.bbmodel` 保留供回看。
+
+`art/resonance_coil.bbmodel` 保存 47 个部件的水平悬浮线圈、短柄和独立闪电图层；`art/resonance_coil_workshop.js` 在 Blockbench 工具菜单提供“绘制谐振雷鸣线圈”，导出模型、八帧动画与六个模块图标。这些素材为原创。
 
 ## 魔改 API
 
