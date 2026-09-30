@@ -1,6 +1,7 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "overload_sim:item/perfect_simulation_crystal"
+    "layer0": "overload_sim:item/perfect_simulation_crystal",
+    "layer1": "overload_sim:item/perfect_simulation_crystal_lightning"
   }
 }

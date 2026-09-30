@@ -1,6 +1,6 @@
 # 过载模拟 Overload Simulation
 
-Minecraft **1.21.1 / NeoForge 21.1.252** 的 AE2 闪电科技附属模组。当前版本为 **0.1.0-alpha.3 测试原型**。
+Minecraft **1.21.1 / NeoForge 21.1.252** 的 AE2 闪电科技附属模组。当前版本为 **0.1.0-alpha.5 测试原型**。
 
 项目在 `D:\MinecraftDev\OverloadSimulation`，独立 Git 仓库的 `codex/ui-hv-network-energy` 分支上。原来的 1.19.2 工程不参与构建。
 
@@ -33,15 +33,17 @@ Minecraft **1.21.1 / NeoForge 21.1.252** 的 AE2 闪电科技附属模组。当�
 .\scripts\install-test.ps1
 ```
 
-本机脚本优先使用 D 盘已有的 Gradle 8.8；其他机器可使用 Gradle Wrapper 下载 8.8。常规构建产物为 `build/libs/overload_sim-0.1.0-alpha.3.jar`，sources jar 提供源码。
+本机脚本优先使用 D 盘已有的 Gradle 8.8；其他机器可使用 Gradle Wrapper 下载 8.8。常规构建产物为 `build/libs/overload_sim-0.1.0-alpha.5.jar`，sources jar 提供源码。
 
 前置版本固定为 AE2 19.2.17、AE2 Lightning Tech Reborn 2.1.0、Thunderbolt Core Reborn 2.0.0、GuideME 21.1.19。升级前置后需要复测 collector 的两处 Mixin 和 高压闪电桥接接口。
 
 ## Blockbench 贴图
 
-`art/overload_sim_pink_white.bbmodel` 是在 Blockbench 5.2.1 中生成、绘画并保存的工程。三种水晶与模拟室均为 32×32 原创粉白像素贴图。工程包含全部纹理，可直接选择并绘制；保存纹理后重新构建。
+`art/simulation_crystals_layers.bbmodel` 保存 16×16 灰白模拟水晶、粉彩完美水晶及独立的 12 帧闪电图层。完美水晶同时用于创造标签图标和模组列表标志。水晶轮廓改编自闪电科技原贴图，其 CC BY-NC-SA 3.0 署名与许可见 [素材说明](THIRD_PARTY_NOTICES.md)。
 
-本地插件 `art/overload_sim_art.js` 是可重复生成基础素材的工具：Blockbench → 文件 → 插件 → 从文件加载，工具菜单 → 生成过载模拟粉白素材。生成会覆盖工程及四张贴图；已手绘的修改应先用 Git 保存。
+`art/overload_simulation_chamber_hollow.bbmodel` 保存原创粉白框架、四角磁场发生器、六面透明玻璃护罩和预览水晶。玻璃保留透明中心与少量反光，并具有对应的薄层碰撞；底部玻璃覆盖原金属平台。预览水晶不导出到静态方块模型；游戏中由客户端渲染器根据槽 0 同步状态显示悬浮、旋转的完美水晶和电弧，取出水晶即消失。
+
+本地插件 `art/overload_sim_visuals.js` 可在 Blockbench → 文件 → 插件 → 从文件加载，然后选择工具菜单 → 绘制模拟水晶与镂空模拟室。它会覆盖当前素材和分层工程，手绘修改前请先用 Git 保存。旧版 `art/overload_sim_pink_white.bbmodel` 保留供回看。
 
 ## 魔改 API
 

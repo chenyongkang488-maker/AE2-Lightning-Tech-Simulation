@@ -33,9 +33,14 @@ write(pathlib.Path('data/overload_sim/recipe/cultivation/default.json'),{'type':
 write(pathlib.Path('data/overload_sim/recipe/production/mob.json'),{'type':'overload_sim:overload_simulation','profile':'overload_sim:mob','production':{'ticks':200,'fe':1000,'lightning':1,'entity_loot':True}})
 write(pathlib.Path('data/overload_sim/recipe/blank_simulation_crystal.json'),{'type':'minecraft:crafting_shapeless','ingredients':[{'item':'ae2lt:electro_chime_crystal'},{'item':'ae2:fluix_crystal'},{'item':'minecraft:amethyst_shard'}],'result':{'id':'overload_sim:blank_simulation_crystal','count':1}})
 write(pathlib.Path('data/overload_sim/recipe/overload_simulation_chamber.json'),{'type':'minecraft:crafting_shaped','pattern':['GPG','IMI','GCG'],'key':{'G':{'item':'ae2:quartz_glass'},'P':{'item':'ae2:engineering_processor'},'I':{'item':'minecraft:iron_ingot'},'M':{'item':'ae2lt:lightning_collapse_matrix'},'C':{'item':'overload_sim:blank_simulation_crystal'}},'result':{'id':'overload_sim:overload_simulation_chamber','count':1}})
-for name in ['blank_simulation_crystal','simulation_crystal','perfect_simulation_crystal']:write(pathlib.Path('assets/overload_sim/models/item')/(name+'.json'),{'parent':'minecraft:item/generated','textures':{'layer0':'overload_sim:item/'+name}})
+for name in ['blank_simulation_crystal','simulation_crystal','perfect_simulation_crystal']:
+    textures={'layer0':'overload_sim:item/'+name}
+    if name=='perfect_simulation_crystal':textures['layer1']='overload_sim:item/perfect_simulation_crystal_lightning'
+    write(pathlib.Path('assets/overload_sim/models/item')/(name+'.json'),{'parent':'minecraft:item/generated','textures':textures})
 write(pathlib.Path('assets/overload_sim/blockstates/overload_simulation_chamber.json'),{'variants':{'':{'model':'overload_sim:block/overload_simulation_chamber'}}})
-write(pathlib.Path('assets/overload_sim/models/block/overload_simulation_chamber.json'),{'parent':'minecraft:block/cube_all','textures':{'all':'overload_sim:block/overload_simulation_chamber'}})
+# The chamber geometry is exported and edited in Blockbench. Keep that source intact.
+chamber_model=pathlib.Path('assets/overload_sim/models/block/overload_simulation_chamber.json')
+if not (ROOT/chamber_model).exists():write(chamber_model,{'parent':'minecraft:block/cube_all','textures':{'all':'overload_sim:block/overload_simulation_chamber'}})
 write(pathlib.Path('assets/overload_sim/models/item/overload_simulation_chamber.json'),{'parent':'overload_sim:block/overload_simulation_chamber'})
 for tag in ['mineable/pickaxe','needs_iron_tool']:write(pathlib.Path('data/minecraft/tags/block')/(tag+'.json'),{'replace':False,'values':['overload_sim:overload_simulation_chamber']})
 write(pathlib.Path('data/overload_sim/loot_table/blocks/overload_simulation_chamber.json'),{'type':'minecraft:block','pools':[{'rolls':1,'entries':[{'type':'minecraft:item','name':'overload_sim:overload_simulation_chamber'}],'conditions':[{'condition':'minecraft:survives_explosion'}]}]})

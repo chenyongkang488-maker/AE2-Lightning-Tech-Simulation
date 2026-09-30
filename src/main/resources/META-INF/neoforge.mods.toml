@@ -1,10 +1,11 @@
 modLoader="javafml"
 loaderVersion="[4,)"
-license="MIT"
+license="MIT (code); CC BY-NC-SA 3.0 (derived crystal artwork)"
 [[mods]]
 modId="overload_sim"
-version="0.1.0-alpha.3"
+version="0.1.0-alpha.5"
 displayName="Overload Simulation"
+logoFile="logo.png"
 description='''A data-driven AE2 Lightning Tech addon for lightning-grown simulation crystals and resource simulation.'''
 [[mixins]]
 config="overload_sim.mixins.json"

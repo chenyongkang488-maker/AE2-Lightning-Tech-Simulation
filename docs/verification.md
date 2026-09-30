@@ -1,5 +1,17 @@
 # 验证记录
 
+## 0.1.0-alpha.5（2026-09-30）
+
+`scripts/build.ps1 -GameTests` 退出码 0，BUILD SUCCESSFUL；4 项 JUnit 测试无失败/错误，28 项必需服务器 GameTest 全部通过。最终日志：`build/verification/alpha5-final.log`。水晶世界显示同步先在旧实现中失败，再修复；用户要求六面玻璃后，玻璃碰撞回归先在开放框架中按预期失败，再加入与玻璃模型对应的薄层碰撞。
+
+Blockbench 内生成并保存两个可编辑分层工程：16×16 灰白/粉彩水晶及 12 帧独立闪电；粉白模拟室框架与六面玻璃。静态模型导出 30 个元素，工程额外保留两个禁止导出的水晶/闪电预览面。六个玻璃元素各有两面、完整 UV 和有效贴图引用；玻璃贴图 184/256 像素完全透明，其余为边框与反光。PNG 与工程内嵌贴图、最终 JAR 中贴图逐字节一致。
+
+开发客户端实际显示六面玻璃、空机与有水晶机器，透过玻璃仍能看见悬浮旋转水晶与四角电弧。世界显示已复核客户端重启和在界面关闭时使用开发命令清空水晶槽；清空后水晶与电弧消失。预览保存为 `art/chamber_preview.png`、`art/crystal_preview.png` 和 `art/chamber_ingame_preview.png`。Blockbench 保持打开最终工程。完整 GUI 搬运、多人同步、不同显示设置及长期联调仍遵循下方测试边界。
+
+只读审查发现并修复了电弧背面剔除和方块物品第一人称变换继承问题；最终复查无未解决的重要问题。原水晶轮廓遵循上游 CC BY-NC-SA 3.0 素材许可，署名与许可说明已随 JAR 打包；原创代码、框架和电弧保留 MIT。JAR 未捆绑前置类。
+
+已安装 `D:\mc\.minecraft\versions\OverloadSim-Test-1.21.1\mods\overload_sim-0.1.0-alpha.5.jar`，172517 字节，SHA-256 `61607C14BC8E137C618550E36EB4DF06157264C533B00910C8BC2510D8330262`。中间 alpha.4 测试包备份于 `addon-backups\20260930-234241`；alpha.3 在 `addon-backups\20260930-232912`。其他 10 个前置/测试模组哈希保持不变。
+
 ## 0.1.0-alpha.3（2026-09-30）
 
 最终 `scripts/build.ps1 -GameTests`：退出码 0，BUILD SUCCESSFUL，4 项 JUnit 测试无失败/错误，26 项必需服务器 GameTest 全部通过。日志：本机 `build/verification/alpha3-check.log`。三个新增回归测试先在 alpha.2 中按预期失败，分别复现缺少四格升级库存、普通手持卡插入和待机充电；修复后全部通过。Shift 点击测试还复现了原有搬运方法一次只填入一个空槽，改用 AE2 原生语义槽搬运后通过。

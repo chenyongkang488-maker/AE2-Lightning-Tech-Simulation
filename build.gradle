@@ -2,7 +2,7 @@ plugins {
     id 'java-library'
     id 'net.neoforged.moddev' version '2.0.148'
 }
-version = '0.1.0-alpha.3'
+version = '0.1.0-alpha.5'
 group = 'dev.overloadsim'
 base { archivesName = 'overload_sim' }
 java { toolchain.languageVersion = JavaLanguageVersion.of(21); withSourcesJar() }
@@ -22,5 +22,9 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 tasks.named('test') { useJUnitPlatform() }
+tasks.named('processResources') {
+    from('THIRD_PARTY_NOTICES.md') { into 'META-INF' }
+    from('art/licenses/AE2LT-LICENSE_ASSETS.md') { into 'META-INF' }
+}
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
 tasks.withType(Jar).configureEach { preserveFileTimestamps = false; reproducibleFileOrder = true }

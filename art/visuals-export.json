@@ -1,0 +1,9 @@
+{
+  "source": "Blockbench local workshop",
+  "spriteSize": 16,
+  "lightningFrames": 12,
+  "bodyLayers": 1,
+  "effectLayers": 1,
+  "chamberElements": 30,
+  "glassPanels": 6
+}

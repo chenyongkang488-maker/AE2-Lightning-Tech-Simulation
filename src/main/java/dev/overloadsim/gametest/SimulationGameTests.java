@@ -13,6 +13,31 @@ import java.util.Optional;
 @PrefixGameTestTemplate(false)
 public class SimulationGameTests {
     @GameTest(template="empty")
+    public static void crystalDisplayUpdatesWithoutOpeningMachineMenu(GameTestHelper h){
+        var level=h.getLevel();var pos=h.absolutePos(new BlockPos(5,1,5));level.setBlockAndUpdate(pos,ModContent.CHAMBER.get().defaultBlockState());
+        var machine=(dev.overloadsim.machine.SimulationChamberBlockEntity)level.getBlockEntity(pos);var empty=machine.getUpdateTag(level.registryAccess());
+        machine.inventory().setStackInSlot(0,CrystalDataAccess.perfect(new CrystalData(ModContent.id("iron"),Optional.empty(),0,1)));var filled=machine.getUpdateTag(level.registryAccess());
+        h.assertTrue(!java.util.Arrays.equals(empty.getByteArray("#upd"),filled.getByteArray("#upd")),"world render packet must change on crystal insertion without opening GUI");
+        var mirror=new dev.overloadsim.machine.SimulationChamberBlockEntity(pos,machine.getBlockState());mirror.setLevel(level);mirror.handleUpdateTag(filled,level.registryAccess());
+        try{h.assertTrue((boolean)mirror.getClass().getMethod("displayHasCrystal").invoke(mirror),"client receives crystal presence");
+            machine.inventory().setStackInSlot(0,ItemStack.EMPTY);var removed=machine.getUpdateTag(level.registryAccess());mirror.handleUpdateTag(removed,level.registryAccess());
+            h.assertTrue(!(boolean)mirror.getClass().getMethod("displayHasCrystal").invoke(mirror),"removing the crystal removes the client visual");
+        }catch(ReflectiveOperationException error){throw new RuntimeException(error);}h.succeed();
+    }
+    @GameTest(template="empty")
+    public static void chamberGlassKeepsTransparentFacesAndSolidProtection(GameTestHelper h){
+        var state=ModContent.CHAMBER.get().defaultBlockState();var pos=h.absolutePos(new BlockPos(5,1,5));var level=h.getLevel();level.setBlockAndUpdate(pos,state);
+        h.assertTrue(!state.canOcclude(),"glass frame must not cull adjacent block faces");
+        var shape=state.getShape(level,pos);var collision=state.getCollisionShape(level,pos);
+        var window=net.minecraft.world.phys.shapes.Shapes.box(.4,.4,0,.6,.6,.12);
+        h.assertTrue(net.minecraft.world.phys.shapes.Shapes.joinIsNotEmpty(shape,window,net.minecraft.world.phys.shapes.BooleanOp.AND)&&net.minecraft.world.phys.shapes.Shapes.joinIsNotEmpty(collision,window,net.minecraft.world.phys.shapes.BooleanOp.AND),"front glass panel has selection and collision");
+        for(var glassPanel:java.util.List.of(
+            net.minecraft.world.phys.shapes.Shapes.box(0,.4,.4,.12,.6,.6),net.minecraft.world.phys.shapes.Shapes.box(.88,.4,.4,1,.6,.6),
+            net.minecraft.world.phys.shapes.Shapes.box(.4,.4,.88,.6,.6,1),net.minecraft.world.phys.shapes.Shapes.box(.4,.95,.4,.6,1,.6)))
+            h.assertTrue(net.minecraft.world.phys.shapes.Shapes.joinIsNotEmpty(collision,glassPanel,net.minecraft.world.phys.shapes.BooleanOp.AND),"side and top glass protect the crystal");
+        h.assertTrue(net.minecraft.world.phys.shapes.Shapes.joinIsNotEmpty(collision,net.minecraft.world.phys.shapes.Shapes.box(.1,0,.1,.9,.1,.9),net.minecraft.world.phys.shapes.BooleanOp.AND),"base remains solid");h.succeed();
+    }
+    @GameTest(template="empty")
     public static void heldSpeedCardsFillFourSeparateSlots(GameTestHelper h){
         var level=h.getLevel();var pos=h.absolutePos(new BlockPos(5,1,5));level.setBlockAndUpdate(pos,ModContent.CHAMBER.get().defaultBlockState());
         var machine=(dev.overloadsim.machine.SimulationChamberBlockEntity)level.getBlockEntity(pos);

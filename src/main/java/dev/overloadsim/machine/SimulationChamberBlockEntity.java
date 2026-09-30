@@ -20,6 +20,7 @@ import net.minecraft.core.*;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.*;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
@@ -40,7 +41,7 @@ public class SimulationChamberBlockEntity extends AENetworkedBlockEntity impleme
         @Override public int getSlotLimit(int slot){return switch(slot){case 0->1;case 1->SimulationConfig.MATRIX_LIMIT.get();case 2->0;default->64;};}
         @Override public ItemStack insertItem(int slot,ItemStack stack,boolean simulate){return slot<OUTPUT_START&&busy()?stack:super.insertItem(slot,stack,simulate);}
         @Override public ItemStack extractItem(int slot,int count,boolean simulate){return slot<OUTPUT_START&&busy()?ItemStack.EMPTY:super.extractItem(slot,count,simulate);}
-        @Override protected void onContentsChanged(int slot){saveChanges();}
+        @Override protected void onContentsChanged(int slot){saveChanges();if(slot==0)updateVisualState();}
     };
     private final IItemHandler automation=new IItemHandler(){
         public int getSlots(){return SLOTS+upgrades.size();}
@@ -60,6 +61,7 @@ public class SimulationChamberBlockEntity extends AENetworkedBlockEntity impleme
     private boolean legacyEhvRefund;
     private int outputMask=63,status=0;
     private boolean eject=true,taskActive=false;
+    private int visualFlags;
     private static final org.slf4j.Logger LOG=org.slf4j.LoggerFactory.getLogger(SimulationChamberBlockEntity.class);
     public SimulationChamberBlockEntity(BlockPos pos,BlockState state){super(ModContent.CHAMBER_ENTITY.get(),pos,state);getMainNode().setFlags(GridFlags.REQUIRE_CHANNEL).setIdlePowerUsage(2).setVisualRepresentation(ModContent.CHAMBER_ITEM.get());}
     public ItemStackHandler inventory(){return inventory;}
@@ -67,11 +69,25 @@ public class SimulationChamberBlockEntity extends AENetworkedBlockEntity impleme
     public IItemHandler automation(){return automation;}
     public EnergyStorage energy(){return energy;}
     public boolean busy(){return taskActive;}
+    public boolean displayHasCrystal(){return (visualFlags&1)!=0;}
+    public boolean displayWorking(){return (visualFlags&2)!=0;}
+    private int currentVisualFlags(){return inventory.getStackInSlot(0).is(ModContent.PERFECT.get())?1|((taskActive&&status==1&&getMainNode().isActive())?2:0):0;}
+    private void updateVisualState(){
+        if(level==null||level.isClientSide())return;
+        int next=currentVisualFlags();if(next!=visualFlags){visualFlags=next;markForClientUpdate();}
+    }
+    @Override protected void writeToStream(RegistryFriendlyByteBuf data){super.writeToStream(data);data.writeByte(currentVisualFlags());}
+    @Override protected boolean readFromStream(RegistryFriendlyByteBuf data){boolean changed=super.readFromStream(data);int next=data.readUnsignedByte()&3;changed|=next!=visualFlags;visualFlags=next;return changed;}
+    @Override protected void saveVisualState(CompoundTag data){super.saveVisualState(data);data.putByte("SimulationVisual",(byte)visualFlags);}
+    @Override protected void loadVisualState(CompoundTag data){super.loadVisualState(data);visualFlags=data.getByte("SimulationVisual")&3;}
     public int remaining(){return remaining;}public int totalTicks(){return totalTicks;}public int actualParallel(){return actualParallel;}public int status(){return status;}public boolean eject(){return eject;}public int outputMask(){return outputMask;}
     public int maximumParallel(){return SimulationRules.parallel(Math.min(32,inventory.getStackInSlot(1).getCount()));}
     public void toggleEject(){eject=!eject;saveChanges();}
     public void toggleSide(int side){if(side>=0&&side<6){outputMask^=1<<side;saveChanges();}}
     public void tick(){
+        try{tickSimulation();}finally{updateVisualState();}
+    }
+    private void tickSimulation(){
         if(!(level instanceof ServerLevel server))return;frequency.serverTick();
         chargeFromNetwork((int)Math.min(energy.getMaxEnergyStored(),(long)energy.getEnergyStored()+SimulationConfig.NETWORK_FE_PER_TICK.get()));
         if(eject&&server.getGameTime()%SimulationConfig.EJECT_INTERVAL.get()==0)ejectOutputs();
