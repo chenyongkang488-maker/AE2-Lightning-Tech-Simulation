@@ -1,0 +1,12 @@
+{
+  "includes": ["../common/common.json", "../common/player_inventory.json"],
+  "generatedBackground": {"width": 176, "height": 184},
+  "helpTopic": "overload_sim:overload-simulation.md",
+  "slots": {
+    "STORAGE_CELL": {"left": 38, "top": 29},
+    "CONFIG": {"left": 38, "top": 56},
+    "MACHINE_INPUT": {"left": 64, "top": 56},
+    "MACHINE_OUTPUT": {"left": 108, "top": 27, "grid": "BREAK_AFTER_3COLS"}
+  },
+  "text": {"dialog_title": {"text": {"translate": "block.overload_sim.overload_simulation_chamber"}, "position": {"left": 8, "top": 6}}}
+}

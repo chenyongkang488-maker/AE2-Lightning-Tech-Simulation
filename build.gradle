@@ -2,7 +2,7 @@ plugins {
     id 'java-library'
     id 'net.neoforged.moddev' version '2.0.148'
 }
-version = '0.1.0-alpha.1'
+version = '0.1.0-alpha.2'
 group = 'dev.overloadsim'
 base { archivesName = 'overload_sim' }
 java { toolchain.languageVersion = JavaLanguageVersion.of(21); withSourcesJar() }
@@ -10,7 +10,7 @@ repositories { mavenCentral() }
 neoForge {
     version = '21.1.252'
     runs {
-        client { client(); gameDirectory = file('run-client') }
+        client { client(); gameDirectory = file('run-client'); if (project.hasProperty('uiReviewWorld')) { programArguments.addAll('--quickPlaySingleplayer', project.property('uiReviewWorld').toString()) } }
         server { server(); programArgument '--nogui'; gameDirectory = file('run-server') }
         gameTestServer { type = 'gameTestServer'; gameDirectory = file('run-gametest'); systemProperty 'neoforge.enabledGameTestNamespaces', 'overload_sim' }
     }

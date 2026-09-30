@@ -1,4 +1,4 @@
-# 数据包与 Java API（0.1.0-alpha.1）
+# 数据包与 Java API（0.1.0-alpha.2）
 
 面向 Minecraft 1.21.1，数据目录使用单数 `recipe`、`loot_table`、`tags/block`。建议覆盖本模组现有配方 ID；新增匹配配方应给明确的更高 priority，避免最高优先级相同造成冲突。
 
@@ -28,6 +28,8 @@
   }
 }
 ```
+
+allow_artificial 默认为 true；显式 false 时仍保留自然雷限定。`/reload` 后生效。
 
 固定检查水平 5×5 除中心 24 个位置。mode 为 mineral 时 material 在中心同一 Y；crop 和 tree 时 material 在上方一格，且需 soil 选择器。选择器 id 支持块 ID 或以 # 开头的块标签，properties 可精确匹配状态，例如 `{"id":"minecraft:wheat","properties":{"age":"0"}}`。默认作物配方允许任意生长阶段。
 
@@ -67,18 +69,18 @@ profile `overload_sim:any` 是默认兜底。首次绑定的雷击不算培养�
   "profile":"my_pack:silver",
   "priority":100,
   "production":{
-    "ticks":200,"fe":1000,"lightning":10,
+    "ticks":200,"fe":1000,"lightning":1,
     "outputs":[{"item":"my_mod:raw_silver","count":1,"chance":1}],
     "input":{"item":"minecraft:amethyst_shard","count":1}
   }
 }
 ```
 
-ticks/fe/lightning 为单次操作成本，lightning 指 EHV 单位。能量不足时降低实际并行；每个并行单独抽取 outputs 中各项概率。批次启动一次扣费，模板不消耗，input 按实际并行消耗。input 中 chance 不参与消耗逻辑，建议省略。
+ticks/fe/lightning 为单次操作成本，lightning 指 HV（高压闪电）单位，内置配方均为 1。能量不足时降低实际并行；每个并行单独抽取 outputs 中各项概率。批次启动一次扣费，模板不消耗，input 按实际并行消耗。input 中 chance 不参与消耗逻辑，建议省略。
 
 默认无矩阵 1 并行，N 个矩阵为 4N 并行，上限 32 个/128 并行。加速卡范围 0..4，耗时为 `ceil(ticks / 2^cards)`，最低 1 tick，单次成本不变。COMMON 配置可降低矩阵和加速卡数量上限。
 
-fe/lightning 0..1000000000，ticks 1..1000000，outputs 最多 64 项，每项 count 1..4096，chance 0..1。自定义 Java 输出提供器同样限制单次最多 64 项、每项最多 4096 件。实际产物按物品堆叠上限拆分后保存，单次总量最多 4096 件、最多 256 个物品栈，超过限制会拒绝启动并返还已预留的 EHV。
+fe/lightning 0..1000000000，ticks 1..1000000，outputs 最多 64 项，每项 count 1..4096，chance 0..1。自定义 Java 输出提供器同样限制单次最多 64 项、每项最多 4096 件。实际产物按物品堆叠上限拆分后保存，单次总量最多 4096 件、最多 256 个物品栈，超过限制会拒绝启动并返还已预留的 HV。
 
 显式 outputs 配方按所有非零概率产物都掉落的保守上限检查输出槽，考虑物品与组件兼容性，空间不足时降低实际并行。前置事件结束后重新检查容量。实体战利品和 Java 提供器无法预知产物，本 alpha 版要求至少一个空输出槽；抽取结果仅固定一次，超出剩余容量时保存并等待腾出空间，不重抽也不重复扣费。
 
@@ -107,12 +109,14 @@ NeoForge.EVENT_BUS 的事件：
 
 - `SimulationEvents.BeforeBinding`：可取消；结构消耗/玩家换晶之前。
 - `BeforeCultivation`：可取消；培养换晶之前。
-- `BeforeSimulation`：可取消；EHV/FE 和辅助材料支付之前，包含实际 parallel。
+- `BeforeSimulation`：可取消；HV/FE 和辅助材料支付之前，包含实际 parallel。
 - `Completed`：提交后通知，operation 为 binding、mob_binding、cultivation、production。产物已输出完毕才视为 production 完成。
 
 事件包含服务器世界、不可变 BlockPos、水晶数据。数据字段不可变；前置事件后会重新检查相关库存和结构。条件/提供器应使用命名 API，避免直接依赖 compat 中的版本固定桥接类。
 
 ## 自动化接口与指南
+
+FE 不足时优先按实际可启动批次所需费用，从在线 ME 网络的 IEnergyService 取 AE 电力，通过 PowerUnit.FE/AE 的运行时标准比例换算；不预充满整个缓冲。小数 FE 余量随区块保存，外部 FE 能力继续可用。新批次和退款使用 HV；旧 alpha.1 已付费任务保留快照，旧退款记录按 EHV 返还。
 
 机器注册 NeoForge `Capabilities.ItemHandler.BLOCK` 和 `Capabilities.EnergyStorage.BLOCK`。槽 0 为完美水晶，1 矩阵，2 加速卡，3 辅助材料，4..12 输出。外部只可提取输出，批次进行中拒绝修改输入。GUI 允许空闲时取回输入。
 

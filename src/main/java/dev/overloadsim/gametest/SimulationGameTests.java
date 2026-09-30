@@ -59,11 +59,10 @@ public class SimulationGameTests {
         for(int x=-2;x<=2;x++)for(int z=-2;z<=2;z++)if(x!=0||z!=0){h.assertTrue(level.getBlockState(center.offset(x,0,z)).is(Blocks.FARMLAND),"retain soil");h.assertTrue(level.isEmptyBlock(center.offset(x,1,z)),"consume crop");}h.succeed();
     }
     @GameTest(template="empty")
-    public static void cultivationRejectsArtificialAndCompletesAtTen(GameTestHelper h){
+    public static void cultivationAcceptsArtificialAndCompletesAtTen(GameTestHelper h){
         var level=h.getLevel();var pos=h.absolutePos(BlockPos.ZERO);var initial=CrystalDataAccess.bound(new CrystalData(ModContent.id("iron"),Optional.empty(),0,1));
-        h.assertTrue(CrystalDataAccess.read(CrystalBinding.cultivate(level,pos,initial,false)).orElseThrow().strikes()==0,"artificial bolt must not advance");
-        var current=initial;for(int i=0;i<9;i++)current=CrystalBinding.cultivate(level,pos,current,true);
-        h.assertTrue(current.is(ModContent.BOUND.get()),"nine strikes stay bound");current=CrystalBinding.cultivate(level,pos,current,true);
+        var current=initial;for(int i=0;i<9;i++)current=CrystalBinding.cultivate(level,pos,current,false);
+        h.assertTrue(current.is(ModContent.BOUND.get())&&CrystalDataAccess.read(current).orElseThrow().strikes()==9,"nine artificial strikes advance cultivation");current=CrystalBinding.cultivate(level,pos,current,false);
         h.assertTrue(current.is(ModContent.PERFECT.get()),"tenth strike perfects");h.succeed();
     }
     @GameTest(template="empty")
@@ -78,12 +77,12 @@ public class SimulationGameTests {
         var level=h.getLevel();var player=new net.minecraft.server.level.ServerPlayer(level.getServer(),level,new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(),"simulation-test"),net.minecraft.server.level.ClientInformation.createDefault());var p=h.absolutePos(new BlockPos(5,2,5));player.setPos(p.getX(),p.getY(),p.getZ());
         var cow=h.spawn(net.minecraft.world.entity.EntityType.COW,new BlockPos(6,2,5));cow.setNoAi(true);var sheep=h.spawn(net.minecraft.world.entity.EntityType.SHEEP,new BlockPos(8,2,5));sheep.setNoAi(true);
         player.setItemInHand(net.minecraft.world.InteractionHand.OFF_HAND,new ItemStack(ModContent.BLANK.get()));
-        var bolt=net.minecraft.world.entity.EntityType.LIGHTNING_BOLT.create(level);bolt.getPersistentData().putBoolean("ae2lt.natural_weather_lightning",true);
+        var bolt=net.minecraft.world.entity.EntityType.LIGHTNING_BOLT.create(level);
         level.random.setSeed(4096);dev.overloadsim.binding.PlayerLightningHandler.process(player,bolt);
         var result=CrystalDataAccess.read(player.getOffhandItem()).orElseThrow();h.assertTrue(result.entityType().orElseThrow().toString().equals("minecraft:cow"),"nearest cow must be recorded");
         dev.overloadsim.binding.PlayerLightningHandler.process(player,bolt);h.assertTrue(CrystalDataAccess.read(player.getOffhandItem()).orElseThrow().strikes()==0,"one bolt cannot also cultivate");
-        var second=net.minecraft.world.entity.EntityType.LIGHTNING_BOLT.create(level);second.getPersistentData().putBoolean("ae2lt.natural_weather_lightning",true);dev.overloadsim.binding.PlayerLightningHandler.process(player,second);
-        h.assertTrue(CrystalDataAccess.read(player.getOffhandItem()).orElseThrow().strikes()==1,"distinct natural bolt cultivates once");player.discard();h.succeed();
+        var second=net.minecraft.world.entity.EntityType.LIGHTNING_BOLT.create(level);dev.overloadsim.binding.PlayerLightningHandler.process(player,second);
+        h.assertTrue(CrystalDataAccess.read(player.getOffhandItem()).orElseThrow().strikes()==1,"distinct artificial bolt cultivates once");player.discard();h.succeed();
     }
     @GameTest(template="empty",timeoutTicks=400)
     public static void poweredNetworkProducesFourParallelAndPaysActualCosts(GameTestHelper h){
@@ -95,12 +94,53 @@ public class SimulationGameTests {
         var drive=(appeng.blockentity.storage.DriveBlockEntity)level.getBlockEntity(p.east());var cell=new ItemStack(com.moakiee.ae2lt.registry.ModItems.INFINITE_STORAGE_CELL.get());
         var storage=appeng.api.storage.StorageCells.getCellInventory(cell,drive::saveChanges);
         h.assertTrue(storage!=null,"lightning-capable cell handler");
-        long inserted=storage.insert(com.moakiee.ae2lt.me.key.LightningKey.EXTREME_HIGH_VOLTAGE,40,appeng.api.config.Actionable.MODULATE,appeng.api.networking.security.IActionSource.empty());h.assertTrue(inserted==40,"seed EHV storage");storage.persist();drive.getInternalInventory().setItemDirect(0,cell);
+        long inserted=storage.insert(com.moakiee.ae2lt.me.key.LightningKey.HIGH_VOLTAGE,4,appeng.api.config.Actionable.MODULATE,appeng.api.networking.security.IActionSource.empty());h.assertTrue(inserted==4,"seed exactly four HV for four operations");storage.persist();drive.getInternalInventory().setItemDirect(0,cell);
         machine.inventory().setStackInSlot(0,CrystalDataAccess.perfect(new CrystalData(ModContent.id("iron"),Optional.empty(),0,1)));
         machine.inventory().setStackInSlot(1,new ItemStack(com.moakiee.ae2lt.registry.ModItems.LIGHTNING_COLLAPSE_MATRIX.get()));
         machine.inventory().setStackInSlot(2,new ItemStack(net.minecraft.core.registries.BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.parse("ae2:speed_card")),4));machine.energy().receiveEnergy(10000,false);
         for(int slot=4;slot<13;slot++)machine.inventory().setStackInSlot(slot,new ItemStack(net.minecraft.world.item.Items.RAW_IRON));
         h.succeedWhen(()->{h.assertTrue(machine.inventory().getStackInSlot(4).getCount()==5,"four outputs merge into existing partial slots; status="+machine.status()+" node="+machine.getMainNode().isActive()+" fe="+machine.energy().getEnergyStored());h.assertTrue(machine.energy().getEnergyStored()==6000,"pay exactly four operations");h.assertTrue(machine.inventory().getStackInSlot(0).is(ModContent.PERFECT.get()),"template retained");});
+    }
+    @GameTest(template="empty",timeoutTicks=180)
+    public static void aeNetworkSuppliesFeWithoutCableOrLocalCharge(GameTestHelper h){
+        var machine=capacityMachine(h);machine.energy().deserializeNBT(h.getLevel().registryAccess(),net.minecraft.nbt.IntTag.valueOf(0));
+        // Only one output can fit, and only one batch can start.
+        for(int slot=4;slot<13;slot++)machine.inventory().setStackInSlot(slot,new ItemStack(net.minecraft.world.item.Items.DIAMOND,64));
+        machine.inventory().setStackInSlot(4,new ItemStack(net.minecraft.world.item.Items.RAW_IRON,63));
+        h.succeedWhen(()->{h.assertTrue(machine.inventory().getStackInSlot(4).getCount()==64,"ME grid alone supplies simulation FE");h.assertTrue(machine.energy().getEnergyStored()==0,"draw and pay exactly required FE, without filling unused buffer");});
+    }
+    @GameTest(template="empty")
+    public static void boundTooltipReportsPercentageAndStage(GameTestHelper h){
+        var crystal=CrystalDataAccess.bound(new CrystalData(ModContent.id("iron"),Optional.empty(),1,1));var lines=new java.util.ArrayList<net.minecraft.network.chat.Component>();
+        crystal.getItem().appendHoverText(crystal,net.minecraft.world.item.Item.TooltipContext.of(h.getLevel()),lines,net.minecraft.world.item.TooltipFlag.NORMAL);
+        h.assertTrue(lines.stream().anyMatch(c->c.getStyle().getColor()!=null&&c.getStyle().getColor().getValue()==net.minecraft.ChatFormatting.AQUA.getColor()&&c.getContents() instanceof net.minecraft.network.chat.contents.TranslatableContents t&&java.util.Arrays.asList(t.getArgs()).contains("10.0")),"one of ten strikes displays cyan 10.0 percent");
+        h.assertTrue(lines.stream().anyMatch(c->c.getStyle().getColor()!=null&&c.getStyle().getColor().getValue()==net.minecraft.ChatFormatting.LIGHT_PURPLE.getColor()&&c.getContents() instanceof net.minecraft.network.chat.contents.TranslatableContents t&&t.getKey().equals("item.ae2lt.electro_chime_crystal.stage")),"stage line follows upstream crystal styling");h.succeed();
+    }
+    @GameTest(template="empty",timeoutTicks=160)
+    public static void collectorBindsUsingArtificialLightning(GameTestHelper h){
+        var level=h.getLevel();var p=h.absolutePos(new BlockPos(5,3,5));var blocks=net.minecraft.core.registries.BuiltInRegistries.BLOCK;
+        level.setBlockAndUpdate(p,blocks.get(net.minecraft.resources.ResourceLocation.parse("ae2lt:lightning_collector")).defaultBlockState());
+        level.setBlockAndUpdate(p.below(),blocks.get(net.minecraft.resources.ResourceLocation.parse("ae2:creative_energy_cell")).defaultBlockState());
+        level.setBlockAndUpdate(p.below(2),blocks.get(net.minecraft.resources.ResourceLocation.parse("ae2:drive")).defaultBlockState());
+        var drive=(appeng.blockentity.storage.DriveBlockEntity)level.getBlockEntity(p.below(2));drive.getInternalInventory().setItemDirect(0,new ItemStack(com.moakiee.ae2lt.registry.ModItems.INFINITE_STORAGE_CELL.get()));
+        var collector=(com.moakiee.ae2lt.blockentity.LightningCollectorBlockEntity)level.getBlockEntity(p);collector.getInventory().setStackInSlot(0,new ItemStack(ModContent.BLANK.get()));
+        for(int x=-2;x<=2;x++)for(int z=-2;z<=2;z++)if(x!=0||z!=0)level.setBlockAndUpdate(p.offset(x,0,z),Blocks.RAW_IRON_BLOCK.defaultBlockState());
+        h.runAtTickTime(80,()->{h.assertTrue(collector.captureLightning(false),"artificial bolt actually captured by original collector");h.assertTrue(collector.getInstalledCrystal().is(ModContent.BOUND.get()),"successful artificial capture binds simulation crystal");h.assertTrue(level.isEmptyBlock(p.offset(2,0,2)),"binding consumes raw blocks");h.succeed();});
+    }
+    @GameTest(template="empty",timeoutTicks=120)
+    public static void extremeHighVoltageCannotPayHighVoltageRecipe(GameTestHelper h){
+        var machine=capacityMachine(h);var drive=(appeng.blockentity.storage.DriveBlockEntity)h.getLevel().getBlockEntity(machine.getBlockPos().east());var cell=drive.getInternalInventory().getStackInSlot(0);var storage=appeng.api.storage.StorageCells.getCellInventory(cell,drive::saveChanges);
+        storage.extract(com.moakiee.ae2lt.me.key.LightningKey.HIGH_VOLTAGE,40,appeng.api.config.Actionable.MODULATE,appeng.api.networking.security.IActionSource.empty());storage.insert(com.moakiee.ae2lt.me.key.LightningKey.EXTREME_HIGH_VOLTAGE,40,appeng.api.config.Actionable.MODULATE,appeng.api.networking.security.IActionSource.empty());storage.persist();
+        h.runAtTickTime(80,()->{h.assertTrue(machine.getMainNode().isActive(),"network online");h.assertTrue(!machine.busy()&&machine.energy().getEnergyStored()==10000,"EHV cannot start or pay an HV batch");h.succeed();});
+    }
+    @GameTest(template="empty",timeoutTicks=160)
+    public static void finiteAeNetworkDebitsStandardFeConversionOnce(GameTestHelper h){
+        var machine=capacityMachine(h);var level=h.getLevel();machine.inventory().setStackInSlot(0,ItemStack.EMPTY);machine.energy().deserializeNBT(level.registryAccess(),net.minecraft.nbt.IntTag.valueOf(0));
+        level.setBlockAndUpdate(machine.getBlockPos().west(),net.minecraft.core.registries.BuiltInRegistries.BLOCK.get(net.minecraft.resources.ResourceLocation.parse("ae2:energy_cell")).defaultBlockState());
+        var cell=(appeng.blockentity.networking.EnergyCellBlockEntity)level.getBlockEntity(machine.getBlockPos().west());cell.injectAEPower(50000,appeng.api.config.Actionable.MODULATE);
+        h.runAtTickTime(80,()->{h.assertTrue(machine.getMainNode().isActive(),"finite powered network online");var grid=machine.getMainNode().getGrid();double before=grid.getEnergyService().getStoredPower();
+            try{var charge=machine.getClass().getDeclaredMethod("chargeFromNetwork",int.class);charge.setAccessible(true);charge.invoke(machine,1000);charge.invoke(machine,1000);}catch(ReflectiveOperationException error){throw new RuntimeException(error);}
+            h.assertTrue(machine.energy().getEnergyStored()==1000,"1000 FE retained in local buffer");h.assertTrue(Math.abs(before-grid.getEnergyService().getStoredPower()-500)<.0001,"1000 FE costs 500 AE once, under default AE2 2:1 conversion");h.succeed();});
     }
     @GameTest(template="empty")
     public static void oversizedRecipeOutputSavesAsLegalStacks(GameTestHelper h){
@@ -132,7 +172,7 @@ public class SimulationGameTests {
         var machine=(dev.overloadsim.machine.SimulationChamberBlockEntity)level.getBlockEntity(p);machine.toggleEject();
         var drive=(appeng.blockentity.storage.DriveBlockEntity)level.getBlockEntity(p.east());var cell=new ItemStack(com.moakiee.ae2lt.registry.ModItems.INFINITE_STORAGE_CELL.get());
         var storage=appeng.api.storage.StorageCells.getCellInventory(cell,drive::saveChanges);
-        storage.insert(com.moakiee.ae2lt.me.key.LightningKey.EXTREME_HIGH_VOLTAGE,40,appeng.api.config.Actionable.MODULATE,appeng.api.networking.security.IActionSource.empty());storage.persist();drive.getInternalInventory().setItemDirect(0,cell);
+        storage.insert(com.moakiee.ae2lt.me.key.LightningKey.HIGH_VOLTAGE,40,appeng.api.config.Actionable.MODULATE,appeng.api.networking.security.IActionSource.empty());storage.persist();drive.getInternalInventory().setItemDirect(0,cell);
         machine.inventory().setStackInSlot(0,CrystalDataAccess.perfect(new CrystalData(ModContent.id("iron"),Optional.empty(),0,1)));
         machine.inventory().setStackInSlot(1,new ItemStack(com.moakiee.ae2lt.registry.ModItems.LIGHTNING_COLLAPSE_MATRIX.get()));
         machine.inventory().setStackInSlot(2,new ItemStack(net.minecraft.core.registries.BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.parse("ae2:speed_card")),4));machine.energy().receiveEnergy(10000,false);return machine;

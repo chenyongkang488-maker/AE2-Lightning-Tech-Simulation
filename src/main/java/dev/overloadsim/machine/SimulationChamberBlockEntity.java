@@ -52,6 +52,8 @@ public class SimulationChamberBlockEntity extends AENetworkedBlockEntity impleme
     private ResourceLocation taskRecipe;
     private int remaining,totalTicks,actualParallel,cardsSnapshot;
     private long paidFe,paidLightning,lightningRefund;
+    private double networkFeFraction;
+    private boolean legacyEhvRefund;
     private int outputMask=63,status=0;
     private boolean eject=true,taskActive=false;
     private static final org.slf4j.Logger LOG=org.slf4j.LoggerFactory.getLogger(SimulationChamberBlockEntity.class);
@@ -67,7 +69,7 @@ public class SimulationChamberBlockEntity extends AENetworkedBlockEntity impleme
     public void tick(){
         if(!(level instanceof ServerLevel server))return;frequency.serverTick();
         if(eject&&server.getGameTime()%SimulationConfig.EJECT_INTERVAL.get()==0)ejectOutputs();
-        if(lightningRefund>0){lightningRefund-=LightningNetwork.refund(this,lightningRefund);saveChanges();if(lightningRefund>0){status=7;return;}}
+        if(lightningRefund>0){lightningRefund-=LightningNetwork.refund(this,lightningRefund,legacyEhvRefund);saveChanges();if(lightningRefund>0){status=7;return;}legacyEhvRefund=false;}
         if(taskActive){
             if(taskCrystal==null||SimulationData.profile(taskCrystal.profile()).isEmpty()){status=6;return;}
             if(!getMainNode().isActive()){status=2;return;}
@@ -83,9 +85,9 @@ public class SimulationChamberBlockEntity extends AENetworkedBlockEntity impleme
         if(!getMainNode().isActive()){status=2;return;}
         var matches=SimulationData.recipes(server,SimulationRecipe.Kind.PRODUCTION).stream().filter(h->h.value().data().profile().equals(data.get().profile())).toList();var chosen=SimulationData.select(matches);if(chosen.isEmpty()){status=5;return;}var production=chosen.get().value().data().production();
         int p=outputParallel(production,maximumParallel());if(p<1){status=4;return;}
-        if(production.fe()>0)p=(int)Math.min(p,energy.getEnergyStored()/production.fe());
         if(production.lightning()>0)p=(int)Math.min(p,LightningNetwork.extract(this,Long.MAX_VALUE,true)/production.lightning());
         if(production.input().isPresent()){var input=production.input().get();var aux=inventory.getStackInSlot(3);if(!BuiltInRegistries.ITEM.getKey(aux.getItem()).equals(input.item())){status=3;return;}p=Math.min(p,aux.getCount()/input.count());}
+        if(production.fe()>0){p=(int)Math.min(p,energy.getMaxEnergyStored()/production.fe());if(p>0)chargeFromNetwork((int)SimulationRules.batchEnergy(production.fe(),p));p=(int)Math.min(p,energy.getEnergyStored()/production.fe());}
         if(p<1){status=3;return;}
         if(NeoForge.EVENT_BUS.post(new SimulationEvents.BeforeSimulation(server,worldPosition,data.get(),p)).isCanceled())return;
         // A listener may mutate inventory/energy/network. Verify the full transaction again.
@@ -93,11 +95,20 @@ public class SimulationChamberBlockEntity extends AENetworkedBlockEntity impleme
         if(production.input().isPresent()){var in=production.input().get();var aux=inventory.getStackInSlot(3);if(!BuiltInRegistries.ITEM.getKey(aux.getItem()).equals(in.item())||aux.getCount()<in.count()*p)return;}
         long lightningCost=SimulationRules.batchEnergy(production.lightning(),p);if(LightningNetwork.extract(this,lightningCost,true)<lightningCost)return;
         long extracted=LightningNetwork.extract(this,lightningCost,false);if(extracted!=lightningCost){lightningRefund=Math.addExact(lightningRefund,extracted);saveChanges();return;}
-        // Roll only after a successful EHV reservation; failed reservations cannot reroll loot.
+        // Roll only after a successful HV reservation; failed reservations cannot reroll loot.
         var fixed=new ArrayList<ItemStack>();try{for(int op=0;op<p;op++)fixed.addAll(MobLoot.roll(server,worldPosition,data.get(),production));}catch(RuntimeException error){lightningRefund=Math.addExact(lightningRefund,extracted);status=5;saveChanges();LOG.error("Invalid simulation output for {}",chosen.get().id(),error);return;}
         long feCost=SimulationRules.batchEnergy(production.fe(),p);energy.deserializeNBT(server.registryAccess(),IntTag.valueOf(energy.getEnergyStored()-(int)feCost));
         if(production.input().isPresent()){var aux=inventory.getStackInSlot(3).copy();aux.shrink(production.input().get().count()*p);inventory.setStackInSlot(3,aux);}
         pending.clear();pending.addAll(fixed);taskCrystal=data.get();taskRecipe=chosen.get().id();actualParallel=p;cardsSnapshot=Math.min(4,inventory.getStackInSlot(2).getCount());totalTicks=SimulationRules.duration(production.ticks(),cardsSnapshot);remaining=totalTicks;paidFe=feCost;paidLightning=lightningCost;taskActive=true;status=1;saveChanges();
+    }
+    private void chargeFromNetwork(int requestedFe){
+        int needed=Math.min(energy.getMaxEnergyStored(),requestedFe)-energy.getEnergyStored();
+        var grid=getMainNode().getGrid();if(needed<=0||grid==null||!getMainNode().isActive())return;
+        double wanted=appeng.api.config.PowerUnit.FE.convertTo(appeng.api.config.PowerUnit.AE,Math.max(0,needed-networkFeFraction));
+        double drawn=grid.getEnergyService().extractAEPower(wanted,appeng.api.config.Actionable.MODULATE,appeng.api.config.PowerMultiplier.ONE);
+        double available=networkFeFraction+appeng.api.config.PowerUnit.AE.convertTo(appeng.api.config.PowerUnit.FE,drawn);
+        int received=energy.receiveEnergy(Math.min(needed,(int)Math.floor(available)),false);
+        networkFeFraction=Math.max(0,available-received);saveChanges();
     }
     private int outputParallel(SimulationRecipe.Production production,int maximum){
         // Unknown loot/provider output is rolled once after EHV reservation and journaled.
@@ -138,10 +149,12 @@ public class SimulationChamberBlockEntity extends AENetworkedBlockEntity impleme
             if(budget==0)break;
         }
     }
-    @Override public void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){super.saveAdditional(tag,registries);tag.put("Inventory",inventory.serializeNBT(registries));tag.put("Energy",energy.serializeNBT(registries));frequency.save(tag);tag.putBoolean("Eject",eject);tag.putInt("OutputMask",outputMask);tag.putLong("LightningRefund",lightningRefund);
+    @Override public void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){super.saveAdditional(tag,registries);tag.put("Inventory",inventory.serializeNBT(registries));tag.put("Energy",energy.serializeNBT(registries));tag.putDouble("NetworkFeFraction",networkFeFraction);frequency.save(tag);tag.putBoolean("Eject",eject);tag.putInt("OutputMask",outputMask);tag.putLong("LightningRefund",lightningRefund);tag.putString("LightningRefundTier",legacyEhvRefund?"ehv":"hv");
         if(taskActive){var job=new CompoundTag();job.putInt("Remaining",remaining);job.putInt("Duration",totalTicks);job.putInt("Parallel",actualParallel);job.putInt("Cards",cardsSnapshot);job.putString("Recipe",taskRecipe.toString());job.putLong("PaidFe",paidFe);job.putLong("PaidLightning",paidLightning);job.put("Crystal",CrystalData.CODEC.encodeStart(net.minecraft.nbt.NbtOps.INSTANCE,taskCrystal).getOrThrow());var outputs=new ListTag();for(var stack:pending)outputs.add(stack.save(registries));job.put("Outputs",outputs);tag.put("Job",job);}
     }
     @Override public void loadTag(CompoundTag tag,HolderLookup.Provider registries){super.loadTag(tag,registries);inventory.deserializeNBT(registries,tag.getCompound("Inventory"));if(tag.contains("Energy"))energy.deserializeNBT(registries,tag.get("Energy"));frequency.load(tag);eject=!tag.contains("Eject")||tag.getBoolean("Eject");outputMask=tag.contains("OutputMask")?tag.getInt("OutputMask")&63:63;lightningRefund=Math.max(0,tag.getLong("LightningRefund"));pending.clear();taskActive=false;
+        networkFeFraction=tag.getDouble("NetworkFeFraction");if(!Double.isFinite(networkFeFraction)||networkFeFraction<0||networkFeFraction>=1)networkFeFraction=0;
+        legacyEhvRefund=lightningRefund>0&&(!tag.contains("LightningRefundTier")||tag.getString("LightningRefundTier").equals("ehv"));
         if(tag.contains("Job")){var job=tag.getCompound("Job");taskCrystal=CrystalData.CODEC.parse(NbtOps.INSTANCE,job.get("Crystal")).getOrThrow();taskRecipe=ResourceLocation.parse(job.getString("Recipe"));remaining=Math.max(0,job.getInt("Remaining"));totalTicks=Math.max(1,job.getInt("Duration"));actualParallel=Math.clamp(job.getInt("Parallel"),1,128);cardsSnapshot=Math.clamp(job.getInt("Cards"),0,4);paidFe=job.getLong("PaidFe");paidLightning=job.getLong("PaidLightning");for(var entry:job.getList("Outputs",Tag.TAG_COMPOUND))ItemStack.parse(registries,entry).ifPresent(pending::add);taskActive=true;}
     }
     @Override public AENetworkedBlockEntity getFrequencyBindingBlockEntity(){return this;}

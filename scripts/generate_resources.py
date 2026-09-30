@@ -8,8 +8,8 @@ zh={'item.overload_sim.blank_simulation_crystal':'空白模拟电鸣水晶','ite
 en={'item.overload_sim.blank_simulation_crystal':'Blank Simulation Crystal','item.overload_sim.simulation_crystal':'Simulation Crystal','item.overload_sim.perfect_simulation_crystal':'Perfect Simulation Crystal','block.overload_sim.overload_simulation_chamber':'Overload Simulation Chamber','itemGroup.overload_sim':'Overload Simulation','tooltip.overload_sim.profile':'Simulation: %s','tooltip.overload_sim.progress':'Cultivation strikes: %s','tooltip.overload_sim.missing':'Missing simulation profile; operation paused','tooltip.overload_sim.guide':'Hold G to open the AE2 guide','gui.overload_sim.frequency':'Frequency','gui.overload_sim.eject':'Auto eject','gui.overload_sim.enabled':'Enabled','gui.overload_sim.disabled':'Disabled','gui.overload_sim.power':'FE: %s  Parallel: %s / %s','gui.overload_sim.slot.0':'Reusable perfect simulation crystal','gui.overload_sim.slot.1':'Lightning Collapse Matrix: 4 parallel each, up to 32','gui.overload_sim.slot.2':'AE2 acceleration cards: up to 4','gui.overload_sim.slot.3':'Auxiliary recipe input (optional)'}
 for i,(a,b) in enumerate(zip(['待机','模拟中','等待 ME 网络上线','能量或材料不足','等待输出空间','配方缺失或冲突','档案缺失，已暂停','等待返还闪电能量'],['Idle','Simulating','Waiting for active ME network','Insufficient energy or input','Waiting for output space','Missing or ambiguous recipe','Missing profile; paused','Returning lightning energy'])):zh[f'status.overload_sim.{i}']=a;en[f'status.overload_sim.{i}']=b
 for i,(a,b) in enumerate(zip(['下','上','北','南','西','东'],['D','U','N','S','W','E'])):zh[f'direction.overload_sim.{i}']=a;en[f'direction.overload_sim.{i}']=b
-zh.update({'gui.overload_sim.energy':'FE：%s','gui.overload_sim.parallel':'并行：%s / %s'})
-en.update({'gui.overload_sim.energy':'FE: %s','gui.overload_sim.parallel':'Parallel: %s / %s','gui.overload_sim.eject':'Eject','gui.overload_sim.enabled':'On','gui.overload_sim.disabled':'Off'})
+zh.update({'gui.overload_sim.output_config':'输出面配置','gui.overload_sim.back':'返回模拟室','gui.overload_sim.clear_sides':'关闭所有输出面','gui.overload_sim.network_power':'FE 不足时从 AE 网络取得能量','gui.overload_sim.hv':'网络高压闪电：%s','gui.overload_sim.energy':'FE：%s','gui.overload_sim.parallel':'并行：%s / %s'})
+en.update({'gui.overload_sim.output_config':'Outputs','gui.overload_sim.back':'Return to Chamber','gui.overload_sim.clear_sides':'Disable all output faces','gui.overload_sim.network_power':'Draws AE power when local FE is insufficient','gui.overload_sim.hv':'Network HV: %s','gui.overload_sim.energy':'FE: %s','gui.overload_sim.parallel':'Parallel: %s / %s','gui.overload_sim.eject':'Eject','gui.overload_sim.enabled':'On','gui.overload_sim.disabled':'Off'})
 defaults=[('iron','mineral','raw_iron_block','raw_iron',1,'粗铁','Raw Iron'),('copper','mineral','raw_copper_block','raw_copper',1,'粗铜','Raw Copper'),('gold','mineral','raw_gold_block','raw_gold',1,'粗金','Raw Gold'),('diamond','mineral','diamond_block','diamond',1,'钻石','Diamond'),('netherite','mineral','netherite_block','netherite_ingot',1,'下界合金','Netherite'),('wheat','crop','wheat','wheat',2,'小麦','Wheat'),('carrot','crop','carrots','carrot',2,'胡萝卜','Carrot'),('potato','crop','potatoes','potato',2,'马铃薯','Potato'),('beetroot','crop','beetroots','beetroot',2,'甜菜根','Beetroot')]
 for tree,cn in [('oak','橡树'),('spruce','云杉'),('birch','白桦'),('jungle','丛林树'),('acacia','金合欢'),('dark_oak','深色橡树'),('cherry','樱花树')]:defaults.append((tree,'tree',tree+'_sapling',tree+'_log',4,cn,tree.replace('_',' ').title()))
 for key,kind,block,item,count,cn,name in defaults:
@@ -22,7 +22,7 @@ for key,kind,block,item,count,cn,name in defaults:
     cost=1000 if key!='netherite' else 16000
     outputs=[{'item':'minecraft:'+item,'count':count}]
     if key in ['wheat','beetroot']:outputs.append({'item':'minecraft:'+key+'_seeds','count':1,'chance':.5})
-    write(pathlib.Path('data/overload_sim/recipe/production')/(key+'.json'),{'type':'overload_sim:overload_simulation','profile':profile,'production':{'ticks':200,'fe':cost,'lightning':10 if key!='netherite' else 100,'outputs':outputs}})
+    write(pathlib.Path('data/overload_sim/recipe/production')/(key+'.json'),{'type':'overload_sim:overload_simulation','profile':profile,'production':{'ticks':200,'fe':cost,'lightning':1,'outputs':outputs}})
     zh['profile.overload_sim.'+key]=cn;en['profile.overload_sim.'+key]=name
 write(pathlib.Path('data/overload_sim/simulation_profile/mob.json'),{'kind':'mob','name':'profile.overload_sim.mob','icon':'minecraft:rotten_flesh'})
 zh['profile.overload_sim.mob']='生物战利品';en['profile.overload_sim.mob']='Mob loot'
@@ -30,7 +30,7 @@ write(pathlib.Path('data/overload_sim/recipe/binding/mob.json'),{'type':'overloa
 for mob in ['wither','ender_dragon']:
     write(pathlib.Path('data/overload_sim/recipe/binding')/('deny_'+mob+'.json'),{'type':'overload_sim:mob_crystal_binding','profile':'overload_sim:mob','priority':1000,'mob':{'entity':'minecraft:'+mob,'disabled':True}})
 write(pathlib.Path('data/overload_sim/recipe/cultivation/default.json'),{'type':'overload_sim:crystal_cultivation','profile':'overload_sim:any','cultivation':{'required':10,'increment':1}})
-write(pathlib.Path('data/overload_sim/recipe/production/mob.json'),{'type':'overload_sim:overload_simulation','profile':'overload_sim:mob','production':{'ticks':200,'fe':1000,'lightning':10,'entity_loot':True}})
+write(pathlib.Path('data/overload_sim/recipe/production/mob.json'),{'type':'overload_sim:overload_simulation','profile':'overload_sim:mob','production':{'ticks':200,'fe':1000,'lightning':1,'entity_loot':True}})
 write(pathlib.Path('data/overload_sim/recipe/blank_simulation_crystal.json'),{'type':'minecraft:crafting_shapeless','ingredients':[{'item':'ae2lt:electro_chime_crystal'},{'item':'ae2:fluix_crystal'},{'item':'minecraft:amethyst_shard'}],'result':{'id':'overload_sim:blank_simulation_crystal','count':1}})
 write(pathlib.Path('data/overload_sim/recipe/overload_simulation_chamber.json'),{'type':'minecraft:crafting_shaped','pattern':['GPG','IMI','GCG'],'key':{'G':{'item':'ae2:quartz_glass'},'P':{'item':'ae2:engineering_processor'},'I':{'item':'minecraft:iron_ingot'},'M':{'item':'ae2lt:lightning_collapse_matrix'},'C':{'item':'overload_sim:blank_simulation_crystal'}},'result':{'id':'overload_sim:overload_simulation_chamber','count':1}})
 for name in ['blank_simulation_crystal','simulation_crystal','perfect_simulation_crystal']:write(pathlib.Path('assets/overload_sim/models/item')/(name+'.json'),{'parent':'minecraft:item/generated','textures':{'layer0':'overload_sim:item/'+name}})
@@ -60,19 +60,19 @@ item_ids:
 
 ## 雷击绑定
 
-把空白水晶放入闪电收集器。以收集器为中心，在同一高度的 5×5 平面填满 24 个相同的粗矿块；钻石和下界合金使用对应储存块。收集器成功收集自然雷击后，这些方块被消耗，水晶记录对应矿物。
+把空白水晶放入闪电收集器。以收集器为中心，在同一高度的 5×5 平面填满 24 个相同的粗矿块；钻石和下界合金使用对应储存块。收集器成功收集雷击后，这些方块被消耗，水晶记录对应矿物。
 
 作物使用 24 格耕地上方的同类作物，绑定时只消耗作物。树木使用 24 格泥土类方块上的同类树苗，保留土地。默认支持铁、铜、金、钻石、下界合金、四种农作物和七种树苗。
 
-左手拿空白水晶受到自然雷击时，有 10% 概率记录半径 5 格内最近的存活生物。只记录生物类型，不复制装备、背包或个体数据。默认禁止凋灵和末影龙。
+左手拿空白水晶受到雷击时，有 10% 概率记录半径 5 格内最近的存活生物。只记录生物类型，不复制装备、背包或个体数据。默认禁止凋灵和末影龙。
 
-已绑定水晶再接受 10 次有效自然雷击后成为完美水晶。可以继续放在收集器中培养，也可以拿在左手受雷击。指令生成和人工雷击默认不推进；整合包作者可在配方中允许人工雷击。
+已绑定水晶再接受 10 次有效雷击后成为完美水晶。可以继续放在收集器中培养，也可以拿在左手受雷击。自然雷、指令雷和人工雷都可绑定与培养；整合包作者可通过 allow_artificial=false 禁止人工雷。
 
 ## 模拟室
 
-模拟室接入在线 ME 网络并取得频道，同时接收 FE 电力与 EHV 闪电能量。将完美水晶放入第一个槽，模板可重复使用。默认一次操作需要 1000 FE、10 EHV 和 200 tick；下界合金成本更高。
+模拟室接入在线 ME 网络并取得频道，使用高压闪电（HV），并按 AE2 标准换算从 ME 网络取得 FE；也支持外部 FE 供电。将完美水晶放入第一个槽，模板可重复使用。默认一次操作需要 1000 FE、1 HV 和 200 tick；下界合金成本更高。
 
-闪电坍缩矩阵放第二槽：无矩阵为 1 并行，每个矩阵提供 4 并行，最多 32 个即 128 并行。第三槽可放最多 4 张 AE2 加速卡，每张将耗时减半。第四槽供自定义配方消耗辅助材料。
+闪电坍缩矩阵放第二槽：无矩阵为 1 并行，每个矩阵提供 4 并行，最多 32 个即 128 并行。右上角升级槽可放最多 4 张 AE2 加速卡，每张将耗时减半。第四槽供自定义配方消耗辅助材料。
 
 能量和辅助材料在批次开始时按实际并行一次扣除。随机战利品每次操作独立抽取，开始后固定并随任务保存。输出堵塞时等待空间；网络离线时暂停。拆除尚未完成的任务会丢失该任务，不能提前取得产物。
 

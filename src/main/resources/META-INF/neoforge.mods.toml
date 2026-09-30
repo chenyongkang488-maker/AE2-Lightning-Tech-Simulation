@@ -3,7 +3,7 @@ loaderVersion="[4,)"
 license="MIT"
 [[mods]]
 modId="overload_sim"
-version="0.1.0-alpha.1"
+version="0.1.0-alpha.2"
 displayName="Overload Simulation"
 description='''A data-driven AE2 Lightning Tech addon for lightning-grown simulation crystals and resource simulation.'''
 [[mixins]]

@@ -1,0 +1,15 @@
+{
+  "includes": ["../common/common.json"],
+  "generatedBackground": {"width": 90, "height": 96},
+  "text": {"dialog_title": {"text": {"translate": "gui.overload_sim.output_config"}, "position": {"left": 8, "top": 6}}},
+  "widgets": {
+    "return": {"left": 68, "top": -5, "width": 20, "height": 20},
+    "clear": {"left": 74, "top": 79},
+    "side0": {"left": 32, "top": 68},
+    "side1": {"left": 32, "top": 24},
+    "side2": {"left": 32, "top": 46},
+    "side3": {"left": 54, "top": 68},
+    "side4": {"left": 10, "top": 46},
+    "side5": {"left": 54, "top": 46}
+  }
+}
