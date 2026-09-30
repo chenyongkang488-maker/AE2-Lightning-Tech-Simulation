@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "GPG",
+    "IMI",
+    "GCG"
+  ],
+  "key": {
+    "G": {
+      "item": "ae2:quartz_glass"
+    },
+    "P": {
+      "item": "ae2:engineering_processor"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "M": {
+      "item": "ae2lt:lightning_collapse_matrix"
+    },
+    "C": {
+      "item": "overload_sim:blank_simulation_crystal"
+    }
+  },
+  "result": {
+    "id": "overload_sim:overload_simulation_chamber",
+    "count": 1
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "overload_sim:block/overload_simulation_chamber"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "type": "overload_sim:overload_simulation",
+  "profile": "overload_sim:mob",
+  "production": {
+    "ticks": 200,
+    "fe": 1000,
+    "lightning": 10,
+    "entity_loot": true
+  }
+}

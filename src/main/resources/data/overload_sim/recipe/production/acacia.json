@@ -1,0 +1,15 @@
+{
+  "type": "overload_sim:overload_simulation",
+  "profile": "overload_sim:acacia",
+  "production": {
+    "ticks": 200,
+    "fe": 1000,
+    "lightning": 10,
+    "outputs": [
+      {
+        "item": "minecraft:acacia_log",
+        "count": 4
+      }
+    ]
+  }
+}

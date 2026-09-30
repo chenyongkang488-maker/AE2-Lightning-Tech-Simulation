@@ -1,0 +1,9 @@
+{
+  "type": "overload_sim:mob_crystal_binding",
+  "profile": "overload_sim:mob",
+  "priority": 1000,
+  "mob": {
+    "entity": "minecraft:ender_dragon",
+    "disabled": true
+  }
+}

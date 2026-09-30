@@ -1,0 +1,9 @@
+{
+  "type": "overload_sim:mob_crystal_binding",
+  "profile": "overload_sim:mob",
+  "mob": {
+    "entity": "*",
+    "radius": 5,
+    "probability": 0.1
+  }
+}

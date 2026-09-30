@@ -1,0 +1,13 @@
+{
+  "type": "overload_sim:crystal_binding",
+  "profile": "overload_sim:jungle",
+  "world": {
+    "mode": "tree",
+    "material": {
+      "id": "minecraft:jungle_sapling"
+    },
+    "soil": {
+      "id": "#minecraft:dirt"
+    }
+  }
+}

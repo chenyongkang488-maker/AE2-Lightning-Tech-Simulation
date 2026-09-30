@@ -1,0 +1,13 @@
+{
+  "type": "overload_sim:crystal_binding",
+  "profile": "overload_sim:wheat",
+  "world": {
+    "mode": "crop",
+    "material": {
+      "id": "minecraft:wheat"
+    },
+    "soil": {
+      "id": "minecraft:farmland"
+    }
+  }
+}

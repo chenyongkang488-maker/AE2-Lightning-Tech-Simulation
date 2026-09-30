@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cube_all",
+  "textures": {
+    "all": "overload_sim:block/overload_simulation_chamber"
+  }
+}

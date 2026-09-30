@@ -1,0 +1,13 @@
+{
+  "type": "overload_sim:crystal_binding",
+  "profile": "overload_sim:potato",
+  "world": {
+    "mode": "crop",
+    "material": {
+      "id": "minecraft:potatoes"
+    },
+    "soil": {
+      "id": "minecraft:farmland"
+    }
+  }
+}

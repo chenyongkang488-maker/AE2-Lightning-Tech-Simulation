@@ -26,35 +26,38 @@
 ### Task 1: 工程与核心规则
 Files: build.gradle; core/SimulationRules.java; test/core/SimulationRulesTest.java。
 Interfaces: parallel(int)、duration(int,int)、batchEnergy(long,int)、withinRadius(double,double)、chance(double,double)。
-- [ ] 写矩阵 0/1/2/32、非法数量、速度下限、概率边界和费用溢出的测试，运行看到失败。
-- [ ] 实现核心规则，测试通过，建立基线提交。
+- [x] 写矩阵 0/1/2/32、非法数量、速度下限、概率边界和费用溢出的测试，运行看到失败。
+- [x] 实现核心规则，测试通过，建立基线提交。
 
 ### Task 2: 数据、API 与水晶
 Files: ModContent、api/CrystalData、api/CrystalDataAccess、data/SimulationRecipe、data/SimulationData、api/SimulationEvents。
 Interfaces: 绑定/培养/生产四种 RecipeType 及 Codec；档案通过可重载 JSON 管理；稳定组件持久化和网络编解码。
-- [ ] 验证错误数据拒绝、稳定档案和不可变组件；实现注册、tooltip、创造标签和示例配方。
-- [ ] 构建检查序列化与客户端分离，提交。
+- [x] 验证错误数据拒绝、稳定档案和不可变组件；实现注册、tooltip、创造标签和示例配方。
+- [x] 构建检查序列化与客户端分离，提交。
 
 ### Task 3: 收集器与副手雷击
-Files: compat/CollectorMixin、compat/CollectorInventoryMixin、binding/CrystalBinding、binding/PlayerLightningHandler。
+Files: mixin/CollectorMixin、mixin/CollectorInventoryMixin、binding/CrystalBinding、binding/PlayerLightningHandler。
 Interfaces: onCaptured(collector,natural)、onPlayerStrike(player,bolt)，提交前取消事件与完成通知。
-- [ ] GameTest 覆盖 24 格同类材料、错一格保持、土壤保留、培养与最近生物；同雷电重复触发只执行一次。
-- [ ] 用固定 2.1.0 JAR 字节码确认注入点；实现服务端流程，提交。
+- [x] GameTest 覆盖 24 格同类材料、错一格保持、土壤保留、培养与最近生物；同雷电重复触发只执行一次。
+- [x] 用固定 2.1.0 JAR 字节码确认注入点；实现服务端流程，提交。
 
 ### Task 4: 模拟室、升级与网络
 Files: machine/SimulationChamberBlock、SimulationChamberBlockEntity、SimulationMenu、client/SimulationScreen。
 Interfaces: FrequencyBindingHost、FrequencyBindingMenuHost；FE/item capabilities；持久任务快照。
-- [ ] 测试并行费用、输出容量、任务恢复、邻接部分插入；实现库存、FE、EHV 提取和无线生命周期。
-- [ ] GUI 展示进度、能源、实际并行与状态；矩阵/卡/水晶工作时锁定；输出六面配置。
-- [ ] 生物战利品直接生成，不生成真实实体；提交。
+- [x] 测试并行费用、输出容量、任务恢复、邻接部分插入；实现库存、FE、EHV 提取和无线生命周期。
+- [x] GUI 展示进度、能源、实际并行与状态；矩阵/卡/水晶工作时锁定；输出六面配置。
+- [x] 生物战利品直接生成，不生成真实实体；提交。
 
 ### Task 5: Blockbench 外观与指南
 Files: art/*.bbmodel；assets/overload_sim；GuideME pages。
-- [ ] 参考 AE2LT 原资源的粉白配色；制作 3 种水晶和模拟室可编辑模型/贴图。
-- [ ] 在 Blockbench 打开项目并检查/导出；模型资源校验；G 键指南、中文翻译和配方，提交。
+- [x] 参考 AE2LT 原资源的粉白配色；制作 3 种水晶和模拟室可编辑模型/贴图。
+- [x] 在 Blockbench 打开项目并检查/导出；模型资源校验；G 键指南、中文翻译和配方，提交。
 
 ### Task 6: 验证与交付
-Files: README、docs/API.md、scripts/bootstrap.ps1、scripts/install-test.ps1。
-- [ ] build、JUnit 与 GameTest；修复发现的问题，独立代码审查。
-- [ ] 将构建 JAR 安装到既有 PCL 测试实例，实际客户端启动检查；记录未验证项。
-- [ ] 版本标签和回滚说明；保留源码、Blockbench 项目与可测试 JAR。
+Files: README、docs/api.md、scripts/bootstrap.ps1、scripts/install-test.ps1。
+- [x] build、JUnit 与 GameTest；修复发现的问题，独立代码审查。
+- [x] 将构建 JAR 安装到既有 PCL 测试实例；开发客户端启动到主菜单并验证资源加载。未验证交互记录在 docs/verification.md。
+- [x] 版本标签和回滚说明；保留源码、Blockbench 项目与可测试 JAR。
+
+## Alpha 交付边界
+完成首版代码、资源和自动测试。PCL 实际游戏界面、长按 G、无线网络长期行为及坏数据包重载保留后续人工联调，不作为本轮已验证项。

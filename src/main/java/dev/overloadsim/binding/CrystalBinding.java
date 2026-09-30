@@ -1,0 +1,53 @@
+package dev.overloadsim.binding;
+import java.util.*;
+import java.util.function.Supplier;
+import dev.overloadsim.ModContent;
+import dev.overloadsim.api.*;
+import dev.overloadsim.data.*;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.common.NeoForge;
+
+public final class CrystalBinding {
+    private CrystalBinding(){}
+    public static ItemStack bindStructure(ServerLevel level,BlockPos center,ItemStack stack,boolean natural){return bindStructure(level,center,stack,natural,()->stack);}
+    public static ItemStack bindStructure(ServerLevel level,BlockPos center,ItemStack stack,boolean natural,Supplier<ItemStack> current){
+        if(!stack.is(ModContent.BLANK.get()))return stack;
+        var original=stack.copy();
+        var matches=SimulationData.recipes(level,SimulationRecipe.Kind.BINDING).stream().filter(h->natural||h.value().data().allowArtificial()).filter(h->SimulationData.profile(h.value().data().profile()).isPresent()).filter(h->structure(level,center,h.value().data().world()).isPresent()).toList();
+        var chosen=SimulationData.select(matches);if(chosen.isEmpty())return stack;
+        var recipe=chosen.get().value();var snapshots=structure(level,center,recipe.data().world()).orElseThrow();
+        var data=new CrystalData(recipe.data().profile(),Optional.empty(),0,1);
+        if(NeoForge.EVENT_BUS.post(new SimulationEvents.BeforeBinding(level,center,data)).isCanceled())return stack;
+        if(current.get()!=stack||!ItemStack.matches(original,current.get()))return stack;
+        if(structure(level,center,recipe.data().world()).filter(snapshots::equals).isEmpty())return stack;
+        if(!snapshots.entrySet().stream().allMatch(e->level.hasChunkAt(e.getKey()) && level.getBlockState(e.getKey()).equals(e.getValue()) && level.getBlockEntity(e.getKey())==null))return stack;
+        for(var pos:snapshots.keySet())level.setBlockAndUpdate(pos,Blocks.AIR.defaultBlockState());
+        return CrystalDataAccess.bound(data);
+    }
+    private static Optional<Map<BlockPos,BlockState>> structure(ServerLevel level,BlockPos center,SimulationRecipe.WorldRule rule){
+        if(rule.material().isEmpty()||!Set.of("mineral","crop","tree").contains(rule.mode()))return Optional.empty();
+        if(rule.condition().isPresent()&&!SimulationExtensions.binding(rule.condition().get(),level,center))return Optional.empty();
+        var states=new LinkedHashMap<BlockPos,BlockState>();
+        for(int x=-2;x<=2;x++)for(int z=-2;z<=2;z++){
+            if(x==0&&z==0)continue;var ground=center.offset(x,0,z);var material=rule.mode().equals("mineral")?ground:ground.above();
+            if(!level.hasChunkAt(ground)||!level.hasChunkAt(material))return Optional.empty();
+            if(!rule.mode().equals("mineral")&&(rule.soil().isEmpty()||!rule.soil().get().matches(level.getBlockState(ground))))return Optional.empty();
+            var state=level.getBlockState(material);if(!rule.material().get().matches(state)||level.getBlockEntity(material)!=null)return Optional.empty();states.put(material,state);
+        }
+        return Optional.of(states);
+    }
+    public static ItemStack cultivate(ServerLevel level,BlockPos pos,ItemStack stack,boolean natural){
+        if(!stack.is(ModContent.BOUND.get()))return stack;var data=CrystalDataAccess.read(stack);if(data.isEmpty()||SimulationData.profile(data.get().profile()).isEmpty())return stack;
+        var matches=SimulationData.recipes(level,SimulationRecipe.Kind.CULTIVATION).stream().filter(h->h.value().data().profile().equals(data.get().profile())||h.value().data().profile().equals(ModContent.id("any"))).filter(h->natural||h.value().data().allowArtificial()).toList();
+        var chosen=SimulationData.select(matches);if(chosen.isEmpty())return stack;
+        var original=stack.copy();
+        if(NeoForge.EVENT_BUS.post(new SimulationEvents.BeforeCultivation(level,pos,data.get())).isCanceled()||!ItemStack.matches(original,stack))return stack;
+        var next=data.get().advance(chosen.get().value().data().cultivation().increment());
+        var result=next.strikes()>=chosen.get().value().data().cultivation().required()?CrystalDataAccess.perfect(next):CrystalDataAccess.bound(next);
+        return result;
+    }
+}

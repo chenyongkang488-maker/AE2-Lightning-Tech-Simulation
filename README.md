@@ -1,0 +1,63 @@
+# 过载模拟 Overload Simulation
+
+Minecraft **1.21.1 / NeoForge 21.1.252** 的 AE2 闪电科技附属模组。当前版本为 **0.1.0-alpha.1 测试原型**。
+
+项目在 `D:\MinecraftDev\OverloadSimulation`，独立 Git 仓库的 `codex/initial-prototype` 分支上。原来的 1.19.2 工程不参与构建。
+
+## 游戏内容
+
+- 三阶段模拟电鸣水晶：空白、绑定、完美。数据使用可序列化且同步的 Data Component，完美水晶身份固定，便于 AE2 模板识别。
+- 闪电收集器成功接收自然雷击后，扫描水平 5×5 的 24 格。矿物消耗同种材料块；作物、树苗消耗植物并保留土壤。
+- 左手空白水晶受自然雷击，10% 概率记录球形半径 5 格内最近的存活 Mob 类型。同一道雷不会重复抽取或培养。
+- 绑定后额外 10 次有效雷击变成完美水晶，可重复作为模拟室模板。
+- 模拟室消耗 FE 和 ME 网络中的 EHV。矩阵 0 个为 1 并行，1 个为 4 并行，32 个为 128 并行；最多 4 张 AE2 加速卡。
+- 批次开始时按实际并行扣费并固定随机产物。任务、剩余时间和待输出物品随区块保存；网络离线暂停，输出堵塞等待。
+- 标准物品与 FE 接口、六面自动弹出、闪电科技共享过载频率界面及记忆卡设置。
+- 长按 G 打开 AE2/GuideME 的对应指南页面。
+
+默认档案为铁、铜、金、钻石、下界合金，小麦、胡萝卜、马铃薯、甜菜根，七种树苗及生物战利品。默认排除凋灵和末影龙，可通过数据包覆盖。
+
+矿物使用 24 个粗矿块；钻石、下界合金用对应储存块。收集器中心不计入。作物种在收集器所在高度的耕地上方，树苗种在相同高度的泥土类方块上方。默认只认可原模组标记的自然雷击，指令 `/summon lightning_bolt` 默认不推进。
+
+生物战利品按无玩家的死亡上下文抽取，不复制装备、背包、个体 NBT，也不假造玩家击杀或抢夺。拆除正在加工的机器会丢失未完成任务和已支付费用；已经加工完但尚未装入输出槽的物品会掉落。机器运行中锁定输入槽。
+
+## 构建与运行
+
+需要 Java 21 JDK。四个前置的下载地址及 SHA-256 固定在 `scripts/dependencies.json`，二进制依赖不会提交到 Git，也不打包进附属模组。
+
+```powershell
+.\scripts\bootstrap.ps1
+.\scripts\build.ps1 -GameTests
+.\scripts\build.ps1 -Client
+.\scripts\install-test.ps1
+```
+
+本机脚本优先使用 D 盘已有的 Gradle 8.8；其他机器可使用 Gradle Wrapper 下载 8.8。常规构建产物为 `build/libs/overload_sim-0.1.0-alpha.1.jar`，sources jar 提供源码。
+
+前置版本固定为 AE2 19.2.17、AE2 Lightning Tech Reborn 2.1.0、Thunderbolt Core Reborn 2.0.0、GuideME 21.1.19。升级前置后需要复测 collector 的两处 Mixin 和 EHV 桥接接口。
+
+## Blockbench 贴图
+
+`art/overload_sim_pink_white.bbmodel` 是在 Blockbench 5.2.1 中生成、绘画并保存的工程。三种水晶与模拟室均为 32×32 原创粉白像素贴图。工程包含全部纹理，可直接选择并绘制；保存纹理后重新构建。
+
+本地插件 `art/overload_sim_art.js` 是可重复生成基础素材的工具：Blockbench → 文件 → 插件 → 从文件加载，工具菜单 → 生成过载模拟粉白素材。生成会覆盖工程及四张贴图；已手绘的修改应先用 Git 保存。
+
+## 魔改 API
+
+见 [数据包与 Java API](docs/api.md)，可 `/reload` 的四种专用配方与 simulation_profile、命名输出提供器、结构条件、实体条件和可取消前置事件。当前不直接依赖 KubeJS；已有 Java API 可供桥接模组使用。AE2 支持通过总线运输及具有稳定组件的模板，原型没有实现按需自动合成的原生 AE2 CPU 接口。
+
+## Git 回滚
+
+```powershell
+git log --oneline
+git diff
+git switch -c codex/next-feature
+git restore --source <提交号> -- <文件路径>
+git revert <提交号>
+```
+
+`git revert` 会记录反向提交，适合整体撤销已保存的改动。先提交当前工作再切换历史版本。没有配置远程仓库，也没有上传或发布。
+
+## 测试边界
+
+JUnit 检查并行、加速、概率边界和溢出；服务器 GameTest 检查实际物品数据、方块消耗、耕地保留、培养和依赖集成。游戏内长期存档、多人权限及更多第三方生物仍需后续联调。测试报告位于 `build/test-results` 和 `run-gametest`，发布前请重新运行测试。

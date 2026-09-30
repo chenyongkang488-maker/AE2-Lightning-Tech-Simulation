@@ -1,0 +1,13 @@
+{
+  "type": "overload_sim:crystal_binding",
+  "profile": "overload_sim:birch",
+  "world": {
+    "mode": "tree",
+    "material": {
+      "id": "minecraft:birch_sapling"
+    },
+    "soil": {
+      "id": "#minecraft:dirt"
+    }
+  }
+}

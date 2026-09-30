@@ -1,0 +1,15 @@
+{
+  "type": "overload_sim:overload_simulation",
+  "profile": "overload_sim:spruce",
+  "production": {
+    "ticks": 200,
+    "fe": 1000,
+    "lightning": 10,
+    "outputs": [
+      {
+        "item": "minecraft:spruce_log",
+        "count": 4
+      }
+    ]
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "type": "overload_sim:crystal_binding",
+  "profile": "overload_sim:beetroot",
+  "world": {
+    "mode": "crop",
+    "material": {
+      "id": "minecraft:beetroots"
+    },
+    "soil": {
+      "id": "minecraft:farmland"
+    }
+  }
+}

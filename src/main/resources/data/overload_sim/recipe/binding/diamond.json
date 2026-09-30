@@ -1,0 +1,10 @@
+{
+  "type": "overload_sim:crystal_binding",
+  "profile": "overload_sim:diamond",
+  "world": {
+    "mode": "mineral",
+    "material": {
+      "id": "minecraft:diamond_block"
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "type": "overload_sim:crystal_cultivation",
+  "profile": "overload_sim:any",
+  "cultivation": {
+    "required": 10,
+    "increment": 1
+  }
+}
