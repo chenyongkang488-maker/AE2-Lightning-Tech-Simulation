@@ -34,7 +34,7 @@
   "gui.overload_sim.output_config": "Outputs",
   "gui.overload_sim.back": "Return to Chamber",
   "gui.overload_sim.clear_sides": "Disable all output faces",
-  "gui.overload_sim.network_power": "Draws AE power when local FE is insufficient",
+  "gui.overload_sim.network_power": "Continuously charges FE from an online ME grid",
   "gui.overload_sim.hv": "Network HV: %s",
   "gui.overload_sim.energy": "FE: %s",
   "gui.overload_sim.parallel": "Parallel: %s / %s",

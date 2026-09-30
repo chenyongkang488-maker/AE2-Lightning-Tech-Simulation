@@ -34,7 +34,7 @@
   "gui.overload_sim.output_config": "输出面配置",
   "gui.overload_sim.back": "返回模拟室",
   "gui.overload_sim.clear_sides": "关闭所有输出面",
-  "gui.overload_sim.network_power": "FE 不足时从 AE 网络取得能量",
+  "gui.overload_sim.network_power": "在线时持续从 AE 网络充入 FE",
   "gui.overload_sim.hv": "网络高压闪电：%s",
   "gui.overload_sim.energy": "FE：%s",
   "gui.overload_sim.parallel": "并行：%s / %s",

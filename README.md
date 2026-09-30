@@ -1,8 +1,8 @@
 # 过载模拟 Overload Simulation
 
-Minecraft **1.21.1 / NeoForge 21.1.252** 的 AE2 闪电科技附属模组。当前版本为 **0.1.0-alpha.2 测试原型**。
+Minecraft **1.21.1 / NeoForge 21.1.252** 的 AE2 闪电科技附属模组。当前版本为 **0.1.0-alpha.3 测试原型**。
 
-项目在 `D:\MinecraftDev\OverloadSimulation`，独立 Git 仓库的 `codex/initial-prototype` 分支上。原来的 1.19.2 工程不参与构建。
+项目在 `D:\MinecraftDev\OverloadSimulation`，独立 Git 仓库的 `codex/ui-hv-network-energy` 分支上。原来的 1.19.2 工程不参与构建。
 
 ## 游戏内容
 
@@ -10,7 +10,8 @@ Minecraft **1.21.1 / NeoForge 21.1.252** 的 AE2 闪电科技附属模组。当�
 - 闪电收集器成功接收雷击后，扫描水平 5×5 的 24 格。矿物消耗同种材料块；作物、树苗消耗植物并保留土壤。
 - 左手空白水晶受雷击，10% 概率记录球形半径 5 格内最近的存活 Mob 类型。同一道雷不会重复抽取或培养。
 - 绑定后额外 10 次有效雷击变成完美水晶，可重复作为模拟室模板。
-- 每次操作消耗 1 个 ME 网络高压闪电（HV）；FE 不足时按 AE2 的 PowerUnit 标准换算直接从网络取得电力，也支持外部 FE。矩阵 0 个为 1 并行，1 个为 4 并行，32 个为 128 并行；最多 4 张 AE2 加速卡。
+- 每次操作消耗 1 个 ME 网络高压闪电（HV）；在线时持续按 AE2 的 PowerUnit 标准换算从网络充入 FE，默认每 tick 最多 10,000 FE，缓冲上限 2,000,000 FE，也支持外部 FE。矩阵 0 个为 1 并行，1 个为 4 并行，32 个为 128 并行。
+- 右上角使用 AE2 原生四格展开升级栏，每格一张加速卡；可以手持加速卡直接右键机器插入。旧版堆叠卡槽自动迁移；运行中的批次保留原加速快照。
 - 批次开始时按实际并行扣费并固定随机产物。任务、剩余时间和待输出物品随区块保存；网络离线暂停，输出堵塞等待。
 - 标准物品与 FE 接口、六面自动弹出、闪电科技共享过载频率界面及记忆卡设置。
 - 长按 G 打开 AE2/GuideME 的对应指南页面。
@@ -32,7 +33,7 @@ Minecraft **1.21.1 / NeoForge 21.1.252** 的 AE2 闪电科技附属模组。当�
 .\scripts\install-test.ps1
 ```
 
-本机脚本优先使用 D 盘已有的 Gradle 8.8；其他机器可使用 Gradle Wrapper 下载 8.8。常规构建产物为 `build/libs/overload_sim-0.1.0-alpha.2.jar`，sources jar 提供源码。
+本机脚本优先使用 D 盘已有的 Gradle 8.8；其他机器可使用 Gradle Wrapper 下载 8.8。常规构建产物为 `build/libs/overload_sim-0.1.0-alpha.3.jar`，sources jar 提供源码。
 
 前置版本固定为 AE2 19.2.17、AE2 Lightning Tech Reborn 2.1.0、Thunderbolt Core Reborn 2.0.0、GuideME 21.1.19。升级前置后需要复测 collector 的两处 Mixin 和 高压闪电桥接接口。
 

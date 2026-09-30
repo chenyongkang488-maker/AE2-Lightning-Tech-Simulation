@@ -13,6 +13,84 @@ import java.util.Optional;
 @PrefixGameTestTemplate(false)
 public class SimulationGameTests {
     @GameTest(template="empty")
+    public static void heldSpeedCardsFillFourSeparateSlots(GameTestHelper h){
+        var level=h.getLevel();var pos=h.absolutePos(new BlockPos(5,1,5));level.setBlockAndUpdate(pos,ModContent.CHAMBER.get().defaultBlockState());
+        var machine=(dev.overloadsim.machine.SimulationChamberBlockEntity)level.getBlockEntity(pos);
+        var player=new net.minecraft.server.level.ServerPlayer(level.getServer(),level,new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(),"upgrade-test"),net.minecraft.server.level.ClientInformation.createDefault());
+        var speed=net.minecraft.core.registries.BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.parse("ae2:speed_card"));
+        player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND,new ItemStack(speed,6));
+        var hit=new net.minecraft.world.phys.BlockHitResult(pos.getCenter(),net.minecraft.core.Direction.UP,pos,false);
+        level.getBlockState(pos).useItemOn(player.getMainHandItem(),level,player,net.minecraft.world.InteractionHand.MAIN_HAND,hit);
+        h.assertTrue(player.getMainHandItem().getCount()==2,"normal held-card click inserts four cards and preserves excess");
+        var upgrades=((appeng.api.upgrades.IUpgradeableObject)machine).getUpgrades();
+        h.assertTrue(upgrades.size()==4&&upgrades.getInstalledUpgrades(speed)==4,"four native upgrade slots installed");
+        for(int i=0;i<4;i++)h.assertTrue(upgrades.getStackInSlot(i).getCount()==1&&upgrades.getSlotLimit(i)==1,"one card per slot");
+        level.getBlockState(pos).useItemOn(player.getMainHandItem(),level,player,net.minecraft.world.InteractionHand.MAIN_HAND,hit);
+        h.assertTrue(player.getMainHandItem().getCount()==2,"full panel preserves held cards");
+        var drops=new java.util.ArrayList<ItemStack>();machine.addAdditionalDrops(level,pos,drops);
+        h.assertTrue(drops.stream().filter(s->s.is(speed)).mapToInt(ItemStack::getCount).sum()==4,"breaking returns all four cards");
+        machine.clearContent();player.getAbilities().instabuild=true;
+        level.getBlockState(pos).useItemOn(player.getMainHandItem(),level,player,net.minecraft.world.InteractionHand.MAIN_HAND,hit);
+        h.assertTrue(player.getMainHandItem().getCount()==2&&upgrades.getInstalledUpgrades(speed)==2,"creative insertion preserves held stack");
+        player.discard();h.succeed();
+    }
+    @GameTest(template="empty")
+    public static void oldStackedCardsMigrateAndPersistWithoutMovingOutputs(GameTestHelper h){
+        var level=h.getLevel();var pos=h.absolutePos(new BlockPos(5,1,5));level.setBlockAndUpdate(pos,ModContent.CHAMBER.get().defaultBlockState());
+        var machine=(dev.overloadsim.machine.SimulationChamberBlockEntity)level.getBlockEntity(pos);
+        var speed=net.minecraft.core.registries.BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.parse("ae2:speed_card"));
+        var old=new net.neoforged.neoforge.items.ItemStackHandler(13);var cards=new ItemStack(speed,4);
+        cards.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,net.minecraft.network.chat.Component.literal("legacy cards"));
+        old.setStackInSlot(2,cards);old.setStackInSlot(3,new ItemStack(net.minecraft.world.item.Items.WHEAT,2));old.setStackInSlot(4,new ItemStack(net.minecraft.world.item.Items.DIAMOND,5));
+        var tag=machine.saveWithoutMetadata(level.registryAccess());tag.remove("Upgrades");tag.put("Inventory",old.serializeNBT(level.registryAccess()));machine.loadTag(tag,level.registryAccess());
+        var upgrades=((appeng.api.upgrades.IUpgradeableObject)machine).getUpgrades();
+        for(int i=0;i<4;i++)h.assertTrue(upgrades.getStackInSlot(i).getCount()==1&&ItemStack.isSameItemSameComponents(cards,upgrades.getStackInSlot(i)),"migration preserves each card and components");
+        var saved=machine.saveWithoutMetadata(level.registryAccess());machine.loadTag(saved,level.registryAccess());
+        h.assertTrue(upgrades.getInstalledUpgrades(speed)==4&&machine.inventory().getStackInSlot(2).isEmpty(),"reload does not duplicate migrated cards");
+        h.assertTrue(machine.inventory().getStackInSlot(3).getCount()==2&&machine.inventory().getStackInSlot(4).getCount()==5,"auxiliary and output slots stay unchanged");h.succeed();
+    }
+    @GameTest(template="empty",timeoutTicks=280)
+    public static void idleMachineContinuouslyRefillsAndStopsAtCapacity(GameTestHelper h){
+        var machine=capacityMachine(h);machine.inventory().setStackInSlot(0,ItemStack.EMPTY);machine.energy().deserializeNBT(h.getLevel().registryAccess(),net.minecraft.nbt.IntTag.valueOf(0));
+        h.runAtTickTime(80,()->{h.assertTrue(machine.getMainNode().isActive(),"online idle machine");int before=machine.energy().getEnergyStored();h.assertTrue(before>0,"idle machine charges without a template");
+            h.runAfterDelay(3,()->{h.assertTrue(machine.energy().getEnergyStored()-before==3*10000,"charge continuously at 10000 FE per tick");});});
+        h.runAtTickTime(240,()->{h.assertTrue(machine.energy().getEnergyStored()==2_000_000,"stop at FE capacity");
+            h.getLevel().setBlockAndUpdate(machine.getBlockPos().west(),Blocks.AIR.defaultBlockState());machine.energy().deserializeNBT(h.getLevel().registryAccess(),net.minecraft.nbt.IntTag.valueOf(0));
+            h.runAfterDelay(20,()->{h.assertTrue(machine.energy().getEnergyStored()==0&&!machine.getMainNode().isActive(),"unpowered grid cannot create FE");h.succeed();});});
+    }
+    @GameTest(template="empty",timeoutTicks=120)
+    public static void runningBatchChargesAndKeepsItsSpeedSnapshot(GameTestHelper h){
+        var machine=capacityMachine(h);machine.getUpgrades().clear();
+        h.runAtTickTime(80,()->{h.assertTrue(machine.busy()&&machine.totalTicks()==200,"batch snapshots zero speed cards");assertPaidBatch(h,machine,4000,4);
+            int before=machine.energy().getEnergyStored();machine.getUpgrades().addItems(appeng.core.definitions.AEItems.SPEED_CARD.stack(4));
+            h.runAfterDelay(3,()->{h.assertTrue(machine.energy().getEnergyStored()-before==30000,"running batch also charges every tick");h.assertTrue(machine.totalTicks()==200,"newly inserted cards apply to the next batch");h.succeed();});});
+    }
+    @GameTest(template="empty")
+    public static void menuShiftClickUsesFourUpgradeSlotsInsteadOfAuxiliarySlot(GameTestHelper h){
+        var level=h.getLevel();var pos=h.absolutePos(new BlockPos(5,1,5));level.setBlockAndUpdate(pos,ModContent.CHAMBER.get().defaultBlockState());
+        var machine=(dev.overloadsim.machine.SimulationChamberBlockEntity)level.getBlockEntity(pos);
+        var player=new net.minecraft.server.level.ServerPlayer(level.getServer(),level,new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(),"menu-test"),net.minecraft.server.level.ClientInformation.createDefault());
+        player.getInventory().setItem(9,appeng.core.definitions.AEItems.SPEED_CARD.stack(4));var menu=new dev.overloadsim.machine.SimulationMenu(1,player.getInventory(),machine);
+        h.assertTrue(menu.getSlots(appeng.menu.SlotSemantics.UPGRADE).size()==4,"native upgrade panel receives four slots");
+        int source=menu.getSlots(appeng.menu.SlotSemantics.PLAYER_INVENTORY).stream().filter(s->s.getContainerSlot()==9).findFirst().orElseThrow().index;
+        menu.quickMoveStack(player,source);h.assertTrue(machine.getUpgrades().getInstalledUpgrades(appeng.core.definitions.AEItems.SPEED_CARD)==4&&machine.inventory().getStackInSlot(3).isEmpty(),"shift-click speed cards target upgrades; installed="+machine.getUpgrades().getInstalledUpgrades(appeng.core.definitions.AEItems.SPEED_CARD)+" remaining="+player.getInventory().getItem(9).getCount());
+        menu.quickMoveStack(player,12);h.assertTrue(machine.getUpgrades().getInstalledUpgrades(appeng.core.definitions.AEItems.SPEED_CARD)==3,"shift-click can retrieve an idle upgrade");
+        int retained=0;for(int i=0;i<player.getInventory().getContainerSize();i++)if(player.getInventory().getItem(i).is(appeng.core.definitions.AEItems.SPEED_CARD.asItem()))retained+=player.getInventory().getItem(i).getCount();
+        h.assertTrue(retained==1,"retrieval returns exactly one card to the player");player.discard();h.succeed();
+    }
+    @GameTest(template="empty")
+    public static void automationRespectsConfiguredCardLimitAndRejectsUnsupportedCards(GameTestHelper h){
+        var level=h.getLevel();var pos=h.absolutePos(new BlockPos(5,1,5));level.setBlockAndUpdate(pos,ModContent.CHAMBER.get().defaultBlockState());
+        var machine=(dev.overloadsim.machine.SimulationChamberBlockEntity)level.getBlockEntity(pos);int previous=SimulationConfig.CARD_LIMIT.get();
+        try{SimulationConfig.CARD_LIMIT.set(2);var remainder=appeng.core.definitions.AEItems.SPEED_CARD.stack(6);var io=machine.automation();
+            h.assertTrue(io.getSlots()==17&&!io.isItemValid(2,remainder),"old slot reserved; four appended upgrade slots exposed");
+            for(int i=13;i<17;i++)remainder=io.insertItem(i,remainder,false);
+            h.assertTrue(remainder.getCount()==4&&machine.getUpgrades().getInstalledUpgrades(appeng.core.definitions.AEItems.SPEED_CARD)==2,"all insertion paths honor the pack limit");
+            h.assertTrue(io.extractItem(13,1,false).isEmpty(),"automation cannot steal installed upgrades");
+            var unsupported=appeng.core.definitions.AEItems.CAPACITY_CARD.stack();h.assertTrue(machine.getUpgrades().addItems(unsupported).getCount()==1,"unsupported upgrade is not consumed");
+        }finally{SimulationConfig.CARD_LIMIT.set(previous);}h.succeed();
+    }
+    @GameTest(template="empty")
     public static void mineralBindingConsumesExactly24(GameTestHelper h){
         var center=h.absolutePos(new BlockPos(5,1,5));var level=h.getLevel();
         for(int x=-2;x<=2;x++)for(int z=-2;z<=2;z++)if(x!=0||z!=0)level.setBlockAndUpdate(center.offset(x,0,z),Blocks.RAW_IRON_BLOCK.defaultBlockState());
@@ -97,9 +175,9 @@ public class SimulationGameTests {
         long inserted=storage.insert(com.moakiee.ae2lt.me.key.LightningKey.HIGH_VOLTAGE,4,appeng.api.config.Actionable.MODULATE,appeng.api.networking.security.IActionSource.empty());h.assertTrue(inserted==4,"seed exactly four HV for four operations");storage.persist();drive.getInternalInventory().setItemDirect(0,cell);
         machine.inventory().setStackInSlot(0,CrystalDataAccess.perfect(new CrystalData(ModContent.id("iron"),Optional.empty(),0,1)));
         machine.inventory().setStackInSlot(1,new ItemStack(com.moakiee.ae2lt.registry.ModItems.LIGHTNING_COLLAPSE_MATRIX.get()));
-        machine.inventory().setStackInSlot(2,new ItemStack(net.minecraft.core.registries.BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.parse("ae2:speed_card")),4));machine.energy().receiveEnergy(10000,false);
+        installFourCards(machine);machine.energy().receiveEnergy(10000,false);
         for(int slot=4;slot<13;slot++)machine.inventory().setStackInSlot(slot,new ItemStack(net.minecraft.world.item.Items.RAW_IRON));
-        h.succeedWhen(()->{h.assertTrue(machine.inventory().getStackInSlot(4).getCount()==5,"four outputs merge into existing partial slots; status="+machine.status()+" node="+machine.getMainNode().isActive()+" fe="+machine.energy().getEnergyStored());h.assertTrue(machine.energy().getEnergyStored()==6000,"pay exactly four operations");h.assertTrue(machine.inventory().getStackInSlot(0).is(ModContent.PERFECT.get()),"template retained");});
+        h.succeedWhen(()->{h.assertTrue(machine.inventory().getStackInSlot(4).getCount()==5,"four outputs merge into existing partial slots; status="+machine.status()+" node="+machine.getMainNode().isActive()+" fe="+machine.energy().getEnergyStored());assertPaidBatch(h,machine,4000,4);h.assertTrue(machine.inventory().getStackInSlot(0).is(ModContent.PERFECT.get()),"template retained");});
     }
     @GameTest(template="empty",timeoutTicks=180)
     public static void aeNetworkSuppliesFeWithoutCableOrLocalCharge(GameTestHelper h){
@@ -107,7 +185,7 @@ public class SimulationGameTests {
         // Only one output can fit, and only one batch can start.
         for(int slot=4;slot<13;slot++)machine.inventory().setStackInSlot(slot,new ItemStack(net.minecraft.world.item.Items.DIAMOND,64));
         machine.inventory().setStackInSlot(4,new ItemStack(net.minecraft.world.item.Items.RAW_IRON,63));
-        h.succeedWhen(()->{h.assertTrue(machine.inventory().getStackInSlot(4).getCount()==64,"ME grid alone supplies simulation FE");h.assertTrue(machine.energy().getEnergyStored()==0,"draw and pay exactly required FE, without filling unused buffer");});
+        h.succeedWhen(()->{h.assertTrue(machine.inventory().getStackInSlot(4).getCount()==64,"ME grid alone supplies simulation FE");h.assertTrue(machine.energy().getEnergyStored()>0,"keep refilling unused buffer");assertPaidBatch(h,machine,1000,1);});
     }
     @GameTest(template="empty")
     public static void boundTooltipReportsPercentageAndStage(GameTestHelper h){
@@ -131,14 +209,14 @@ public class SimulationGameTests {
     public static void extremeHighVoltageCannotPayHighVoltageRecipe(GameTestHelper h){
         var machine=capacityMachine(h);var drive=(appeng.blockentity.storage.DriveBlockEntity)h.getLevel().getBlockEntity(machine.getBlockPos().east());var cell=drive.getInternalInventory().getStackInSlot(0);var storage=appeng.api.storage.StorageCells.getCellInventory(cell,drive::saveChanges);
         storage.extract(com.moakiee.ae2lt.me.key.LightningKey.HIGH_VOLTAGE,40,appeng.api.config.Actionable.MODULATE,appeng.api.networking.security.IActionSource.empty());storage.insert(com.moakiee.ae2lt.me.key.LightningKey.EXTREME_HIGH_VOLTAGE,40,appeng.api.config.Actionable.MODULATE,appeng.api.networking.security.IActionSource.empty());storage.persist();
-        h.runAtTickTime(80,()->{h.assertTrue(machine.getMainNode().isActive(),"network online");h.assertTrue(!machine.busy()&&machine.energy().getEnergyStored()==10000,"EHV cannot start or pay an HV batch");h.succeed();});
+        h.runAtTickTime(80,()->{h.assertTrue(machine.getMainNode().isActive(),"network online");h.assertTrue(!machine.busy()&&dev.overloadsim.compat.LightningNetwork.extract(machine,Long.MAX_VALUE,true)==0,"EHV cannot start or pay an HV batch");h.succeed();});
     }
     @GameTest(template="empty",timeoutTicks=160)
     public static void finiteAeNetworkDebitsStandardFeConversionOnce(GameTestHelper h){
-        var machine=capacityMachine(h);var level=h.getLevel();machine.inventory().setStackInSlot(0,ItemStack.EMPTY);machine.energy().deserializeNBT(level.registryAccess(),net.minecraft.nbt.IntTag.valueOf(0));
+        var machine=capacityMachine(h);var level=h.getLevel();machine.inventory().setStackInSlot(0,ItemStack.EMPTY);machine.energy().deserializeNBT(level.registryAccess(),net.minecraft.nbt.IntTag.valueOf(2_000_000));
         level.setBlockAndUpdate(machine.getBlockPos().west(),net.minecraft.core.registries.BuiltInRegistries.BLOCK.get(net.minecraft.resources.ResourceLocation.parse("ae2:energy_cell")).defaultBlockState());
         var cell=(appeng.blockentity.networking.EnergyCellBlockEntity)level.getBlockEntity(machine.getBlockPos().west());cell.injectAEPower(50000,appeng.api.config.Actionable.MODULATE);
-        h.runAtTickTime(80,()->{h.assertTrue(machine.getMainNode().isActive(),"finite powered network online");var grid=machine.getMainNode().getGrid();double before=grid.getEnergyService().getStoredPower();
+        h.runAtTickTime(80,()->{h.assertTrue(machine.getMainNode().isActive(),"finite powered network online");machine.energy().deserializeNBT(level.registryAccess(),net.minecraft.nbt.IntTag.valueOf(0));var grid=machine.getMainNode().getGrid();double before=grid.getEnergyService().getStoredPower();
             try{var charge=machine.getClass().getDeclaredMethod("chargeFromNetwork",int.class);charge.setAccessible(true);charge.invoke(machine,1000);charge.invoke(machine,1000);}catch(ReflectiveOperationException error){throw new RuntimeException(error);}
             h.assertTrue(machine.energy().getEnergyStored()==1000,"1000 FE retained in local buffer");h.assertTrue(Math.abs(before-grid.getEnergyService().getStoredPower()-500)<.0001,"1000 FE costs 500 AE once, under default AE2 2:1 conversion");h.succeed();});
     }
@@ -155,14 +233,14 @@ public class SimulationGameTests {
     public static void incompatiblePartialOutputsDoNotChargeBatch(GameTestHelper h){
         var machine=capacityMachine(h);
         for(int slot=4;slot<13;slot++)machine.inventory().setStackInSlot(slot,new ItemStack(net.minecraft.world.item.Items.DIAMOND));
-        h.runAtTickTime(80,()->{h.assertTrue(machine.getMainNode().isActive(),"test network active");h.assertTrue(machine.energy().getEnergyStored()==10000&&!machine.busy()&&machine.status()==4,"unrelated partial stacks must not admit a paid batch");h.succeed();});
+        h.runAtTickTime(80,()->{h.assertTrue(machine.getMainNode().isActive(),"test network active");h.assertTrue(!machine.busy()&&machine.status()==4&&dev.overloadsim.compat.LightningNetwork.extract(machine,Long.MAX_VALUE,true)==40,"unrelated partial stacks must not admit a paid batch");h.succeed();});
     }
     @GameTest(template="empty",timeoutTicks=120)
     public static void outputCapacityReducesActualParallel(GameTestHelper h){
         var machine=capacityMachine(h);
         for(int slot=4;slot<13;slot++)machine.inventory().setStackInSlot(slot,new ItemStack(net.minecraft.world.item.Items.DIAMOND,64));
         machine.inventory().setStackInSlot(4,new ItemStack(net.minecraft.world.item.Items.RAW_IRON,63));
-        h.succeedWhen(()->{h.assertTrue(machine.inventory().getStackInSlot(4).getCount()==64,"one output fits");h.assertTrue(machine.actualParallel()==1&&machine.energy().getEnergyStored()==9000,"capacity limits four installed parallels to one paid operation");});
+        h.succeedWhen(()->{h.assertTrue(machine.inventory().getStackInSlot(4).getCount()==64,"one output fits");h.assertTrue(machine.actualParallel()==1,"capacity limits four installed parallels to one operation");assertPaidBatch(h,machine,1000,1);});
     }
     private static dev.overloadsim.machine.SimulationChamberBlockEntity capacityMachine(GameTestHelper h){
         var level=h.getLevel();var p=h.absolutePos(new BlockPos(5,1,5));var registry=net.minecraft.core.registries.BuiltInRegistries.BLOCK;
@@ -175,7 +253,11 @@ public class SimulationGameTests {
         storage.insert(com.moakiee.ae2lt.me.key.LightningKey.HIGH_VOLTAGE,40,appeng.api.config.Actionable.MODULATE,appeng.api.networking.security.IActionSource.empty());storage.persist();drive.getInternalInventory().setItemDirect(0,cell);
         machine.inventory().setStackInSlot(0,CrystalDataAccess.perfect(new CrystalData(ModContent.id("iron"),Optional.empty(),0,1)));
         machine.inventory().setStackInSlot(1,new ItemStack(com.moakiee.ae2lt.registry.ModItems.LIGHTNING_COLLAPSE_MATRIX.get()));
-        machine.inventory().setStackInSlot(2,new ItemStack(net.minecraft.core.registries.BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.parse("ae2:speed_card")),4));machine.energy().receiveEnergy(10000,false);return machine;
+        installFourCards(machine);machine.energy().receiveEnergy(10000,false);return machine;
+    }
+    private static void installFourCards(dev.overloadsim.machine.SimulationChamberBlockEntity machine){for(int slot=0;slot<4;slot++)machine.getUpgrades().setItemDirect(slot,appeng.core.definitions.AEItems.SPEED_CARD.stack());}
+    private static void assertPaidBatch(GameTestHelper h,dev.overloadsim.machine.SimulationChamberBlockEntity machine,long fe,long hv){
+        try{var paidFe=machine.getClass().getDeclaredField("paidFe");var paidHv=machine.getClass().getDeclaredField("paidLightning");paidFe.setAccessible(true);paidHv.setAccessible(true);h.assertTrue(paidFe.getLong(machine)==fe&&paidHv.getLong(machine)==hv,"actual batch pays exact FE and HV independent of buffer refilling");}catch(ReflectiveOperationException error){throw new RuntimeException(error);}
     }
     @GameTest(template="empty")
     public static void multiOutputUsesPartialStacksBeforeEmptySlots(GameTestHelper h)throws ReflectiveOperationException{

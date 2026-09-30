@@ -44,6 +44,7 @@ public final class ModContent {
     public static void setup(FMLCommonSetupEvent e){e.enqueueWork(()->{
         CHAMBER.get().setBlockEntity(SimulationChamberBlockEntity.class,CHAMBER_ENTITY.get(),null,(level,pos,state,be)->be.tick());
         AEBaseBlockEntity.registerBlockEntityItem(CHAMBER_ENTITY.get(),CHAMBER_ITEM.get());
+        appeng.api.upgrades.Upgrades.add(appeng.core.definitions.AEItems.SPEED_CARD,CHAMBER_ITEM.get(),4);
     });}
     public static void capabilities(RegisterCapabilitiesEvent e){
         e.registerBlockEntity(appeng.api.AECapabilities.IN_WORLD_GRID_NODE_HOST,CHAMBER_ENTITY.get(),(be,context)->be);

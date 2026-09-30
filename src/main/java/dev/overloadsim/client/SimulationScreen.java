@@ -21,7 +21,7 @@ public class SimulationScreen extends AEBaseScreen<SimulationMenu> {
     private final TextureToggleButton ejectButton;
     public SimulationScreen(SimulationMenu menu,Inventory inventory,Component title){
         super(menu,inventory,title,StyleManager.loadStyleDoc("/screens/overload_sim/chamber.json"));
-        widgets.add("upgrades",new UpgradesPanel(menu.getSlots(SlotSemantics.UPGRADE),()->List.of(Component.translatable("gui.overload_sim.slot.2"))));
+        widgets.add("upgrades",new UpgradesPanel(menu.getSlots(SlotSemantics.UPGRADE),()->appeng.api.upgrades.Upgrades.getTooltipLinesForMachine(dev.overloadsim.ModContent.CHAMBER_ITEM.get())));
         var frequencyButton=new TextureToggleButton(TextureToggleButton.ButtonType.FREQUENCY_BIND,b->FrequencyApi.openBindingScreen(menu));
         frequencyButton.setTooltipAt(0,List.of(Component.translatable("gui.overload_sim.frequency")));addToLeftToolbar(frequencyButton);
         ejectButton=new TextureToggleButton(TextureToggleButton.ButtonType.AUTO_EXPORT,b->menu.toggleEject());
@@ -46,7 +46,7 @@ public class SimulationScreen extends AEBaseScreen<SimulationMenu> {
         super.render(g,mx,my,partial);
         if(mx>=leftPos+10&&mx<leftPos+23&&my>=topPos+26&&my<topPos+80)g.renderTooltip(font,List.of(Component.translatable("gui.overload_sim.energy",menu.fe),Component.translatable("gui.overload_sim.network_power")),java.util.Optional.empty(),mx,my);
         if(mx>=leftPos+150&&mx<leftPos+166&&my>=topPos+5&&my<topPos+21)g.renderTooltip(font,List.of(Component.translatable("status.overload_sim."+menu.status),Component.translatable("gui.overload_sim.hv",menu.highVoltage)),java.util.Optional.empty(),mx,my);
-        var slot=getSlotUnderMouse();if(slot!=null&&slot.index<4&&slot.getItem().isEmpty())g.renderTooltip(font,Component.translatable("gui.overload_sim.slot."+slot.index),mx,my);
+        var slot=getSlotUnderMouse();if(slot!=null&&slot.getItem().isEmpty()){var semantic=menu.getSlotSemantic(slot);int input=semantic==SlotSemantics.STORAGE_CELL?0:semantic==SlotSemantics.CONFIG?1:semantic==SlotSemantics.MACHINE_INPUT?3:-1;if(input>=0)g.renderTooltip(font,Component.translatable("gui.overload_sim.slot."+input),mx,my);}
     }
     static void icon(GuiGraphics g,Icon icon,int x,int y){Blitter.texture(Icon.TEXTURE,256,256).src(icon.x,icon.y,icon.width,icon.height).dest(x,y).blit(g);}
 }

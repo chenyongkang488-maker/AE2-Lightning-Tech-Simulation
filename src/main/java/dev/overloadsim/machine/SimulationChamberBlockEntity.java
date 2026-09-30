@@ -6,6 +6,9 @@ import appeng.api.networking.security.*;
 import appeng.api.orientation.BlockOrientation;
 import appeng.api.util.AECableType;
 import appeng.api.stacks.AEItemKey;
+import appeng.api.upgrades.IUpgradeableObject;
+import appeng.api.upgrades.IUpgradeInventory;
+import appeng.core.definitions.AEItems;
 import appeng.util.SettingsFrom;
 import com.moakiee.ae2lt.api.frequency.*;
 import dev.overloadsim.*;
@@ -28,23 +31,24 @@ import net.neoforged.neoforge.energy.EnergyStorage;
 import net.neoforged.neoforge.items.*;
 import net.neoforged.neoforge.common.NeoForge;
 
-public class SimulationChamberBlockEntity extends AENetworkedBlockEntity implements IActionHost,FrequencyBindingHost {
+public class SimulationChamberBlockEntity extends AENetworkedBlockEntity implements IActionHost,FrequencyBindingHost,IUpgradeableObject {
     public static final int OUTPUT_START=4,SLOTS=13;
     private final FrequencyBindingAccess frequency=FrequencyApi.createBinding(this);
+    private final IUpgradeInventory upgrades=new SimulationUpgrades(this::saveChanges);
     private final ItemStackHandler inventory=new ItemStackHandler(SLOTS){
-        @Override public boolean isItemValid(int slot,ItemStack stack){return switch(slot){case 0->stack.is(ModContent.PERFECT.get())&&CrystalDataAccess.read(stack).isPresent();case 1->BuiltInRegistries.ITEM.getKey(stack.getItem()).equals(ResourceLocation.parse("ae2lt:lightning_collapse_matrix"));case 2->BuiltInRegistries.ITEM.getKey(stack.getItem()).equals(ResourceLocation.parse("ae2:speed_card"));case 3->true;default->false;};}
-        @Override public int getSlotLimit(int slot){return switch(slot){case 0->1;case 1->SimulationConfig.MATRIX_LIMIT.get();case 2->SimulationConfig.CARD_LIMIT.get();default->64;};}
+        @Override public boolean isItemValid(int slot,ItemStack stack){return switch(slot){case 0->stack.is(ModContent.PERFECT.get())&&CrystalDataAccess.read(stack).isPresent();case 1->BuiltInRegistries.ITEM.getKey(stack.getItem()).equals(ResourceLocation.parse("ae2lt:lightning_collapse_matrix"));case 3->true;default->false;};}
+        @Override public int getSlotLimit(int slot){return switch(slot){case 0->1;case 1->SimulationConfig.MATRIX_LIMIT.get();case 2->0;default->64;};}
         @Override public ItemStack insertItem(int slot,ItemStack stack,boolean simulate){return slot<OUTPUT_START&&busy()?stack:super.insertItem(slot,stack,simulate);}
         @Override public ItemStack extractItem(int slot,int count,boolean simulate){return slot<OUTPUT_START&&busy()?ItemStack.EMPTY:super.extractItem(slot,count,simulate);}
         @Override protected void onContentsChanged(int slot){saveChanges();}
     };
     private final IItemHandler automation=new IItemHandler(){
-        public int getSlots(){return SLOTS;}
-        public ItemStack getStackInSlot(int slot){return inventory.getStackInSlot(slot);}
-        public ItemStack insertItem(int slot,ItemStack s,boolean sim){return inventory.insertItem(slot,s,sim);}
-        public ItemStack extractItem(int slot,int count,boolean sim){return slot<OUTPUT_START?ItemStack.EMPTY:inventory.extractItem(slot,count,sim);}
-        public int getSlotLimit(int slot){return inventory.getSlotLimit(slot);}
-        public boolean isItemValid(int slot,ItemStack s){return inventory.isItemValid(slot,s);}
+        public int getSlots(){return SLOTS+upgrades.size();}
+        public ItemStack getStackInSlot(int slot){return slot<SLOTS?inventory.getStackInSlot(slot):upgrades.getStackInSlot(slot-SLOTS);}
+        public ItemStack insertItem(int slot,ItemStack s,boolean sim){return slot<SLOTS?inventory.insertItem(slot,s,sim):upgrades.insertItem(slot-SLOTS,s,sim);}
+        public ItemStack extractItem(int slot,int count,boolean sim){return slot>=OUTPUT_START&&slot<SLOTS?inventory.extractItem(slot,count,sim):ItemStack.EMPTY;}
+        public int getSlotLimit(int slot){return slot<SLOTS?inventory.getSlotLimit(slot):upgrades.getSlotLimit(slot-SLOTS);}
+        public boolean isItemValid(int slot,ItemStack s){return slot<SLOTS?inventory.isItemValid(slot,s):upgrades.isItemValid(slot-SLOTS,s);}
     };
     private final EnergyStorage energy=new EnergyStorage(2_000_000,2_000_000,0){@Override public int receiveEnergy(int max,boolean simulate){int moved=super.receiveEnergy(max,simulate);if(moved>0&&!simulate)saveChanges();return moved;}};
     private final List<ItemStack> pending=new ArrayList<>();
@@ -59,6 +63,7 @@ public class SimulationChamberBlockEntity extends AENetworkedBlockEntity impleme
     private static final org.slf4j.Logger LOG=org.slf4j.LoggerFactory.getLogger(SimulationChamberBlockEntity.class);
     public SimulationChamberBlockEntity(BlockPos pos,BlockState state){super(ModContent.CHAMBER_ENTITY.get(),pos,state);getMainNode().setFlags(GridFlags.REQUIRE_CHANNEL).setIdlePowerUsage(2).setVisualRepresentation(ModContent.CHAMBER_ITEM.get());}
     public ItemStackHandler inventory(){return inventory;}
+    @Override public IUpgradeInventory getUpgrades(){return upgrades;}
     public IItemHandler automation(){return automation;}
     public EnergyStorage energy(){return energy;}
     public boolean busy(){return taskActive;}
@@ -68,6 +73,7 @@ public class SimulationChamberBlockEntity extends AENetworkedBlockEntity impleme
     public void toggleSide(int side){if(side>=0&&side<6){outputMask^=1<<side;saveChanges();}}
     public void tick(){
         if(!(level instanceof ServerLevel server))return;frequency.serverTick();
+        chargeFromNetwork((int)Math.min(energy.getMaxEnergyStored(),(long)energy.getEnergyStored()+SimulationConfig.NETWORK_FE_PER_TICK.get()));
         if(eject&&server.getGameTime()%SimulationConfig.EJECT_INTERVAL.get()==0)ejectOutputs();
         if(lightningRefund>0){lightningRefund-=LightningNetwork.refund(this,lightningRefund,legacyEhvRefund);saveChanges();if(lightningRefund>0){status=7;return;}legacyEhvRefund=false;}
         if(taskActive){
@@ -87,7 +93,7 @@ public class SimulationChamberBlockEntity extends AENetworkedBlockEntity impleme
         int p=outputParallel(production,maximumParallel());if(p<1){status=4;return;}
         if(production.lightning()>0)p=(int)Math.min(p,LightningNetwork.extract(this,Long.MAX_VALUE,true)/production.lightning());
         if(production.input().isPresent()){var input=production.input().get();var aux=inventory.getStackInSlot(3);if(!BuiltInRegistries.ITEM.getKey(aux.getItem()).equals(input.item())){status=3;return;}p=Math.min(p,aux.getCount()/input.count());}
-        if(production.fe()>0){p=(int)Math.min(p,energy.getMaxEnergyStored()/production.fe());if(p>0)chargeFromNetwork((int)SimulationRules.batchEnergy(production.fe(),p));p=(int)Math.min(p,energy.getEnergyStored()/production.fe());}
+        if(production.fe()>0){p=(int)Math.min(p,energy.getMaxEnergyStored()/production.fe());p=(int)Math.min(p,energy.getEnergyStored()/production.fe());}
         if(p<1){status=3;return;}
         if(NeoForge.EVENT_BUS.post(new SimulationEvents.BeforeSimulation(server,worldPosition,data.get(),p)).isCanceled())return;
         // A listener may mutate inventory/energy/network. Verify the full transaction again.
@@ -99,13 +105,14 @@ public class SimulationChamberBlockEntity extends AENetworkedBlockEntity impleme
         var fixed=new ArrayList<ItemStack>();try{for(int op=0;op<p;op++)fixed.addAll(MobLoot.roll(server,worldPosition,data.get(),production));}catch(RuntimeException error){lightningRefund=Math.addExact(lightningRefund,extracted);status=5;saveChanges();LOG.error("Invalid simulation output for {}",chosen.get().id(),error);return;}
         long feCost=SimulationRules.batchEnergy(production.fe(),p);energy.deserializeNBT(server.registryAccess(),IntTag.valueOf(energy.getEnergyStored()-(int)feCost));
         if(production.input().isPresent()){var aux=inventory.getStackInSlot(3).copy();aux.shrink(production.input().get().count()*p);inventory.setStackInSlot(3,aux);}
-        pending.clear();pending.addAll(fixed);taskCrystal=data.get();taskRecipe=chosen.get().id();actualParallel=p;cardsSnapshot=Math.min(4,inventory.getStackInSlot(2).getCount());totalTicks=SimulationRules.duration(production.ticks(),cardsSnapshot);remaining=totalTicks;paidFe=feCost;paidLightning=lightningCost;taskActive=true;status=1;saveChanges();
+        pending.clear();pending.addAll(fixed);taskCrystal=data.get();taskRecipe=chosen.get().id();actualParallel=p;cardsSnapshot=getInstalledUpgrades(AEItems.SPEED_CARD);totalTicks=SimulationRules.duration(production.ticks(),cardsSnapshot);remaining=totalTicks;paidFe=feCost;paidLightning=lightningCost;taskActive=true;status=1;saveChanges();
     }
     private void chargeFromNetwork(int requestedFe){
         int needed=Math.min(energy.getMaxEnergyStored(),requestedFe)-energy.getEnergyStored();
         var grid=getMainNode().getGrid();if(needed<=0||grid==null||!getMainNode().isActive())return;
         double wanted=appeng.api.config.PowerUnit.FE.convertTo(appeng.api.config.PowerUnit.AE,Math.max(0,needed-networkFeFraction));
         double drawn=grid.getEnergyService().extractAEPower(wanted,appeng.api.config.Actionable.MODULATE,appeng.api.config.PowerMultiplier.ONE);
+        if(drawn<=0&&networkFeFraction==0)return;
         double available=networkFeFraction+appeng.api.config.PowerUnit.AE.convertTo(appeng.api.config.PowerUnit.FE,drawn);
         int received=energy.receiveEnergy(Math.min(needed,(int)Math.floor(available)),false);
         networkFeFraction=Math.max(0,available-received);saveChanges();
@@ -149,10 +156,13 @@ public class SimulationChamberBlockEntity extends AENetworkedBlockEntity impleme
             if(budget==0)break;
         }
     }
-    @Override public void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){super.saveAdditional(tag,registries);tag.put("Inventory",inventory.serializeNBT(registries));tag.put("Energy",energy.serializeNBT(registries));tag.putDouble("NetworkFeFraction",networkFeFraction);frequency.save(tag);tag.putBoolean("Eject",eject);tag.putInt("OutputMask",outputMask);tag.putLong("LightningRefund",lightningRefund);tag.putString("LightningRefundTier",legacyEhvRefund?"ehv":"hv");
+    @Override public void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){super.saveAdditional(tag,registries);tag.put("Inventory",inventory.serializeNBT(registries));upgrades.writeToNBT(tag,"Upgrades",registries);tag.put("Energy",energy.serializeNBT(registries));tag.putDouble("NetworkFeFraction",networkFeFraction);frequency.save(tag);tag.putBoolean("Eject",eject);tag.putInt("OutputMask",outputMask);tag.putLong("LightningRefund",lightningRefund);tag.putString("LightningRefundTier",legacyEhvRefund?"ehv":"hv");
         if(taskActive){var job=new CompoundTag();job.putInt("Remaining",remaining);job.putInt("Duration",totalTicks);job.putInt("Parallel",actualParallel);job.putInt("Cards",cardsSnapshot);job.putString("Recipe",taskRecipe.toString());job.putLong("PaidFe",paidFe);job.putLong("PaidLightning",paidLightning);job.put("Crystal",CrystalData.CODEC.encodeStart(net.minecraft.nbt.NbtOps.INSTANCE,taskCrystal).getOrThrow());var outputs=new ListTag();for(var stack:pending)outputs.add(stack.save(registries));job.put("Outputs",outputs);tag.put("Job",job);}
     }
     @Override public void loadTag(CompoundTag tag,HolderLookup.Provider registries){super.loadTag(tag,registries);inventory.deserializeNBT(registries,tag.getCompound("Inventory"));if(tag.contains("Energy"))energy.deserializeNBT(registries,tag.get("Energy"));frequency.load(tag);eject=!tag.contains("Eject")||tag.getBoolean("Eject");outputMask=tag.contains("OutputMask")?tag.getInt("OutputMask")&63:63;lightningRefund=Math.max(0,tag.getLong("LightningRefund"));pending.clear();taskActive=false;
+        upgrades.clear();upgrades.readFromNBT(tag,"Upgrades",registries);
+        // Alpha.1/.2 stored all cards in main slot 2; preserve the other slot indices.
+        if(!tag.contains("Upgrades")){var legacy=inventory.getStackInSlot(2).copy();if(legacy.is(AEItems.SPEED_CARD.asItem())){for(int slot=0;slot<upgrades.size()&&!legacy.isEmpty();slot++){upgrades.setItemDirect(slot,legacy.copyWithCount(1));legacy.shrink(1);}inventory.setStackInSlot(2,legacy);}}
         networkFeFraction=tag.getDouble("NetworkFeFraction");if(!Double.isFinite(networkFeFraction)||networkFeFraction<0||networkFeFraction>=1)networkFeFraction=0;
         legacyEhvRefund=lightningRefund>0&&(!tag.contains("LightningRefundTier")||tag.getString("LightningRefundTier").equals("ehv"));
         if(tag.contains("Job")){var job=tag.getCompound("Job");taskCrystal=CrystalData.CODEC.parse(NbtOps.INSTANCE,job.get("Crystal")).getOrThrow();taskRecipe=ResourceLocation.parse(job.getString("Recipe"));remaining=Math.max(0,job.getInt("Remaining"));totalTicks=Math.max(1,job.getInt("Duration"));actualParallel=Math.clamp(job.getInt("Parallel"),1,128);cardsSnapshot=Math.clamp(job.getInt("Cards"),0,4);paidFe=job.getLong("PaidFe");paidLightning=job.getLong("PaidLightning");for(var entry:job.getList("Outputs",Tag.TAG_COMPOUND))ItemStack.parse(registries,entry).ifPresent(pending::add);taskActive=true;}
@@ -170,8 +180,8 @@ public class SimulationChamberBlockEntity extends AENetworkedBlockEntity impleme
     @Override public Set<Direction> getGridConnectableSides(BlockOrientation o){return EnumSet.allOf(Direction.class);}
     @Override public AECableType getCableConnectionType(Direction d){return AECableType.SMART;}
     @Override protected Item getItemFromBlockEntity(){return ModContent.CHAMBER_ITEM.get();}
-    @Override public void addAdditionalDrops(Level level,BlockPos pos,List<ItemStack> drops){for(int i=0;i<SLOTS;i++)if(!inventory.getStackInSlot(i).isEmpty())drops.add(inventory.getStackInSlot(i).copy());if(taskActive&&remaining==0)for(var s:pending)drops.add(s.copy());}
-    @Override public void clearContent(){for(int i=0;i<SLOTS;i++)inventory.setStackInSlot(i,ItemStack.EMPTY);pending.clear();taskActive=false;}
+    @Override public void addAdditionalDrops(Level level,BlockPos pos,List<ItemStack> drops){for(int i=0;i<SLOTS;i++)if(!inventory.getStackInSlot(i).isEmpty())drops.add(inventory.getStackInSlot(i).copy());for(var card:upgrades)if(!card.isEmpty())drops.add(card.copy());if(taskActive&&remaining==0)for(var s:pending)drops.add(s.copy());}
+    @Override public void clearContent(){for(int i=0;i<SLOTS;i++)inventory.setStackInSlot(i,ItemStack.EMPTY);upgrades.clear();pending.clear();taskActive=false;}
     @Override public void exportSettings(SettingsFrom mode,DataComponentMap.Builder builder,Player p){super.exportSettings(mode,builder,p);frequency.exportMemorySettings(mode,builder,t->{t.putBoolean("Eject",eject);t.putInt("OutputMask",outputMask);});}
     @Override public void importSettings(SettingsFrom mode,DataComponentMap map,Player p){super.importSettings(mode,map,p);frequency.importMemorySettings(mode,map,t->{eject=t.getBoolean("Eject");outputMask=t.getInt("OutputMask")&63;saveChanges();});}
 }

@@ -6,6 +6,10 @@ import appeng.menu.locator.MenuLocators;
 import dev.overloadsim.ModContent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.ItemInteractionResult;
+import net.minecraft.world.item.ItemStack;
+import appeng.core.definitions.AEItems;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.*;
 import net.minecraft.world.level.block.SoundType;
@@ -20,5 +24,15 @@ public class SimulationChamberBlock extends AEBaseEntityBlock<SimulationChamberB
     @Override public BlockEntity newBlockEntity(BlockPos pos,BlockState state){return new SimulationChamberBlockEntity(pos,state);}
     @Override public BlockEntityType<SimulationChamberBlockEntity> getBlockEntityType(){return ModContent.CHAMBER_ENTITY.get();}
     @Override public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level,BlockState state,BlockEntityType<T> type){return !level.isClientSide()&&type==ModContent.CHAMBER_ENTITY.get()?(l,p,s,be)->((SimulationChamberBlockEntity)be).tick():null;}
+    @Override protected ItemInteractionResult useItemOn(ItemStack stack,BlockState state,Level level,BlockPos pos,Player player,InteractionHand hand,BlockHitResult hit){
+        if(!stack.is(AEItems.SPEED_CARD.asItem()))return super.useItemOn(stack,state,level,pos,player,hand,hit);
+        var machine=getBlockEntity(level,pos);if(machine==null)return ItemInteractionResult.FAIL;
+        if(!level.isClientSide()){
+            var remainder=machine.getUpgrades().addItems(stack.copy());
+            if(remainder.getCount()==stack.getCount())return ItemInteractionResult.FAIL;
+            if(!player.getAbilities().instabuild)player.setItemInHand(hand,remainder);
+        }
+        return ItemInteractionResult.sidedSuccess(level.isClientSide());
+    }
     @Override protected InteractionResult useWithoutItem(BlockState state,Level level,BlockPos pos,Player player,BlockHitResult hit){if(!level.isClientSide())MenuOpener.open(ModContent.MENU.get(),player,MenuLocators.forBlockEntity(level.getBlockEntity(pos)));return InteractionResult.sidedSuccess(level.isClientSide());}
 }

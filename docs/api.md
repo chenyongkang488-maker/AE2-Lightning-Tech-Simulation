@@ -1,4 +1,4 @@
-# 数据包与 Java API（0.1.0-alpha.2）
+# 数据包与 Java API（0.1.0-alpha.3）
 
 面向 Minecraft 1.21.1，数据目录使用单数 `recipe`、`loot_table`、`tags/block`。建议覆盖本模组现有配方 ID；新增匹配配方应给明确的更高 priority，避免最高优先级相同造成冲突。
 
@@ -116,9 +116,11 @@ NeoForge.EVENT_BUS 的事件：
 
 ## 自动化接口与指南
 
-FE 不足时优先按实际可启动批次所需费用，从在线 ME 网络的 IEnergyService 取 AE 电力，通过 PowerUnit.FE/AE 的运行时标准比例换算；不预充满整个缓冲。小数 FE 余量随区块保存，外部 FE 能力继续可用。新批次和退款使用 HV；旧 alpha.1 已付费任务保留快照，旧退款记录按 EHV 返还。
+在线且取得频道时，每个服务器 tick 从 ME 网络的 IEnergyService 取 AE 电力，通过 PowerUnit.FE/AE 的运行时标准比例换算并补充本地 FE 缓冲；待机、加工和输出堵塞时均持续充电。COMMON 配置 `networkFeChargePerTick` 默认 10000，范围 0..2000000，0 关闭网络充电。缓冲容量 2000000 FE；满电、离线或网络无法供电时停止抽取。小数 FE 余量随区块保存，外部 FE 能力继续可用。生产批次的 FE 支付与缓存充电分开计算，不增加配方成本。新批次和退款使用 HV；旧 alpha.1 已付费任务保留快照，旧退款记录按 EHV 返还。
 
-机器注册 NeoForge `Capabilities.ItemHandler.BLOCK` 和 `Capabilities.EnergyStorage.BLOCK`。槽 0 为完美水晶，1 矩阵，2 加速卡，3 辅助材料，4..12 输出。外部只可提取输出，批次进行中拒绝修改输入。GUI 允许空闲时取回输入。
+机器注册 NeoForge `Capabilities.ItemHandler.BLOCK` 和 `Capabilities.EnergyStorage.BLOCK`。物品接口共 17 槽：0 完美水晶，1 矩阵，2 为旧卡槽迁移保留（拒绝插入），3 辅助材料，4..12 输出，13..16 四个加速卡槽（每格一张）。外部只可提取输出，批次进行中拒绝修改水晶、矩阵和辅助材料；可以插入新卡，下一批生效。GUI 允许空闲时取回输入和加速卡。Shift 点击加速卡直接进入升级栏。
+
+机器实现 AE2 `IUpgradeableObject`，`getUpgrades()` 返回原生 AE2 升级库存，支持直接手持加速卡右键插入。`Upgrades` 注册四张加速卡；每次插入均检查 `accelerationCardLimit`。升级库存单独保存为 `Upgrades`；alpha.1/alpha.2 的主库存槽 2 自动拆为最多四张独立卡，并保留物品组件和其他槽位置。降低配置上限不会销毁已安装的卡，只限制生效数量与继续插入。
 
 自动弹出只移动输出，最多每次 64 件，默认每 10 tick 尝试；六面可分别开关，按接收方真实余量扣除，未加载区块不访问。频率接口实现闪电科技公开的 FrequencyBindingHost，并使用其共享界面和记忆卡处理。
 
