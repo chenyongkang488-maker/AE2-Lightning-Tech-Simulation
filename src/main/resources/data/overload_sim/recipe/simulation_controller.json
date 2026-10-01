@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "FFF",
+    "FCF",
+    "FFF"
+  ],
+  "key": {
+    "F": {
+      "item": "overload_sim:simulation_frame"
+    },
+    "C": {
+      "item": "overload_sim:overload_simulation_chamber"
+    }
+  },
+  "result": {
+    "id": "overload_sim:simulation_controller",
+    "count": 1
+  }
+}

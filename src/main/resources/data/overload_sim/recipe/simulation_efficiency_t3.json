@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " D ",
+    "DMD",
+    " F "
+  ],
+  "key": {
+    "D": {
+      "item": "minecraft:diamond"
+    },
+    "M": {
+      "item": "overload_sim:simulation_efficiency_t2"
+    },
+    "F": {
+      "item": "overload_sim:simulation_frame"
+    }
+  },
+  "result": {
+    "id": "overload_sim:simulation_efficiency_t3",
+    "count": 1
+  }
+}

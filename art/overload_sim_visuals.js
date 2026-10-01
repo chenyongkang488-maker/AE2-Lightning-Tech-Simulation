@@ -4,7 +4,7 @@
 (function(){
     const ROOT='D:/MinecraftDev/OverloadSimulation';
     const REFERENCE='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAABCUExURWYUSv/l/fS008xRjj8MH5k9YOVytSYrVDxfgP+A1/7//2BUprBv3dr//5FdzTc7coq775zT/2yQsylAVxoXLwAAAOP7YkEAAAAWdFJOU////////////////////////////wAB0sDkAAAACXBIWXMAAA7CAAAOwgEVKEqAAAAAgUlEQVQoU13O6w7DIAgFYLwerVY6hfd/1UXbrev4QeALCYf0r+g7XNMHyDyBjH0AGeMuObu3NkRSAEqaUlJvXYgeOS/YtuRjgfO1XrDvVPKExguO115yRaC5T+j9QCsIXBhjfhm9o7EwGH2BjiSFBZgHZ44hDBHIuKOLiIrcSX/qDfTdD0MQhy32AAAAAElFTkSuQmCC';
-    let generateAction,saveAction,previewAction;
+    let generateAction,saveAction,previewAction,multiblockAction;
     const canvas=(w,h)=>{const c=document.createElement('canvas');c.width=w;c.height=h;return c;};
     const writeText=(path,value)=>Blockbench.writeFile(ROOT+'/'+path,{savetype:'text',content:typeof value==='string'?value:JSON.stringify(value,null,2)+'\n'});
     const writePng=(path,c)=>Blockbench.writeFile(ROOT+'/'+path,{savetype:'image',content:c.toDataURL('image/png')});
@@ -153,10 +153,13 @@
     Plugin.register('overload_sim_visuals',{
         title:'Overload Simulation Visual Workshop',author:'Codex',description:'Layered crystals, lightning flipbook and a chamber with six glass panels.',icon:'bolt',version:'0.3.0',variant:'desktop',
         onload(){
+            eval(require('fs').readFileSync(ROOT+'/art/multiblock_simulation_workshop.js','utf8'));
+            multiblockAction=new Action('overload_sim_draw_multiblock',{name:'绘制多方块模拟室',icon:'view_in_ar',click(){globalThis.drawMultiblockSimulation().catch(error=>{writeText('art/multiblock-error.txt',String(error.stack||error));Blockbench.showMessageBox({title:'多方块素材导出错误',message:String(error.stack||error)});});}});
+            MenuBar.addAction(multiblockAction,'tools');
             generateAction=new Action('overload_sim_draw_visuals',{name:'绘制模拟水晶与镂空模拟室',icon:'bolt',click(){generate().catch(error=>{writeText('art/visuals-error.txt',String(error.stack||error));Blockbench.showMessageBox({title:'素材导出错误',message:String(error.stack||error)});});}});
             saveAction=new Action('overload_sim_save_visuals',{name:'保存当前模拟室分层工程',icon:'save',click(){globalThis.overloadVisuals?.save();}});
             previewAction=new Action('overload_sim_preview_visuals',{name:'导出模拟室预览图',icon:'photo_camera',click(){Screencam.screenshotPreview(Preview.selected,{width:640,height:640},url=>Blockbench.writeFile(ROOT+'/art/chamber_preview.png',{savetype:'image',content:url}));}});
             MenuBar.addAction(generateAction,'tools');MenuBar.addAction(saveAction,'tools');MenuBar.addAction(previewAction,'tools');
-        },onunload(){generateAction?.delete();saveAction?.delete();previewAction?.delete();}
+        },onunload(){generateAction?.delete();saveAction?.delete();previewAction?.delete();multiblockAction?.delete();}
     });
 })();

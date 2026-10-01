@@ -1,6 +1,13 @@
 {
   "replace": false,
   "values": [
-    "overload_sim:overload_simulation_chamber"
+    "overload_sim:simulation_controller",
+    "overload_sim:simulation_frame",
+    "overload_sim:simulation_efficiency_t1",
+    "overload_sim:simulation_efficiency_t2",
+    "overload_sim:simulation_efficiency_t3",
+    "overload_sim:simulation_fortune_module",
+    "overload_sim:simulation_overload_module",
+    "overload_sim:simulation_smelting_module"
   ]
 }

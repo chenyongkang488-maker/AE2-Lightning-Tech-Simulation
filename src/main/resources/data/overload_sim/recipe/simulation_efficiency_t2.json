@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " R ",
+    "RMR",
+    " F "
+  ],
+  "key": {
+    "R": {
+      "item": "minecraft:redstone_block"
+    },
+    "M": {
+      "item": "overload_sim:simulation_efficiency_t1"
+    },
+    "F": {
+      "item": "overload_sim:simulation_frame"
+    }
+  },
+  "result": {
+    "id": "overload_sim:simulation_efficiency_t2",
+    "count": 1
+  }
+}

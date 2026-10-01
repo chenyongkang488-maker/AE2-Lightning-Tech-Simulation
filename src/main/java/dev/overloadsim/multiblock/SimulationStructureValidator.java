@@ -8,6 +8,8 @@ import net.minecraft.world.level.Level;
 
 /** Bounded, chunk-safe scans. A successful result is immutable and owned by one controller. */
 public final class SimulationStructureValidator {
+    private static final net.minecraft.tags.TagKey<net.minecraft.world.level.block.Block> FRAMES=net.minecraft.tags.TagKey.create(net.minecraft.core.registries.Registries.BLOCK,ModContent.id("simulation_frames"));
+    private static final net.minecraft.tags.TagKey<net.minecraft.world.level.block.Block> GLASS=net.minecraft.tags.TagKey.create(net.minecraft.core.registries.Registries.BLOCK,ModContent.id("simulation_glass"));
     public record Result(SimulationStructure structure,String error,BlockPos problem){
         public boolean valid(){return structure!=null;}
     }
@@ -34,6 +36,7 @@ public final class SimulationStructureValidator {
             boolean edge=boundaries>=2;if((pass==0)!=edge)continue;
             BlockPos p=min.offset(x,y,z);if(!level.hasChunkAt(p))return new Result(null,"unloaded",p);
             var state=level.getBlockState(p);var block=state.getBlock();
+            if(SimulationStructureIndex.occupied(level,p,controller))return new Result(null,"owned",p);
             if(boundaries==0){if(!state.isAir())return new Result(null,"interior",p);continue;}
             if(level.getBlockEntity(p) instanceof SimulationMemberBlockEntity member&&member.owner()!=null&&!member.ownedBy(controller))
                 return new Result(null,"owned",p);
@@ -43,16 +46,16 @@ public final class SimulationStructureValidator {
                 if(block==MultiblockContent.CONTROLLER.get()){if(!special)return new Result(null,"controller_position",p);c++;if(!p.equals(controller.getBlockPos()))return new Result(null,"controllers",p);}
                 else if(BuiltInRegistries.BLOCK.getKey(block).equals(ResourceLocation.parse("ae2lt:overloaded_interface"))){
                     if(!special)return new Result(null,"interface_position",p);interfaces++;port=p.immutable();
-                }else if(block!=MultiblockContent.FRAME.get())return new Result(null,"edge",p);
+                }else if(block!=MultiblockContent.FRAME.get()&&!state.is(FRAMES))return new Result(null,"edge",p);
             }else if(y==0){
                 var kind=MultiblockData.module(block);
                 if(kind!=null)switch(kind){
                     case FRAME->{}case T1->t1++;case T2->t2++;case T3->t3++;case FORTUNE->f++;case OVERLOAD->o++;case SMELTING->s++;
-                }else return new Result(null,"floor",p);
+                }else if(!state.is(FRAMES))return new Result(null,"floor",p);
             }else{
                 if(block==MultiblockContent.GLASS.get()){
                     if(!(level.getBlockEntity(p) instanceof SimulationMemberBlockEntity m)||!m.ownedBy(controller))return new Result(null,"owned",p);
-                }else if(!BuiltInRegistries.BLOCK.getKey(block).equals(ResourceLocation.parse("ae2:quartz_vibrant_glass")))return new Result(null,"glass",p);
+                }else if(!state.is(GLASS)&&!BuiltInRegistries.BLOCK.getKey(block).equals(ResourceLocation.parse("ae2:quartz_vibrant_glass")))return new Result(null,"glass",p);
                 glass.add(p.immutable());
             }
         }

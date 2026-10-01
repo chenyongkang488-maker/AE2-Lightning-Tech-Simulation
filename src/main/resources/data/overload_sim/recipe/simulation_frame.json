@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "IQI",
+    "QGQ",
+    "IQI"
+  ],
+  "key": {
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "Q": {
+      "item": "minecraft:quartz"
+    },
+    "G": {
+      "item": "ae2:quartz_vibrant_glass"
+    }
+  },
+  "result": {
+    "id": "overload_sim:simulation_frame",
+    "count": 4
+  }
+}

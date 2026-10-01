@@ -13,6 +13,7 @@ public class OverloadSimulation {
     public static final String ID="overload_sim";
     public OverloadSimulation(IEventBus bus,ModContainer container){
         ModContent.register(bus);container.registerConfig(ModConfig.Type.COMMON,SimulationConfig.SPEC);
+        dev.overloadsim.multiblock.SimulationStructureIndex.register();
         NeoForge.EVENT_BUS.addListener((AddReloadListenerEvent e)->e.addListener(new SimulationData()));
         NeoForge.EVENT_BUS.addListener((AddReloadListenerEvent e)->e.addListener(new dev.overloadsim.multiblock.MultiblockData()));
         NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.LOWEST,true,PlayerLightningHandler::struck);

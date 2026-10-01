@@ -106,5 +106,18 @@
   "gui.overload_sim.coil.wrench_mode.6": "清空",
   "gui.overload_sim.coil.wrench_mode.7": "旋转",
   "tooltip.overload_sim.coil.wrench_controls": "Shift＋滚轮：切换配置工具用途",
-  "message.overload_sim.coil.wrench_mode": "配置工具用途：%s"
+  "message.overload_sim.coil.wrench_mode": "配置工具用途：%s",
+  "block.overload_sim.simulation_controller": "模拟室控制器",
+  "block.overload_sim.simulation_frame": "模拟室框架",
+  "block.overload_sim.simulation_efficiency_t1": "模拟效率模块 T1",
+  "block.overload_sim.simulation_efficiency_t2": "模拟效率模块 T2",
+  "block.overload_sim.simulation_efficiency_t3": "模拟效率模块 T3",
+  "block.overload_sim.simulation_fortune_module": "模拟时运模块",
+  "block.overload_sim.simulation_overload_module": "模拟过载模块",
+  "block.overload_sim.simulation_smelting_module": "模拟熔炼模块",
+  "gui.overload_sim.multiblock.crystals": "水晶：%s / %s",
+  "gui.overload_sim.multiblock.outputs": "产物（第 %s / 4 页）",
+  "gui.overload_sim.multiblock.take": "左键取一组，右键取一个，Shift取入背包",
+  "status.overload_sim.8": "结构所在区块未加载",
+  "gui.overload_sim.multiblock.error": "结构诊断：%s"
 }

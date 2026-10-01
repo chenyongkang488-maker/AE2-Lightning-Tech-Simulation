@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " B ",
+    "BFB",
+    " B "
+  ],
+  "key": {
+    "B": {
+      "item": "minecraft:blast_furnace"
+    },
+    "F": {
+      "item": "overload_sim:simulation_frame"
+    }
+  },
+  "result": {
+    "id": "overload_sim:simulation_smelting_module",
+    "count": 1
+  }
+}

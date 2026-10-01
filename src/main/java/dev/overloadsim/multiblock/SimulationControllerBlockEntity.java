@@ -20,7 +20,8 @@ import dev.overloadsim.api.MultiblockSimulationEvents;
 import dev.overloadsim.compat.*;
 public class SimulationControllerBlockEntity extends AENetworkedBlockEntity implements IActionHost {
     private UUID identity=UUID.randomUUID();
-    private SimulationStructure structure;private String error="no_structure";
+    private SimulationStructure structure;private String error="no_structure";private boolean structureDirty;
+    private BlockPos savedMin;private int savedSize;
     private final BulkOutputBuffer outputs=new BulkOutputBuffer();
     private final SimulationGridBridge bridge=new SimulationGridBridge(this);
     private SimulationBatch batch;private int nextCrystal,status;
@@ -50,6 +51,7 @@ public class SimulationControllerBlockEntity extends AENetworkedBlockEntity impl
     public UUID identity(){return identity;}
     public SimulationStructure structure(){return structure;}
     public String error(){return error;}
+    public void markStructureDirty(){structureDirty=true;}
     public ItemStackHandler crystals(){return crystals;}
     public BulkOutputBuffer outputs(){return outputs;}
     public EnergyStorage energy(){return energy;}
@@ -69,7 +71,7 @@ public class SimulationControllerBlockEntity extends AENetworkedBlockEntity impl
     }
     public void tick(){
         if(level==null||level.isClientSide)return;
-        if(level.getGameTime()%(structure==null?20:100)==0)checkStructure();
+        if(structureDirty||level.getGameTime()%(structure==null?20:100)==0){structureDirty=false;checkStructure();}
         bridge.refresh();charge();
         if(refundHv>0||refundEhv>0){refundHv-=bridge.insert(false,refundHv);refundEhv-=bridge.insert(true,refundEhv);saveChanges();if(refundHv>0||refundEhv>0){status=7;return;}}
         if(structure==null){status=6;return;}if(!loaded()){status=8;return;}
@@ -106,17 +108,21 @@ public class SimulationControllerBlockEntity extends AENetworkedBlockEntity impl
         double available=feFraction+appeng.api.config.PowerUnit.AE.convertTo(appeng.api.config.PowerUnit.FE,drawn);
         int received=energy.receiveEnergy(Math.min(needed,(int)Math.floor(available)),false);feFraction=Math.max(0,available-received);if(drawn>0)saveChanges();
     }
-    public boolean loaded(){return structure!=null&&structure.members().stream().allMatch(level::hasChunkAt);}
+    public boolean loaded(){
+        if(structure==null)return false;var min=structure.min();int maxX=(min.getX()+structure.size()-1)>>4,maxZ=(min.getZ()+structure.size()-1)>>4;
+        for(int x=min.getX()>>4;x<=maxX;x++)for(int z=min.getZ()>>4;z<=maxZ;z++)if(!level.getChunkSource().hasChunk(x,z))return false;
+        return true;
+    }
     public void checkStructure(){
         if(level==null||level.isClientSide||SimulationStructureIndex.converting())return;
         if(structure!=null&&!loaded()){error="unloaded";return;}
-        var result=structure==null?SimulationStructureValidator.find(this):SimulationStructureValidator.validate(this,structure.min(),structure.size());
-        if(!result.valid()){error=result.error();invalidateStructure();return;}
+        var result=structure==null?(savedMin==null?SimulationStructureValidator.find(this):SimulationStructureValidator.validate(this,savedMin,savedSize)):SimulationStructureValidator.validate(this,structure.min(),structure.size());
+        if(!result.valid()){error=result.error();if(error.equals("unloaded"))return;savedMin=null;savedSize=0;invalidateStructure();return;}
         error="";var next=result.structure();
         if(structure!=null){structure=next;return;}
         if(NeoForge.EVENT_BUS.post(new MultiblockSimulationEvents.BeforeStructureForm(this,next)).isCanceled())return;
         var verify=SimulationStructureValidator.validate(this,next.min(),next.size());if(!verify.valid())return;next=verify.structure();
-        structure=next;
+        structure=next;savedMin=next.min();savedSize=next.size();SimulationStructureIndex.bind(this,next);
         final var formed=next;
         SimulationStructureIndex.converting(()->{
             for(var p:formed.members()){
@@ -133,7 +139,7 @@ public class SimulationControllerBlockEntity extends AENetworkedBlockEntity impl
         });saveChanges();markForClientUpdate();NeoForge.EVENT_BUS.post(new MultiblockSimulationEvents.Formed(this,formed));
     }
     public void invalidateStructure(){
-        var old=structure;structure=null;bridge.disconnect();if(old==null||level==null)return;
+        var old=structure;structure=null;savedMin=null;savedSize=0;SimulationStructureIndex.release(this);bridge.disconnect();if(old==null||level==null)return;
         SimulationStructureIndex.converting(()->{for(var p:old.members())if(level.hasChunkAt(p)&&level.getBlockEntity(p) instanceof SimulationMemberBlockEntity m&&m.ownedBy(this))m.restore();});
         saveChanges();markForClientUpdate();NeoForge.EVENT_BUS.post(new MultiblockSimulationEvents.Invalidated(this,old));
     }
@@ -149,8 +155,8 @@ public class SimulationControllerBlockEntity extends AENetworkedBlockEntity impl
         batch=tag.contains("Batch")?SimulationBatch.load(tag.getCompound("Batch"),r):null;rolls.clear();
         for(var v:tag.getList("Rolls",Tag.TAG_COMPOUND)){var t=(CompoundTag)v;int slot=t.getInt("Slot");if(slot<0||slot>=49)continue;var list=new ArrayList<ItemStack>();for(var item:t.getList("Outputs",Tag.TAG_COMPOUND))ItemStack.parse(r,item).ifPresent(list::add);rolls.put(slot,new Roll(ItemStack.parseOptional(r,t.getCompound("Input")),List.copyOf(list)));}
     }
-    @Override public void saveAdditional(CompoundTag tag,HolderLookup.Provider r){super.saveAdditional(tag,r);tag.put("SimulationMachine",saveMachine(r));}
-    @Override public void loadTag(CompoundTag tag,HolderLookup.Provider r){super.loadTag(tag,r);loadMachine(tag.getCompound("SimulationMachine"),r);}
+    @Override public void saveAdditional(CompoundTag tag,HolderLookup.Provider r){super.saveAdditional(tag,r);tag.put("SimulationMachine",saveMachine(r));if(savedMin!=null){tag.putLong("StructureMin",savedMin.asLong());tag.putInt("StructureSize",savedSize);}}
+    @Override public void loadTag(CompoundTag tag,HolderLookup.Provider r){super.loadTag(tag,r);loadMachine(tag.getCompound("SimulationMachine"),r);if(tag.contains("StructureMin")){savedMin=BlockPos.of(tag.getLong("StructureMin"));savedSize=Math.clamp(tag.getInt("StructureSize"),3,7);}}
     private void writeVisual(RegistryFriendlyByteBuf data){
         data.writeVarInt(visualSize());data.writeBlockPos(visualMin());data.writeByte(visualFlags());var items=visualCrystals();data.writeVarInt(items.size());for(var item:items)ItemStack.STREAM_CODEC.encode(data,item);
     }

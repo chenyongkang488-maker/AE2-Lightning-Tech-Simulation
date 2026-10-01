@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " R ",
+    "RSR",
+    " F "
+  ],
+  "key": {
+    "R": {
+      "item": "minecraft:redstone"
+    },
+    "S": {
+      "item": "ae2:speed_card"
+    },
+    "F": {
+      "item": "overload_sim:simulation_frame"
+    }
+  },
+  "result": {
+    "id": "overload_sim:simulation_efficiency_t1",
+    "count": 1
+  }
+}

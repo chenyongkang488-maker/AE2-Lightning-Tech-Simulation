@@ -26,6 +26,11 @@ public class MultiblockSimulationMenu extends AEBaseMenu {
     @GuiSync(37) public long multiplier;
     @GuiSync(38) public long hv;
     @GuiSync(39) public long ehv;
+    @GuiSync(40) public String problem="";
+    @GuiSync(41) public long feCost;
+    @GuiSync(42) public long hvCost;
+    @GuiSync(43) public long ehvCost;
+    @GuiSync(44) public int frequency=-1;
     private final SimulationControllerBlockEntity host;
     private final ItemStackHandler display=new ItemStackHandler(VISIBLE_OUTPUTS);
     private final int[] quantities=new int[VISIBLE_OUTPUTS];
@@ -92,6 +97,8 @@ public class MultiblockSimulationMenu extends AEBaseMenu {
             var batch=host.batch();remaining=batch==null?0:batch.remaining;duration=batch==null?s==null?180:MultiblockData.policy().duration(s):batch.duration;
             participants=batch==null?0:batch.inputs.size();multiplier=s==null?1:MultiblockData.policy().multiplier(s);
             hv=host.bridge().extract(false,Long.MAX_VALUE,true);ehv=host.bridge().extract(true,Long.MAX_VALUE,true);refresh();
+            problem=host.error();var cost=batch!=null?batch.cost:s==null?new MultiblockRules.Costs(1000,1,0):MultiblockData.policy().cost(1,s);feCost=cost.fe();hvCost=cost.hv();ehvCost=cost.ehv();frequency=-1;
+            if(s!=null&&s.networkInterface()!=null&&host.getLevel().hasChunkAt(s.networkInterface())&&host.getLevel().getBlockEntity(s.networkInterface()) instanceof com.moakiee.ae2lt.blockentity.OverloadedInterfaceBlockEntity port)frequency=port.getFrequencyBinding().getFrequencyId();
         }super.broadcastChanges();
     }
     @Override public boolean stillValid(Player player){return !host.isRemoved()&&player.level()==host.getLevel()&&player.distanceToSqr(host.getBlockPos().getCenter())<=64;}

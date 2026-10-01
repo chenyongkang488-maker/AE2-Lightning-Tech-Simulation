@@ -106,5 +106,18 @@
   "gui.overload_sim.coil.wrench_mode.6": "Empty",
   "gui.overload_sim.coil.wrench_mode.7": "Rotate",
   "tooltip.overload_sim.coil.wrench_controls": "Shift + scroll: cycle configurator mode",
-  "message.overload_sim.coil.wrench_mode": "Configurator mode: %s"
+  "message.overload_sim.coil.wrench_mode": "Configurator mode: %s",
+  "block.overload_sim.simulation_controller": "Simulation Chamber Controller",
+  "block.overload_sim.simulation_frame": "Simulation Chamber Frame",
+  "block.overload_sim.simulation_efficiency_t1": "Simulation Efficiency Module T1",
+  "block.overload_sim.simulation_efficiency_t2": "Simulation Efficiency Module T2",
+  "block.overload_sim.simulation_efficiency_t3": "Simulation Efficiency Module T3",
+  "block.overload_sim.simulation_fortune_module": "Simulation Fortune Module",
+  "block.overload_sim.simulation_overload_module": "Simulation Overload Module",
+  "block.overload_sim.simulation_smelting_module": "Simulation Smelting Module",
+  "gui.overload_sim.multiblock.crystals": "Crystals: %s / %s",
+  "gui.overload_sim.multiblock.outputs": "Outputs (page %s / 4)",
+  "gui.overload_sim.multiblock.take": "Left: one stack. Right: one item. Shift: fill inventory.",
+  "status.overload_sim.8": "Structure chunks unloaded",
+  "gui.overload_sim.multiblock.error": "Structure diagnostic: %s"
 }

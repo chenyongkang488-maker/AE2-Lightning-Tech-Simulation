@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " N ",
+    "MFM",
+    " N "
+  ],
+  "key": {
+    "N": {
+      "item": "minecraft:netherite_ingot"
+    },
+    "M": {
+      "item": "ae2lt:lightning_collapse_matrix"
+    },
+    "F": {
+      "item": "overload_sim:simulation_frame"
+    }
+  },
+  "result": {
+    "id": "overload_sim:simulation_overload_module",
+    "count": 1
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "policy": {
+    "ticks": 180,
+    "reduction_cap": 104,
+    "fortune_cap": 10,
+    "t1": 2,
+    "t2": 4,
+    "t3": 8,
+    "fe": 1000,
+    "hv": 1,
+    "overload_ehv": 1,
+    "smelting_hv": 2
+  },
+  "smelting": [
+    {
+      "input": "minecraft:raw_iron",
+      "result": "minecraft:iron_ingot",
+      "count": 2
+    },
+    {
+      "input": "minecraft:raw_gold",
+      "result": "minecraft:gold_ingot",
+      "count": 2
+    },
+    {
+      "input": "minecraft:raw_copper",
+      "result": "minecraft:copper_ingot",
+      "count": 2
+    }
+  ],
+  "modules": []
+}

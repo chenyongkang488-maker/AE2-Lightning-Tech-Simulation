@@ -8,5 +8,6 @@ import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 @EventBusSubscriber(modid=OverloadSimulation.ID,bus=EventBusSubscriber.Bus.MOD,value=Dist.CLIENT)
 public class ClientRegistration {
     @SubscribeEvent public static void screens(RegisterMenuScreensEvent event){event.register(ModContent.MENU.get(),SimulationScreen::new);event.register(ModContent.COIL_MENU.get(),CoilScreen::new);event.register(dev.overloadsim.multiblock.MultiblockContent.MENU.get(),MultiblockSimulationScreen::new);}
-    @SubscribeEvent public static void renderers(EntityRenderersEvent.RegisterRenderers event){event.registerBlockEntityRenderer(ModContent.CHAMBER_ENTITY.get(),SimulationChamberRenderer::new);}
+    @SubscribeEvent public static void renderers(EntityRenderersEvent.RegisterRenderers event){event.registerBlockEntityRenderer(ModContent.CHAMBER_ENTITY.get(),SimulationChamberRenderer::new);event.registerBlockEntityRenderer(dev.overloadsim.multiblock.MultiblockContent.CONTROLLER_ENTITY.get(),MultiblockSimulationRenderer::new);}
+    @SubscribeEvent public static void extraModels(net.neoforged.neoforge.client.event.ModelEvent.RegisterAdditional event){event.register(net.minecraft.client.resources.model.ModelResourceLocation.standalone(ModContent.id("block/simulation_emitter")));}
 }

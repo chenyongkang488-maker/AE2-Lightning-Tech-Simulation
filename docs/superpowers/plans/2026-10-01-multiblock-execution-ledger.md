@@ -18,3 +18,6 @@ Ruling: formed validation runs once per 100 ticks as a bounded fallback, unforme
 Task 4: complete. RED missing menu. GREEN 63 GameTests including legal left/right/shift transfers and stale revision rejection. AE native layout supports only 9/3/2-column enums; use two nine-column panels rather than unsupported seven/eight-column identifiers. Server quantity snapshots carry legal prototypes, current page and a revision.
 
 Task 5: in progress. Blockbench opened and target window selected with computer-use skill.
+
+Additional integration check: 65 GameTests passed, including original-interface grid bridging, exact 2048-item AE export and packed controller-item restoration.
+Blockbench existing visual plugin reload prompts for local-file access. Requested human operation because computer-use guidance forbids acting on security/privacy permission requests. Continue independent validation while pending; no approval inferred from elapsed time.

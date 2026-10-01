@@ -45,6 +45,6 @@ public final class MultiblockSimulationScreen extends AEBaseScreen<MultiblockSim
         if(slot!=null&&slot.index>=49&&slot.index<81&&!slot.getItem().isEmpty())
             g.renderTooltip(font,java.util.List.of(slot.getItem().getHoverName(),Component.literal(menu.quantity(slot.index-49)+" / 1024"),Component.translatable("gui.overload_sim.multiblock.take")),java.util.Optional.empty(),mx,my);
         if(mx>=leftPos+16&&mx<leftPos+336&&my>=topPos+186&&my<topPos+211)
-            g.renderTooltip(font,java.util.List.of(Component.translatable("status.overload_sim."+menu.status),Component.literal(menu.host().error())),java.util.Optional.empty(),mx,my);
+            g.renderTooltip(font,java.util.List.of(Component.translatable("status.overload_sim."+menu.status),Component.translatable("gui.overload_sim.multiblock.error",menu.problem),Component.literal("FE "+menu.feCost+" · HV "+menu.hvCost+" · EHV "+menu.ehvCost),Component.literal("过载频道："+menu.frequency)),java.util.Optional.empty(),mx,my);
     }
 }

@@ -9,6 +9,33 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(OverloadSimulation.ID)
 @PrefixGameTestTemplate(false)
 public class MultiblockGameTests {
+    @GameTest(template="empty",timeoutTicks=120)
+    public static void originalInterfaceBridgesAndExportsAcceptedQuantities(GameTestHelper h){
+        var c=powered(h,3);var min=c.structure().min();c.invalidateStructure();
+        var p=min.offset(0,0,1);var registry=net.minecraft.core.registries.BuiltInRegistries.BLOCK;
+        h.getLevel().setBlockAndUpdate(p,registry.get(net.minecraft.resources.ResourceLocation.parse("ae2lt:overloaded_interface")).defaultBlockState());c.checkStructure();
+        h.runAtTickTime(80,()->{
+            c.bridge().refresh();var port=(appeng.blockentity.grid.AENetworkedBlockEntity)h.getLevel().getBlockEntity(p);
+            h.assertTrue(c.getMainNode().getGrid()==port.getMainNode().getGrid(),"original interface joins controller network");
+            c.outputs().insert(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_INGOT),2048,false);c.bridge().export();
+            h.assertTrue(c.outputs().count(0)==0&&c.outputs().count(1)==0,"bulk inserted through AE keys");
+            long stored=c.getMainNode().getGrid().getStorageService().getInventory().extract(appeng.api.stacks.AEItemKey.of(net.minecraft.world.item.Items.IRON_INGOT),2048,appeng.api.config.Actionable.SIMULATE,appeng.api.networking.security.IActionSource.ofMachine(c));
+            h.assertTrue(stored==2048,"exported counts exact");
+            h.getLevel().setBlockAndUpdate(p,net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());c.checkStructure();
+            h.assertTrue(c.structure()==null,"removed original interface invalidates structure");h.succeed();
+        });
+    }
+    @GameTest(template="empty")
+    public static void breakingControllerPreservesBulkAndCrystalsInOneItem(GameTestHelper h){
+        var c=build(h,h.absolutePos(new net.minecraft.core.BlockPos(2,1,2)),3);c.checkStructure();c.crystals().setStackInSlot(0,ironCrystal());c.outputs().insert(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_INGOT),2048,false);
+        var params=new net.minecraft.world.level.storage.loot.LootParams.Builder(h.getLevel()).withParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.ORIGIN,c.getBlockPos().getCenter()).withParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.BLOCK_STATE,c.getBlockState()).withParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.BLOCK_ENTITY,c).withParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.TOOL,net.minecraft.world.item.ItemStack.EMPTY);
+        var drops=c.getBlockState().getDrops(params);
+        h.assertTrue(drops.size()==1,"one packed controller item");var item=drops.getFirst();var tag=item.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA).copyTag();
+        var oldPos=c.getBlockPos();h.getLevel().setBlockAndUpdate(oldPos,net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
+        h.getLevel().setBlockAndUpdate(oldPos,c.getBlockState());var next=(dev.overloadsim.multiblock.SimulationControllerBlockEntity)h.getLevel().getBlockEntity(oldPos);
+        next.loadMachine(tag.getCompound("SimulationMachine"),h.getLevel().registryAccess());
+        h.assertTrue(next.outputs().count(0)==1024&&next.outputs().count(1)==1024&&next.crystals().getStackInSlot(0).is(dev.overloadsim.ModContent.PERFECT.get()),"packed state restored");h.succeed();
+    }
     @GameTest(template="empty")
     public static void multiblockMenuExists(GameTestHelper h){
         var c=build(h,h.absolutePos(new net.minecraft.core.BlockPos(2,1,2)),3);c.checkStructure();
