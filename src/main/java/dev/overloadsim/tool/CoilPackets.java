@@ -21,7 +21,11 @@ public final class CoilPackets {
         public Type<Configure> type(){return TYPE;}
     }
     @SubscribeEvent public static void register(RegisterPayloadHandlersEvent e){var r=e.registrar("1");
-        r.playToServer(Open.TYPE,Open.CODEC,(packet,context)->{if(context.player() instanceof ServerPlayer player)CoilMenu.open(player);});
-        r.playToServer(Configure.TYPE,Configure.CODEC,(packet,context)->{if(context.player() instanceof ServerPlayer player&&player.containerMenu instanceof CoilMenu menu&&menu.containerId==packet.menuId())menu.configure(player,packet.action(),packet.value());});
+        r.playToServer(Open.TYPE,Open.CODEC,(packet,context)->{if(context.player() instanceof ServerPlayer player)dev.overloadsim.compat.CoilHubAccess.open(player);});
+        r.playToServer(Configure.TYPE,Configure.CODEC,(packet,context)->{
+            if(!(context.player() instanceof ServerPlayer player)||player.containerMenu.containerId!=packet.menuId())return;
+            if(player.containerMenu instanceof dev.overloadsim.compat.CoilHubAccess.Configuration hub)hub.overloadSim$configure(player,packet.action(),packet.value());
+            else if(player.containerMenu instanceof CoilMenu menu)menu.configure(player,packet.action(),packet.value());
+        });
     }
 }

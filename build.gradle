@@ -2,7 +2,7 @@ plugins {
     id 'java-library'
     id 'net.neoforged.moddev' version '2.0.148'
 }
-version = '0.1.0-alpha.6'
+version = '0.1.0-alpha.7'
 group = 'dev.overloadsim'
 base { archivesName = 'overload_sim' }
 java { toolchain.languageVersion = JavaLanguageVersion.of(21); withSourcesJar() }
@@ -17,6 +17,8 @@ neoForge {
     mods { overload_sim { sourceSet sourceSets.main } }
 }
 dependencies {
+    compileOnly files('libs/Mekanism-1.21.1-10.7.19.85.jar')
+    if(project.hasProperty('mekTests')) runtimeOnly files('libs/Mekanism-1.21.1-10.7.19.85.jar')
     implementation files('libs/appliedenergistics2-19.2.17.jar', 'libs/ae2lt-2.1.0.jar', 'libs/thunderbolt-2.0.0.jar', 'libs/guideme-21.1.19.jar')
     testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

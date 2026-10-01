@@ -18,7 +18,7 @@ public final class CoilClient {
     @SubscribeEvent(priority=EventPriority.HIGHEST)
     public static void keys(ClientTickEvent.Pre event){
         var mc=Minecraft.getInstance();if(mc.player==null||mc.screen!=null)return;
-        if(CoilModules.isCoil(mc.player.getMainHandItem())||CoilModules.isCoil(mc.player.getOffhandItem()))while(DeviceHubKeyMappings.OPEN_CONFIG.consumeClick())PacketDistributor.sendToServer(new CoilPackets.Open());
+        if(CoilModules.isCoil(dev.overloadsim.compat.CoilHubAccess.weapon(mc.player)))while(DeviceHubKeyMappings.OPEN_CONFIG.consumeClick())PacketDistributor.sendToServer(new CoilPackets.Open());
     }
     @SubscribeEvent
     public static void effects(ClientTickEvent.Post event){

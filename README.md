@@ -1,8 +1,8 @@
 # 过载模拟 Overload Simulation
 
-Minecraft **1.21.1 / NeoForge 21.1.252** 的 AE2 闪电科技附属模组。当前版本为 **0.1.0-alpha.6 测试原型**。
+Minecraft **1.21.1 / NeoForge 21.1.252** 的 AE2 闪电科技附属模组。当前版本为 **0.1.0-alpha.7 测试原型**。
 
-项目在 `D:\MinecraftDev\OverloadSimulation`，独立 Git 仓库的 `codex/resonance-coil` 分支上。原来的 1.19.2 工程不参与构建。
+项目在 `D:\MinecraftDev\OverloadSimulation`，独立 Git 仓库的 `codex/coil-hub-wrench` 分支上。原来的 1.19.2 工程不参与构建。
 
 ## 游戏内容
 
@@ -18,6 +18,8 @@ Minecraft **1.21.1 / NeoForge 21.1.252** 的 AE2 闪电科技附属模组。当�
 - 谐振雷鸣线圈：水平悬浮的粉白线圈头与八帧粉色电弧。原生过载装备工作站安装核心和模块并绑定网络；短按右键松开劈目标，蓄力 1.5 秒松开劈自己，默认消耗 10 HV 人工雷，极高压模块开启后消耗 10 EHV 自然雷。
 - 拟态模块提供下界合金采集等级和电流挖掘；前置满足后可安装终极破坏、效率 X、时运 V、精准采集模块。在 G 界面配置，精准开启时优先于时运。支持原生 T1/T2/T3 能量模块、手持及工作站持续 AE FE 充电。挖掘与近战默认消耗 200 FE。
 
+G 使用闪电科技原生设备界面，四个装备页与右上角武器页共用；武器页按主手优先显示线圈或电磁炮，无主手武器时回退副手。扳手模块不需要拟态前置，默认关闭；开启后禁用右键引雷和蓄力释放，支持 AE 扳手及可选通用机械原生配置器的八种用途。
+
 默认档案为铁、铜、金、钻石、下界合金，小麦、胡萝卜、马铃薯、甜菜根，七种树苗及生物战利品。默认排除凋灵和末影龙，可通过数据包覆盖。
 
 矿物使用 24 个粗矿块；钻石、下界合金用对应储存块。收集器中心不计入。作物种在收集器所在高度的耕地上方，树苗种在相同高度的泥土类方块上方。默认接受自然雷、人工雷及指令 `/summon lightning_bolt`。配方可设置 `allow_artificial=false` 限制人工雷。
@@ -26,16 +28,17 @@ Minecraft **1.21.1 / NeoForge 21.1.252** 的 AE2 闪电科技附属模组。当�
 
 ## 构建与运行
 
-需要 Java 21 JDK。四个前置的下载地址及 SHA-256 固定在 `scripts/dependencies.json`，二进制依赖不会提交到 Git，也不打包进附属模组。
+需要 Java 21 JDK。四个前置及可选通用机械编译依赖的下载地址及 SHA-256 固定在 `scripts/dependencies.json`，二进制依赖不会提交到 Git，也不打包进附属模组。
 
 ```powershell
 .\scripts\bootstrap.ps1
 .\scripts\build.ps1 -GameTests
 .\scripts\build.ps1 -Client
+.\scripts\build.ps1 -GameTests -Mekanism
 .\scripts\install-test.ps1
 ```
 
-本机脚本优先使用 D 盘已有的 Gradle 8.8；其他机器可使用 Gradle Wrapper 下载 8.8。常规构建产物为 `build/libs/overload_sim-0.1.0-alpha.6.jar`，sources jar 提供源码。
+本机脚本优先使用 D 盘已有的 Gradle 8.8；其他机器可使用 Gradle Wrapper 下载 8.8。常规构建产物为 `build/libs/overload_sim-0.1.0-alpha.7.jar`，sources jar 提供源码。通用机械 10.7.19.85 是可选运行依赖，常规测试不加载它；-Mekanism（Gradle -PmekTests）启用真实集成测试。
 
 前置版本固定为 AE2 19.2.17、AE2 Lightning Tech Reborn 2.1.0、Thunderbolt Core Reborn 2.0.0、GuideME 21.1.19。升级前置后需要复测 collector 的两处 Mixin 和 高压闪电桥接接口。
 
@@ -47,7 +50,7 @@ Minecraft **1.21.1 / NeoForge 21.1.252** 的 AE2 闪电科技附属模组。当�
 
 本地插件 `art/overload_sim_visuals.js` 可在 Blockbench → 文件 → 插件 → 从文件加载，然后选择工具菜单 → 绘制模拟水晶与镂空模拟室。它会覆盖当前素材和分层工程，手绘修改前请先用 Git 保存。旧版 `art/overload_sim_pink_white.bbmodel` 保留供回看。
 
-`art/resonance_coil.bbmodel` 保存 47 个部件的水平悬浮线圈、短柄和独立闪电图层；`art/resonance_coil_workshop.js` 在 Blockbench 工具菜单提供“绘制谐振雷鸣线圈”，导出模型、八帧动画与六个模块图标。这些素材为原创。
+`art/resonance_coil.bbmodel` 保存 47 个部件的水平悬浮线圈、短柄和独立闪电图层；`art/resonance_coil_workshop.js` 在 Blockbench 工具菜单提供“绘制谐振雷鸣线圈”，导出模型、八帧动画与七个模块图标。模块外壳改编自 overload_module_base.png，保留 CC BY-NC-SA 3.0 许可；线圈与电弧为原创。
 
 ## 魔改 API
 

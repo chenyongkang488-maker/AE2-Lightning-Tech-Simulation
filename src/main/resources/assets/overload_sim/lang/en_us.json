@@ -88,5 +88,21 @@
   "gui.overload_sim.coil.artificial": "Artificial · 10 HV",
   "gui.overload_sim.coil.efficiency_level": "Efficiency: %s / 10",
   "gui.overload_sim.coil.fortune_level": "Fortune: %s / 5",
-  "gui.overload_sim.coil.silk": "Silk Touch"
+  "gui.overload_sim.coil.silk": "Silk Touch",
+  "item.overload_sim.wrench_module": "Wrench Module",
+  "gui.overload_sim.coil.natural_mode": "Natural lightning",
+  "gui.overload_sim.coil.wrench": "Wrench mode",
+  "gui.overload_sim.coil.wrench_mode": "Configurator mode",
+  "gui.overload_sim.coil.no_mekanism": "Mekanism absent: AE wrench only",
+  "tooltip.overload_sim.coil.wrench_module": "Enable in G to disable lightning and use AE wrench / Mek configurator",
+  "tooltip.overload_sim.coil.wrench_active": "Wrench mode: lightning disabled",
+  "message.overload_sim.coil.disabled": "Wrench mode disables lightning",
+  "gui.overload_sim.coil.wrench_mode.0": "Wrench",
+  "gui.overload_sim.coil.wrench_mode.1": "Items",
+  "gui.overload_sim.coil.wrench_mode.2": "Fluids",
+  "gui.overload_sim.coil.wrench_mode.3": "Chemical",
+  "gui.overload_sim.coil.wrench_mode.4": "Energy",
+  "gui.overload_sim.coil.wrench_mode.5": "Heat",
+  "gui.overload_sim.coil.wrench_mode.6": "Empty",
+  "gui.overload_sim.coil.wrench_mode.7": "Rotate"
 }

@@ -1,5 +1,19 @@
 # 验证记录
 
+## 0.1.0-alpha.7（2026-10-01）
+
+最终 `build runGameTestServer -PmekTests` 和 `build runGameTestServer` 均退出 0、BUILD SUCCESSFUL，各 50 项必需 GameTest 通过；4 项 JUnit 无失败/错误。日志：`build/verification/coil-mek-release.log`、`coil-no-mek-release.log`。普通运行不包含通用机械，验证可选依赖缺失时仍能加载独立服务器。
+
+新增检查覆盖：线圈原生 hub 武器页识别与主副手优先；电磁炮行为保留；原始手持物品绑定、非法配置与迟到包拒绝；alpha.6 五字段配置读取；扳手默认关闭、无需拟态前置、开关及卸下核心/模块即时失效；已开始的引雷释放和直接引雷入口都被阻止；真实 AE 驱动器旋转及拆卸返还内部存储元件。通用机械检查真实右键侧面配置、私有机器权限、八种用途的原生工具能力、旋转、清空及准确掉落、右键拆卸、延迟网络创建后切换管道连接。临时配置器代理不会在实际线圈持久化任何通用机械组件。
+
+只读复核提出两个问题并已修正：兼容桥接避免持久化可选模组组件；延迟管道断言之前不能提前结束 GameTest。最终两种环境重新验证后通过。GameTestServer 的玩家缓存仅在测试服务器启动时补齐，生产服务器不被修改。
+
+Blockbench 工坊 0.3.0 在桌面应用内绘制并导出：47 元素水平悬浮线圈，两层 32×32、八帧白芯粉色汇聚电弧，七个 16×16 原版模块外壳变体。预览为 `art/resonance_coil_preview.png` 和 `art/coil_modules_preview.png`。模块外壳、嵌入基底及预览保留上游 CC BY-NC-SA 3.0；原创线圈与电弧 MIT，署名随 JAR 打包。JAR 内模型、七个配方/图标、版本和许可证均校验，未捆绑 AE/Mek/闪电科技前置类。
+
+客户端成功加载到开发存档，实际看到线圈进入原生设备界面：原生状态区、模块列表及滚动到末尾的设置区，包括精准采集、扳手模式和用途。用户按物理 Esc 停止电脑控制后，没有继续 UI 操作。新增扳手模块的客户端点击、换手电磁炮画面与 PCL 启动后的完整手工交互仍待人工联调；服务器对应操作已有上述自动测试。
+
+已安装 `D:\mc\.minecraft\versions\OverloadSim-Test-1.21.1\mods\overload_sim-0.1.0-alpha.7.jar`，301412 字节，SHA-256 `02A490FBC523F51A49E3BF0096CF20A3F5EA0AAE2EB9B6ED85F10D2735351C14`。alpha.6 备份 `D:\mc\.minecraft\versions\OverloadSim-Test-1.21.1\addon-backups\20261001-114803\overload_sim-0.1.0-alpha.6.jar`；其余 10 个前置/测试模组 hash 未变。运行中的游戏需重启后加载新 JAR。Git 回滚标签为 `v0.1.0-alpha.7`。
+
 ## 0.1.0-alpha.5（2026-09-30）
 
 `scripts/build.ps1 -GameTests` 退出码 0，BUILD SUCCESSFUL；4 项 JUnit 测试无失败/错误，28 项必需服务器 GameTest 全部通过。最终日志：`build/verification/alpha5-final.log`。水晶世界显示同步先在旧实现中失败，再修复；用户要求六面玻璃后，玻璃碰撞回归先在开放框架中按预期失败，再加入与玻璃模型对应的薄层碰撞。

@@ -3,7 +3,7 @@ from pathlib import Path
 import json
 root=Path(__file__).resolve().parents[1]
 path=root/'run-client/saves/ui-review/datapacks/visual-review/data/overload_sim_review/function/coil.mcfunction'
-modules=['overload_sim:'+id for id in ['extreme_voltage_module','mimic_tool_module','ultimate_destruction_module','efficiency_module','fortune_module','silk_touch_module']]+['ae2lt:energy_module_t3']
+modules=['overload_sim:'+id for id in ['extreme_voltage_module','mimic_tool_module','ultimate_destruction_module','efficiency_module','fortune_module','silk_touch_module','wrench_module']]+['ae2lt:energy_module_t3']
 def nbt(value):
     if isinstance(value,dict):return '{'+','.join(json.dumps(k)+':'+nbt(v) for k,v in value.items())+'}'
     if isinstance(value,list):return '['+','.join(nbt(v) for v in value)+']'
@@ -19,6 +19,8 @@ path.write_text('\n'.join([
 'setblock 1003 180 1001 minecraft:diamond_ore','setblock 1004 180 1001 minecraft:bedrock',
 'setblock 1003 180 1002 minecraft:oak_log','setblock 1004 180 1002 ae2lt:firmament_conversion_core',
 'item replace entity @s weapon.mainhand with '+coil,
+'give @s ae2lt:electromagnetic_railgun',
+'setblock 1000 180 997 mekanism:metallurgic_infuser',
 'tp @s 1000.6 180 1003.3 180 6'
 ])+'\n',encoding='utf-8')
 print('Prepared ignored developer scene:',path)

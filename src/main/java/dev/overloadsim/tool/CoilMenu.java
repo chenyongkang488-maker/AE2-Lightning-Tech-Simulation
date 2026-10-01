@@ -24,17 +24,10 @@ public final class CoilMenu extends AbstractContainerMenu {
     /** Only the server calls this. Illegal actions never mutate the held stack. */
     public boolean configure(Player player,int action,int value){
         if(inventory.player.level().isClientSide()||!stillValid(player))return false;
-        var s=stack();var old=CoilSettings.read(s);CoilSettings next;
-        switch(action){
-            case 0 -> {if(!CoilModules.has(s,CoilModuleItem.Type.EXTREME)||value<0||value>1)return false;next=new CoilSettings(value==1,old.efficiencyEnabled(),old.efficiency(),old.fortune(),old.silk());}
-            case 1 -> {if(!CoilModules.has(s,CoilModuleItem.Type.EFFICIENCY)||value<0||value>1)return false;next=new CoilSettings(old.extreme(),value==1,old.efficiency(),old.fortune(),old.silk());}
-            case 2 -> {if(!CoilModules.has(s,CoilModuleItem.Type.EFFICIENCY)||value<0||value>10)return false;next=new CoilSettings(old.extreme(),old.efficiencyEnabled(),value,old.fortune(),old.silk());}
-            case 3 -> {if(!CoilModules.has(s,CoilModuleItem.Type.FORTUNE)||value<0||value>5)return false;next=new CoilSettings(old.extreme(),old.efficiencyEnabled(),old.efficiency(),value,old.silk());}
-            case 4 -> {if(!CoilModules.has(s,CoilModuleItem.Type.SILK)||value<0||value>1)return false;next=new CoilSettings(old.extreme(),old.efficiencyEnabled(),old.efficiency(),old.fortune(),value==1);}
-            default -> {return false;}
-        }
-        s.set(ModContent.COIL_SETTINGS.get(),next);inventory.setChanged();broadcastChanges();return true;
+        if(!CoilConfiguration.apply(stack(),action,value))return false;
+        inventory.setChanged();broadcastChanges();return true;
     }
+
     private void refresh(){
         if(inventory.player.level().isClientSide())return;var s=stack();var settings=CoilSettings.read(s);
         data.set(0,settings.extreme()?1:0);data.set(1,settings.efficiencyEnabled()?1:0);data.set(2,settings.efficiency());data.set(3,settings.fortune());data.set(4,settings.silk()?1:0);

@@ -88,5 +88,21 @@
   "gui.overload_sim.coil.artificial": "人工雷 · 10 高压",
   "gui.overload_sim.coil.efficiency_level": "效率等级：%s / 10",
   "gui.overload_sim.coil.fortune_level": "时运等级：%s / 5",
-  "gui.overload_sim.coil.silk": "精准采集"
+  "gui.overload_sim.coil.silk": "精准采集",
+  "item.overload_sim.wrench_module": "扳手模块",
+  "gui.overload_sim.coil.natural_mode": "自然雷模式",
+  "gui.overload_sim.coil.wrench": "扳手模式",
+  "gui.overload_sim.coil.wrench_mode": "配置工具用途",
+  "gui.overload_sim.coil.no_mekanism": "未安装通用机械：仅 AE 扳手功能可用",
+  "tooltip.overload_sim.coil.wrench_module": "G 开启后禁用引雷，切换 AE 扳手与通用机械配置用途",
+  "tooltip.overload_sim.coil.wrench_active": "扳手模式：引雷已关闭",
+  "message.overload_sim.coil.disabled": "扳手模式开启：引雷已关闭",
+  "gui.overload_sim.coil.wrench_mode.0": "通用扳手",
+  "gui.overload_sim.coil.wrench_mode.1": "物品",
+  "gui.overload_sim.coil.wrench_mode.2": "流体",
+  "gui.overload_sim.coil.wrench_mode.3": "化学品",
+  "gui.overload_sim.coil.wrench_mode.4": "能量",
+  "gui.overload_sim.coil.wrench_mode.5": "热量",
+  "gui.overload_sim.coil.wrench_mode.6": "清空",
+  "gui.overload_sim.coil.wrench_mode.7": "旋转"
 }

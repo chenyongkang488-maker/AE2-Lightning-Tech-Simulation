@@ -2,7 +2,8 @@
   "source": "Blockbench canvas and Java item codec",
   "elements": 47,
   "lightningFrames": 8,
-  "modules": 6,
+  "modules": 7,
   "horizontalFloatingHead": true,
-  "originalArtwork": true
+  "convergingArcs": true,
+  "moduleBase": "AE2LT overload_module_base.png (CC BY-NC-SA 3.0)"
 }

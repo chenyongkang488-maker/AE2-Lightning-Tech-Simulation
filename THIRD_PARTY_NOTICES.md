@@ -18,3 +18,11 @@ LGPL license is separate from its asset license.
 The chamber frame geometry, metal atlas and separately drawn lightning overlay
 are original addon work under this project's MIT license. The addon Java code
 remains MIT. Reference mod binaries are neither committed nor bundled.
+
+The seven coil module icons are adapted from AE2LT 2.1.0's
+`assets/ae2lt/textures/item/overload_module_base.png`. The original beveled case
+and pink contacts are retained; the inset panel and seven function symbols are
+new. These icons, `art/reference/overload_module_base.png`, their preview sheet
+and the embedded base sprite in `art/resonance_coil_workshop.js` retain
+**CC BY-NC-SA 3.0** under the same attribution above. The coil geometry, body
+atlas and eight-frame converging arcs are original addon artwork (MIT).

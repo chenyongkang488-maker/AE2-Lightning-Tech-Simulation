@@ -1,4 +1,4 @@
-// Original addon art created and exported inside the Blockbench desktop canvas/model API.
+// Coil artwork created/exported in Blockbench; module cases adapt AE2LT (see THIRD_PARTY_NOTICES.md).
 (function(){
     const ROOT='D:/MinecraftDev/OverloadSimulation';let drawAction,previewAction;
     const canvas=(w,h)=>{let c=document.createElement('canvas');c.width=w;c.height=h;return c;};
@@ -22,12 +22,37 @@
     function lightning(){
         const c=canvas(32,32*8),g=c.getContext('2d');g.imageSmoothingEnabled=false;
         for(let f=0;f<8;f++){
-            const j=f%3-1,p=[[6,7],[13+j,10],[10+j,15],[22-j,14],[16+j,21],[25,25]];
-            stroke(g,p,'#b74f99',f*32);stroke(g,p.map(([x,y],i)=>[x+(i%2),y-1]),'#ffb5e7',f*32);
-            stroke(g,[[13+j,10],[17,6],[19,9]],'#ef7dca',f*32);stroke(g,[[16+j,21],[10,25],[8,23]],'#ec94cc',f*32);
-            for(let i=1;i<p.length;i++){g.fillStyle=i%2?'#fff3ff':'#cdf6ff';g.fillRect(p[i][0],p[i][1]+f*32,1,1);}
-            if(f<6){g.fillStyle='#ffdaef';g.fillRect(7+f,27+f*32,1,1);g.fillRect(23-f,5+f*32,1,1);}
+            const center=[16+(f%3-1)*.3,16],starts=[[3,3],[28,3],[3,28],[28,28]];
+            starts.forEach(([sx,sy],arm)=>{
+                const pts=[];for(let n=0;n<=5;n++){
+                    const t=n/5,j=n===0||n===5?0:Math.sin(f*2.4+arm*1.9+n*3.1)*2.1;
+                    pts.push([sx+(center[0]-sx)*t+j,sy+(center[1]-sy)*t-j]);
+                }
+                g.save();g.translate(0,f*32);g.lineJoin='bevel';g.lineCap='square';
+                for(const [color,width]of [['#ef6bbd',2.5],['#ffd0ee',1.4],['#fff0ff',.75]]){
+                    g.strokeStyle=color;g.lineWidth=width;g.beginPath();pts.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));g.stroke();
+                }
+                g.restore();
+            });
+            g.fillStyle=f%2?'#fff7ff':'#ffd0ee';g.fillRect(15,15+f*32,2,2);
         }return c;
+    }
+    // AE2LT overload_module_base.png; CC BY-NC-SA 3.0, see THIRD_PARTY_NOTICES.md.
+    const MODULE_BASE='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAeUExURaM6e05TWt7f4sHDxzU5QKWnrGFmbe2Rvd9loAAAAF19jGoAAAAKdFJOU////////////wCyzCzPAAAACXBIWXMAAA7BAAAOwQG4kWvtAAAAYklEQVQoU12PCwrAMAhD/WRtc/8Lj7RD6iSgPIwfI0mzT6pJv0LAIyIjUymdRsRTsYFnZgNA9QDoIEMdw70sf3As19BjaWv3UB2ks5Q2GD5KB8Am5sI0uAABW1gmYX/b338BWdwElmYD00UAAAAASUVORK5CYII=';
+    async function modules(){
+        const base=new Image();base.src=MODULE_BASE;await base.decode();
+        const ids=['extreme_voltage_module','mimic_tool_module','ultimate_destruction_module','efficiency_module','fortune_module','silk_touch_module','wrench_module'];
+        const colors=['#eb78b7','#acbde7','#b35b9d','#eca4cb','#e8cb7e','#a4dfef','#eb90c4'];
+        const glyphs=[[[9,4],[8,5],[7,6],[8,6],[9,6],[8,7],[7,8]],[[6,4],[7,4],[8,4],[9,4],[7,5],[9,5],[7,6],[7,7],[7,8]],[[6,4],[7,4],[8,4],[9,4],[6,5],[9,5],[6,6],[8,6],[9,6],[6,7],[7,7],[9,7],[6,8],[7,8],[8,8],[9,8]],[[6,4],[7,5],[8,6],[7,7],[6,8],[8,4],[9,5],[10,6],[9,7],[8,8]],[[7,4],[8,4],[6,5],[9,5],[6,6],[9,6],[7,7],[8,7],[7,8]],[[7,4],[8,4],[6,5],[9,5],[6,6],[9,6],[7,7],[8,7]],[[6,4],[9,4],[6,5],[7,5],[8,5],[9,5],[7,6],[8,6],[8,7],[9,8]]];
+        const preview=canvas(7*64,64),pg=preview.getContext('2d');pg.imageSmoothingEnabled=false;
+        for(let index=0;index<ids.length;index++){
+            const c=canvas(16,16),g=c.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(base,0,0);
+            g.fillStyle='#54586f';g.fillRect(5,3,6,6);
+            g.fillStyle=colors[index];for(const [x,y]of glyphs[index])g.fillRect(x,y,1,1);
+            g.fillStyle='#fff1fa';const [hx,hy]=glyphs[index][0];g.fillRect(hx,hy,1,1);
+            png('src/main/resources/assets/overload_sim/textures/item/'+ids[index]+'.png',c);pg.drawImage(c,index*64,0,64,64);
+        }
+        png('art/coil_modules_preview.png',preview);
     }
     async function texture(name,c,animated=false){
         const t=new Texture({name:name+'.png',namespace:'overload_sim',folder:'item',width:c.width,height:c.height,uv_width:c.width,uv_height:animated?32:c.height}).fromDataURL(c.toDataURL()).add();await pause();
@@ -85,22 +110,13 @@
         write('src/main/resources/assets/overload_sim/models/item/resonance_coil.json',model);
         write('src/main/resources/assets/overload_sim/textures/item/resonance_coil_lightning.png.mcmeta',{animation:{width:32,height:32,frametime:2,interpolate:false}});
         Project.save_path=ROOT+'/art/resonance_coil.bbmodel';write('art/resonance_coil.bbmodel',Codecs.project.compile());Project.saved=true;
-        for(let [index,id]of ['extreme_voltage_module','mimic_tool_module','ultimate_destruction_module','efficiency_module','fortune_module','silk_touch_module'].entries()){
-            const c=canvas(16,16),g=c.getContext('2d');g.fillStyle='#58576c';g.fillRect(2,2,12,12);g.fillStyle='#f5eef8';g.fillRect(3,3,10,10);g.fillStyle='#dc8fbc';g.fillRect(4,4,8,8);g.fillStyle='#fff0fa';g.fillRect(5,5,6,6);g.fillStyle=['#bd639e','#6e6986','#713957','#dd77b0','#b79354','#7dc4db'][index];
-            if(index===0){for(let [x,y]of [[8,5],[7,6],[6,7],[7,7],[8,7],[8,8],[7,9],[6,10]])g.fillRect(x,y,1,1);}
-            if(index===1){g.fillRect(5,5,6,1);g.fillRect(7,6,1,5);g.fillRect(9,6,1,2);}
-            if(index===2){g.fillRect(5,6,6,3);g.clearRect(7,7,2,1);}
-            if(index===3){for(let n=0;n<3;n++){g.fillRect(6+n,5+n*2,4,1);g.fillRect(5+n,6+n*2,4,1);}}
-            if(index===4){g.fillRect(6,5,4,6);g.fillStyle='#fff2ba';g.fillRect(7,6,1,4);}
-            if(index===5){g.fillRect(5,7,6,2);g.fillRect(7,5,2,6);}
-            png('src/main/resources/assets/overload_sim/textures/item/'+id+'.png',c);
-        }
+        await modules();
         Preview.selected.loadAnglePreset({position:[24,32,30],target:[8,9,8],projection:'perspective'});await pause();
         Screencam.screenshotPreview(Preview.selected,{width:640,height:640},url=>Blockbench.writeFile(ROOT+'/art/resonance_coil_preview.png',{savetype:'image',content:url}));
-        write('art/coil-export.json',{source:'Blockbench canvas and Java item codec',elements:model.elements.length,lightningFrames:8,modules:6,horizontalFloatingHead:true,originalArtwork:true});
-        Blockbench.showQuickMessage('谐振雷鸣线圈与 6 个模块已绘制、保存和导出',6000);
+        write('art/coil-export.json',{source:'Blockbench canvas and Java item codec',elements:model.elements.length,lightningFrames:8,modules:7,horizontalFloatingHead:true,convergingArcs:true,moduleBase:"AE2LT overload_module_base.png (CC BY-NC-SA 3.0)"});
+        Blockbench.showQuickMessage('谐振雷鸣线圈与 7 个模块已绘制、保存和导出',6000);
     }
-    Plugin.register('resonance_coil_workshop',{title:'Resonance Coil Workshop',author:'Codex',description:'Original horizontal floating coil and animated lightning artwork.',icon:'bolt',version:'0.2.0',variant:'desktop',
+    Plugin.register('resonance_coil_workshop',{title:'Resonance Coil Workshop',author:'Codex',description:'Original horizontal floating coil and animated lightning artwork.',icon:'bolt',version:'0.3.0',variant:'desktop',
         onload(){drawAction=new Action('draw_resonance_coil',{name:'绘制谐振雷鸣线圈',icon:'bolt',click(){draw().catch(e=>{write('art/coil-error.txt',String(e.stack||e));Blockbench.showMessageBox({title:'线圈导出错误',message:String(e.stack||e)});});}});previewAction=new Action('preview_resonance_coil',{name:'导出线圈预览',icon:'photo_camera',click(){Screencam.screenshotPreview(Preview.selected,{width:640,height:640},url=>Blockbench.writeFile(ROOT+'/art/resonance_coil_preview.png',{savetype:'image',content:url}));}});MenuBar.addAction(drawAction,'tools');MenuBar.addAction(previewAction,'tools');},
         onunload(){drawAction?.delete();previewAction?.delete();}
     });

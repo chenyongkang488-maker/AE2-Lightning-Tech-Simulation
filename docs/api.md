@@ -1,4 +1,4 @@
-# 数据包与 Java API（0.1.0-alpha.3）
+# 数据包与 Java API（0.1.0-alpha.7）
 
 面向 Minecraft 1.21.1，数据目录使用单数 `recipe`、`loot_table`、`tags/block`。建议覆盖本模组现有配方 ID；新增匹配配方应给明确的更高 priority，避免最高优先级相同造成冲突。
 
@@ -128,8 +128,13 @@ GuideME 页面位于 `assets/overload_sim/ae2guide/overload-simulation.md`，中
 
 ## 谐振雷鸣线圈 API
 
-`dev.overloadsim.tool.CoilModules` 提供 `install`、`uninstall`、`entries`、`has`、`setCore` 和 `capacity`。返回的物品为副本，安装不扣除传入物品，调用者负责扣除一件；安装检查重复类型和拟态前置，仍有依赖模块时拒绝卸载拟态。只接受本模组线圈和六个指定模块，以及闪电科技 T1/T2/T3 能量模块。
+`dev.overloadsim.tool.CoilModules` 提供 `install`、`uninstall`、`entries`、`has`、`setCore` 和 `capacity`。返回的物品为副本，安装不扣除传入物品，调用者负责扣除一件；安装检查重复类型和拟态前置，仍有依赖模块时拒绝卸载拟态。只接受本模组线圈和七个指定模块，以及闪电科技 T1/T2/T3 能量模块。
 
 `CoilSettings` 保存不可变配置，效果访问器会检查当前模块和核心；精准优先于时运。核心、模块、配置与 long FE 分别使用 `coil_core`、`coil_modules`、`coil_settings`、`coil_fe` Data Component。`CoilEnergy.INSTANCE` 暴露标准 FE item capability，`refill` 按工具绑定的在线工作站网络充电；持有工具或把它留在在线工作站时持续充电，默认 10,000 FE/tick。支持最多 20,000,000,000 FE 的组件缓存，int FE capability 查询按 Integer.MAX_VALUE 钳制。
 
-`CoilLightning.target(player,self)` 计算服务器端有效目标；`fire(player,stack,self)` 校验核心、绑定、冷却和目标，严格支付 10 个所选 HV/EHV，生成失败返还。EHV 使用上游自然雷标记，不修改全局天气。COMMON 配置 `resonanceCoil` 可调整射程、蓄力、冷却、采矿 FE 和充电速率；六个模块及工具使用标准 crafting 配方，可通过数据包覆盖。G 配置是服务器校验的专用菜单；指南 `resonance-coil.md` 对应工具及全部模块。
+`CoilLightning.target(player,self)` 计算服务器端有效目标；`fire(player,stack,self)` 校验核心、绑定、冷却和目标，严格支付 10 个所选 HV/EHV，生成失败返还。EHV 使用上游自然雷标记，不修改全局天气。COMMON 配置 `resonanceCoil` 可调整射程、蓄力、冷却、采矿 FE 和充电速率；七个模块及工具使用标准 crafting 配方，可通过数据包覆盖。G 配置沿用原生 DeviceHubMenu 武器页，配置包校验菜单、玩家、所选页与原始手持物品引用；指南 `resonance-coil.md` 对应工具及全部模块。
+
+
+`CoilSettings` 新增可省略的 `wrench`（默认 false）和 `wrench_mode`（0..7，默认 0），旧五参数构造器保留。`CoilConfiguration.apply(stack,action,value)` 校验模块及边界，action 5 开关扳手、6 选择用途。`CoilWrench.active` 同时校验核心和已安装模块；`CoilLightning.fire` 在此状态返回 DISABLED，不抽取闪电。
+
+扳手用途 0..7 分别为通用扳手、物品、流体、化学品、能量、热量、清空、旋转。AE 的 InteractionUtil 条件桥接只对有效线圈提供能力，不注册永久 wrench 标签。通用机械在存在时加载可选桥接，调用真实配置器的 useOn 与 item abilities，保留安全、管道、拆卸与清空规则，不复制机器逻辑。未安装通用机械也可使用 AE 扳手。

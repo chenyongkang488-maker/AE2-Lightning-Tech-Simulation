@@ -14,7 +14,7 @@ import net.minecraft.world.phys.*;
 
 /** Public server-side targeting and strict lightning transaction. */
 public final class CoilLightning {
-    public enum Result {SUCCESS,NO_CORE,UNBOUND,NO_TARGET,NO_LIGHTNING,COOLDOWN,SPAWN_FAILED}
+    public enum Result {SUCCESS,NO_CORE,UNBOUND,NO_TARGET,NO_LIGHTNING,COOLDOWN,SPAWN_FAILED,DISABLED}
     private CoilLightning(){}
     public static Optional<Vec3> target(ServerPlayer player,boolean self){
         if(self)return Optional.of(player.position());
@@ -30,6 +30,7 @@ public final class CoilLightning {
         return block.getType()==HitResult.Type.BLOCK?Optional.of(block.getBlockPos().above().getBottomCenter()):Optional.empty();
     }
     public static Result fire(ServerPlayer player,ItemStack stack,boolean self){
+        if(CoilWrench.active(stack))return Result.DISABLED;
         if(!CoilModules.isCoil(stack)||!CoilModules.hasCore(stack)||player.isSpectator()||!player.isAlive())return Result.NO_CORE;
         if(player.getCooldowns().isOnCooldown(stack.getItem()))return Result.COOLDOWN;
         var target=target(player,self);if(target.isEmpty()||!player.serverLevel().isLoaded(net.minecraft.core.BlockPos.containing(target.get())))return Result.NO_TARGET;

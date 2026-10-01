@@ -10,7 +10,7 @@ public final class CoilModuleItem extends Item {
     public enum Type {
         EXTREME("extreme_voltage_module",false), MIMIC("mimic_tool_module",false),
         ULTIMATE("ultimate_destruction_module",true), EFFICIENCY("efficiency_module",true),
-        FORTUNE("fortune_module",true), SILK("silk_touch_module",true);
+        FORTUNE("fortune_module",true), SILK("silk_touch_module",true), WRENCH("wrench_module",false);
         public final String id;public final boolean needsMimic;
         Type(String id,boolean needsMimic){this.id=id;this.needsMimic=needsMimic;}
     }

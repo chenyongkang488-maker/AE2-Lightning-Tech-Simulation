@@ -8,9 +8,9 @@ data=root/'src/main/resources/data/overload_sim'
 def write(path,value):
     path.parent.mkdir(parents=True,exist_ok=True)
     path.write_text(json.dumps(value,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
-ids=['extreme_voltage_module','mimic_tool_module','ultimate_destruction_module','efficiency_module','fortune_module','silk_touch_module']
-zh=['极高压模块','拟态工具模块','终极破坏模块','效率模块','时运模块','精准采集模块']
-en=['Extreme Voltage Module','Mimic Tool Module','Ultimate Destruction Module','Efficiency Module','Fortune Module','Silk Touch Module']
+ids=['extreme_voltage_module','mimic_tool_module','ultimate_destruction_module','efficiency_module','fortune_module','silk_touch_module','wrench_module']
+zh=['极高压模块','拟态工具模块','终极破坏模块','效率模块','时运模块','精准采集模块','扳手模块']
+en=['Extreme Voltage Module','Mimic Tool Module','Ultimate Destruction Module','Efficiency Module','Fortune Module','Silk Touch Module','Wrench Module']
 for item in ids:
     write(assets/f'models/item/{item}.json',{'parent':'minecraft:item/generated','textures':{'layer0':f'overload_sim:item/{item}'}})
 
@@ -41,7 +41,15 @@ common={
 'gui.overload_sim.coil.efficiency_level':('效率等级：%s / 10','Efficiency: %s / 10'),
 'gui.overload_sim.coil.fortune_level':('时运等级：%s / 5','Fortune: %s / 5'),
 'gui.overload_sim.coil.silk':('精准采集','Silk Touch'),
+'gui.overload_sim.coil.natural_mode':('自然雷模式','Natural lightning'),
+'gui.overload_sim.coil.wrench':('扳手模式','Wrench mode'),
+'gui.overload_sim.coil.wrench_mode':('配置工具用途','Configurator mode'),
+'gui.overload_sim.coil.no_mekanism':('未安装通用机械：仅 AE 扳手功能可用','Mekanism absent: AE wrench only'),
+'tooltip.overload_sim.coil.wrench_module':('G 开启后禁用引雷，切换 AE 扳手与通用机械配置用途','Enable in G to disable lightning and use AE wrench / Mek configurator'),
+'tooltip.overload_sim.coil.wrench_active':('扳手模式：引雷已关闭','Wrench mode: lightning disabled'),
+'message.overload_sim.coil.disabled':('扳手模式开启：引雷已关闭','Wrench mode disables lightning'),
 }
+for mode,zhmode,enmode in zip(range(8),['通用扳手','物品','流体','化学品','能量','热量','清空','旋转'],['Wrench','Items','Fluids','Chemical','Energy','Heat','Empty','Rotate']):common[f'gui.overload_sim.coil.wrench_mode.{mode}']=(zhmode,enmode)
 for index,lang in enumerate(['zh_cn','en_us']):
     path=assets/f'lang/{lang}.json';strings=json.loads(path.read_text(encoding='utf-8'))
     strings['item.overload_sim.resonance_coil']=['谐振雷鸣线圈','Resonance Lightning Coil'][index]
@@ -52,7 +60,7 @@ for index,lang in enumerate(['zh_cn','en_us']):
 def shaped(id,pattern,key):
     write(data/f'recipe/{id}.json',{'type':'minecraft:crafting_shaped','category':'equipment','pattern':pattern,'key':{k:{'item':v} for k,v in key.items()},'result':{'id':f'overload_sim:{id}','count':1}})
 shaped('resonance_coil',['IFI','FCF',' R '],{'I':'minecraft:iron_ingot','F':'ae2:fluix_crystal','C':'overload_sim:perfect_simulation_crystal','R':'ae2:engineering_processor'})
-materials={'extreme_voltage_module':'ae2lt:lightning_collapse_matrix','mimic_tool_module':'minecraft:netherite_ingot','ultimate_destruction_module':'ae2lt:ultimate_overload_core','efficiency_module':'minecraft:redstone_block','fortune_module':'minecraft:lapis_block','silk_touch_module':'minecraft:amethyst_block'}
+materials={'extreme_voltage_module':'ae2lt:lightning_collapse_matrix','mimic_tool_module':'minecraft:netherite_ingot','ultimate_destruction_module':'ae2lt:ultimate_overload_core','efficiency_module':'minecraft:redstone_block','fortune_module':'minecraft:lapis_block','silk_touch_module':'minecraft:amethyst_block','wrench_module':'ae2:certus_quartz_wrench'}
 for item,material in materials.items():shaped(item,['IFI','FCF','IRI'],{'I':'minecraft:iron_ingot','F':'ae2:fluix_crystal','C':material,'R':'ae2:engineering_processor'})
 
 # Preserve the original model exported by Blockbench on future resource regeneration.

@@ -1,4 +1,4 @@
-param([switch]$GameTests,[switch]$Client)
+param([switch]$GameTests,[switch]$Client,[switch]$Mekanism)
 $ErrorActionPreference='Stop'
 $projectRoot=Split-Path -Parent $PSScriptRoot
 if(-not $env:JAVA_HOME -and (Test-Path -LiteralPath 'D:\DevTools\Java\jdk-21.0.12.1+1')){$env:JAVA_HOME='D:\DevTools\Java\jdk-21.0.12.1+1'}
@@ -10,5 +10,6 @@ if(Test-Path -LiteralPath 'D:\DevTools\Gradle-8.8\bin\gradle.bat'){$gradleExecut
 $tasks=@('build','--console=plain')
 if($GameTests){$tasks+= 'runGameTestServer'}
 if($Client){$tasks+= 'runClient'}
+if($Mekanism){$tasks+= '-PmekTests'}
 Push-Location -LiteralPath $projectRoot
 try{& $gradleExecutable @tasks;if($LASTEXITCODE -ne 0){throw "Gradle failed: $LASTEXITCODE"}}finally{Pop-Location}

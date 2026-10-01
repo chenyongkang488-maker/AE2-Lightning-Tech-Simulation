@@ -31,11 +31,13 @@ public class ResonanceCoilItem extends Item implements DeviceItem {
     public DeviceKind deviceKind(){return DeviceKind.RAILGUN;}
     @Override public InteractionResultHolder<ItemStack> use(Level level,Player player,InteractionHand hand){
         var stack=player.getItemInHand(hand);
+        if(CoilWrench.active(stack))return InteractionResultHolder.pass(stack);
         if(!CoilModules.hasCore(stack)){if(player instanceof ServerPlayer sp)sp.displayClientMessage(Component.translatable("message.overload_sim.coil.no_core"),true);return InteractionResultHolder.fail(stack);}
         player.startUsingItem(hand);return InteractionResultHolder.consume(stack);
     }
     @Override public InteractionResult onItemUseFirst(ItemStack stack,UseOnContext context){
         var player=context.getPlayer();if(player==null)return InteractionResult.PASS;
+        if(CoilWrench.active(stack))return InteractionResult.PASS;
         if(player.isShiftKeyDown()&&CoilModules.miningReady(stack)){
             if(!CoilMining.ready(stack))return InteractionResult.FAIL;
             var before=context.getLevel().getBlockState(context.getClickedPos());
@@ -48,6 +50,7 @@ public class ResonanceCoilItem extends Item implements DeviceItem {
         return use(context.getLevel(),player,context.getHand()).getResult();
     }
     @Override public InteractionResult useOn(UseOnContext context){
+        if(CoilWrench.active(context.getItemInHand()))return CoilWrench.use(context);
         var player=context.getPlayer();if(player==null)return InteractionResult.PASS;
         if(player.isShiftKeyDown()&&CoilMining.modifyTerrain(context))return InteractionResult.sidedSuccess(context.getLevel().isClientSide());
         return use(context.getLevel(),player,context.getHand()).getResult();
@@ -55,6 +58,7 @@ public class ResonanceCoilItem extends Item implements DeviceItem {
     @Override public int getUseDuration(ItemStack stack,LivingEntity entity){return 72000;}
     @Override public UseAnim getUseAnimation(ItemStack stack){return UseAnim.BOW;}
     @Override public void releaseUsing(ItemStack stack,Level level,LivingEntity entity,int remaining){
+        if(CoilWrench.active(stack))return;
         if(entity instanceof ServerPlayer player&&player.getItemInHand(player.getUsedItemHand())==stack){
             var result=CoilLightning.fire(player,stack,72000-remaining>=SimulationConfig.COIL_SELF_CHARGE.get());
             if(result!=CoilLightning.Result.SUCCESS&&result!=CoilLightning.Result.COOLDOWN)player.displayClientMessage(Component.translatable("message.overload_sim.coil."+result.name().toLowerCase(java.util.Locale.ROOT)),true);
@@ -71,6 +75,7 @@ public class ResonanceCoilItem extends Item implements DeviceItem {
         int efficiency=CoilSettings.read(stack).efficiencyLevel(stack);return 9+(efficiency>0?efficiency*efficiency+1:0);
     }
     @Override public boolean canPerformAction(ItemStack stack,ItemAbility ability){
+        if(CoilWrench.ability(stack,ability))return true;
         return CoilMining.ready(stack)&&(ItemAbilities.DEFAULT_PICKAXE_ACTIONS.contains(ability)||ItemAbilities.DEFAULT_AXE_ACTIONS.contains(ability)||ItemAbilities.DEFAULT_SHOVEL_ACTIONS.contains(ability)||ItemAbilities.DEFAULT_HOE_ACTIONS.contains(ability)||ItemAbilities.DEFAULT_SWORD_ACTIONS.contains(ability)||ability==ItemAbilities.SHEARS_DIG||ability==ItemAbilities.SHEARS_DISARM||ability==ItemAbilities.SHEARS_CARVE);
     }
     @Override public ItemAttributeModifiers getDefaultAttributeModifiers(ItemStack stack){
@@ -95,11 +100,12 @@ public class ResonanceCoilItem extends Item implements DeviceItem {
         if(attacker instanceof ServerPlayer player){CoilEnergy.INSTANCE.tryConsume(stack,player,SimulationConfig.COIL_MINING_FE.get());CoilMining.spark(player,target.getBoundingBox().getCenter());}return true;
     }
     @Override public boolean shouldCauseReequipAnimation(ItemStack old,ItemStack next,boolean slotChanged){return slotChanged||old.getItem()!=next.getItem();}
+    @Override public boolean doesSneakBypassUse(ItemStack stack,net.minecraft.world.level.LevelReader level,BlockPos pos,Player player){return CoilWrench.active(stack)&&(!CoilWrench.mekanism()||CoilSettings.read(stack).wrenchMode()==0);}
     @Override public void appendHoverText(ItemStack stack,TooltipContext context,List<Component> lines,TooltipFlag flag){
         lines.add(Component.translatable("tooltip.overload_sim.coil.controls").withStyle(ChatFormatting.GRAY));
         lines.add(Component.translatable("tooltip.overload_sim.coil.config").withStyle(ChatFormatting.GRAY));
         lines.add(Component.translatable(CoilModules.hasCore(stack)?"tooltip.overload_sim.coil.core_ready":"message.overload_sim.coil.no_core").withStyle(CoilModules.hasCore(stack)?ChatFormatting.LIGHT_PURPLE:ChatFormatting.RED));
-        lines.add(Component.translatable("tooltip.overload_sim.coil.voltage",CoilSettings.read(stack).natural(stack)?"EHV":"HV").withStyle(ChatFormatting.AQUA));
+        lines.add(CoilWrench.active(stack)?Component.translatable("tooltip.overload_sim.coil.wrench_active").withStyle(ChatFormatting.LIGHT_PURPLE):Component.translatable("tooltip.overload_sim.coil.voltage",CoilSettings.read(stack).natural(stack)?"EHV":"HV").withStyle(ChatFormatting.AQUA));
         lines.add(Component.literal("FE: "+CoilEnergy.read(stack)+" / "+CoilModules.capacity(stack)).withStyle(ChatFormatting.GRAY));
     }
 }
