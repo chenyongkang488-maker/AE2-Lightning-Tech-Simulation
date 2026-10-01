@@ -10,6 +10,18 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public class MultiblockGameTests {
     @GameTest(template="empty")
+    public static void frameRoofRejectsLegacyGlassWithoutLosingPaidState(GameTestHelper h){
+        var min=h.absolutePos(new net.minecraft.core.BlockPos(2,1,2));var c=build(h,min,3);c.checkStructure();
+        c.crystals().setStackInSlot(0,ironCrystal());c.outputs().insert(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_INGOT),71,false);
+        var paid=new dev.overloadsim.multiblock.SimulationBatch(java.util.List.of(new dev.overloadsim.multiblock.SimulationBatch.Output(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_INGOT),1)),java.util.Map.of(0,ironCrystal()),180,new dev.overloadsim.multiblock.MultiblockRules.Costs(1000,1,0),false,false,"roof-migration");paid.paid=true;paid.remaining=93;
+        var saved=c.saveMachine(h.getLevel().registryAccess());saved.put("Batch",paid.save(h.getLevel().registryAccess()));c.loadMachine(saved,h.getLevel().registryAccess());c.invalidateStructure();
+        var roof=min.offset(1,2,1);var glass=net.minecraft.core.registries.BuiltInRegistries.BLOCK.get(net.minecraft.resources.ResourceLocation.parse("ae2:quartz_vibrant_glass"));h.getLevel().setBlockAndUpdate(roof,glass.defaultBlockState());c.checkStructure();
+        h.assertTrue(c.structure()==null&&c.error().equals("roof"),"legacy glass roof pauses and identifies roof position");
+        h.assertTrue(c.batch().paid&&c.batch().remaining==93&&c.outputs().count(0)==71&&!c.crystals().getStackInSlot(0).isEmpty(),"paid state and inventory remain intact");
+        h.getLevel().setBlockAndUpdate(roof,dev.overloadsim.multiblock.MultiblockContent.FRAME.get().defaultBlockState());c.checkStructure();
+        h.assertTrue(c.structure()!=null&&c.structure().glass().size()==4&&c.batch().remaining==93,"frame roof reforms without resetting paid job");h.succeed();
+    }
+    @GameTest(template="empty")
     public static void oldProcessCacheCannotCollideWithCurrentReloadCounters(GameTestHelper h){
         var c=build(h,h.absolutePos(new net.minecraft.core.BlockPos(2,1,2)),3);c.checkStructure();var input=ironCrystal();
         c.fixedRoll(0,input,()->java.util.List.of(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.RAW_IRON)));
@@ -220,7 +232,7 @@ public class MultiblockGameTests {
             var min=helper.absolutePos(new net.minecraft.core.BlockPos(2,1,2));
             var controller=build(helper,min,size);controller.checkStructure();
             helper.assertTrue(controller.structure()!=null&&controller.structure().capacity()==size*size,"form outer size "+size);
-            helper.assertTrue(controller.structure().glass().size()==5*(size-2)*(size-2),"five glass faces");
+            helper.assertTrue(controller.structure().glass().size()==4*(size-2)*(size-2),"four glass faces and frame roof");
             var pane=controller.structure().glass().getFirst();
             helper.getLevel().setBlockAndUpdate(pane,net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
             helper.assertTrue(controller.structure()==null,"breaking any glass invalidates");
@@ -233,7 +245,7 @@ public class MultiblockGameTests {
         var glass=net.minecraft.core.registries.BuiltInRegistries.BLOCK.get(net.minecraft.resources.ResourceLocation.parse("ae2:quartz_vibrant_glass"));
         for(int x=0;x<n;x++)for(int y=0;y<n;y++)for(int z=0;z<n;z++){
             int b=(x==0||x==n-1?1:0)+(y==0||y==n-1?1:0)+(z==0||z==n-1?1:0);
-            var block=b>=2||y==0?dev.overloadsim.multiblock.MultiblockContent.FRAME.get():b==1?glass:net.minecraft.world.level.block.Blocks.AIR;
+            var block=b>=2||y==0||y==n-1?dev.overloadsim.multiblock.MultiblockContent.FRAME.get():b==1?glass:net.minecraft.world.level.block.Blocks.AIR;
             if(x==1&&y==0&&z==0&&h.getLevel().getBlockState(min.offset(x,y,z)).is(dev.overloadsim.multiblock.MultiblockContent.CONTROLLER.get()))continue;
             h.getLevel().setBlockAndUpdate(min.offset(x,y,z),block.defaultBlockState());
         }

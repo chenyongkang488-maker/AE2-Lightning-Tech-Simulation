@@ -47,6 +47,8 @@ public final class SimulationStructureValidator {
                 else if(BuiltInRegistries.BLOCK.getKey(block).equals(ResourceLocation.parse("ae2lt:overloaded_interface"))){
                     if(!special)return new Result(null,"interface_position",p);interfaces++;port=p.immutable();
                 }else if(block!=MultiblockContent.FRAME.get()&&!state.is(FRAMES))return new Result(null,"edge",p);
+            }else if(y==n-1){
+                if(block!=MultiblockContent.FRAME.get()&&!state.is(FRAMES))return new Result(null,"roof",p);
             }else if(y==0){
                 var kind=MultiblockData.module(block);
                 if(kind!=null)switch(kind){

@@ -1,6 +1,6 @@
 {
   "includes": ["../common/common.json"],
-  "generatedBackground": {"width":352,"height":240},
+  "generatedBackground": {"width":314,"height":238},
   "helpTopic":"overload_sim:multiblock-simulation.md",
   "slots":{
     "MACHINE_INPUT":{"left":18,"top":26,"grid":"BREAK_AFTER_9COLS"},

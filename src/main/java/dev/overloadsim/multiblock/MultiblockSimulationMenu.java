@@ -96,7 +96,8 @@ public class MultiblockSimulationMenu extends AEBaseMenu {
             var s=host.structure();capacity=s==null?0:s.capacity();fe=host.energy().getEnergyStored();status=host.status();
             var batch=host.batch();remaining=batch==null?0:batch.remaining;duration=batch==null?s==null?180:MultiblockData.policy().duration(s):batch.duration;
             participants=batch==null?0:batch.inputs.size();multiplier=s==null?1:MultiblockData.policy().multiplier(s);
-            hv=host.bridge().extract(false,Long.MAX_VALUE,true);ehv=host.bridge().extract(true,Long.MAX_VALUE,true);refresh();
+            // Totals are no longer part of this UI; avoid simulating a full network extraction every tick.
+            hv=0;ehv=0;refresh();
             problem=host.diagnostic();var cost=batch!=null?batch.cost:s==null?new MultiblockRules.Costs(1000,1,0):MultiblockData.policy().cost(1,s);feCost=cost.fe();hvCost=cost.hv();ehvCost=cost.ehv();frequency=-1;
             if(s!=null&&s.networkInterface()!=null&&host.getLevel().hasChunkAt(s.networkInterface())&&host.getLevel().getBlockEntity(s.networkInterface()) instanceof com.moakiee.ae2lt.blockentity.OverloadedInterfaceBlockEntity port)frequency=port.getFrequencyBinding().getFrequencyId();
         }super.broadcastChanges();

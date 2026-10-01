@@ -120,5 +120,7 @@
   "gui.overload_sim.multiblock.take": "左键取一组，右键取一个，Shift取入背包",
   "status.overload_sim.8": "结构所在区块未加载",
   "gui.overload_sim.multiblock.error": "结构诊断：%s",
-  "gui.overload_sim.multiblock.frequency": "过载频道：%s"
+  "gui.overload_sim.multiblock.frequency": "过载频道：%s",
+  "gui.overload_sim.multiblock.recovery": "切换额外水晶回收视图（仅取出）",
+  "gui.overload_sim.multiblock.unformed": "未成型 · 库存回收"
 }

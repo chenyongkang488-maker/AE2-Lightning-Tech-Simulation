@@ -120,5 +120,7 @@
   "gui.overload_sim.multiblock.take": "Left: one stack. Right: one item. Shift: fill inventory.",
   "status.overload_sim.8": "Structure chunks unloaded",
   "gui.overload_sim.multiblock.error": "Structure diagnostic: %s",
-  "gui.overload_sim.multiblock.frequency": "Overload frequency: %s"
+  "gui.overload_sim.multiblock.frequency": "Overload frequency: %s",
+  "gui.overload_sim.multiblock.recovery": "Toggle extra crystal recovery view",
+  "gui.overload_sim.multiblock.unformed": "Unformed · recovery"
 }
