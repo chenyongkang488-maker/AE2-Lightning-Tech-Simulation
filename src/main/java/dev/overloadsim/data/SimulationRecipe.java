@@ -37,8 +37,8 @@ public record SimulationRecipe(Kind kind, Data data) implements Recipe<RecipeInp
         public static final Codec<WorldRule> CODEC=RecordCodecBuilder.create(i->i.group(Codec.STRING.optionalFieldOf("mode","mineral").forGetter(WorldRule::mode),Selector.CODEC.optionalFieldOf("material").forGetter(WorldRule::material),Selector.CODEC.optionalFieldOf("soil").forGetter(WorldRule::soil),ResourceLocation.CODEC.optionalFieldOf("condition").forGetter(WorldRule::condition)).apply(i,WorldRule::new));
     }
     public record MobRule(String entity, double radius, double probability, boolean disabled, Optional<ResourceLocation> condition) {
-        public static final MobRule DEFAULT=new MobRule("*",5,.1,false,Optional.empty());
-        public static final Codec<MobRule> CODEC=RecordCodecBuilder.create(i->i.group(Codec.STRING.optionalFieldOf("entity","*").forGetter(MobRule::entity),Codec.doubleRange(0,32).optionalFieldOf("radius",5d).forGetter(MobRule::radius),Codec.doubleRange(0,1).optionalFieldOf("probability",.1).forGetter(MobRule::probability),Codec.BOOL.optionalFieldOf("disabled",false).forGetter(MobRule::disabled),ResourceLocation.CODEC.optionalFieldOf("condition").forGetter(MobRule::condition)).apply(i,MobRule::new));
+        public static final MobRule DEFAULT=new MobRule("*",5,.33,false,Optional.empty());
+        public static final Codec<MobRule> CODEC=RecordCodecBuilder.create(i->i.group(Codec.STRING.optionalFieldOf("entity","*").forGetter(MobRule::entity),Codec.doubleRange(0,32).optionalFieldOf("radius",5d).forGetter(MobRule::radius),Codec.doubleRange(0,1).optionalFieldOf("probability",DEFAULT.probability()).forGetter(MobRule::probability),Codec.BOOL.optionalFieldOf("disabled",false).forGetter(MobRule::disabled),ResourceLocation.CODEC.optionalFieldOf("condition").forGetter(MobRule::condition)).apply(i,MobRule::new));
     }
     public record Cultivation(int required, int increment) {
         public static final Cultivation DEFAULT=new Cultivation(10,1);

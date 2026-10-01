@@ -19,7 +19,9 @@ import net.neoforged.neoforge.event.entity.EntityStruckByLightningEvent;
 
 public final class PlayerLightningHandler {
     private PlayerLightningHandler(){}
-    public static void struck(EntityStruckByLightningEvent event){if(!event.isCanceled()&&event.getEntity() instanceof ServerPlayer player)process(player,event.getLightning());}
+    // The strike event denotes a lightning hit even when damage/vanilla effects are canceled.
+    // Observe it without clearing cancellation, so damage protection remains effective.
+    public static void struck(EntityStruckByLightningEvent event){if(event.getEntity() instanceof ServerPlayer player)process(player,event.getLightning());}
     public static void process(ServerPlayer player,LightningBolt bolt){
         var stack=player.getOffhandItem();if(!CrystalDataAccess.isSimulationCrystal(stack)||stack.is(ModContent.PERFECT.get()))return;
         var level=player.serverLevel();var ledger=bolt.getPersistentData();String key="overload_sim.hit."+player.getUUID();if(ledger.getBoolean(key))return;ledger.putBoolean(key,true);

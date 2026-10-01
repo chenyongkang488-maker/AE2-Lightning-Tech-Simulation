@@ -102,10 +102,10 @@ public class ResonanceCoilItem extends Item implements DeviceItem {
     @Override public boolean shouldCauseReequipAnimation(ItemStack old,ItemStack next,boolean slotChanged){return slotChanged||old.getItem()!=next.getItem();}
     @Override public boolean doesSneakBypassUse(ItemStack stack,net.minecraft.world.level.LevelReader level,BlockPos pos,Player player){return CoilWrench.active(stack)&&(!CoilWrench.mekanism()||CoilSettings.read(stack).wrenchMode()==0);}
     @Override public void appendHoverText(ItemStack stack,TooltipContext context,List<Component> lines,TooltipFlag flag){
-        lines.add(Component.translatable("tooltip.overload_sim.coil.controls").withStyle(ChatFormatting.GRAY));
+        lines.add(Component.translatable(CoilWrench.active(stack)?"tooltip.overload_sim.coil.wrench_controls":"tooltip.overload_sim.coil.controls").withStyle(ChatFormatting.GRAY));
         lines.add(Component.translatable("tooltip.overload_sim.coil.config").withStyle(ChatFormatting.GRAY));
         lines.add(Component.translatable(CoilModules.hasCore(stack)?"tooltip.overload_sim.coil.core_ready":"message.overload_sim.coil.no_core").withStyle(CoilModules.hasCore(stack)?ChatFormatting.LIGHT_PURPLE:ChatFormatting.RED));
-        lines.add(CoilWrench.active(stack)?Component.translatable("tooltip.overload_sim.coil.wrench_active").withStyle(ChatFormatting.LIGHT_PURPLE):Component.translatable("tooltip.overload_sim.coil.voltage",CoilSettings.read(stack).natural(stack)?"EHV":"HV").withStyle(ChatFormatting.AQUA));
+        lines.add(CoilWrench.active(stack)?Component.translatable("tooltip.overload_sim.coil.wrench_active",Component.translatable("gui.overload_sim.coil.wrench_mode."+CoilSettings.read(stack).wrenchMode())).withStyle(ChatFormatting.LIGHT_PURPLE):Component.translatable("tooltip.overload_sim.coil.voltage",CoilSettings.read(stack).natural(stack)?"EHV":"HV").withStyle(ChatFormatting.AQUA));
         lines.add(Component.literal("FE: "+CoilEnergy.read(stack)+" / "+CoilModules.capacity(stack)).withStyle(ChatFormatting.GRAY));
     }
 }

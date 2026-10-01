@@ -1,4 +1,4 @@
-# 数据包与 Java API（0.1.0-alpha.7）
+# 数据包与 Java API（0.1.0-alpha.8）
 
 面向 Minecraft 1.21.1，数据目录使用单数 `recipe`、`loot_table`、`tags/block`。建议覆盖本模组现有配方 ID；新增匹配配方应给明确的更高 priority，避免最高优先级相同造成冲突。
 
@@ -47,11 +47,13 @@ condition 是 Java 注册的结构条件 ID。未知条件拒绝匹配。含方�
   "profile":"overload_sim:mob",
   "priority":200,
   "allow_artificial":false,
-  "mob":{"entity":"#my_pack:simulatable","radius":5,"probability":0.1,"disabled":false,"condition":"my_pack:mob_allowed"}
+  "mob":{"entity":"#my_pack:simulatable","radius":5,"probability":0.33,"disabled":false,"condition":"my_pack:mob_allowed"}
 }
 ```
 
-entity 为实体 ID、#实体类型标签或 *。只考虑存活 Mob，半径为三维球形，先挑选每个候选生物的最高优先级规则，再挑选允许记录的最近生物，最后抽取一次概率。disabled=true 可以配置黑名单。每位玩家每道雷只处理一次。成功只记录 EntityType ID，不记录个体 NBT。
+entity 为实体 ID、#实体类型标签或 *。只考虑存活 Mob，半径为三维球形，先挑选每个候选生物的最高优先级规则，再挑选允许记录的最近生物，最后抽取一次概率。probability 默认 0.33，数据包显式设置的概率仍优先。disabled=true 可以配置黑名单。每位玩家每道雷只处理一次。成功只记录 EntityType ID，不记录个体 NBT。
+
+玩家记录监听真实 EntityStruckByLightningEvent，接收已取消事件，不依赖伤害判定，适用于创造模式；不会解除原版效果或伤害保护的取消状态。纯 visualOnly 闪电不触发实体雷击事件。BeforeBinding 仍可由整合包取消，以禁止记录；人工雷仍受 allow_artificial 配方字段控制。
 
 ## 培养
 
@@ -138,3 +140,5 @@ GuideME 页面位于 `assets/overload_sim/ae2guide/overload-simulation.md`，中
 `CoilSettings` 新增可省略的 `wrench`（默认 false）和 `wrench_mode`（0..7，默认 0），旧五参数构造器保留。`CoilConfiguration.apply(stack,action,value)` 校验模块及边界，action 5 开关扳手、6 选择用途。`CoilWrench.active` 同时校验核心和已安装模块；`CoilLightning.fire` 在此状态返回 DISABLED，不抽取闪电。
 
 扳手用途 0..7 分别为通用扳手、物品、流体、化学品、能量、热量、清空、旋转。AE 的 InteractionUtil 条件桥接只对有效线圈提供能力，不注册永久 wrench 标签。通用机械在存在时加载可选桥接，调用真实配置器的 useOn 与 item abilities，保留安全、管道、拆卸与清空规则，不复制机器逻辑。未安装通用机械也可使用 AE 扳手。
+
+Shift＋滚轮使用 CycleWrenchMode(slot,steps) 服务端载荷，steps 为 -8..8 的非零整数，用途按八项循环。CoilWrench.cycleMode 校验存活非旁观玩家、潜行、无打开容器、当前主手快捷栏槽和有效核心/扳手模块；仅更新 wrench_mode，不改变其他配置或扣能量。客户端在 MouseHandler 原始输入入口接管有效工具的垂直滚动，遵循原版滚轮灵敏度及离散选项；部分滚轮量在 20 tick 窗口内累积，离开有效操作状态或切换快捷栏槽后清空。接管时清空原版待处理滚动，避免松开 Shift 后误切快捷栏；界面、旁观模式和普通滚轮保留原版行为。载荷协议升级为 2，客户端与服务端需一同更新。

@@ -20,6 +20,8 @@ class SimulationRulesTest {
     @Test void probabilityAndRadiusBoundaries() {
         assertTrue(SimulationRules.chance(0.099,0.1));
         assertFalse(SimulationRules.chance(0.1,0.1));
+        assertTrue(SimulationRules.chance(0.329999,0.33));
+        assertFalse(SimulationRules.chance(0.33,0.33));
         assertTrue(SimulationRules.withinRadius(25,5));
         assertFalse(SimulationRules.withinRadius(25.001,5));
     }

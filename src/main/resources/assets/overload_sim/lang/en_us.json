@@ -94,8 +94,8 @@
   "gui.overload_sim.coil.wrench": "Wrench mode",
   "gui.overload_sim.coil.wrench_mode": "Configurator mode",
   "gui.overload_sim.coil.no_mekanism": "Mekanism absent: AE wrench only",
-  "tooltip.overload_sim.coil.wrench_module": "Enable in G to disable lightning and use AE wrench / Mek configurator",
-  "tooltip.overload_sim.coil.wrench_active": "Wrench mode: lightning disabled",
+  "tooltip.overload_sim.coil.wrench_module": "Enable in G to disable lightning · Main hand: Shift + scroll to change mode",
+  "tooltip.overload_sim.coil.wrench_active": "Wrench mode: %s · lightning disabled",
   "message.overload_sim.coil.disabled": "Wrench mode disables lightning",
   "gui.overload_sim.coil.wrench_mode.0": "Wrench",
   "gui.overload_sim.coil.wrench_mode.1": "Items",
@@ -104,5 +104,7 @@
   "gui.overload_sim.coil.wrench_mode.4": "Energy",
   "gui.overload_sim.coil.wrench_mode.5": "Heat",
   "gui.overload_sim.coil.wrench_mode.6": "Empty",
-  "gui.overload_sim.coil.wrench_mode.7": "Rotate"
+  "gui.overload_sim.coil.wrench_mode.7": "Rotate",
+  "tooltip.overload_sim.coil.wrench_controls": "Shift + scroll: cycle configurator mode",
+  "message.overload_sim.coil.wrench_mode": "Configurator mode: %s"
 }

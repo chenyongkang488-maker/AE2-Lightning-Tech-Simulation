@@ -20,12 +20,20 @@ public final class CoilPackets {
         public static final StreamCodec<FriendlyByteBuf,Configure> CODEC=StreamCodec.composite(ByteBufCodecs.VAR_INT,Configure::menuId,ByteBufCodecs.VAR_INT,Configure::action,ByteBufCodecs.VAR_INT,Configure::value,Configure::new);
         public Type<Configure> type(){return TYPE;}
     }
-    @SubscribeEvent public static void register(RegisterPayloadHandlersEvent e){var r=e.registrar("1");
+    public record CycleWrenchMode(int slot,int steps) implements CustomPacketPayload {
+        public static final Type<CycleWrenchMode> TYPE=new Type<>(ModContent.id("cycle_wrench_mode"));
+        public static final StreamCodec<FriendlyByteBuf,CycleWrenchMode> CODEC=StreamCodec.composite(ByteBufCodecs.VAR_INT,CycleWrenchMode::slot,ByteBufCodecs.VAR_INT,CycleWrenchMode::steps,CycleWrenchMode::new);
+        public Type<CycleWrenchMode> type(){return TYPE;}
+    }
+    @SubscribeEvent public static void register(RegisterPayloadHandlersEvent e){var r=e.registrar("2");
         r.playToServer(Open.TYPE,Open.CODEC,(packet,context)->{if(context.player() instanceof ServerPlayer player)dev.overloadsim.compat.CoilHubAccess.open(player);});
         r.playToServer(Configure.TYPE,Configure.CODEC,(packet,context)->{
             if(!(context.player() instanceof ServerPlayer player)||player.containerMenu.containerId!=packet.menuId())return;
             if(player.containerMenu instanceof dev.overloadsim.compat.CoilHubAccess.Configuration hub)hub.overloadSim$configure(player,packet.action(),packet.value());
             else if(player.containerMenu instanceof CoilMenu menu)menu.configure(player,packet.action(),packet.value());
+        });
+        r.playToServer(CycleWrenchMode.TYPE,CycleWrenchMode.CODEC,(packet,context)->{
+            if(context.player() instanceof ServerPlayer player)CoilWrench.cycleMode(player,packet.slot(),packet.steps());
         });
     }
 }

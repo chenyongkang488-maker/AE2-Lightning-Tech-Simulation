@@ -45,8 +45,10 @@ common={
 'gui.overload_sim.coil.wrench':('扳手模式','Wrench mode'),
 'gui.overload_sim.coil.wrench_mode':('配置工具用途','Configurator mode'),
 'gui.overload_sim.coil.no_mekanism':('未安装通用机械：仅 AE 扳手功能可用','Mekanism absent: AE wrench only'),
-'tooltip.overload_sim.coil.wrench_module':('G 开启后禁用引雷，切换 AE 扳手与通用机械配置用途','Enable in G to disable lightning and use AE wrench / Mek configurator'),
-'tooltip.overload_sim.coil.wrench_active':('扳手模式：引雷已关闭','Wrench mode: lightning disabled'),
+'tooltip.overload_sim.coil.wrench_module':('G 开启后禁用引雷 · 主手 Shift＋滚轮切换配置用途','Enable in G to disable lightning · Main hand: Shift + scroll to change mode'),
+'tooltip.overload_sim.coil.wrench_active':('扳手模式：%s · 引雷已关闭','Wrench mode: %s · lightning disabled'),
+'tooltip.overload_sim.coil.wrench_controls':('Shift＋滚轮：切换配置工具用途','Shift + scroll: cycle configurator mode'),
+'message.overload_sim.coil.wrench_mode':('配置工具用途：%s','Configurator mode: %s'),
 'message.overload_sim.coil.disabled':('扳手模式开启：引雷已关闭','Wrench mode disables lightning'),
 }
 for mode,zhmode,enmode in zip(range(8),['通用扳手','物品','流体','化学品','能量','热量','清空','旋转'],['Wrench','Items','Fluids','Chemical','Energy','Heat','Empty','Rotate']):common[f'gui.overload_sim.coil.wrench_mode.{mode}']=(zhmode,enmode)

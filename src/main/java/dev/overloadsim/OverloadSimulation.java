@@ -14,7 +14,7 @@ public class OverloadSimulation {
     public OverloadSimulation(IEventBus bus,ModContainer container){
         ModContent.register(bus);container.registerConfig(ModConfig.Type.COMMON,SimulationConfig.SPEC);
         NeoForge.EVENT_BUS.addListener((AddReloadListenerEvent e)->e.addListener(new SimulationData()));
-        NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.LOWEST,PlayerLightningHandler::struck);
+        NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.LOWEST,true,PlayerLightningHandler::struck);
         bus.addListener(ModContent::capabilities);
         bus.addListener(ModContent::setup);
     }

@@ -94,8 +94,8 @@
   "gui.overload_sim.coil.wrench": "扳手模式",
   "gui.overload_sim.coil.wrench_mode": "配置工具用途",
   "gui.overload_sim.coil.no_mekanism": "未安装通用机械：仅 AE 扳手功能可用",
-  "tooltip.overload_sim.coil.wrench_module": "G 开启后禁用引雷，切换 AE 扳手与通用机械配置用途",
-  "tooltip.overload_sim.coil.wrench_active": "扳手模式：引雷已关闭",
+  "tooltip.overload_sim.coil.wrench_module": "G 开启后禁用引雷 · 主手 Shift＋滚轮切换配置用途",
+  "tooltip.overload_sim.coil.wrench_active": "扳手模式：%s · 引雷已关闭",
   "message.overload_sim.coil.disabled": "扳手模式开启：引雷已关闭",
   "gui.overload_sim.coil.wrench_mode.0": "通用扳手",
   "gui.overload_sim.coil.wrench_mode.1": "物品",
@@ -104,5 +104,7 @@
   "gui.overload_sim.coil.wrench_mode.4": "能量",
   "gui.overload_sim.coil.wrench_mode.5": "热量",
   "gui.overload_sim.coil.wrench_mode.6": "清空",
-  "gui.overload_sim.coil.wrench_mode.7": "旋转"
+  "gui.overload_sim.coil.wrench_mode.7": "旋转",
+  "tooltip.overload_sim.coil.wrench_controls": "Shift＋滚轮：切换配置工具用途",
+  "message.overload_sim.coil.wrench_mode": "配置工具用途：%s"
 }

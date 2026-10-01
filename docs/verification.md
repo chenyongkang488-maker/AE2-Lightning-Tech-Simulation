@@ -1,5 +1,19 @@
 # 验证记录
 
+## 0.1.0-alpha.8（2026-10-01）
+
+最终 `build runGameTestServer -PmekTests` 和 `build runGameTestServer` 均退出 0、BUILD SUCCESSFUL，各 56 项必需 GameTest 通过；8 项 JUnit 无失败/错误。日志：`build/verification/alpha8-mek-release.log`、`alpha8-no-mek-release.log`。资源 86 个 JSON 均可解析，JAR 版本、水晶概率、仅客户端注册的滚轮 Mixin 和可选前置类未捆绑均已检查。
+
+首次回归 `lightning-scroll-red.log` 在旧代码中复现 5 项新增 GameTest 失败及 3 项新增 JUnit 失败。普通创造模式真实雷击在旧代码中可以绑定；被取消的 EntityStruckByLightningEvent 则被注册与处理器同时过滤。修复后接收已取消的真实命中事件，不清除取消状态、不要求伤害，保留 BeforeBinding 扩展取消能力。约 28.14% 的确定性随机结果在旧 10% 配方下失败、33% 配方下成功；数据包省略概率默认 33%，显式自定义概率保持有效。真实闪电 tick 检查命中、副手最近生物绑定、创造玩家生命不变、同雷多 tick 去重、另一道人工雷培养。
+
+线圈主手 Shift＋滚轮正反向循环八种用途；服务端校验潜行、存活非旁观玩家、当前快捷栏槽、核心/启用的扳手模块、步数和无打开容器。测试覆盖正反向环绕、设置及 FE 保留、失效/卸下模块与核心、迟到槽位、非法步数、副手和界面场景拒绝。物品提示及操作栏显示用途，中英文指南和资源生成脚本同步。
+
+只读复核发现并修正：原版 MouseHandler 在 NeoForge 滚轮事件前已进行整数过滤，改为客户端原始输入入口接管，遵循灵敏度及离散滚轮选项；清空被接管的原版滚动，防止 Shift 松开后误切快捷栏；按玩家和槽位维护余量，避免服务器同步替换 ItemStack 时丢失余量；旁观模式保留原版输入。单元测试覆盖原始四次 0.25、混合小数及整步、正反向、超时/重置、无效输入及步数限制。最终复查没有未解决的功能问题。载荷协议更新为 2，客户端和服务端需一起更新。
+
+本轮没有继续电脑控制，没有启动新客户端或实测鼠标/触控板操作。客户端 Mixin 的目标方法和字段已对照固定版本源码，编译与打包已验证；服务器测试不覆盖实际客户端注入及输入，需要游戏内联调。
+
+已安装 `D:\mc\.minecraft\versions\OverloadSim-Test-1.21.1\mods\overload_sim-0.1.0-alpha.8.jar`，313404 字节，SHA-256 `386629BD18193F0F230603483CC26E833F49E36D6318F6CB3DD64CF6E41DD86B`，与构建产物一致。alpha.7 备份于 `addon-backups\20261001-122354`；其余 10 个前置/测试模组 hash 未变。运行中的游戏需重启才能加载；上一版 Git 标签 `v0.1.0-alpha.7` 可供回退。
+
 ## 0.1.0-alpha.7（2026-10-01）
 
 最终 `build runGameTestServer -PmekTests` 和 `build runGameTestServer` 均退出 0、BUILD SUCCESSFUL，各 50 项必需 GameTest 通过；4 项 JUnit 无失败/错误。日志：`build/verification/coil-mek-release.log`、`coil-no-mek-release.log`。普通运行不包含通用机械，验证可选依赖缺失时仍能加载独立服务器。

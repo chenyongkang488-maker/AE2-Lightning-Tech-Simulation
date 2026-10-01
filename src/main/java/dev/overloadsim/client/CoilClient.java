@@ -15,10 +15,23 @@ import org.joml.Vector3f;
 
 @EventBusSubscriber(modid=OverloadSimulation.ID,value=Dist.CLIENT)
 public final class CoilClient {
+    private static final dev.overloadsim.core.ModeScroll WRENCH_SCROLL=new dev.overloadsim.core.ModeScroll();
+    private static net.minecraft.client.player.LocalPlayer scrollingPlayer;
+    private static int scrollingSlot=-1;
+    private static boolean canScrollWrench(Minecraft mc){return mc.player!=null&&mc.player.isAlive()&&!mc.player.isSpectator()&&mc.screen==null&&mc.getOverlay()==null&&mc.player.isShiftKeyDown()&&CoilWrench.active(mc.player.getMainHandItem());}
     @SubscribeEvent(priority=EventPriority.HIGHEST)
     public static void keys(ClientTickEvent.Pre event){
-        var mc=Minecraft.getInstance();if(mc.player==null||mc.screen!=null)return;
+        var mc=Minecraft.getInstance();if(!canScrollWrench(mc)){WRENCH_SCROLL.reset();scrollingPlayer=null;scrollingSlot=-1;}if(mc.player==null||mc.screen!=null)return;
         if(CoilModules.isCoil(dev.overloadsim.compat.CoilHubAccess.weapon(mc.player)))while(DeviceHubKeyMappings.OPEN_CONFIG.consumeClick())PacketDistributor.sendToServer(new CoilPackets.Open());
+    }
+    /** Called before vanilla accumulation, which would hide fractional input from NeoForge's event. */
+    public static boolean scrollWrench(long window,double delta){
+        var mc=Minecraft.getInstance();if(window!=mc.getWindow().getWindow()||!canScrollWrench(mc)||delta==0)return false;
+        if(mc.player!=scrollingPlayer||mc.player.getInventory().selected!=scrollingSlot){WRENCH_SCROLL.reset();scrollingPlayer=mc.player;scrollingSlot=mc.player.getInventory().selected;}
+        double adjusted=(mc.options.discreteMouseScroll().get()?Math.signum(delta):delta)*mc.options.mouseWheelSensitivity().get();
+        int steps=WRENCH_SCROLL.scroll(adjusted,mc.gui.getGuiTicks());
+        if(steps!=0)PacketDistributor.sendToServer(new CoilPackets.CycleWrenchMode(mc.player.getInventory().selected,steps));
+        return true;
     }
     @SubscribeEvent
     public static void effects(ClientTickEvent.Post event){

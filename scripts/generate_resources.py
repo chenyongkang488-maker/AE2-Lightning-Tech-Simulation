@@ -26,7 +26,7 @@ for key,kind,block,item,count,cn,name in defaults:
     zh['profile.overload_sim.'+key]=cn;en['profile.overload_sim.'+key]=name
 write(pathlib.Path('data/overload_sim/simulation_profile/mob.json'),{'kind':'mob','name':'profile.overload_sim.mob','icon':'minecraft:rotten_flesh'})
 zh['profile.overload_sim.mob']='生物战利品';en['profile.overload_sim.mob']='Mob loot'
-write(pathlib.Path('data/overload_sim/recipe/binding/mob.json'),{'type':'overload_sim:mob_crystal_binding','profile':'overload_sim:mob','mob':{'entity':'*','radius':5,'probability':.1}})
+write(pathlib.Path('data/overload_sim/recipe/binding/mob.json'),{'type':'overload_sim:mob_crystal_binding','profile':'overload_sim:mob','mob':{'entity':'*','radius':5,'probability':.33}})
 for mob in ['wither','ender_dragon']:
     write(pathlib.Path('data/overload_sim/recipe/binding')/('deny_'+mob+'.json'),{'type':'overload_sim:mob_crystal_binding','profile':'overload_sim:mob','priority':1000,'mob':{'entity':'minecraft:'+mob,'disabled':True}})
 write(pathlib.Path('data/overload_sim/recipe/cultivation/default.json'),{'type':'overload_sim:crystal_cultivation','profile':'overload_sim:any','cultivation':{'required':10,'increment':1}})
@@ -69,7 +69,7 @@ item_ids:
 
 作物使用 24 格耕地上方的同类作物，绑定时只消耗作物。树木使用 24 格泥土类方块上的同类树苗，保留土地。默认支持铁、铜、金、钻石、下界合金、四种农作物和七种树苗。
 
-左手拿空白水晶受到雷击时，有 10% 概率记录半径 5 格内最近的存活生物。只记录生物类型，不复制装备、背包或个体数据。默认禁止凋灵和末影龙。
+左手拿空白水晶受到雷击时，有 33% 概率记录半径 5 格内最近的存活生物。只判定真实雷击命中，无需受到伤害，创造模式也可使用；人工雷同样有效。只记录生物类型，不复制装备、背包或个体数据。默认禁止凋灵和末影龙。
 
 已绑定水晶再接受 10 次有效雷击后成为完美水晶。可以继续放在收集器中培养，也可以拿在左手受雷击。自然雷、指令雷和人工雷都可绑定与培养；整合包作者可通过 allow_artificial=false 禁止人工雷。
 
