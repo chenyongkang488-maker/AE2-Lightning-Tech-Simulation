@@ -60,7 +60,7 @@ globalThis.drawMultiblockSimulation = async function(){
     const shapes={north:[[0,0,3],[16,16,4]],south:[[0,0,12],[16,16,13]],west:[[3,0,0],[4,16,16]],east:[[12,0,0],[13,16,16]],up:[[0,12,0],[16,13,16]],down:[[0,3,0],[16,4,16]]};
     const variants={};
     for(const [face,bounds]of Object.entries(shapes)){
-        const name='simulation_glass_'+face;project(name);var glass=await texture(name,glassCanvas());const c=box(new Group({name:'内陷粉白透明玻璃板'}).init(),'聚能玻璃内陷板',bounds[0],bounds[1],glass);
+        const name='simulation_glass_'+face;project(name);Project.texture_width=Project.texture_height=16;var glass=await texture(name,glassCanvas());const c=box(new Group({name:'内陷粉白透明玻璃板'}).init(),'聚能玻璃内陷板',bounds[0],bounds[1],glass);
         for(const f of Object.values(c.faces))f.uv=[0,0,16,16];
         await save(name,'minecraft:translucent');variants['face='+face]={model:'overload_sim:block/'+name};
     }write('src/main/resources/assets/overload_sim/blockstates/formed_simulation_glass.json',{variants});

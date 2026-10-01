@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "formed=false": {
+      "model": "overload_sim:block/simulation_smelting_module"
+    },
+    "formed=true": {
+      "model": "overload_sim:block/simulation_smelting_module"
+    }
+  }
+}

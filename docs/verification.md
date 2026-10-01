@@ -115,3 +115,17 @@ Blockbench 5.2.1 内加载本地素材插件、生成工程、绘画完美水晶
 当前 Blockbench 本地绘图插件停在原生文件访问许可窗口，等待用户手动处理。多方块 PNG/Java 模型尚未从 Blockbench 导出，客户端视觉验收和 alpha.9 JAR 打包安装尚未完成。两份绘图 JavaScript 的语法检查通过，不等同于导出或视觉验收。
 
 PCL OverloadSim-Test-1.21.1 的 11 个模组与开工前 SHA-256 全部一致，附属模组仍为 alpha.8。多方块资产与客户端检查完成后才替换该附属模组；未创建 alpha.9 发布标签。
+
+## 2026-10-01 alpha.9 交付检查
+
+用户手动允许 Blockbench 文件访问后，从原生工具菜单执行绘图。17 个可编辑工程、18 张内嵌 PNG、16 个运行时零件模型通过 `scripts/verify-multiblock-resources.py` 校验。玻璃工程使用 16×16 UV；导出 PNG 字节与工程内嵌纹理一致。两份 Blockbench 绘图 JavaScript 的语法检查通过。
+
+开发客户端原生操作验证了 5³ 成型结构、25 个水晶、七个 T3 效率模块及过载/熔炼模块，实际周期 62 tick。确认五面玻璃、平滑框架、四角线圈、悬浮水晶及工作电弧正常显示。控制器界面调整为 352×240，在 854×480 窗口完整显示标题、输入、输出和玩家背包；输出数量 1024 可见，左键取出 64，右键取出 1，剩余数量准确；分页及帮助按钮打开多方块指南并返回正常。在线 FE 持续补充到 2,000,000。截图保存在 `art/verification/multiblock-ui.png`、`multiblock-guide.png`、`multiblock-working.png`。
+
+两次客户端均正常保存并关闭，Gradle runClient 退出码 0。最终导出资源及界面修改后的 `build test runGameTestServer -PmekTests` 成功，79 项必需 GameTest 全部通过，12 项 JUnit 无失败或错误；日志 `build/verification/multiblock-release-alpha9.log`。常规依赖环境的同一服务器源码此前也通过 79 项 GameTest。新资源未增加本模组缺失模型或指南加载错误，保留前置模组已有日志提示。
+
+最终运行 JAR 为 466,208 字节，SHA-256 `364ad14da5cd8df975b141716b2ececae5953ebb451dd6ff1e5267c0333c6362`。53 份相关模型、方块状态、物品模型及纹理与源码资源逐字节一致，包含多方块控制器、策略和中英文路径的指南，未打入前置模组类。
+
+`scripts/install-test.ps1` 将 alpha.9 安装到 `D:/mc/.minecraft/versions/OverloadSim-Test-1.21.1/mods/`，实例中只保留一个本附属模组版本。alpha.8 移入 `addon-backups/20261001-164652/`，与安装前哈希一致。十个前置/其他模组和 46 份设置/配置文件全部保持原哈希，用户 Java 及内存设置未变。安装文件与构建文件 SHA-256 一致。
+
+本轮原生操作位于独立开发存档，PCL 实例完成安装与文件校验；未替用户修改 PCL 存档或启动其世界。长期跨区块无线生产、多人权限及更多第三方配方仍需后续整合包测试。

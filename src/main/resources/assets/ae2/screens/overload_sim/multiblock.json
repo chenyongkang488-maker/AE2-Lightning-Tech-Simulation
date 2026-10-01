@@ -1,12 +1,12 @@
 {
   "includes": ["../common/common.json"],
-  "generatedBackground": {"width":352,"height":310},
+  "generatedBackground": {"width":352,"height":240},
   "helpTopic":"overload_sim:multiblock-simulation.md",
   "slots":{
-    "MACHINE_INPUT":{"left":18,"top":44,"grid":"BREAK_AFTER_9COLS"},
-    "MACHINE_OUTPUT":{"left":180,"top":44,"grid":"BREAK_AFTER_9COLS"},
-    "PLAYER_INVENTORY":{"left":96,"top":226,"grid":"BREAK_AFTER_9COLS"},
-    "PLAYER_HOTBAR":{"left":96,"top":284,"grid":"BREAK_AFTER_9COLS"}
+    "MACHINE_INPUT":{"left":18,"top":26,"grid":"BREAK_AFTER_9COLS"},
+    "MACHINE_OUTPUT":{"left":180,"top":26,"grid":"BREAK_AFTER_9COLS"},
+    "PLAYER_INVENTORY":{"left":96,"top":157,"grid":"BREAK_AFTER_9COLS"},
+    "PLAYER_HOTBAR":{"left":96,"top":217,"grid":"BREAK_AFTER_9COLS"}
   },
   "text":{"dialog_title":{"text":{"translate":"block.overload_sim.simulation_controller"},"position":{"left":8,"top":6}}}
 }

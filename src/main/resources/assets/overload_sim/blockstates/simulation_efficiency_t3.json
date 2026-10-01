@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "formed=false": {
+      "model": "overload_sim:block/simulation_efficiency_t3"
+    },
+    "formed=true": {
+      "model": "overload_sim:block/simulation_efficiency_t3"
+    }
+  }
+}

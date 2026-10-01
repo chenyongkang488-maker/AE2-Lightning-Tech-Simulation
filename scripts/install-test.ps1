@@ -4,9 +4,13 @@ $projectRoot=Split-Path -Parent $PSScriptRoot
 $jar=Join-Path $projectRoot 'build\libs\overload_sim-0.1.0-alpha.9.jar'
 if(-not(Test-Path -LiteralPath $jar)){throw 'Build the mod first.'}
 if(-not(Test-Path -LiteralPath (Join-Path $Instance 'mods'))){throw 'Expected an existing test instance with a mods directory.'}
+$Instance=(Resolve-Path -LiteralPath $Instance).Path
+$modsPath=(Resolve-Path -LiteralPath (Join-Path $Instance 'mods')).Path
 # Preserve earlier addon versions; leave all other mods and launcher settings alone.
 $backup=Join-Path $Instance ('addon-backups\'+(Get-Date -Format 'yyyyMMdd-HHmmss'))
-foreach($oldJar in (Get-ChildItem -LiteralPath (Join-Path $Instance 'mods') -Filter 'overload_sim-*.jar')){
+if(-not([IO.Path]::GetFullPath($backup).StartsWith($Instance+[IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase))){throw 'Backup path escapes the test instance.'}
+foreach($oldJar in (Get-ChildItem -LiteralPath $modsPath -Filter 'overload_sim-*.jar' -File)){
+    if(-not($oldJar.FullName.StartsWith($modsPath+[IO.Path]::DirectorySeparatorChar,[StringComparison]::OrdinalIgnoreCase))){throw 'Addon path escapes the mods directory.'}
     New-Item -ItemType Directory -Force -Path $backup | Out-Null
     Move-Item -LiteralPath $oldJar.FullName -Destination (Join-Path $backup $oldJar.Name)
 }

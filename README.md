@@ -1,6 +1,8 @@
 # 过载模拟 Overload Simulation
 
-Minecraft **1.21.1 / NeoForge 21.1.252** 的 AE2 闪电科技附属模组。**0.1.0-alpha.9 开发中**；PCL 测试实例目前仍为 alpha.8。多方块模型导出与客户端验收完成后再安装新版。
+Minecraft **1.21.1 / NeoForge 21.1.252** 的 AE2 闪电科技附属模组。当前版本 **0.1.0-alpha.9**，新增多方块模拟室；Blockbench 模型导出及开发客户端验收已完成。
+
+已安装到 PCL 的 `OverloadSim-Test-1.21.1`；原 alpha.8 保存在该实例的 `addon-backups/20261001-164652/`。其他十个模组和 46 份设置/配置文件的 SHA-256 保持一致。
 
 项目在 `D:\MinecraftDev\OverloadSimulation`，独立 Git 仓库的 `codex/multiblock-simulation` 分支上。原来的 1.19.2 工程不参与构建。
 
@@ -31,7 +33,7 @@ G 使用闪电科技原生设备界面，四个装备页与右上角武器页共
 
 矿物使用 24 个粗矿块；钻石、下界合金用对应储存块。收集器中心不计入。作物种在收集器所在高度的耕地上方，树苗种在相同高度的泥土类方块上方。默认接受自然雷、人工雷及指令 `/summon lightning_bolt`。配方可设置 `allow_artificial=false` 限制人工雷。
 
-生物战利品按无玩家的死亡上下文抽取，不复制装备、背包、个体 NBT，也不假造玩家击杀或抢夺。拆除正在加工的机器会丢失未完成任务和已支付费用；已经加工完但尚未装入输出槽的物品会掉落。机器运行中锁定输入槽。
+生物战利品按无玩家的死亡上下文抽取，不复制装备、背包、个体 NBT，也不假造玩家击杀或抢夺。旧单方块模拟室拆除时会丢失未完成任务和已支付费用，已加工但尚未装入输出槽的物品会掉落，运行中锁定输入槽。多方块控制器则随物品保存任务及库存。
 
 ## 构建与运行
 
@@ -50,6 +52,8 @@ G 使用闪电科技原生设备界面，四个装备页与右上角武器页共
 前置版本固定为 AE2 19.2.17、AE2 Lightning Tech Reborn 2.1.0、Thunderbolt Core Reborn 2.0.0、GuideME 21.1.19。升级前置后需要复测 collector 的两处 Mixin 和 高压闪电桥接接口。
 
 ## Blockbench 贴图
+
+`art/multiblock_simulation_assembly.bbmodel` 是多方块分层总装预览，另有 16 个独立零件工程。工具菜单中的“绘制多方块模拟室”导出八种方块、成型框架、内陷玻璃与顶部线圈；各纹理 PNG 与工程内嵌纹理一致。工作水晶、电弧、过载环和熔炼火焰由客户端渲染器动态绘制，静态模型中只保留展示占位。实际游戏截图见 `art/verification/`，素材校验运行 `scripts/verify-multiblock-resources.py`。
 
 `art/simulation_crystals_layers.bbmodel` 保存 16×16 灰白模拟水晶、粉彩完美水晶及独立的 12 帧闪电图层。完美水晶同时用于创造标签图标和模组列表标志。水晶轮廓改编自闪电科技原贴图，其 CC BY-NC-SA 3.0 署名与许可见 [素材说明](THIRD_PARTY_NOTICES.md)。
 

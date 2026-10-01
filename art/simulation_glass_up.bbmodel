@@ -1,0 +1,211 @@
+{
+  "meta": {
+    "format_version": "5.0",
+    "model_format": "java_block",
+    "box_uv": false
+  },
+  "name": "simulation_glass_up",
+  "parent": "",
+  "java_block_version": "26.3",
+  "ambientocclusion": false,
+  "front_gui_light": false,
+  "visible_box": [
+    1,
+    1,
+    0
+  ],
+  "variable_placeholders": "",
+  "multi_file_ruleset": "",
+  "variable_placeholder_buttons": [],
+  "unhandled_root_fields": {},
+  "resolution": {
+    "width": 16,
+    "height": 16
+  },
+  "elements": [
+    {
+      "name": "聚能玻璃内陷板",
+      "box_uv": false,
+      "render_order": "default",
+      "rescale": false,
+      "locked": false,
+      "shade_direction_override": "",
+      "light_emission": 0,
+      "export": true,
+      "scope": 0,
+      "allow_mirror_modeling": true,
+      "from": [
+        0,
+        12,
+        0
+      ],
+      "to": [
+        16,
+        13,
+        16
+      ],
+      "autouv": 0,
+      "color": 2,
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": 0
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": 0
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": 0
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": 0
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": 0
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": 0
+        }
+      },
+      "type": "cube",
+      "uuid": "59aced1c-ca6f-0898-dbaa-b0719cb8bb46"
+    }
+  ],
+  "groups": [
+    {
+      "name": "内陷粉白透明玻璃板",
+      "uuid": "427c2329-86c3-3bb9-b9c5-4386280be495",
+      "export": true,
+      "locked": false,
+      "scope": 0,
+      "selected": false,
+      "visibility": true,
+      "_static": {
+        "properties": {},
+        "temp_data": {}
+      },
+      "origin": [
+        8,
+        8,
+        8
+      ],
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "color": 0,
+      "children": [],
+      "reset": false,
+      "shade": true,
+      "mirror_uv": false,
+      "autouv": 0,
+      "isOpen": false,
+      "primary_selected": false
+    }
+  ],
+  "outliner": [
+    {
+      "uuid": "427c2329-86c3-3bb9-b9c5-4386280be495",
+      "isOpen": false,
+      "children": [
+        "59aced1c-ca6f-0898-dbaa-b0719cb8bb46"
+      ]
+    }
+  ],
+  "textures": [
+    {
+      "name": "simulation_glass_up.png",
+      "path": "D:/MinecraftDev/OverloadSimulation/src/main/resources/assets/overload_sim/textures/block/simulation_glass_up.png",
+      "folder": "block",
+      "namespace": "overload_sim",
+      "id": "0",
+      "group": "",
+      "scope": 0,
+      "width": 16,
+      "height": 16,
+      "uv_width": 16,
+      "uv_height": 16,
+      "particle": false,
+      "use_as_default": false,
+      "layers_enabled": true,
+      "sync_to_project": "",
+      "file_format": "png",
+      "render_mode": "default",
+      "render_sides": "auto",
+      "wrap_mode": "limited",
+      "pbr_channel": "color",
+      "fps": 7,
+      "frame_time": 1,
+      "frame_order_type": "loop",
+      "frame_order": "",
+      "frame_interpolate": false,
+      "visible": true,
+      "internal": true,
+      "saved": true,
+      "uuid": "436350cf-063d-5e25-a6ba-33e082aad23f",
+      "layers": [
+        {
+          "type": "pixel_layer",
+          "name": "粉白陶瓷 · 绕组 · 独立升级符号",
+          "parent_uuid": "",
+          "offset": [
+            0,
+            0
+          ],
+          "scale": [
+            1,
+            1
+          ],
+          "opacity": 100,
+          "visible": true,
+          "blend_mode": "default",
+          "width": 16,
+          "height": 16,
+          "data_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAmklEQVR4AcyPQQpFUBSGbyavXq9nyszEwAIswcgu7MIK7MIujJQN2ICMDBQDKZKSAf0kBjccSm79dW6d7+v8whAX2p0IDE/8WoyYLqsdoLMAU9W6jJA+LQNgqwC/C3lAIInm3mH7FwDOK++a4AQMMf+CkzBfQID5goPOgLbhV9huHMwvEXRRrjZhYlCyNJsqfOS//dMVnxpIRgAAAP//ginOAgAAAAZJREFUAwA4dp4BS0Q4wAAAAABJRU5ErkJggg=="
+        }
+      ],
+      "source": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAmklEQVR4AcyPQQpFUBSGbyavXq9nyszEwAIswcgu7MIK7MIujJQN2ICMDBQDKZKSAf0kBjccSm79dW6d7+v8whAX2p0IDE/8WoyYLqsdoLMAU9W6jJA+LQNgqwC/C3lAIInm3mH7FwDOK++a4AQMMf+CkzBfQID5goPOgLbhV9huHMwvEXRRrjZhYlCyNJsqfOS//dMVnxpIRgAAAP//ginOAgAAAAZJREFUAwA4dp4BS0Q4wAAAAABJRU5ErkJggg=="
+    }
+  ]
+}

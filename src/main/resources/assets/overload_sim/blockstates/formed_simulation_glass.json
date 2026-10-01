@@ -1,0 +1,22 @@
+{
+  "variants": {
+    "face=north": {
+      "model": "overload_sim:block/simulation_glass_north"
+    },
+    "face=south": {
+      "model": "overload_sim:block/simulation_glass_south"
+    },
+    "face=west": {
+      "model": "overload_sim:block/simulation_glass_west"
+    },
+    "face=east": {
+      "model": "overload_sim:block/simulation_glass_east"
+    },
+    "face=up": {
+      "model": "overload_sim:block/simulation_glass_up"
+    },
+    "face=down": {
+      "model": "overload_sim:block/simulation_glass_down"
+    }
+  }
+}
