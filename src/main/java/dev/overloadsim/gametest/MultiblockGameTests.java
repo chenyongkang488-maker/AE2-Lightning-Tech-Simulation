@@ -9,6 +9,113 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(OverloadSimulation.ID)
 @PrefixGameTestTemplate(false)
 public class MultiblockGameTests {
+    @GameTest(template="empty")
+    public static void oldProcessCacheCannotCollideWithCurrentReloadCounters(GameTestHelper h){
+        var c=build(h,h.absolutePos(new net.minecraft.core.BlockPos(2,1,2)),3);c.checkStructure();var input=ironCrystal();
+        c.fixedRoll(0,input,()->java.util.List.of(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.RAW_IRON)));
+        var registry=h.getLevel().registryAccess();var saved=c.saveMachine(registry);var generation=saved.getString("RollGeneration").split(":");
+        saved.putString("RollGeneration",generation[generation.length-2]+":"+generation[generation.length-1]);
+        var paid=new dev.overloadsim.multiblock.SimulationBatch(java.util.List.of(new dev.overloadsim.multiblock.SimulationBatch.Output(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.DIAMOND),2)),java.util.Map.of(0,input),180,new dev.overloadsim.multiblock.MultiblockRules.Costs(1000,1,0),false,false,"old-process");paid.paid=true;paid.remaining=93;saved.put("Batch",paid.save(registry));
+        c.loadMachine(saved,registry);var current=c.fixedRoll(0,input,()->java.util.List.of(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.RAW_GOLD)));
+        h.assertTrue(current.getFirst().is(net.minecraft.world.item.Items.RAW_GOLD),"old process counters cannot retain unpaid outputs");
+        h.assertTrue(c.batch().paid&&c.batch().remaining==93&&c.batch().outputs.getFirst().prototype().is(net.minecraft.world.item.Items.DIAMOND),"paid journal preserves its fixed result across session changes");h.succeed();
+    }
+    @GameTest(template="empty")
+    public static void formedGlassDropsItsOriginalMaterial(GameTestHelper h){
+        var min=h.absolutePos(new net.minecraft.core.BlockPos(2,1,2));var c=build(h,min,3);c.checkStructure();var p=c.structure().glass().getFirst();
+        var member=(dev.overloadsim.multiblock.SimulationMemberBlockEntity)h.getLevel().getBlockEntity(p);member.bind(c,net.minecraft.world.level.block.Blocks.QUARTZ_BLOCK.defaultBlockState());
+        var params=new net.minecraft.world.level.storage.loot.LootParams.Builder(h.getLevel()).withParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.ORIGIN,p.getCenter()).withParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.BLOCK_STATE,h.getLevel().getBlockState(p)).withParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.BLOCK_ENTITY,member).withParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.TOOL,net.minecraft.world.item.ItemStack.EMPTY);
+        var state=h.getLevel().getBlockState(p);var drops=state.getDrops(params);h.assertTrue(drops.size()==1&&drops.getFirst().is(net.minecraft.world.item.Items.QUARTZ_BLOCK),"formed proxy preserves original material loot");
+        h.getLevel().setBlockAndUpdate(p,net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());drops=state.getDrops(params);
+        h.assertTrue(drops.size()==1&&drops.getFirst().is(net.minecraft.world.item.Items.QUARTZ_BLOCK),"player loot after removal retains original material");h.succeed();
+    }
+    @GameTest(template="empty")
+    public static void dataReloadInvalidatesUnpaidCachedOutcomes(GameTestHelper h){
+        var c=build(h,h.absolutePos(new net.minecraft.core.BlockPos(2,1,2)),3);c.checkStructure();var input=ironCrystal();
+        c.fixedRoll(0,input,()->java.util.List.of(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.RAW_IRON)));
+        String before=dev.overloadsim.multiblock.MultiblockData.policy().signature(c.structure());
+        try{var method=dev.overloadsim.multiblock.MultiblockData.class.getDeclaredMethod("apply",java.util.Map.class,net.minecraft.server.packs.resources.ResourceManager.class,net.minecraft.util.profiling.ProfilerFiller.class);method.setAccessible(true);method.invoke(new dev.overloadsim.multiblock.MultiblockData(),java.util.Map.of(),null,null);}catch(ReflectiveOperationException e){throw new RuntimeException(e);}
+        var roll=c.fixedRoll(0,input,()->java.util.List.of(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.RAW_GOLD)));
+        h.assertTrue(roll.getFirst().is(net.minecraft.world.item.Items.RAW_GOLD),"unpaid cached outcome refreshed after data reload");
+        h.assertTrue(!before.equals(dev.overloadsim.multiblock.MultiblockData.policy().signature(c.structure())),"unpaid batch policy detects data reload");h.succeed();
+    }
+    @GameTest(template="empty")
+    public static void removedMembersStayRemovedAndReplacementsSurvive(GameTestHelper h){
+        var min=h.absolutePos(new net.minecraft.core.BlockPos(2,1,2));var c=build(h,min,3);c.checkStructure();
+        var corner=min;h.getLevel().setBlockAndUpdate(corner,net.minecraft.world.level.block.Blocks.STONE.defaultBlockState());
+        h.assertTrue(h.getLevel().getBlockState(corner).is(net.minecraft.world.level.block.Blocks.STONE),"replacement must not be overwritten by stale member state");
+        c=build(h,min,3);c.checkStructure();h.getLevel().destroyBlock(corner,true);
+        h.assertTrue(h.getLevel().getBlockState(corner).isAir(),"survival removal must not resurrect a dropped frame");
+        c=build(h,min,3);c.checkStructure();var glass=c.structure().glass().getFirst();h.getLevel().destroyBlock(glass,true);
+        h.assertTrue(h.getLevel().getBlockState(glass).isAir(),"removed glass stays air");h.succeed();
+    }
+    @GameTest(template="empty")
+    public static void obsoleteMemberRestoresAfterSmallerStructureForms(GameTestHelper h){
+        var min=h.absolutePos(new net.minecraft.core.BlockPos(2,1,2));var c=build(h,min,3);c.checkStructure();
+        var outside=min.offset(5,2,5);var original=net.minecraft.core.registries.BuiltInRegistries.BLOCK.get(net.minecraft.resources.ResourceLocation.parse("ae2:quartz_vibrant_glass")).defaultBlockState();
+        h.getLevel().setBlockAndUpdate(outside,dev.overloadsim.multiblock.MultiblockContent.GLASS.get().defaultBlockState());
+        var member=(dev.overloadsim.multiblock.SimulationMemberBlockEntity)h.getLevel().getBlockEntity(outside);member.bind(c,original);member.recover();
+        h.assertTrue(h.getLevel().getBlockState(outside).equals(original),"member outside current bounds restores its original glass");h.succeed();
+    }
+    @GameTest(template="empty")
+    public static void missingOwnerChunkSchedulesRecoveryWithoutLoadingIt(GameTestHelper h){
+        var p=h.absolutePos(new net.minecraft.core.BlockPos(2,1,2));h.getLevel().setBlockAndUpdate(p,dev.overloadsim.multiblock.MultiblockContent.GLASS.get().defaultBlockState());
+        var member=(dev.overloadsim.multiblock.SimulationMemberBlockEntity)h.getLevel().getBlockEntity(p);var owner=p.offset(10000,0,10000);
+        var dummy=new dev.overloadsim.multiblock.SimulationControllerBlockEntity(owner,dev.overloadsim.multiblock.MultiblockContent.CONTROLLER.get().defaultBlockState());member.bind(dummy,net.minecraft.world.level.block.Blocks.GLASS.defaultBlockState());
+        h.getLevel().getBlockTicks().clearArea(new net.minecraft.world.level.levelgen.structure.BoundingBox(p.getX(),p.getY(),p.getZ(),p.getX(),p.getY(),p.getZ()));member.recover();
+        h.assertTrue(!h.getLevel().hasChunkAt(owner)&&h.getLevel().getBlockTicks().hasScheduledTick(p,dev.overloadsim.multiblock.MultiblockContent.GLASS.get()),"retry queued without force loading owner chunk");h.succeed();
+    }
+    @GameTest(template="empty",timeoutTicks=110)
+    public static void shrinkingRejectsUnpaidOutOfCapacityInputs(GameTestHelper h){
+        var c=powered(h,7);var min=c.structure().min();h.runAtTickTime(80,()->{
+            c.crystals().setStackInSlot(48,ironCrystal());java.util.function.Consumer<dev.overloadsim.api.MultiblockSimulationEvents.BeforeBatchStart> cancel=e->{if(e.controller==c)e.setCanceled(true);};
+            net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(cancel);
+            try{c.tick();}finally{net.neoforged.neoforge.common.NeoForge.EVENT_BUS.unregister(cancel);}
+            h.assertTrue(c.batch()!=null&&!c.batch().paid,"unpaid snapshot created");c.invalidateStructure();
+            for(int x=0;x<7;x++)for(int y=0;y<7;y++)for(int z=0;z<7;z++){var p=min.offset(x,y,z);if(!p.equals(c.getBlockPos()))h.getLevel().setBlockAndUpdate(p,net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());}
+            h.assertTrue(build(h,min,3)==c,"shrinking preserves the same controller entity");c.checkStructure();c.tick();h.assertTrue(c.structure()!=null&&c.structure().capacity()==9,"smaller structure formed: "+c.diagnostic());
+            h.assertTrue(c.batch()==null||!c.batch().paid,"out-of-capacity unpaid inputs cannot start");
+            long stored=c.getMainNode().getGrid().getStorageService().getInventory().extract(com.moakiee.ae2lt.me.key.LightningKey.HIGH_VOLTAGE,Long.MAX_VALUE,appeng.api.config.Actionable.SIMULATE,appeng.api.networking.security.IActionSource.ofMachine(c));
+            h.assertTrue(stored==1000,"disabled slot charged nothing, remaining HV="+stored);h.succeed();
+        });
+    }
+    @GameTest(template="empty",timeoutTicks=110)
+    public static void sparseCrystalsAlternateWhenOnlyOneCanBePaid(GameTestHelper h){
+        var c=powered(h,7);h.runAtTickTime(80,()->{
+            c.bridge().extract(false,999,false);c.crystals().setStackInSlot(0,ironCrystal());c.crystals().setStackInSlot(48,ironCrystal());
+            c.tick();h.assertTrue(c.batch().inputs.containsKey(0),"first crystal selected");for(int i=1;i<180;i++)c.tick();
+            c.bridge().insert(false,1);c.tick();h.assertTrue(c.batch().inputs.containsKey(48),"second sparse crystal selected");for(int i=1;i<180;i++)c.tick();
+            c.bridge().insert(false,1);c.tick();h.assertTrue(c.batch().inputs.containsKey(0),"fairness resumes after last selected slot");h.succeed();
+        });
+    }
+    @GameTest(template="empty")
+    public static void unpaidPolicyDistinguishesStructureCapacity(GameTestHelper h){
+        var min=h.absolutePos(new net.minecraft.core.BlockPos(2,1,2));var small=build(h,min,3);small.checkStructure();var signature=dev.overloadsim.multiblock.MultiblockData.policy().signature(small.structure());
+        small.invalidateStructure();var large=build(h,min,7);large.checkStructure();
+        h.assertTrue(!signature.equals(dev.overloadsim.multiblock.MultiblockData.policy().signature(large.structure())),"unpaid job signature includes crystal capacity");h.succeed();
+    }
+    @GameTest(template="empty",timeoutTicks=140)
+    public static void offlinePaidJobDoesNotShowWorkingEffects(GameTestHelper h){
+        var c=powered(h,3);h.runAtTickTime(80,()->{c.crystals().setStackInSlot(0,ironCrystal());c.tick();h.getLevel().setBlockAndUpdate(c.getBlockPos().north(),net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());});
+        h.runAtTickTime(120,()->{h.assertTrue(c.busy()&&!c.getMainNode().isActive(),"offline job retained");h.assertTrue((c.visualFlags()&1)==0,"offline job does not show working lightning");h.succeed();});
+    }
+    @GameTest(template="empty",timeoutTicks=110)
+    public static void controllerRequiresAnAEChannel(GameTestHelper h){
+        var c=powered(h,3);h.runAtTickTime(80,()->{h.assertTrue(c.getMainNode().getNode().hasFlag(appeng.api.networking.GridFlags.REQUIRE_CHANNEL),"controller requires one AE channel");h.succeed();});
+    }
+    @GameTest(template="empty",timeoutTicks=110)
+    public static void removedInterfaceImmediatelyStopsExport(GameTestHelper h){
+        var c=powered(h,3);var min=c.structure().min();c.invalidateStructure();var p=min.offset(0,0,1);
+        h.getLevel().setBlockAndUpdate(p,net.minecraft.core.registries.BuiltInRegistries.BLOCK.get(net.minecraft.resources.ResourceLocation.parse("ae2lt:overloaded_interface")).defaultBlockState());c.checkStructure();
+        h.runAtTickTime(81,()->{c.bridge().refresh();h.getLevel().setBlockAndUpdate(p,net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());c.outputs().insert(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_INGOT),1024,false);c.bridge().refresh();c.bridge().export();
+            h.assertTrue(c.outputs().count(0)==1024,"missing live interface prevents export before periodic scan");h.succeed();});
+    }
+    @GameTest(template="empty")
+    public static void formationEventDoesNotReceiveDismantling(GameTestHelper h){
+        h.assertTrue(!dev.overloadsim.api.MultiblockSimulationEvents.Formed.class.isAssignableFrom(dev.overloadsim.api.MultiblockSimulationEvents.Invalidated.class),"formation and dismantling events distinct");h.succeed();
+    }
+    @GameTest(template="empty")
+    public static void legacyChamberRetainsPickaxeTag(GameTestHelper h){h.assertTrue(dev.overloadsim.ModContent.CHAMBER.get().defaultBlockState().is(net.minecraft.tags.BlockTags.MINEABLE_WITH_PICKAXE),"legacy chamber remains pickaxe-mineable");h.succeed();}
     @GameTest(template="empty",timeoutTicks=120)
     public static void originalInterfaceBridgesAndExportsAcceptedQuantities(GameTestHelper h){
         var c=powered(h,3);var min=c.structure().min();c.invalidateStructure();
@@ -127,6 +234,7 @@ public class MultiblockGameTests {
         for(int x=0;x<n;x++)for(int y=0;y<n;y++)for(int z=0;z<n;z++){
             int b=(x==0||x==n-1?1:0)+(y==0||y==n-1?1:0)+(z==0||z==n-1?1:0);
             var block=b>=2||y==0?dev.overloadsim.multiblock.MultiblockContent.FRAME.get():b==1?glass:net.minecraft.world.level.block.Blocks.AIR;
+            if(x==1&&y==0&&z==0&&h.getLevel().getBlockState(min.offset(x,y,z)).is(dev.overloadsim.multiblock.MultiblockContent.CONTROLLER.get()))continue;
             h.getLevel().setBlockAndUpdate(min.offset(x,y,z),block.defaultBlockState());
         }
         var pos=min.offset(1,0,0);h.getLevel().setBlockAndUpdate(pos,dev.overloadsim.multiblock.MultiblockContent.CONTROLLER.get().defaultBlockState());

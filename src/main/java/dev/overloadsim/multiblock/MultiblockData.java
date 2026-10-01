@@ -14,13 +14,16 @@ public final class MultiblockData extends SimpleJsonResourceReloadListener {
         public int duration(SimulationStructure s){long reduction=Math.min(reductionCap,s.t1()*(long)t1+s.t2()*(long)t2+s.t3()*(long)t3);long time=Math.max(1,ticks-reduction);return (int)(s.overload()?(time+1)/2:time);}
         public long multiplier(SimulationStructure s){return 1L<<Math.min(s.fortune(),fortuneCap);}
         public MultiblockRules.Costs cost(int n,SimulationStructure s){return new MultiblockRules.Costs(Math.multiplyExact(n,fe),Math.multiplyExact(n,Math.addExact(hv,s.smelting()?smeltingHv:0)),Math.multiplyExact(n,s.overload()?overloadEhv:0));}
-        public String signature(SimulationStructure s){return toString()+":"+s.t1()+":"+s.t2()+":"+s.t3()+":"+s.fortune()+":"+s.overload()+":"+s.smelting();}
+        public String signature(SimulationStructure s){return toString()+":"+s.capacity()+":"+s.t1()+":"+s.t2()+":"+s.t3()+":"+s.fortune()+":"+s.overload()+":"+s.smelting()+":"+generation();}
     }
     public record Smelt(ResourceLocation result,int count){}
     private static final Policy DEFAULT=new Policy(180,104,10,2,4,8,1000,1,1,2);
     private static volatile Policy policy=DEFAULT;
     private static volatile Map<ResourceLocation,Smelt> smelts=defaults();
     private static volatile Map<ResourceLocation,SimulationPartBlock.Kind> aliases=Map.of();
+    private static volatile long revision;
+    private static final UUID SESSION=UUID.randomUUID();
+    public static String generation(){return SESSION+":"+revision+":"+dev.overloadsim.data.SimulationData.revision();}
     public MultiblockData(){super(new Gson(),"multiblock_simulation");}
     public static Policy policy(){return policy;}
     public static SimulationPartBlock.Kind module(Block block){return block instanceof SimulationPartBlock p?p.kind():aliases.get(BuiltInRegistries.BLOCK.getKey(block));}
@@ -39,7 +42,7 @@ public final class MultiblockData extends SimpleJsonResourceReloadListener {
             if(j.has("modules"))for(var value:j.getAsJsonArray("modules")){
                 var m=value.getAsJsonObject();modules.put(ResourceLocation.parse(m.get("block").getAsString()),SimulationPartBlock.Kind.valueOf(m.get("kind").getAsString().toUpperCase(java.util.Locale.ROOT)));
             }
-        }policy=next;smelts=Map.copyOf(mappings);aliases=Map.copyOf(modules);
+        }policy=next;smelts=Map.copyOf(mappings);aliases=Map.copyOf(modules);revision++;
     }
     public static Smelt smelt(ServerLevel level,ItemStack stack){
         var mapping=smelts.get(BuiltInRegistries.ITEM.getKey(stack.getItem()));if(mapping!=null)return mapping;

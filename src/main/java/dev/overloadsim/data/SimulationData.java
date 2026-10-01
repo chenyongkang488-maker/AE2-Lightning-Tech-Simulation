@@ -14,12 +14,14 @@ import net.minecraft.world.item.crafting.RecipeManager;
 public class SimulationData extends SimpleJsonResourceReloadListener {
     private static volatile Map<ResourceLocation,SimulationProfileView> profiles=Map.of();
     private static RecipeManager indexedManager;
+    private static volatile long revision;
+    public static long revision(){return revision;}
     private static final Map<SimulationRecipe.Kind,List<RecipeHolder<SimulationRecipe>>> INDEX=new EnumMap<>(SimulationRecipe.Kind.class);
     public SimulationData(){super(new Gson(),"simulation_profile");}
     @Override protected void apply(Map<ResourceLocation,JsonElement> json,ResourceManager manager,ProfilerFiller profiler){
         var next=new HashMap<ResourceLocation,SimulationProfileView>();
         json.forEach((id,value)->{var j=value.getAsJsonObject();var kind=j.get("kind").getAsString();if(!Set.of("mineral","crop","tree","mob").contains(kind))throw new IllegalArgumentException("invalid profile kind "+id);next.put(id,new SimulationProfileView(id,kind,j.get("name").getAsString(),ResourceLocation.parse(j.get("icon").getAsString())));});
-        profiles=Map.copyOf(next); indexedManager=null; INDEX.clear();
+        profiles=Map.copyOf(next); indexedManager=null; INDEX.clear();revision++;
     }
     public static Optional<SimulationProfileView> profile(ResourceLocation id){return Optional.ofNullable(profiles.get(id));}
     public static Collection<SimulationProfileView> profiles(){return profiles.values();}

@@ -15,4 +15,12 @@ public class SimulationGlassBlock extends SimulationPartBlock {
         return switch(state.getValue(FACE)){case NORTH->box(0,0,3,16,16,4);case SOUTH->box(0,0,12,16,16,13);case WEST->box(3,0,0,4,16,16);case EAST->box(12,0,0,13,16,16);case UP->box(0,12,0,16,13,16);case DOWN->box(0,3,0,16,4,16);};
     }
     @Override protected boolean skipRendering(BlockState a,BlockState b,Direction side){return b.is(this)&&a.getValue(FACE)==b.getValue(FACE)||super.skipRendering(a,b,side);}
+    @Override public java.util.List<net.minecraft.world.item.ItemStack> getDrops(BlockState state,net.minecraft.world.level.storage.loot.LootParams.Builder builder){
+        var member=builder.getOptionalParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.BLOCK_ENTITY);
+        if(member instanceof SimulationMemberBlockEntity m&&m.originalForDrops()!=null){
+            var original=m.originalForDrops();
+            return original.getDrops(builder.withParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.BLOCK_STATE,original));
+        }
+        return java.util.List.of();
+    }
 }

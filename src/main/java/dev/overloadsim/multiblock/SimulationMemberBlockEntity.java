@@ -7,28 +7,32 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
 public class SimulationMemberBlockEntity extends BlockEntity {
-    private BlockPos owner;private UUID ownerId;private BlockState original;
+    private BlockPos owner;private UUID ownerId;private BlockState original,removalOriginal;
     public SimulationMemberBlockEntity(BlockPos pos,BlockState state){super(MultiblockContent.MEMBER_ENTITY.get(),pos,state);}
     public BlockPos owner(){return owner;}
     public boolean ownedBy(SimulationControllerBlockEntity controller){return owner!=null&&owner.equals(controller.getBlockPos())&&controller.identity().equals(ownerId);}
-    public void bind(SimulationControllerBlockEntity controller,BlockState original){this.owner=controller.getBlockPos();this.ownerId=controller.identity();this.original=original;setChanged();}
+    public void bind(SimulationControllerBlockEntity controller,BlockState original){this.owner=controller.getBlockPos();this.ownerId=controller.identity();this.original=original;removalOriginal=null;setChanged();}
+    public BlockState originalForDrops(){return original!=null?original:removalOriginal;}
     public void release(){
         owner=null;ownerId=null;original=null;setChanged();
     }
     public void notifyController(){if(level!=null&&!level.isClientSide&&owner!=null&&level.hasChunkAt(owner)&&level.getBlockEntity(owner) instanceof SimulationControllerBlockEntity c)c.invalidateStructure();}
     public void restore(){
         if(level==null)return;
-        BlockState before=original;release();
-        if(level.getBlockState(worldPosition).is(MultiblockContent.GLASS.get())&&before!=null)
+        BlockState before=original;removalOriginal=before;release();
+        var current=level.getBlockState(worldPosition);
+        if(level.getBlockEntity(worldPosition)!=this||!current.is(getBlockState().getBlock()))return;
+        if(current.is(MultiblockContent.GLASS.get())&&before!=null)
             SimulationStructureIndex.converting(()->level.setBlockAndUpdate(worldPosition,before));
-        else if(getBlockState().hasProperty(SimulationPartBlock.FORMED))
-            level.setBlockAndUpdate(worldPosition,getBlockState().setValue(SimulationPartBlock.FORMED,false));
+        else if(current.hasProperty(SimulationPartBlock.FORMED))
+            level.setBlockAndUpdate(worldPosition,current.setValue(SimulationPartBlock.FORMED,false));
     }
     @Override public void onLoad(){super.onLoad();if(level!=null&&!level.isClientSide)level.scheduleTick(worldPosition,getBlockState().getBlock(),40);}
     public void recover(){
-        if(owner==null||level==null||!level.hasChunkAt(owner))return;
+        if(owner==null||level==null)return;
+        if(!level.hasChunkAt(owner)){level.scheduleTick(worldPosition,getBlockState().getBlock(),40);return;}
         if(level.getBlockEntity(owner) instanceof SimulationControllerBlockEntity c&&ownedBy(c)){
-            c.checkStructure();if(c.structure()!=null)return;
+            c.checkStructure();if(c.structure()!=null&&c.structure().members().contains(worldPosition))return;
             if(c.error().equals("unloaded")){level.scheduleTick(worldPosition,getBlockState().getBlock(),40);return;}
         }restore();
     }

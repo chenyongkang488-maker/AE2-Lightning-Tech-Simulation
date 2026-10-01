@@ -16,8 +16,8 @@ def write(path,value):
  path=RES/path;path.parent.mkdir(parents=True,exist_ok=True);path.write_text(json.dumps(value,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
 for block in NAMES:
  write(Path('data/overload_sim/loot_table/blocks')/(block+'.json'),{'type':'minecraft:block','pools':[{'rolls':1,'entries':[{'type':'minecraft:item','name':'overload_sim:'+block}],'conditions':[{'condition':'minecraft:survives_explosion'}]}]})
-write(Path('data/overload_sim/loot_table/blocks/formed_simulation_glass.json'),{'type':'minecraft:block','pools':[{'rolls':1,'entries':[{'type':'minecraft:item','name':'ae2:quartz_vibrant_glass'}]}]})
-write(Path('data/minecraft/tags/block/mineable/pickaxe.json'),{'replace':False,'values':['overload_sim:'+id for id in NAMES]})
+write(Path('data/overload_sim/loot_table/blocks/formed_simulation_glass.json'),{'type':'minecraft:block','pools':[]})
+write(Path('data/minecraft/tags/block/mineable/pickaxe.json'),{'replace':False,'values':['overload_sim:overload_simulation_chamber']+['overload_sim:'+id for id in NAMES]})
 write(Path('data/overload_sim/tags/block/simulation_frames.json'),{'replace':False,'values':['overload_sim:simulation_frame']})
 write(Path('data/overload_sim/tags/block/simulation_glass.json'),{'replace':False,'values':['ae2:quartz_vibrant_glass']})
 write(Path('data/overload_sim/multiblock_simulation/default.json'),{'policy':{'ticks':180,'reduction_cap':104,'fortune_cap':10,'t1':2,'t2':4,'t3':8,'fe':1000,'hv':1,'overload_ehv':1,'smelting_hv':2},'smelting':[{'input':'minecraft:raw_'+s,'result':'minecraft:'+s+'_ingot','count':2} for s in ('iron','gold','copper')],'modules':[]})
@@ -40,6 +40,7 @@ for locale,index in [('zh_cn',0),('en_us',1)]:
  'gui.overload_sim.multiblock.outputs':['产物（第 %s / 4 页）','Outputs (page %s / 4)'][index],
  'gui.overload_sim.multiblock.take':['左键取一组，右键取一个，Shift取入背包','Left: one stack. Right: one item. Shift: fill inventory.'][index],
  'status.overload_sim.8':['结构所在区块未加载','Structure chunks unloaded'][index],
+ 'gui.overload_sim.multiblock.frequency':['过载频道：%s','Overload frequency: %s'][index],
  'gui.overload_sim.multiblock.error':['结构诊断：%s','Structure diagnostic: %s'][index]})
  path.write_text(json.dumps(lang,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
 header='---\nnavigation:\n  title: 多方块模拟室\n  icon: overload_sim:simulation_controller\n  parent: overload_sim:overload-simulation.md\nitem_ids:\n'+''.join('  - overload_sim:'+id+'\n' for id in NAMES)+'---\n\n'

@@ -16,10 +16,10 @@ public final class SimulationGridBridge implements SimulationLightningPayment.St
         var structure=host.structure();var expected=structure==null?null:structure.networkInterface();
         if(expected==null||!host.loaded()){disconnect();return;}
         var be=host.getLevel().getBlockEntity(expected);
-        if(!(be instanceof AENetworkedBlockEntity network)){disconnect();return;}
+        if(!(be instanceof com.moakiee.ae2lt.blockentity.OverloadedInterfaceBlockEntity network)){disconnect();return;}
         var a=host.getMainNode().getNode();var b=network.getMainNode().getNode();
-        if(a==null||b==null)return;
-        if(connection!=null&&(!expected.equals(port)||connection.a()!=a||connection.b()!=b))disconnect();
+        if(a==null||b==null){disconnect();return;}
+        if(connection!=null&&(!expected.equals(port)||!a.getConnections().contains(connection)||connection.getOtherSide(a)!=b))disconnect();
         if(connection==null){
             connection=a.getConnections().stream().filter(c->c.getOtherSide(a)==b).findFirst().orElse(null);
             ownedConnection=connection==null;
@@ -37,8 +37,9 @@ public final class SimulationGridBridge implements SimulationLightningPayment.St
         return grid.getStorageService().getInventory().insert(extreme?LightningKey.EXTREME_HIGH_VOLTAGE:LightningKey.HIGH_VOLTAGE,amount,Actionable.MODULATE,IActionSource.ofMachine(host));
     }
     public void export(){
+        refresh();
         var structure=host.structure();var grid=host.getMainNode().getGrid();
-        if(structure==null||structure.networkInterface()==null||!host.loaded()||grid==null||!host.getMainNode().isActive())return;
+        if(structure==null||structure.networkInterface()==null||connection==null||!host.loaded()||grid==null||!host.getMainNode().isActive())return;
         var buffer=host.outputs();boolean moved=false;
         for(int slot=0;slot<buffer.SLOTS;slot++)if(buffer.count(slot)>0){
             long accepted=grid.getStorageService().getInventory().insert(AEItemKey.of(buffer.prototype(slot)),buffer.count(slot),Actionable.MODULATE,IActionSource.ofMachine(host));

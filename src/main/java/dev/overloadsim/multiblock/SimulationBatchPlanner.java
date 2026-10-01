@@ -14,7 +14,7 @@ public final class SimulationBatchPlanner {
         if(per.hv()>0)available=Math.min(available,host.bridge().extract(false,Long.MAX_VALUE,true)/per.hv());
         if(per.ehv()>0)available=Math.min(available,host.bridge().extract(true,Long.MAX_VALUE,true)/per.ehv());
         if(available<1)return null;
-        var reserve=host.outputs().copy();var out=new ArrayList<SimulationBatch.Output>();var inputs=new HashMap<Integer,ItemStack>();
+        var reserve=host.outputs().copy();var out=new ArrayList<SimulationBatch.Output>();var inputs=new HashMap<Integer,ItemStack>();int nextSlot=start;
         for(int i=0;i<s.capacity()&&inputs.size()<available;i++){
             int slot=(start+i)%s.capacity();var item=host.crystals().getStackInSlot(slot);var data=CrystalDataAccess.read(item);
             if(!item.is(ModContent.PERFECT.get())||data.isEmpty()||SimulationData.profile(data.get().profile()).isEmpty())continue;
@@ -29,9 +29,9 @@ public final class SimulationBatchPlanner {
             }
             var next=reserve.copy();boolean fits=true;
             for(var value:outputs)if(next.insert(value.prototype(),value.count(),false)!=value.count()){fits=false;break;}
-            if(!fits)continue;reserve=next;out.addAll(outputs);inputs.put(slot,item.copy());
+            if(!fits)continue;reserve=next;out.addAll(outputs);inputs.put(slot,item.copy());nextSlot=(slot+1)%s.capacity();
         }
         if(inputs.isEmpty())return null;
-        return new SimulationBatch(out,inputs,policy.duration(s),policy.cost(inputs.size(),s),s.overload(),s.smelting(),policy.signature(s));
+        return new SimulationBatch(out,inputs,policy.duration(s),policy.cost(inputs.size(),s),s.overload(),s.smelting(),policy.signature(s),nextSlot);
     }
 }

@@ -20,14 +20,15 @@ import dev.overloadsim.api.MultiblockSimulationEvents;
 import dev.overloadsim.compat.*;
 public class SimulationControllerBlockEntity extends AENetworkedBlockEntity implements IActionHost {
     private UUID identity=UUID.randomUUID();
-    private SimulationStructure structure;private String error="no_structure";private boolean structureDirty;
+    private SimulationStructure structure;private String error="no_structure";private BlockPos problem;private boolean structureDirty;
     private BlockPos savedMin;private int savedSize;
     private final BulkOutputBuffer outputs=new BulkOutputBuffer();
     private final SimulationGridBridge bridge=new SimulationGridBridge(this);
-    private SimulationBatch batch;private int nextCrystal,status;
+    private SimulationBatch batch;private int nextCrystal,status,lastVisualFlags;
     private long refundHv,refundEhv;private double feFraction;
     private record Roll(ItemStack input,List<ItemStack> output){}
     private final Map<Integer,Roll> rolls=new HashMap<>();
+    private String rollGeneration=MultiblockData.generation();
     private final EnergyStorage energy=new EnergyStorage(2_000_000,2_000_000,0){
         @Override public int receiveEnergy(int amount,boolean simulate){int received=super.receiveEnergy(amount,simulate);if(received>0&&!simulate)saveChanges();return received;}
     };
@@ -47,10 +48,11 @@ public class SimulationControllerBlockEntity extends AENetworkedBlockEntity impl
         public int getSlotLimit(int slot){return slot<49?1:1024;}
         public boolean isItemValid(int slot,ItemStack item){return slot<49&&crystals.isItemValid(slot,item);}
     };
-    public SimulationControllerBlockEntity(BlockPos p,BlockState s){super(MultiblockContent.CONTROLLER_ENTITY.get(),p,s);}
+    public SimulationControllerBlockEntity(BlockPos p,BlockState s){super(MultiblockContent.CONTROLLER_ENTITY.get(),p,s);getMainNode().setFlags(GridFlags.REQUIRE_CHANNEL).setIdlePowerUsage(2).setVisualRepresentation(MultiblockContent.CONTROLLER_ITEM.get());}
     public UUID identity(){return identity;}
     public SimulationStructure structure(){return structure;}
     public String error(){return error;}
+    public String diagnostic(){return problem==null?error:error+" @ "+problem.getX()+", "+problem.getY()+", "+problem.getZ();}
     public void markStructureDirty(){structureDirty=true;}
     public ItemStackHandler crystals(){return crystals;}
     public BulkOutputBuffer outputs(){return outputs;}
@@ -62,15 +64,19 @@ public class SimulationControllerBlockEntity extends AENetworkedBlockEntity impl
     public int status(){return status;}
     public int visualSize(){return level!=null&&level.isClientSide?visualSize:structure==null?0:structure.size();}
     public BlockPos visualMin(){return level!=null&&level.isClientSide?visualMin:structure==null?worldPosition:structure.min();}
-    public int visualFlags(){return level!=null&&level.isClientSide?visualFlags:busy()?1|(batch.overload?2:0)|(batch.smelting?4:0):0;}
+    public int visualFlags(){return level!=null&&level.isClientSide?visualFlags:busy()&&batch.remaining>0&&structure!=null&&loaded()&&getMainNode().isActive()?1|(batch.overload?2:0)|(batch.smelting?4:0):0;}
     public List<ItemStack> visualCrystals(){return level!=null&&level.isClientSide?visualCrystals:java.util.stream.IntStream.range(0,structure==null?0:structure.capacity()).mapToObj(crystals::getStackInSlot).filter(s->!s.isEmpty()).map(ItemStack::copy).toList();}
     public List<ItemStack> fixedRoll(int slot,ItemStack item,java.util.function.Supplier<List<ItemStack>> supplier){
+        if(!rollGeneration.equals(MultiblockData.generation())){rolls.clear();rollGeneration=MultiblockData.generation();saveChanges();}
         var cached=rolls.get(slot);if(cached==null||!ItemStack.matches(cached.input,item)){
             cached=new Roll(item.copy(),supplier.get().stream().map(ItemStack::copy).toList());rolls.put(slot,cached);saveChanges();
         }return cached.output;
     }
     public void tick(){
         if(level==null||level.isClientSide)return;
+        try{tickServer();}finally{int flags=visualFlags();if(flags!=lastVisualFlags){lastVisualFlags=flags;markForClientUpdate();}}
+    }
+    private void tickServer(){
         if(structureDirty||level.getGameTime()%(structure==null?20:100)==0){structureDirty=false;checkStructure();}
         bridge.refresh();charge();
         if(refundHv>0||refundEhv>0){refundHv-=bridge.insert(false,refundHv);refundEhv-=bridge.insert(true,refundEhv);saveChanges();if(refundHv>0||refundEhv>0){status=7;return;}}
@@ -82,7 +88,8 @@ public class SimulationControllerBlockEntity extends AENetworkedBlockEntity impl
         if(!batch.paid){
             if(!inputsMatch(batch)||!batch.policy.equals(MultiblockData.policy().signature(structure))){batch=null;saveChanges();return;}
             if(!batch.fits(outputs)){status=4;return;}
-            if(NeoForge.EVENT_BUS.post(new MultiblockSimulationEvents.BeforeBatchStart(this,batch)).isCanceled())return;
+            var candidate=batch;
+            if(NeoForge.EVENT_BUS.post(new MultiblockSimulationEvents.BeforeBatchStart(this,candidate)).isCanceled()||batch!=candidate)return;
             checkStructure();
             if(structure==null||!loaded()||!inputsMatch(batch)||!batch.policy.equals(MultiblockData.policy().signature(structure))||!getMainNode().isActive()||!batch.fits(outputs)||energy.getEnergyStored()<batch.cost.fe())return;
             var payment=SimulationLightningPayment.pay(bridge,batch.cost.hv(),batch.cost.ehv());
@@ -95,11 +102,11 @@ public class SimulationControllerBlockEntity extends AENetworkedBlockEntity impl
         if(batch.remaining>0)batch.remaining--;
         if(batch.remaining==0){
             if(!batch.flush(outputs)){status=4;saveChanges();return;}
-            var completed=batch;batch=null;completed.inputs.keySet().forEach(rolls::remove);nextCrystal=(nextCrystal+completed.inputs.size())%structure.capacity();
+            var completed=batch;batch=null;completed.inputs.keySet().forEach(rolls::remove);nextCrystal=completed.nextSlot%structure.capacity();
             saveChanges();markForClientUpdate();NeoForge.EVENT_BUS.post(new MultiblockSimulationEvents.Completed(this,completed));bridge.export();
         }else saveChanges();
     }
-    private boolean inputsMatch(SimulationBatch job){return job.inputs.entrySet().stream().allMatch(e->ItemStack.matches(e.getValue(),crystals.getStackInSlot(e.getKey())));}
+    private boolean inputsMatch(SimulationBatch job){return structure!=null&&job.inputs.entrySet().stream().allMatch(e->e.getKey()>=0&&e.getKey()<structure.capacity()&&ItemStack.matches(e.getValue(),crystals.getStackInSlot(e.getKey())));}
     private void charge(){
         var grid=getMainNode().getGrid();int needed=Math.min(10000,energy.getMaxEnergyStored()-energy.getEnergyStored());
         if(needed<=0||grid==null||!getMainNode().isActive())return;
@@ -117,8 +124,8 @@ public class SimulationControllerBlockEntity extends AENetworkedBlockEntity impl
         if(level==null||level.isClientSide||SimulationStructureIndex.converting())return;
         if(structure!=null&&!loaded()){error="unloaded";return;}
         var result=structure==null?(savedMin==null?SimulationStructureValidator.find(this):SimulationStructureValidator.validate(this,savedMin,savedSize)):SimulationStructureValidator.validate(this,structure.min(),structure.size());
-        if(!result.valid()){error=result.error();if(error.equals("unloaded"))return;savedMin=null;savedSize=0;invalidateStructure();return;}
-        error="";var next=result.structure();
+        if(!result.valid()){error=result.error();problem=result.problem();if(error.equals("unloaded"))return;savedMin=null;savedSize=0;invalidateStructure();return;}
+        error="";problem=null;var next=result.structure();
         if(structure!=null){structure=next;return;}
         if(NeoForge.EVENT_BUS.post(new MultiblockSimulationEvents.BeforeStructureForm(this,next)).isCanceled())return;
         var verify=SimulationStructureValidator.validate(this,next.min(),next.size());if(!verify.valid())return;next=verify.structure();
@@ -146,13 +153,13 @@ public class SimulationControllerBlockEntity extends AENetworkedBlockEntity impl
     public CompoundTag saveMachine(HolderLookup.Provider r){
         var tag=new CompoundTag();tag.putUUID("Identity",identity);tag.put("Crystals",crystals.serializeNBT(r));tag.put("Bulk",outputs.save(r));tag.put("Energy",energy.serializeNBT(r));tag.putDouble("FeFraction",feFraction);tag.putLong("RefundHv",refundHv);tag.putLong("RefundEhv",refundEhv);tag.putInt("NextCrystal",nextCrystal);
         if(batch!=null)tag.put("Batch",batch.save(r));
-        var fixed=new ListTag();rolls.forEach((slot,roll)->{var t=new CompoundTag();t.putInt("Slot",slot);t.put("Input",roll.input.save(r));var list=new ListTag();for(var item:roll.output)list.add(item.save(r));t.put("Outputs",list);fixed.add(t);});tag.put("Rolls",fixed);return tag;
+        var fixed=new ListTag();rolls.forEach((slot,roll)->{var t=new CompoundTag();t.putInt("Slot",slot);t.put("Input",roll.input.save(r));var list=new ListTag();for(var item:roll.output)list.add(item.save(r));t.put("Outputs",list);fixed.add(t);});tag.put("Rolls",fixed);tag.putString("RollGeneration",rollGeneration);return tag;
     }
     public void loadMachine(CompoundTag tag,HolderLookup.Provider r){
         if(tag.hasUUID("Identity"))identity=tag.getUUID("Identity");crystals.deserializeNBT(r,tag.getCompound("Crystals"));outputs.load(tag.getCompound("Bulk"),r);if(tag.contains("Energy"))energy.deserializeNBT(r,tag.get("Energy"));
         feFraction=tag.getDouble("FeFraction");if(!Double.isFinite(feFraction)||feFraction<0||feFraction>=1)feFraction=0;
         refundHv=Math.max(0,tag.getLong("RefundHv"));refundEhv=Math.max(0,tag.getLong("RefundEhv"));nextCrystal=Math.clamp(tag.getInt("NextCrystal"),0,48);
-        batch=tag.contains("Batch")?SimulationBatch.load(tag.getCompound("Batch"),r):null;rolls.clear();
+        batch=tag.contains("Batch")?SimulationBatch.load(tag.getCompound("Batch"),r):null;rolls.clear();rollGeneration=tag.getString("RollGeneration");
         for(var v:tag.getList("Rolls",Tag.TAG_COMPOUND)){var t=(CompoundTag)v;int slot=t.getInt("Slot");if(slot<0||slot>=49)continue;var list=new ArrayList<ItemStack>();for(var item:t.getList("Outputs",Tag.TAG_COMPOUND))ItemStack.parse(r,item).ifPresent(list::add);rolls.put(slot,new Roll(ItemStack.parseOptional(r,t.getCompound("Input")),List.copyOf(list)));}
     }
     @Override public void saveAdditional(CompoundTag tag,HolderLookup.Provider r){super.saveAdditional(tag,r);tag.put("SimulationMachine",saveMachine(r));if(savedMin!=null){tag.putLong("StructureMin",savedMin.asLong());tag.putInt("StructureSize",savedSize);}}

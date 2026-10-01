@@ -1,10 +1,17 @@
 # 过载模拟 Overload Simulation
 
-Minecraft **1.21.1 / NeoForge 21.1.252** 的 AE2 闪电科技附属模组。当前版本为 **0.1.0-alpha.8 测试原型**。
+Minecraft **1.21.1 / NeoForge 21.1.252** 的 AE2 闪电科技附属模组。**0.1.0-alpha.9 开发中**；PCL 测试实例目前仍为 alpha.8。多方块模型导出与客户端验收完成后再安装新版。
 
-项目在 `D:\MinecraftDev\OverloadSimulation`，独立 Git 仓库的 `codex/coil-hub-wrench` 分支上。原来的 1.19.2 工程不参与构建。
+项目在 `D:\MinecraftDev\OverloadSimulation`，独立 Git 仓库的 `codex/multiblock-simulation` 分支上。原来的 1.19.2 工程不参与构建。
 
 ## 游戏内容
+
+- 多方块模拟室：外尺寸 3³～7³，支持 9～49 个完美水晶。12 条边框使用框架，五个面使用聚能石英玻璃，底面填框架或升级模块。控制器及可选原版过载 ME 接口放在底部非角边框，控制器朝外。
+- 多方块默认每个水晶 180 tick 执行一次配方，消耗 1000 FE + 1 HV；效率最多减 104 tick，时运最多 ×1024。过载模块每个水晶额外消耗 1 EHV 并将最终周期减半；熔炼模块额外消耗 2 HV，原铁/铜/金转为双倍锭。
+- 128 格输出缓冲，每格 1024，四页显示；取出/管道提取拆为正常堆叠。原版过载接口使产物直接进入 AE 网络，不能插入的留在缓冲；控制器可用线缆连接 AE 持续充入 FE。
+- 生存拆除多方块控制器时，库存、缓冲、能量及任务随控制器物品保存。结构损坏或区块卸载暂停已付款任务，恢复后继续。单方块矩阵/加速卡规则仍仅作用于旧模拟室。
+
+逐层搭建方式在游戏中长按 G 查看多方块指南；数值、熔炼映射及 Java 事件见 [多方块 API](docs/multiblock-api.md)。
 
 - 三阶段模拟电鸣水晶：空白、绑定、完美。数据使用可序列化且同步的 Data Component，完美水晶身份固定，便于 AE2 模板识别。
 - 闪电收集器成功接收雷击后，扫描水平 5×5 的 24 格。矿物消耗同种材料块；作物、树苗消耗植物并保留土壤。
@@ -38,7 +45,7 @@ G 使用闪电科技原生设备界面，四个装备页与右上角武器页共
 .\scripts\install-test.ps1
 ```
 
-本机脚本优先使用 D 盘已有的 Gradle 8.8；其他机器可使用 Gradle Wrapper 下载 8.8。常规构建产物为 `build/libs/overload_sim-0.1.0-alpha.8.jar`，sources jar 提供源码。通用机械 10.7.19.85 是可选运行依赖，常规测试不加载它；-Mekanism（Gradle -PmekTests）启用真实集成测试。
+本机脚本优先使用 D 盘已有的 Gradle 8.8；其他机器可使用 Gradle Wrapper 下载 8.8。常规构建产物为 `build/libs/overload_sim-0.1.0-alpha.9.jar`，sources jar 提供源码。通用机械 10.7.19.85 是可选运行依赖，常规测试不加载它；-Mekanism（Gradle -PmekTests）启用真实集成测试。
 
 前置版本固定为 AE2 19.2.17、AE2 Lightning Tech Reborn 2.1.0、Thunderbolt Core Reborn 2.0.0、GuideME 21.1.19。升级前置后需要复测 collector 的两处 Mixin 和 高压闪电桥接接口。
 
