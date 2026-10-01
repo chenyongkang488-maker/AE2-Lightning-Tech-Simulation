@@ -33,6 +33,7 @@ public class SimulationControllerBlockEntity extends AENetworkedBlockEntity impl
         @Override public int receiveEnergy(int amount,boolean simulate){int received=super.receiveEnergy(amount,simulate);if(received>0&&!simulate)saveChanges();return received;}
     };
     private int visualSize,visualFlags;private BlockPos visualMin;private List<ItemStack> visualCrystals=List.of();
+    private final Object visualToken=new Object();
     private final ItemStackHandler crystals=new ItemStackHandler(49){
         @Override public int getSlotLimit(int slot){return 1;}
         @Override public boolean isItemValid(int slot,ItemStack s){return s.is(ModContent.PERFECT.get())&&CrystalDataAccess.read(s).isPresent();}
@@ -170,12 +171,13 @@ public class SimulationControllerBlockEntity extends AENetworkedBlockEntity impl
     @Override protected void writeToStream(RegistryFriendlyByteBuf data){super.writeToStream(data);writeVisual(data);}
     @Override protected boolean readFromStream(RegistryFriendlyByteBuf data){
         boolean changed=super.readFromStream(data);visualSize=Math.clamp(data.readVarInt(),0,7);visualMin=data.readBlockPos();visualFlags=data.readUnsignedByte()&7;int count=data.readVarInt();if(count<0||count>49)throw new IllegalArgumentException("visual crystals");
-        var items=new ArrayList<ItemStack>();for(int i=0;i<count;i++)items.add(ItemStack.STREAM_CODEC.decode(data));visualCrystals=List.copyOf(items);return true;
+        var items=new ArrayList<ItemStack>();for(int i=0;i<count;i++)items.add(ItemStack.STREAM_CODEC.decode(data));visualCrystals=List.copyOf(items);SimulationShellVisuals.publish(this,visualToken);return true;
     }
     @Override protected void saveVisualState(CompoundTag tag){super.saveVisualState(tag);tag.putInt("Size",visualSize());tag.putLong("Min",visualMin().asLong());tag.putInt("Flags",visualFlags());if(level!=null){var list=new ListTag();for(var item:visualCrystals())list.add(item.save(level.registryAccess()));tag.put("VisualCrystals",list);}}
     @Override protected void loadVisualState(CompoundTag tag){super.loadVisualState(tag);visualSize=Math.clamp(tag.getInt("Size"),0,7);visualMin=BlockPos.of(tag.getLong("Min"));visualFlags=tag.getInt("Flags")&7;if(level!=null){var list=new ArrayList<ItemStack>();for(var v:tag.getList("VisualCrystals",Tag.TAG_COMPOUND))if(list.size()<49)ItemStack.parse(level.registryAccess(),v).ifPresent(list::add);visualCrystals=List.copyOf(list);}}
-    @Override public void setRemoved(){bridge.disconnect();super.setRemoved();}
-    @Override public void onChunkUnloaded(){bridge.disconnect();super.onChunkUnloaded();}
+    @Override public void onLoad(){super.onLoad();SimulationShellVisuals.publish(this,visualToken);}
+    @Override public void setRemoved(){SimulationShellVisuals.remove(this,visualToken);bridge.disconnect();super.setRemoved();}
+    @Override public void onChunkUnloaded(){SimulationShellVisuals.remove(this,visualToken);bridge.disconnect();super.onChunkUnloaded();}
     @Override public IGridNode getActionableNode(){return getMainNode().getNode();}
     @Override public Set<Direction> getGridConnectableSides(BlockOrientation o){return EnumSet.allOf(Direction.class);}
     @Override public AECableType getCableConnectionType(Direction d){return AECableType.SMART;}
