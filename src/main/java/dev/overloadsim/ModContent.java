@@ -52,8 +52,9 @@ public final class ModContent {
     static {for(var kind:SimulationRecipe.Kind.values()){String name=switch(kind){case BINDING->"crystal_binding";case MOB_BINDING->"mob_crystal_binding";case CULTIVATION->"crystal_cultivation";case PRODUCTION->"overload_simulation";};RECIPE_TYPES.put(kind,TYPES.register(name,()->new RecipeType<SimulationRecipe>(){public String toString(){return id(name).toString();}}));SERIALIZERS.put(kind,RECIPE_SERIALIZERS.register(name,()->new SimulationRecipe.Serializer(kind)));}}
     private static final DeferredRegister<CreativeModeTab> TABS=DeferredRegister.create(Registries.CREATIVE_MODE_TAB,OverloadSimulation.ID);
     static {TABS.register("main",()->CreativeModeTab.builder().title(Component.translatable("itemGroup.overload_sim")).icon(()->new ItemStack(PERFECT.get())).displayItems((p,o)->{o.accept(BLANK);o.accept(BOUND);o.accept(PERFECT);o.accept(CHAMBER_ITEM);o.accept(COIL);for(var m:COIL_UPGRADES.values())o.accept(m);}).build());}
-    public static void register(IEventBus bus){ITEMS.register(bus);BLOCKS.register(bus);COMPONENTS.register(bus);BLOCK_ENTITIES.register(bus);MENUS.register(bus);TYPES.register(bus);RECIPE_SERIALIZERS.register(bus);TABS.register(bus);}
+    public static void register(IEventBus bus){dev.overloadsim.multiblock.MultiblockContent.register(bus);ITEMS.register(bus);BLOCKS.register(bus);COMPONENTS.register(bus);BLOCK_ENTITIES.register(bus);MENUS.register(bus);TYPES.register(bus);RECIPE_SERIALIZERS.register(bus);TABS.register(bus);}
     public static void setup(FMLCommonSetupEvent e){e.enqueueWork(()->{
+        dev.overloadsim.multiblock.MultiblockContent.setup();
         CHAMBER.get().setBlockEntity(SimulationChamberBlockEntity.class,CHAMBER_ENTITY.get(),null,(level,pos,state,be)->be.tick());
         AEBaseBlockEntity.registerBlockEntityItem(CHAMBER_ENTITY.get(),CHAMBER_ITEM.get());
         appeng.api.upgrades.Upgrades.add(appeng.core.definitions.AEItems.SPEED_CARD,CHAMBER_ITEM.get(),4);

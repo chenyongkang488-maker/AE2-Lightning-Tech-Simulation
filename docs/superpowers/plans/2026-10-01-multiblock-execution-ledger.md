@@ -8,4 +8,6 @@ Ruling: approval already covers implementation, Blockbench assets and direct PCL
 
 Preflight: Task 1 owns arithmetic/bulk interfaces consumed by 3/4; Task 2 owns immutable structure and membership consumed by 3/5; Task 3 separates paid job data from client snapshots consumed by 4/5. Task 5 exports must match runtime assets before delivery.
 
-Task 1: in progress. No product code changed yet.
+Task 1: complete. RED test/runGameTestServer failed on missing rules and buffer classes. GREEN: 10 JUnit + 57 GameTests passed (multiblock-task1-green.log); legal/nonstackable prototypes, component identity, 1024 quantities and NBT round-trip verified. Commit 8cb (see git log for full identity).
+
+Task 2: in progress. Immutable validator and passive members; controller is the only ticker.
