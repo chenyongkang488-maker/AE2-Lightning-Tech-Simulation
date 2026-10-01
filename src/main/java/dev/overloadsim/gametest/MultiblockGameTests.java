@@ -10,6 +10,23 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public class MultiblockGameTests {
     @GameTest(template="empty")
+    public static void multiblockMenuExists(GameTestHelper h){
+        var c=build(h,h.absolutePos(new net.minecraft.core.BlockPos(2,1,2)),3);c.checkStructure();
+        c.outputs().insert(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_INGOT),2048,false);
+        var player=net.neoforged.neoforge.common.util.FakePlayerFactory.get(h.getLevel(),new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(),"bulk-menu"));
+        player.setPos(c.getBlockPos().getCenter());
+        var menu=new dev.overloadsim.multiblock.MultiblockSimulationMenu(1,player.getInventory(),c);player.containerMenu=menu;menu.broadcastChanges();
+        int revision=menu.revision();menu.take(player,0,revision,0,0);
+        h.assertTrue(menu.getCarried().getCount()==64&&c.outputs().count(0)==960,"left take legal stack");
+        menu.take(player,0,revision,0,0);h.assertTrue(c.outputs().count(0)==960,"stale revision rejected");
+        menu.setCarried(net.minecraft.world.item.ItemStack.EMPTY);menu.take(player,0,menu.revision(),0,1);
+        h.assertTrue(menu.getCarried().getCount()==1&&c.outputs().count(0)==959,"right take one");
+        menu.setCarried(net.minecraft.world.item.ItemStack.EMPTY);menu.take(player,0,menu.revision(),0,2);
+        int total=0;for(int i=0;i<player.getInventory().getContainerSize();i++){var item=player.getInventory().getItem(i);total+=item.getCount();h.assertTrue(item.getCount()<=item.getMaxStackSize(),"shift split legal");}
+        h.assertTrue(total==959&&c.outputs().count(0)==0,"shift exact bulk debit");
+        menu.take(player,4,menu.revision(),0,2);h.assertTrue(c.outputs().count(1)==1024,"invalid page cannot debit");player.discard();h.succeed();
+    }
+    @GameTest(template="empty")
     public static void multiblockProductionExists(GameTestHelper h){
         var r=h.getLevel().registryAccess();var input=new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.RAW_IRON);
         var batch=new dev.overloadsim.multiblock.SimulationBatch(java.util.List.of(new dev.overloadsim.multiblock.SimulationBatch.Output(input,2048)),java.util.Map.of(0,input),38,new dev.overloadsim.multiblock.MultiblockRules.Costs(1000,3,1),true,true,"fixed");

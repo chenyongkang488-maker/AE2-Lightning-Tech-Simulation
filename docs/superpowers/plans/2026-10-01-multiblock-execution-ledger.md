@@ -14,3 +14,7 @@ Task 2: complete. Missing validator RED observed. GREEN: 59 GameTests passed; al
 
 Task 3: complete. RED missing batch class. GREEN 62 GameTests + 12 JUnit: exact base per-crystal charges; reload/pause preserves fees; full upgrade 49 crystals / 38 ticks / 100352 ingots / 147 HV + 49 EHV; separate partial-payment refund debt. Data policy and raw-smelting/alias extension listener added. Original interface connects through public GridHelper, exports accepted quantities only.
 Ruling: formed validation runs once per 100 ticks as a bounded fallback, unformed every 20; part removal invalidates immediately — cached structure avoids scanning every production tick — detects third-party internal placements within five seconds.
+
+Task 4: complete. RED missing menu. GREEN 63 GameTests including legal left/right/shift transfers and stale revision rejection. AE native layout supports only 9/3/2-column enums; use two nine-column panels rather than unsupported seven/eight-column identifiers. Server quantity snapshots carry legal prototypes, current page and a revision.
+
+Task 5: in progress. Blockbench opened and target window selected with computer-use skill.

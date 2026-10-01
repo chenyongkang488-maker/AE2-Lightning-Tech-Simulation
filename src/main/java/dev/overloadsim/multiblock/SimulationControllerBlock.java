@@ -21,7 +21,7 @@ public class SimulationControllerBlock extends AEBaseEntityBlock<SimulationContr
     @Override public BlockEntityType<SimulationControllerBlockEntity> getBlockEntityType(){return MultiblockContent.CONTROLLER_ENTITY.get();}
     @Override public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level,BlockState state,BlockEntityType<T> type){return !level.isClientSide&&type==getBlockEntityType()?(l,p,s,be)->((SimulationControllerBlockEntity)be).tick():null;}
     @Override protected InteractionResult useWithoutItem(BlockState state,Level level,BlockPos pos,Player player,BlockHitResult hit){
-        if(!level.isClientSide&&level.getBlockEntity(pos) instanceof SimulationControllerBlockEntity c){c.checkStructure();player.displayClientMessage(net.minecraft.network.chat.Component.literal(c.structure()==null?"结构未成型："+c.error():"模拟室 "+c.structure().size()+" × "+c.structure().size()+" × "+c.structure().size()),true);}
+        if(!level.isClientSide&&level.getBlockEntity(pos) instanceof SimulationControllerBlockEntity c){c.checkStructure();appeng.menu.MenuOpener.open(MultiblockContent.MENU.get(),player,appeng.menu.locator.MenuLocators.forBlockEntity(c));}
         return InteractionResult.sidedSuccess(level.isClientSide);
     }
     @Override public void onRemove(BlockState s,Level l,BlockPos p,BlockState next,boolean moving){if(!s.is(next.getBlock())&&l.getBlockEntity(p) instanceof SimulationControllerBlockEntity c)c.invalidateStructure();super.onRemove(s,l,p,next,moving);}
