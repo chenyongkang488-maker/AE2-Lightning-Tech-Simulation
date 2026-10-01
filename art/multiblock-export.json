@@ -1,9 +1,11 @@
 {
   "source": "Blockbench desktop canvas and Java model codec",
+  "visualVersion": 10,
   "playerBlocks": 8,
-  "formedFrame": true,
-  "glassPlanes": 6,
-  "emitter": true,
-  "assemblyLayers": 4,
+  "glassSides": 4,
+  "shellAtlasTiles": 16,
+  "orbFrames": 16,
+  "ecgFrames": 16,
+  "roof": "frame",
   "preview": "multiblock_simulation_preview.png"
 }

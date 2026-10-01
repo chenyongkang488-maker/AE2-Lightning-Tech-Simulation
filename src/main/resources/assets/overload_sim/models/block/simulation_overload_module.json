@@ -7,12 +7,11 @@
     32
   ],
   "textures": {
-    "0": "overload_sim:block/simulation_overload_module",
-    "particle": "overload_sim:block/simulation_overload_module"
+    "0": "overload_sim:block/simulation_overload_module"
   },
   "elements": [
     {
-      "name": "陶瓷与紫灰合金框",
+      "name": "外壳",
       "from": [
         0,
         0,
@@ -26,8 +25,8 @@
       "faces": {
         "north": {
           "uv": [
-            8,
-            8,
+            0,
+            0,
             16,
             16
           ],
@@ -38,8 +37,8 @@
           "uv": [
             0,
             0,
-            8,
-            8
+            16,
+            16
           ],
           "texture": "#0",
           "cullface": "east"
@@ -48,8 +47,8 @@
           "uv": [
             0,
             0,
-            8,
-            8
+            16,
+            16
           ],
           "texture": "#0",
           "cullface": "south"
@@ -58,16 +57,16 @@
           "uv": [
             0,
             0,
-            8,
-            8
+            16,
+            16
           ],
           "texture": "#0",
           "cullface": "west"
         },
         "up": {
           "uv": [
-            8,
-            8,
+            0,
+            0,
             16,
             16
           ],
@@ -77,8 +76,8 @@
         "down": {
           "uv": [
             0,
-            8,
-            8,
+            0,
+            16,
             16
           ],
           "texture": "#0",
@@ -89,7 +88,7 @@
   ],
   "groups": [
     {
-      "name": "粉白外壳",
+      "name": "天枢风格白色外壳与粉色细框",
       "origin": [
         8,
         8,
@@ -100,17 +99,6 @@
       "children": [
         0
       ]
-    },
-    {
-      "name": "独立升级模块面板",
-      "origin": [
-        8,
-        8,
-        8
-      ],
-      "scope": 0,
-      "color": 0,
-      "children": []
     }
   ],
   "parent": "minecraft:block/block",

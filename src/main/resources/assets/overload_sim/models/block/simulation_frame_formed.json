@@ -7,12 +7,11 @@
     32
   ],
   "textures": {
-    "0": "overload_sim:block/simulation_frame_formed",
-    "particle": "overload_sim:block/simulation_frame_formed"
+    "0": "overload_sim:block/simulation_frame_formed"
   },
   "elements": [
     {
-      "name": "平滑边框",
+      "name": "白色面",
       "from": [
         0,
         0,
@@ -28,8 +27,8 @@
           "uv": [
             0,
             0,
-            8,
-            8
+            16,
+            16
           ],
           "texture": "#0",
           "cullface": "north"
@@ -38,8 +37,8 @@
           "uv": [
             0,
             0,
-            8,
-            8
+            16,
+            16
           ],
           "texture": "#0",
           "cullface": "east"
@@ -48,8 +47,8 @@
           "uv": [
             0,
             0,
-            8,
-            8
+            16,
+            16
           ],
           "texture": "#0",
           "cullface": "south"
@@ -58,8 +57,8 @@
           "uv": [
             0,
             0,
-            8,
-            8
+            16,
+            16
           ],
           "texture": "#0",
           "cullface": "west"
@@ -68,8 +67,8 @@
           "uv": [
             0,
             0,
-            8,
-            8
+            16,
+            16
           ],
           "texture": "#0",
           "cullface": "up"
@@ -78,8 +77,8 @@
           "uv": [
             0,
             0,
-            8,
-            8
+            16,
+            16
           ],
           "texture": "#0",
           "cullface": "down"
@@ -89,7 +88,7 @@
   ],
   "groups": [
     {
-      "name": "成型后连续陶瓷边框",
+      "name": "连接模型加载前的白色回退面",
       "origin": [
         8,
         8,

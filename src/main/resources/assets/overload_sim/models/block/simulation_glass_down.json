@@ -2,64 +2,23 @@
   "format_version": "26.3",
   "credit": "Made with Blockbench",
   "ambientocclusion": false,
-  "texture_size": [
-    16,
-    16
-  ],
   "textures": {
-    "0": "overload_sim:block/simulation_glass_down",
-    "particle": "overload_sim:block/simulation_glass_down"
+    "0": "overload_sim:block/simulation_glass_down"
   },
   "elements": [
     {
-      "name": "聚能玻璃内陷板",
+      "name": "玻璃",
       "from": [
         0,
-        3,
+        1.15,
         0
       ],
       "to": [
         16,
-        4,
+        1.2,
         16
       ],
       "faces": {
-        "north": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#0"
-        },
-        "east": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#0"
-        },
-        "south": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#0"
-        },
-        "west": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#0"
-        },
         "up": {
           "uv": [
             0,
@@ -83,7 +42,7 @@
   ],
   "groups": [
     {
-      "name": "内陷粉白透明玻璃板",
+      "name": "无边框玻璃薄面",
       "origin": [
         8,
         8,

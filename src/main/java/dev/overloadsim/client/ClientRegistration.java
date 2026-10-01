@@ -18,5 +18,8 @@ public class ClientRegistration {
     }
     @SubscribeEvent public static void screens(RegisterMenuScreensEvent event){event.register(ModContent.MENU.get(),SimulationScreen::new);event.register(ModContent.COIL_MENU.get(),CoilScreen::new);event.register(dev.overloadsim.multiblock.MultiblockContent.MENU.get(),MultiblockSimulationScreen::new);}
     @SubscribeEvent public static void renderers(EntityRenderersEvent.RegisterRenderers event){event.registerBlockEntityRenderer(ModContent.CHAMBER_ENTITY.get(),SimulationChamberRenderer::new);event.registerBlockEntityRenderer(dev.overloadsim.multiblock.MultiblockContent.CONTROLLER_ENTITY.get(),MultiblockSimulationRenderer::new);}
-    @SubscribeEvent public static void extraModels(net.neoforged.neoforge.client.event.ModelEvent.RegisterAdditional event){event.register(net.minecraft.client.resources.model.ModelResourceLocation.standalone(ModContent.id("block/simulation_emitter")));}
+    @SubscribeEvent public static void extraModels(net.neoforged.neoforge.client.event.ModelEvent.RegisterAdditional event){
+        for(var name:java.util.List.of("simulation_emitter","simulation_shell_atlas","simulation_energy_orb","simulation_energy_orb_orange","simulation_controller_ecg"))
+            event.register(net.minecraft.client.resources.model.ModelResourceLocation.standalone(ModContent.id("block/"+name)));
+    }
 }

@@ -1,6 +1,6 @@
 // Run in Blockbench's desktop console. All raster painting and geometry use Blockbench's canvas/model APIs.
 // Original pink-white artwork; no imported upstream block texture.
-globalThis.drawMultiblockSimulation = async function(){
+globalThis.drawMultiblockSimulationAlpha9 = async function(){
     const ROOT='D:/MinecraftDev/OverloadSimulation';
     const write=(p,v)=>Blockbench.writeFile(ROOT+'/'+p,{savetype:'text',content:typeof v==='string'?v:JSON.stringify(v,null,2)});
     const png=(p,c)=>Blockbench.writeFile(ROOT+'/'+p,{savetype:'image',content:c.toDataURL()});
@@ -88,3 +88,4 @@ globalThis.drawMultiblockSimulation = async function(){
     write('art/multiblock-export.json',{source:'Blockbench desktop canvas and Java model codec',playerBlocks:8,formedFrame:true,glassPlanes:6,emitter:true,assemblyLayers:4,preview:'multiblock_simulation_preview.png'});
     Blockbench.showQuickMessage('多方块模拟室的粉白模型、玻璃、线圈和分层工程已导出',7000);
 };
+eval(require('fs').readFileSync('D:/MinecraftDev/OverloadSimulation/art/multiblock_visual_redesign.js','utf8'));
