@@ -45,7 +45,8 @@ public final class SimulationStructureValidator {
                     if(!special)return new Result(null,"interface_position",p);interfaces++;port=p.immutable();
                 }else if(block!=MultiblockContent.FRAME.get())return new Result(null,"edge",p);
             }else if(y==0){
-                if(block instanceof SimulationPartBlock part)switch(part.kind()){
+                var kind=MultiblockData.module(block);
+                if(kind!=null)switch(kind){
                     case FRAME->{}case T1->t1++;case T2->t2++;case T3->t3++;case FORTUNE->f++;case OVERLOAD->o++;case SMELTING->s++;
                 }else return new Result(null,"floor",p);
             }else{

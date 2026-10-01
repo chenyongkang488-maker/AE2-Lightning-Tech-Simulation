@@ -25,4 +25,18 @@ public class SimulationControllerBlock extends AEBaseEntityBlock<SimulationContr
         return InteractionResult.sidedSuccess(level.isClientSide);
     }
     @Override public void onRemove(BlockState s,Level l,BlockPos p,BlockState next,boolean moving){if(!s.is(next.getBlock())&&l.getBlockEntity(p) instanceof SimulationControllerBlockEntity c)c.invalidateStructure();super.onRemove(s,l,p,next,moving);}
+    @Override public java.util.List<net.minecraft.world.item.ItemStack> getDrops(BlockState state,net.minecraft.world.level.storage.loot.LootParams.Builder builder){
+        var drops=new java.util.ArrayList<>(super.getDrops(state,builder));
+        var be=builder.getOptionalParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.BLOCK_ENTITY);
+        if(be instanceof SimulationControllerBlockEntity c)for(var item:drops)if(item.is(MultiblockContent.CONTROLLER_ITEM.get())){
+            var tag=new net.minecraft.nbt.CompoundTag();tag.put("SimulationMachine",c.saveMachine(builder.getLevel().registryAccess()));
+            item.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA,net.minecraft.world.item.component.CustomData.of(tag));
+        }return drops;
+    }
+    @Override public void setPlacedBy(Level level,BlockPos pos,BlockState state,net.minecraft.world.entity.LivingEntity entity,net.minecraft.world.item.ItemStack item){
+        super.setPlacedBy(level,pos,state,entity,item);
+        var data=item.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+        if(!level.isClientSide&&data!=null&&data.copyTag().contains("SimulationMachine")&&level.getBlockEntity(pos) instanceof SimulationControllerBlockEntity c)
+            c.loadMachine(data.copyTag().getCompound("SimulationMachine"),level.registryAccess());
+    }
 }

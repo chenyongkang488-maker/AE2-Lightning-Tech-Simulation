@@ -9,6 +9,60 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(OverloadSimulation.ID)
 @PrefixGameTestTemplate(false)
 public class MultiblockGameTests {
+    @GameTest(template="empty")
+    public static void multiblockProductionExists(GameTestHelper h){
+        var r=h.getLevel().registryAccess();var input=new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.RAW_IRON);
+        var batch=new dev.overloadsim.multiblock.SimulationBatch(java.util.List.of(new dev.overloadsim.multiblock.SimulationBatch.Output(input,2048)),java.util.Map.of(0,input),38,new dev.overloadsim.multiblock.MultiblockRules.Costs(1000,3,1),true,true,"fixed");
+        batch.paid=true;batch.remaining=17;var restored=dev.overloadsim.multiblock.SimulationBatch.load(batch.save(r),r);
+        h.assertTrue(restored.paid&&restored.remaining==17&&restored.outputs.getFirst().count()==2048,"paid job persistence");
+        var full=new dev.overloadsim.multiblock.BulkOutputBuffer();full.insert(input,131072,false);
+        h.assertTrue(!restored.flush(full)&&full.count(127)==1024,"blocked job stays intact");h.succeed();
+    }
+    private static dev.overloadsim.multiblock.SimulationControllerBlockEntity powered(GameTestHelper h,int n){
+        var min=h.absolutePos(new net.minecraft.core.BlockPos(2,1,2));var c=build(h,min,n);var p=c.getBlockPos();
+        var registry=net.minecraft.core.registries.BuiltInRegistries.BLOCK;
+        h.getLevel().setBlockAndUpdate(p.north(),registry.get(net.minecraft.resources.ResourceLocation.parse("ae2:creative_energy_cell")).defaultBlockState());
+        h.getLevel().setBlockAndUpdate(p.north(2),registry.get(net.minecraft.resources.ResourceLocation.parse("ae2:drive")).defaultBlockState());
+        var drive=(appeng.blockentity.storage.DriveBlockEntity)h.getLevel().getBlockEntity(p.north(2));
+        var cell=new net.minecraft.world.item.ItemStack(com.moakiee.ae2lt.registry.ModItems.INFINITE_STORAGE_CELL.get());
+        var storage=appeng.api.storage.StorageCells.getCellInventory(cell,drive::saveChanges);
+        storage.insert(com.moakiee.ae2lt.me.key.LightningKey.HIGH_VOLTAGE,1000,appeng.api.config.Actionable.MODULATE,appeng.api.networking.security.IActionSource.empty());
+        storage.insert(com.moakiee.ae2lt.me.key.LightningKey.EXTREME_HIGH_VOLTAGE,1000,appeng.api.config.Actionable.MODULATE,appeng.api.networking.security.IActionSource.empty());storage.persist();drive.getInternalInventory().setItemDirect(0,cell);
+        c.checkStructure();return c;
+    }
+    private static net.minecraft.world.item.ItemStack ironCrystal(){return dev.overloadsim.api.CrystalDataAccess.perfect(new dev.overloadsim.api.CrystalData(dev.overloadsim.ModContent.id("iron"),java.util.Optional.empty(),0,1));}
+    @GameTest(template="empty",timeoutTicks=110)
+    public static void baseCyclePersistsFeesAndPausesWithoutStructure(GameTestHelper h){
+        var c=powered(h,3);
+        h.runAtTickTime(80,()->{
+            h.assertTrue(c.getMainNode().isActive()&&c.energy().getEnergyStored()>0,"idle AE continuously charges FE");
+            c.crystals().setStackInSlot(0,ironCrystal());c.crystals().setStackInSlot(1,ironCrystal());c.tick();
+            h.assertTrue(c.busy()&&c.batch().cost.fe()==2000&&c.batch().cost.hv()==2&&c.batch().duration==180,"per crystal default cost and duration");
+            h.assertTrue(c.bridge().extract(false,Long.MAX_VALUE,true)==998,"exact HV debit");
+            for(int i=0;i<88;i++)c.tick();var remaining=c.batch().remaining;
+            var saved=c.saveMachine(h.getLevel().registryAccess());c.loadMachine(saved,h.getLevel().registryAccess());
+            c.invalidateStructure();c.tick();h.assertTrue(c.batch().remaining==remaining,"structure loss pauses paid work");c.checkStructure();
+            for(int i=0;i<remaining;i++)c.tick();
+            h.assertTrue(c.outputs().count(0)==2&&!c.busy(),"180 processing ticks yield exactly two raw iron");
+            h.assertTrue(c.bridge().extract(false,Long.MAX_VALUE,true)==998,"reload does not recharge paid work");h.succeed();
+        });
+    }
+    @GameTest(template="empty",timeoutTicks=110)
+    public static void maximumModulesSmelt49CrystalsIn38Ticks(GameTestHelper h){
+        var c=powered(h,7);var min=c.structure().min();c.invalidateStructure();int index=0;
+        for(int x=1;x<6;x++)for(int z=1;z<6;z++){
+            var block=index<13?dev.overloadsim.multiblock.MultiblockContent.T3.get():index<23?dev.overloadsim.multiblock.MultiblockContent.FORTUNE.get():index==23?dev.overloadsim.multiblock.MultiblockContent.OVERLOAD.get():dev.overloadsim.multiblock.MultiblockContent.SMELTING.get();
+            h.getLevel().setBlockAndUpdate(min.offset(x,0,z),block.defaultBlockState());index++;
+        }c.checkStructure();
+        h.runAtTickTime(80,()->{
+            for(int slot=0;slot<49;slot++)c.crystals().setStackInSlot(slot,ironCrystal());c.tick();
+            h.assertTrue(c.batch().duration==38&&c.batch().cost.fe()==49000&&c.batch().cost.hv()==147&&c.batch().cost.ehv()==49,"maximum matrix policy");
+            for(int i=1;i<38;i++)c.tick();
+            long total=0;for(int slot=0;slot<128;slot++){total+=c.outputs().count(slot);if(c.outputs().count(slot)>0)h.assertTrue(c.outputs().prototype(slot).is(net.minecraft.world.item.Items.IRON_INGOT),"smelting output type");}
+            h.assertTrue(total==100352&&!c.busy(),"49 x 2 x 1024 outputs after exactly 38 ticks");
+            h.assertTrue(c.bridge().extract(false,Long.MAX_VALUE,true)==853&&c.bridge().extract(true,Long.MAX_VALUE,true)==951,"HV and EHV costs remain separate");h.succeed();
+        });
+    }
     @GameTest(template = "empty")
     public static void multiblockStructureExists(GameTestHelper helper) {
         for(int size=3;size<=7;size++){

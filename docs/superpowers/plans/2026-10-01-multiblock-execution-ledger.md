@@ -10,4 +10,7 @@ Preflight: Task 1 owns arithmetic/bulk interfaces consumed by 3/4; Task 2 owns i
 
 Task 1: complete. RED test/runGameTestServer failed on missing rules and buffer classes. GREEN: 10 JUnit + 57 GameTests passed (multiblock-task1-green.log); legal/nonstackable prototypes, component identity, 1024 quantities and NBT round-trip verified. Commit 8cb (see git log for full identity).
 
-Task 2: in progress. Immutable validator and passive members; controller is the only ticker.
+Task 2: complete. Missing validator RED observed. GREEN: 59 GameTests passed; all five outer sizes, capacities, glass removal/restoration, solid interiors and duplicate special modules verified. Fixed AE onRemove visibility from exact compiler diagnostic. Frame/member entities have no ticker.
+
+Task 3: complete. RED missing batch class. GREEN 62 GameTests + 12 JUnit: exact base per-crystal charges; reload/pause preserves fees; full upgrade 49 crystals / 38 ticks / 100352 ingots / 147 HV + 49 EHV; separate partial-payment refund debt. Data policy and raw-smelting/alias extension listener added. Original interface connects through public GridHelper, exports accepted quantities only.
+Ruling: formed validation runs once per 100 ticks as a bounded fallback, unformed every 20; part removal invalidates immediately — cached structure avoids scanning every production tick — detects third-party internal placements within five seconds.
