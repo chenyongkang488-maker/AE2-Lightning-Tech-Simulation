@@ -10,6 +10,16 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public class MultiblockGameTests {
     @GameTest(template="empty")
+    public static void hiddenCrystalSlotsStillReceiveInventoryPackets(GameTestHelper h){
+        var inventory=new net.neoforged.neoforge.items.ItemStackHandler(49);
+        var slot=new dev.overloadsim.multiblock.SimulationCrystalSlot(new appeng.api.inventories.PlatformInventoryWrapper(inventory),48);
+        slot.setVisible(false);slot.set(ironCrystal());
+        h.assertTrue(!slot.isActive()&&!slot.getItem().isEmpty(),"hidden input receives Slot.set packet and remains readable for recovery detection");
+        slot.setVisible(true);h.assertTrue(slot.isActive()&&slot.getItem().is(dev.overloadsim.ModContent.PERFECT.get()),"recovery exposes synchronized extra crystal");
+        slot.setVisible(false);slot.set(net.minecraft.world.item.ItemStack.EMPTY);slot.setVisible(true);
+        h.assertTrue(slot.getItem().isEmpty(),"removal packet synchronizes while hidden");h.succeed();
+    }
+    @GameTest(template="empty")
     public static void frameRoofRejectsLegacyGlassWithoutLosingPaidState(GameTestHelper h){
         var min=h.absolutePos(new net.minecraft.core.BlockPos(2,1,2));var c=build(h,min,3);c.checkStructure();
         c.crystals().setStackInSlot(0,ironCrystal());c.outputs().insert(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_INGOT),71,false);

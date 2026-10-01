@@ -28,9 +28,23 @@ cells={'item'+str(i):{'id':'ae2lt:mysterious_cell','count':1,'components':{'mine
 cells['item2']={'id':'ae2lt:infinite_storage_cell','count':1}
 commands.append('data merge block 1001 178 1010 '+nbt({'inv':cells}).replace('"CellType":1','"CellType":1b').replace('"CellType":2','"CellType":2b'))
 crystal={'id':'overload_sim:perfect_simulation_crystal','count':1,'components':{'overload_sim:crystal_data':{'profile':'overload_sim:iron'}}}
-inventory={'Size':49,'Items':[{'Slot':i,**crystal} for i in range(N*N)]}
+inventory={'Size':49,'Items':[{'Slot':i,**crystal} for i in range(49 if variant=='recovery' else N*N)]}
 entries=[{'Slot':i,'Quantity':1024,'Item':{'id':'minecraft:'+item,'count':1}} for i,item in [(0,'iron_ingot'),(1,'gold_ingot'),(2,'copper_ingot'),(3,'diamond'),(32,'redstone'),(64,'emerald'),(96,'quartz')]]
 commands.append('data merge block 1001 180 1010 '+nbt({'SimulationMachine':{'Crystals':inventory,'Energy':2000000,'Bulk':{'Entries':entries}}}))
+if variant=='recovery':commands+=['setblock 1001 179 1010 minecraft:smooth_quartz','setblock 1001 178 1010 minecraft:air','data merge block 1001 180 1010 {SimulationMachine:{Energy:0}}']
 commands+=['clear @s','give @s overload_sim:simulation_controller','give @s overload_sim:simulation_frame 64','give @s overload_sim:simulation_efficiency_t3','give @s overload_sim:simulation_overload_module','give @s overload_sim:simulation_smelting_module','tp @s 1001.5 180 1008 0 29']
 path.parent.mkdir(parents=True,exist_ok=True);path.write_text('\n'.join(commands)+'\n',encoding='utf8')
 print('Prepared ignored native production scene:',path)
+if N==7 and variant=='pink':
+    stress=[]
+    for offset in (20,30,40,50):
+        for line in commands:
+            if line.startswith(('give ','clear ','tp ')):continue
+            tokens=line.split(' ')
+            pairs=[(1,3),(4,6)] if tokens[0]=='fill' else [(1,3)] if tokens[0]=='setblock' else [(3,5)] if line.startswith('data merge block ') else []
+            for xi,zi in pairs:
+                tokens[xi]=str(float(tokens[xi])+offset).removesuffix('.0')
+                tokens[zi]=str(float(tokens[zi])+offset).removesuffix('.0')
+            stress.append(' '.join(tokens))
+    stress+=['gamemode spectator @s','tp @s 1038 185 1010 0 8']
+    (path.parent/'stress.mcfunction').write_text('\n'.join(stress)+'\n',encoding='utf8')

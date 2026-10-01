@@ -39,7 +39,7 @@ public class MultiblockSimulationMenu extends AEBaseMenu {
     public MultiblockSimulationMenu(int id,Inventory inventory,SimulationControllerBlockEntity host){
         super(MultiblockContent.MENU.get(),id,inventory,host);this.host=host;capacity=host.structure()==null?0:host.structure().capacity();
         var crystals=new PlatformInventoryWrapper(host.crystals());var output=new PlatformInventoryWrapper(display);
-        for(int i=0;i<49;i++){final int slot=i;addSlot(new AppEngSlot(crystals,i){
+        for(int i=0;i<49;i++){final int slot=i;addSlot(new SimulationCrystalSlot(crystals,i){
             @Override public boolean mayPickup(Player p){return !host.busy();}
             @Override public boolean mayPlace(ItemStack item){return slot<capacity&&!host.busy()&&super.mayPlace(item);}
         },SlotSemantics.MACHINE_INPUT);}

@@ -3,6 +3,7 @@ import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
 import dev.overloadsim.ModContent;
 import dev.overloadsim.core.SimulationOrbState;
+import dev.overloadsim.core.SimulationInteriorLayout;
 import dev.overloadsim.multiblock.SimulationControllerBlock;
 import dev.overloadsim.multiblock.SimulationControllerBlockEntity;
 import net.minecraft.client.Minecraft;
@@ -34,14 +35,15 @@ public final class MultiblockSimulationRenderer implements BlockEntityRenderer<S
             context.getBlockRenderDispatcher().getModelRenderer().renderModel(poses.last(),buffers.getBuffer(RenderType.cutout()),null,orb,1,1,1,LightTexture.FULL_BRIGHT,OverlayTexture.NO_OVERLAY);poses.popPose();
         }
         var model=Minecraft.getInstance().getModelManager().getModel(net.minecraft.client.resources.model.ModelResourceLocation.standalone(ModContent.id("block/simulation_emitter")));
+        var interior=new SimulationInteriorLayout(n);float coilScale=interior.coilScale();
         for(int corner=0;corner<4;corner++){
-            float x=(corner&1)==0?1.05f:n-1.6f,z=(corner&2)==0?1.05f:n-1.6f;
-            poses.pushPose();poses.translate(x,n-1.65f,z);poses.scale(.55f,.55f,.55f);
+            float x=(corner&1)==0?interior.coilLow():interior.coilHigh(),z=(corner&2)==0?interior.coilLow():interior.coilHigh();
+            poses.pushPose();poses.translate(x,interior.coilY(),z);poses.scale(coilScale,coilScale,coilScale);
             context.getBlockRenderDispatcher().getModelRenderer().renderModel(poses.last(),buffers.getBuffer(RenderType.cutout()),null,model,1,1,1,LightTexture.FULL_BRIGHT,OverlayTexture.NO_OVERLAY);poses.popPose();
         }
         if(state.visible()){
             var vertices=buffers.getBuffer(RenderType.lightning());var matrix=poses.last().pose();var random=RandomSource.create(be.getBlockPos().asLong()^tick/3*31);
-            for(int corner=0;corner<4;corner++)arc(matrix,vertices,random,(corner&1)==0?1.325f:n-1.325f,n-1.5f,(corner&2)==0?1.325f:n-1.325f,center+((corner&1)==0?-1:1)*radius*.55f,orbY+radius*.5f,center+((corner&2)==0?-1:1)*radius*.55f,.028f);
+            for(int corner=0;corner<4;corner++)arc(matrix,vertices,random,((corner&1)==0?interior.coilLow():interior.coilHigh())+coilScale*.5f,interior.coilY(),((corner&2)==0?interior.coilLow():interior.coilHigh())+coilScale*.5f,center+((corner&1)==0?-1:1)*radius*.55f,orbY+radius*.5f,center+((corner&2)==0?-1:1)*radius*.55f,.028f);
             if(state.overload()){
                 float ringRadius=inner*.38f;for(int segment=0;segment<24;segment++){
                     double a=segment*Math.PI/12+time*.09,b=(segment+1)*Math.PI/12+time*.09;

@@ -1,9 +1,9 @@
 package dev.overloadsim.client;
 import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.Icon;
+import appeng.client.gui.widgets.IconButton;
 import appeng.client.gui.style.StyleManager;
 import appeng.menu.SlotSemantics;
-import appeng.menu.slot.AppEngSlot;
 import dev.overloadsim.core.MultiblockMenuLayout;
 import dev.overloadsim.multiblock.MultiblockSimulationMenu;
 import net.minecraft.client.gui.GuiGraphics;
@@ -13,18 +13,25 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 public final class MultiblockSimulationScreen extends AEBaseScreen<MultiblockSimulationMenu> {
-    private MultiblockMenuLayout layout;private boolean recovery;private Button recoveryButton;
-    public MultiblockSimulationScreen(MultiblockSimulationMenu menu,Inventory inventory,Component title){super(menu,inventory,title,StyleManager.loadStyleDoc("/screens/overload_sim/multiblock.json"));}
+    private MultiblockMenuLayout layout;private boolean recovery;private final Button recoveryButton;
+    public MultiblockSimulationScreen(MultiblockSimulationMenu menu,Inventory inventory,Component title){
+        super(menu,inventory,title,StyleManager.loadStyleDoc("/screens/overload_sim/multiblock.json"));
+        // AE2 populates its persistent toolbar during init; register this control exactly once.
+        recoveryButton=addToLeftToolbar(new IconButton(b->{recovery=!recovery;init(minecraft,width,height);}){
+            @Override protected Icon getIcon(){return Icon.BACK;}
+        });
+        recoveryButton.setMessage(Component.translatable("gui.overload_sim.multiblock.recovery"));
+        recoveryButton.setTooltip(Tooltip.create(Component.translatable("gui.overload_sim.multiblock.recovery")));
+    }
     @Override protected void init(){
         layout=MultiblockMenuLayout.of(menu.capacity,recovery);imageWidth=layout.width();imageHeight=layout.height();
         super.init();setTextHidden(TEXT_ID_DIALOG_TITLE,true);int right=layout.outputLeft();
         addRenderableWidget(Button.builder(Component.literal("‹"),b->menu.changePage(Math.max(0,menu.page-1))).bounds(leftPos+right,topPos+108,20,16).build());
         addRenderableWidget(Button.builder(Component.literal("›"),b->menu.changePage(Math.min(3,menu.page+1))).bounds(leftPos+right+122,topPos+108,20,16).build());
-        recoveryButton=addToLeftToolbar(Button.builder(Component.literal("R"),b->{recovery=!recovery;init(minecraft,width,height);}).bounds(0,0,24,24).build());
-        recoveryButton.setTooltip(Tooltip.create(Component.translatable("gui.overload_sim.multiblock.recovery")));arrange();
+        arrange();
     }
     private void arrange(){
-        for(int i=0;i<49;i++){var slot=(AppEngSlot)menu.slots.get(i);boolean visible=i<layout.side()*layout.side();slot.setActive(visible);slot.setSlotEnabled(visible);position(slot,layout.input(i));}
+        for(int i=0;i<49;i++){var slot=(dev.overloadsim.multiblock.SimulationCrystalSlot)menu.slots.get(i);boolean visible=i<layout.side()*layout.side();slot.setVisible(visible);position(slot,layout.input(i));}
         for(int i=0;i<32;i++)position(menu.slots.get(49+i),layout.output(i));
         var inventory=menu.getSlots(SlotSemantics.PLAYER_INVENTORY);for(int i=0;i<inventory.size();i++)position(inventory.get(i),layout.inventory(i));
         var hotbar=menu.getSlots(SlotSemantics.PLAYER_HOTBAR);for(int i=0;i<hotbar.size();i++)position(hotbar.get(i),layout.hotbar(i));
