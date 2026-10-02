@@ -1,6 +1,6 @@
 # 过载模拟 Overload Simulation
 
-Minecraft **1.21.1 / NeoForge 21.1.252** 的 AE2 闪电科技附属模组。当前版本 **0.1.0-alpha.11**，修复多方块转角、常驻光球和工作时水晶编辑；新增通用矿物/生物适配、完成结算及作者诊断接口。
+Minecraft **1.21.1 / NeoForge 21.1.252** 的 AE2 闪电科技附属模组。当前版本 **0.1.0-alpha.12**，修复模拟室落地、挖掘与破坏粒子的缺失贴图，统一使用白色外壳粒子；保留 alpha.11 的通用矿物/生物适配、完成结算及作者诊断接口。
 
 已安装到 PCL 的 `OverloadSim-Test-1.21.1`；升级时只替换本附属模组，上一版保存在该实例的 `addon-backups/`，验收记录见 `docs/verification.md`。
 
@@ -50,7 +50,7 @@ G 使用闪电科技原生设备界面，四个装备页与右上角武器页共
 .\scripts\install-test.ps1
 ```
 
-本机脚本优先使用 D 盘已有的 Gradle 8.8；其他机器可使用 Gradle Wrapper 下载 8.8。常规构建产物为 `build/libs/overload_sim-0.1.0-alpha.11.jar`，sources jar 提供源码。通用机械 10.7.19.85 是可选运行依赖，常规测试不加载它；-Mekanism（Gradle -PmekTests）启用真实集成测试。
+本机脚本优先使用 D 盘已有的 Gradle 8.8；其他机器可使用 Gradle Wrapper 下载 8.8。常规构建产物为 `build/libs/overload_sim-0.1.0-alpha.12.jar`，sources jar 提供源码。通用机械 10.7.19.85 是可选运行依赖，常规测试不加载它；-Mekanism（Gradle -PmekTests）启用真实集成测试。
 
 前置版本固定为 AE2 19.2.17、AE2 Lightning Tech Reborn 2.1.0、Thunderbolt Core Reborn 2.0.0、GuideME 21.1.19。升级前置后需要复测 collector 的两处 Mixin 和 高压闪电桥接接口。
 

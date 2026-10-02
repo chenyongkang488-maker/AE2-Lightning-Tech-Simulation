@@ -76,6 +76,7 @@ globalThis.drawMultiblockSimulation=async function(){
     }
     async function save(name,render='minecraft:cutout'){
         Canvas.updateAll();const model=JSON.parse(Codecs.java_block.compile({raw:false}));model.parent='minecraft:block/block';model.render_type=render;model.ambientocclusion=false;
+        model.textures.particle='overload_sim:block/simulation_frame_formed';
         write('src/main/resources/assets/overload_sim/models/block/'+name+'.json',model);write('art/'+name+'.bbmodel',Codecs.project.compile());Project.save_path=ROOT+'/art/'+name+'.bbmodel';Project.saved=true;return model;
     }
     const ids=['simulation_controller','simulation_frame','simulation_efficiency_t1','simulation_efficiency_t2','simulation_efficiency_t3','simulation_fortune_module','simulation_overload_module','simulation_smelting_module'];

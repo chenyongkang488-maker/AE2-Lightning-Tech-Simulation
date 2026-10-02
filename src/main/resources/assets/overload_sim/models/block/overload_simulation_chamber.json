@@ -9,7 +9,7 @@
   "textures": {
     "0": "overload_sim:block/overload_simulation_chamber",
     "1": "overload_sim:block/simulation_chamber_glass",
-    "particle": "overload_sim:block/overload_simulation_chamber"
+    "particle": "overload_sim:block/simulation_frame_formed"
   },
   "elements": [
     {

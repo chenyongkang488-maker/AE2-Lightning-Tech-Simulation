@@ -155,3 +155,11 @@ PCL OverloadSim-Test-1.21.1 的 11 个模组与开工前 SHA-256 全部一致，
 一次独立整分支审查后，新增四个回归先复现失败，再修复：未知产物造成整个控制器BE加载失败、无标签的JSON档案冷启动停机、冲突档案误消耗绑定材料、Java规则不能覆盖自动标签。完整 BlockEntity.loadStatic 路径现保留水晶、能源、缓冲与原始任务NBT，缺物品时暂停，主动换晶仍可退旧预付费用。最终 **20项JUnit、125项GameTest** 在常规与Mek环境均通过，记录 compatibility-review-green.log / compatibility-review-release-mek.log（exit0）。无第二轮审查、无遗留Minor。资源/样例/依赖检查通过：213份资源逐字节一致，6份作者JSON可解析，没有夹具JSON或打入前置类。光源本版固定亮度6，约五格范围已验证；可调亮度选项延后。
 
 最终JAR **643,639字节**，SHA256 `de1450a4daa2904d08c957fa45fbb1936df83984d5b07b301124fa201a568ddc`，已安装 `D:/mc/.minecraft/versions/OverloadSim-Test-1.21.1/mods/overload_sim-0.1.0-alpha.11.jar`，安装哈希与构建一致。alpha.10备份位于 `addon-backups/20261002-165440/`，与旧版原始哈希一致。另外10个模组与46份设置文件和紧邻安装前的快照全部一致。PCL存档未修改；开发世界保存/退出正常。本地保留 `codex/simulation-compatibility` 与 `v0.1.0-alpha.11` 标签；未推送或合并。作者入口见 compatibility-api.md 与 examples/compatibility。
+
+## 2026-10-02 alpha.12 粒子修复
+
+定位到 Blockbench 视觉重做导出时漏写 `textures.particle`；方块表面纹理存在，但原版粒子材质解析为 missingno，导致落地、挖掘和破坏时出现紫黑粒子。补齐多方块模型的粒子引用，普通模拟室也统一使用已有的不透明白色外壳 PNG，并同步修正两份视觉导出脚本。几何、UV、动画和生产逻辑未改动。
+
+修改前的白色粒子检查在 16 个实体方块模型上失败，修改后全部通过；纹理透明度为 255，RGB 最小值均超过 210。21 份 Blockbench 工程、24 份内嵌 PNG、20 份运行模型及 JSON 校验通过。`build test` 退出码 0，20 项 JUnit 无失败或错误；JAR 内 213 份资源与源码逐字节一致。开发客户端启动到独立存档后，用户实测反馈“正常修复了”；未完成自动化落地和破坏截图验收。本次只更改客户端资源，未重复服务器 GameTest。
+
+alpha.12 JAR 为 644,061 字节，SHA256 `e13a4303f41477580ff91832c9a6062141fd313ebaeba753755601a7818ed3fb`。已更新 PCL 测试实例，alpha.11 备份位于 `addon-backups/20261002-182637/`，备份与旧版哈希一致；另外 10 个模组及 40 份配置/启动器文件与安装前快照一致。安装记录见 `docs/releases/alpha12-install.json`，构建记录见 `build/verification/particle-alpha12-build.log`。

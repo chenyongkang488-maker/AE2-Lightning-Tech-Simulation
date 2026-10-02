@@ -135,7 +135,7 @@
         glassPanel('东面透明玻璃',[15.5,3,1.5],[15.75,14,14.5],['west','east']);
         glassPanel('顶部透明玻璃',[2,15.5,2],[14,15.75,14],['up','down']);
         glassPanel('底部玻璃保护层',[2,3.05,2],[14,3.3,14],['up','down']);
-        const model=JSON.parse(Codecs.java_block.compile({raw:false}));model.parent='minecraft:block/block';model.render_type='minecraft:cutout';model.ambientocclusion=false;model.textures.particle='overload_sim:block/overload_simulation_chamber';
+        const model=JSON.parse(Codecs.java_block.compile({raw:false}));model.parent='minecraft:block/block';model.render_type='minecraft:cutout';model.ambientocclusion=false;model.textures.particle='overload_sim:block/simulation_frame_formed';
         model.display={gui:{rotation:[30,225,0],translation:[0,0,0],scale:[.65,.65,.65]},ground:{rotation:[0,0,0],translation:[0,3,0],scale:[.25,.25,.25]},fixed:{rotation:[0,0,0],translation:[0,0,0],scale:[.5,.5,.5]},thirdperson_righthand:{rotation:[75,45,0],translation:[0,2.5,0],scale:[.375,.375,.375]}};
         writeText('src/main/resources/assets/overload_sim/models/block/overload_simulation_chamber.json',model);
         // Preview-only crossed sprite planes are never exported into the empty machine's model.

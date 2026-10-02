@@ -7,6 +7,7 @@
     32
   ],
   "textures": {
+    "particle": "overload_sim:block/simulation_frame_formed",
     "0": "overload_sim:block/simulation_overload_module"
   },
   "elements": [
