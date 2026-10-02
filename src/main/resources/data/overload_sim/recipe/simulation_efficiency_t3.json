@@ -1,23 +1,31 @@
 {
-  "type": "minecraft:crafting_shaped",
-  "pattern": [
-    " D ",
-    "DMD",
-    " F "
-  ],
-  "key": {
-    "D": {
-      "item": "minecraft:diamond"
+  "type": "ae2lt:lightning_assembly",
+  "priority": 0,
+  "inputs": [
+    {
+      "ingredient": {
+        "item": "overload_sim:simulation_efficiency_t2"
+      },
+      "count": 4
     },
-    "M": {
-      "item": "overload_sim:simulation_efficiency_t2"
+    {
+      "ingredient": {
+        "item": "ae2lt:overload_singularity"
+      },
+      "count": 32
     },
-    "F": {
-      "item": "overload_sim:simulation_frame"
+    {
+      "ingredient": {
+        "item": "ae2lt:lightning_collapse_matrix"
+      },
+      "count": 1
     }
-  },
+  ],
   "result": {
     "id": "overload_sim:simulation_efficiency_t3",
     "count": 1
-  }
+  },
+  "totalEnergy": 1600000,
+  "lightningCost": 128,
+  "lightningTier": "extreme_high_voltage"
 }

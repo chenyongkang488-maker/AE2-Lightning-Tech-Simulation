@@ -1,23 +1,31 @@
 {
-  "type": "minecraft:crafting_shaped",
-  "pattern": [
-    "IQI",
-    "QGQ",
-    "IQI"
-  ],
-  "key": {
-    "I": {
-      "item": "minecraft:iron_ingot"
+  "type": "ae2lt:lightning_assembly",
+  "priority": 0,
+  "inputs": [
+    {
+      "ingredient": {
+        "item": "ae2lt:overload_alloy_plate"
+      },
+      "count": 8
     },
-    "Q": {
-      "item": "minecraft:quartz"
+    {
+      "ingredient": {
+        "item": "ae2:quartz_vibrant_glass"
+      },
+      "count": 8
     },
-    "G": {
-      "item": "ae2:quartz_vibrant_glass"
+    {
+      "ingredient": {
+        "item": "minecraft:quartz"
+      },
+      "count": 8
     }
-  },
+  ],
   "result": {
     "id": "overload_sim:simulation_frame",
-    "count": 4
-  }
+    "count": 1
+  },
+  "totalEnergy": 40000,
+  "lightningCost": 32,
+  "lightningTier": "high_voltage"
 }

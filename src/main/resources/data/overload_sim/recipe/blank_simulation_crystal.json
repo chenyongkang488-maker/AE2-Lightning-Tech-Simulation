@@ -1,18 +1,31 @@
 {
-  "type": "minecraft:crafting_shapeless",
-  "ingredients": [
+  "type": "ae2lt:lightning_simulation",
+  "priority": 0,
+  "inputs": [
     {
-      "item": "ae2lt:electro_chime_crystal"
+      "ingredient": {
+        "item": "ae2lt:electro_chime_crystal"
+      },
+      "count": 1
     },
     {
-      "item": "ae2:fluix_crystal"
+      "ingredient": {
+        "item": "ae2lt:overload_crystal"
+      },
+      "count": 16
     },
     {
-      "item": "minecraft:amethyst_shard"
+      "ingredient": {
+        "item": "minecraft:amethyst_shard"
+      },
+      "count": 16
     }
   ],
   "result": {
     "id": "overload_sim:blank_simulation_crystal",
     "count": 1
-  }
+  },
+  "totalEnergy": 200000,
+  "lightningCost": 32,
+  "lightningTier": "high_voltage"
 }

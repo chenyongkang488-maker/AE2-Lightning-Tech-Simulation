@@ -54,16 +54,13 @@ common={
 for mode,zhmode,enmode in zip(range(8),['通用扳手','物品','流体','化学品','能量','热量','清空','旋转'],['Wrench','Items','Fluids','Chemical','Energy','Heat','Empty','Rotate']):common[f'gui.overload_sim.coil.wrench_mode.{mode}']=(zhmode,enmode)
 for index,lang in enumerate(['zh_cn','en_us']):
     path=assets/f'lang/{lang}.json';strings=json.loads(path.read_text(encoding='utf-8'))
-    strings['item.overload_sim.resonance_coil']=['谐振雷鸣线圈','Resonance Lightning Coil'][index]
+    strings['item.overload_sim.resonance_coil']=['过载雷鸣线圈','Overload Lightning Coil'][index]
     for item,zhname,enname in zip(ids,zh,en):strings[f'item.overload_sim.{item}']=[zhname,enname][index]
     for key,values in common.items():strings[key]=values[index]
     write(path,strings)
 
-def shaped(id,pattern,key):
-    write(data/f'recipe/{id}.json',{'type':'minecraft:crafting_shaped','category':'equipment','pattern':pattern,'key':{k:{'item':v} for k,v in key.items()},'result':{'id':f'overload_sim:{id}','count':1}})
-shaped('resonance_coil',['IFI','FCF',' R '],{'I':'minecraft:iron_ingot','F':'ae2:fluix_crystal','C':'overload_sim:perfect_simulation_crystal','R':'ae2:engineering_processor'})
-materials={'extreme_voltage_module':'ae2lt:lightning_collapse_matrix','mimic_tool_module':'minecraft:netherite_ingot','ultimate_destruction_module':'ae2lt:ultimate_overload_core','efficiency_module':'minecraft:redstone_block','fortune_module':'minecraft:lapis_block','silk_touch_module':'minecraft:amethyst_block','wrench_module':'ae2:certus_quartz_wrench'}
-for item,material in materials.items():shaped(item,['IFI','FCF','IRI'],{'I':'minecraft:iron_ingot','F':'ae2:fluix_crystal','C':material,'R':'ae2:engineering_processor'})
+from manufacturing_recipes import write_recipes
+write_recipes()
 
 # Preserve the original model exported by Blockbench on future resource regeneration.
 if not (assets/'models/item/resonance_coil.json').exists():

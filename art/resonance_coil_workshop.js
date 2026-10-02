@@ -114,10 +114,10 @@
         Preview.selected.loadAnglePreset({position:[24,32,30],target:[8,9,8],projection:'perspective'});await pause();
         Screencam.screenshotPreview(Preview.selected,{width:640,height:640},url=>Blockbench.writeFile(ROOT+'/art/resonance_coil_preview.png',{savetype:'image',content:url}));
         write('art/coil-export.json',{source:'Blockbench canvas and Java item codec',elements:model.elements.length,lightningFrames:8,modules:7,horizontalFloatingHead:true,convergingArcs:true,moduleBase:"AE2LT overload_module_base.png (CC BY-NC-SA 3.0)"});
-        Blockbench.showQuickMessage('谐振雷鸣线圈与 7 个模块已绘制、保存和导出',6000);
+        Blockbench.showQuickMessage('过载雷鸣线圈与 7 个模块已绘制、保存和导出',6000);
     }
     Plugin.register('resonance_coil_workshop',{title:'Resonance Coil Workshop',author:'Codex',description:'Original horizontal floating coil and animated lightning artwork.',icon:'bolt',version:'0.3.0',variant:'desktop',
-        onload(){drawAction=new Action('draw_resonance_coil',{name:'绘制谐振雷鸣线圈',icon:'bolt',click(){draw().catch(e=>{write('art/coil-error.txt',String(e.stack||e));Blockbench.showMessageBox({title:'线圈导出错误',message:String(e.stack||e)});});}});previewAction=new Action('preview_resonance_coil',{name:'导出线圈预览',icon:'photo_camera',click(){Screencam.screenshotPreview(Preview.selected,{width:640,height:640},url=>Blockbench.writeFile(ROOT+'/art/resonance_coil_preview.png',{savetype:'image',content:url}));}});MenuBar.addAction(drawAction,'tools');MenuBar.addAction(previewAction,'tools');},
+        onload(){drawAction=new Action('draw_resonance_coil',{name:'绘制过载雷鸣线圈',icon:'bolt',click(){draw().catch(e=>{write('art/coil-error.txt',String(e.stack||e));Blockbench.showMessageBox({title:'线圈导出错误',message:String(e.stack||e)});});}});previewAction=new Action('preview_resonance_coil',{name:'导出线圈预览',icon:'photo_camera',click(){Screencam.screenshotPreview(Preview.selected,{width:640,height:640},url=>Blockbench.writeFile(ROOT+'/art/resonance_coil_preview.png',{savetype:'image',content:url}));}});MenuBar.addAction(drawAction,'tools');MenuBar.addAction(previewAction,'tools');},
         onunload(){drawAction?.delete();previewAction?.delete();}
     });
 })();

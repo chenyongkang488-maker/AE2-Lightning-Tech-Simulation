@@ -1,6 +1,6 @@
 ---
 navigation:
-  title: Resonance Lightning Coil
+  title: Overload Lightning Coil
   icon: overload_sim:resonance_coil
   parent: overload_sim:overload-simulation.md
 item_ids:
@@ -14,7 +14,7 @@ item_ids:
   - overload_sim:wrench_module
 ---
 
-# Resonance Lightning Coil
+# Overload Lightning Coil
 
 Insert the coil into a networked Overload Device Workbench, install an Overload Core, and remove it. The workbench binds the coil to its grid. Keep the workbench online and loaded. Holding the tool or leaving it inside the online workbench continuously recharges its FE using AE2's standard conversion.
 

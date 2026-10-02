@@ -1,27 +1,43 @@
 {
-  "type": "minecraft:crafting_shaped",
-  "category": "equipment",
-  "pattern": [
-    "IFI",
-    "FCF",
-    "IRI"
-  ],
-  "key": {
-    "I": {
-      "item": "minecraft:iron_ingot"
+  "type": "ae2lt:lightning_assembly",
+  "priority": 0,
+  "inputs": [
+    {
+      "ingredient": {
+        "item": "ae2lt:overload_module_base"
+      },
+      "count": 1
     },
-    "F": {
-      "item": "ae2:fluix_crystal"
+    {
+      "ingredient": {
+        "item": "ae2lt:lightning_collapse_matrix"
+      },
+      "count": 1
     },
-    "C": {
-      "item": "ae2lt:ultimate_overload_core"
+    {
+      "ingredient": {
+        "item": "ae2lt:overload_tnt"
+      },
+      "count": 64
     },
-    "R": {
-      "item": "ae2:engineering_processor"
+    {
+      "ingredient": {
+        "item": "minecraft:respawn_anchor"
+      },
+      "count": 16
+    },
+    {
+      "ingredient": {
+        "item": "minecraft:heart_of_the_sea"
+      },
+      "count": 1
     }
-  },
+  ],
   "result": {
     "id": "overload_sim:ultimate_destruction_module",
     "count": 1
-  }
+  },
+  "totalEnergy": 800000,
+  "lightningCost": 256,
+  "lightningTier": "extreme_high_voltage"
 }

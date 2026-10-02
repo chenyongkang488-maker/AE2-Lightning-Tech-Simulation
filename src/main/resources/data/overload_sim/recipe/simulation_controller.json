@@ -1,20 +1,31 @@
 {
-  "type": "minecraft:crafting_shaped",
-  "pattern": [
-    "FFF",
-    "FCF",
-    "FFF"
-  ],
-  "key": {
-    "F": {
-      "item": "overload_sim:simulation_frame"
+  "type": "ae2lt:lightning_assembly",
+  "priority": 0,
+  "inputs": [
+    {
+      "ingredient": {
+        "item": "overload_sim:overload_simulation_chamber"
+      },
+      "count": 1
     },
-    "C": {
-      "item": "overload_sim:overload_simulation_chamber"
+    {
+      "ingredient": {
+        "item": "overload_sim:simulation_frame"
+      },
+      "count": 4
+    },
+    {
+      "ingredient": {
+        "item": "ae2lt:overload_processor"
+      },
+      "count": 16
     }
-  },
+  ],
   "result": {
     "id": "overload_sim:simulation_controller",
     "count": 1
-  }
+  },
+  "totalEnergy": 400000,
+  "lightningCost": 64,
+  "lightningTier": "extreme_high_voltage"
 }

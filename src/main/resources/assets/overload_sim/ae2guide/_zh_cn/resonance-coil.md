@@ -1,6 +1,6 @@
 ---
 navigation:
-  title: 谐振雷鸣线圈
+  title: 过载雷鸣线圈
   icon: overload_sim:resonance_coil
   parent: overload_sim:overload-simulation.md
 item_ids:
@@ -14,7 +14,7 @@ item_ids:
   - overload_sim:wrench_module
 ---
 
-# 谐振雷鸣线圈
+# 过载雷鸣线圈
 
 <ItemImage id="overload_sim:resonance_coil" scale="3" />
 

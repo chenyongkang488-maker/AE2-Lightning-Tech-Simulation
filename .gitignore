@@ -6,3 +6,5 @@ libs/
 *.iml
 .superpowers/
 *.log
+__pycache__/
+*.py[cod]

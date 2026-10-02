@@ -4,8 +4,8 @@ ROOT=pathlib.Path(__file__).resolve().parents[1]/'src/main/resources'
 def write(path,value):
     path=ROOT/path; path.parent.mkdir(parents=True,exist_ok=True)
     path.write_text(json.dumps(value,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
-zh={'item.overload_sim.blank_simulation_crystal':'空白模拟电鸣水晶','item.overload_sim.simulation_crystal':'模拟电鸣水晶','item.overload_sim.perfect_simulation_crystal':'完美模拟电鸣水晶','block.overload_sim.overload_simulation_chamber':'过载模拟室','itemGroup.overload_sim':'过载模拟','tooltip.overload_sim.profile':'模拟对象：%s','tooltip.overload_sim.progress':'已培养雷击：%s 次','tooltip.overload_sim.missing':'模拟档案已被移除，暂时无法工作','tooltip.overload_sim.guide':'长按 G 查看 AE2 指南','gui.overload_sim.frequency':'过载频率','gui.overload_sim.eject':'自动弹出','gui.overload_sim.enabled':'开启','gui.overload_sim.disabled':'关闭','gui.overload_sim.power':'FE：%s  并行：%s / %s','gui.overload_sim.slot.0':'完美模拟水晶（可重复使用）','gui.overload_sim.slot.1':'闪电坍缩矩阵：每个提供 4 并行，最多 32 个','gui.overload_sim.slot.2':'AE2 加速卡：最多 4 张','gui.overload_sim.slot.3':'配方辅助材料（默认配方无需材料）'}
-en={'item.overload_sim.blank_simulation_crystal':'Blank Simulation Crystal','item.overload_sim.simulation_crystal':'Simulation Crystal','item.overload_sim.perfect_simulation_crystal':'Perfect Simulation Crystal','block.overload_sim.overload_simulation_chamber':'Overload Simulation Chamber','itemGroup.overload_sim':'Overload Simulation','tooltip.overload_sim.profile':'Simulation: %s','tooltip.overload_sim.progress':'Cultivation strikes: %s','tooltip.overload_sim.missing':'Missing simulation profile; operation paused','tooltip.overload_sim.guide':'Hold G to open the AE2 guide','gui.overload_sim.frequency':'Frequency','gui.overload_sim.eject':'Auto eject','gui.overload_sim.enabled':'Enabled','gui.overload_sim.disabled':'Disabled','gui.overload_sim.power':'FE: %s  Parallel: %s / %s','gui.overload_sim.slot.0':'Reusable perfect simulation crystal','gui.overload_sim.slot.1':'Lightning Collapse Matrix: 4 parallel each, up to 32','gui.overload_sim.slot.2':'AE2 acceleration cards: up to 4','gui.overload_sim.slot.3':'Auxiliary recipe input (optional)'}
+zh={'item.overload_sim.blank_simulation_crystal':'空白模拟电鸣水晶','item.overload_sim.simulation_crystal':'模拟电鸣水晶','item.overload_sim.perfect_simulation_crystal':'完美模拟电鸣水晶','block.overload_sim.overload_simulation_chamber':'过载模拟室','itemGroup.overload_sim':'AE2 闪电科技：模拟','tooltip.overload_sim.profile':'模拟对象：%s','tooltip.overload_sim.progress':'已培养雷击：%s 次','tooltip.overload_sim.missing':'模拟档案已被移除，暂时无法工作','tooltip.overload_sim.guide':'长按 G 查看 AE2 指南','gui.overload_sim.frequency':'过载频率','gui.overload_sim.eject':'自动弹出','gui.overload_sim.enabled':'开启','gui.overload_sim.disabled':'关闭','gui.overload_sim.power':'FE：%s  并行：%s / %s','gui.overload_sim.slot.0':'完美模拟水晶（可重复使用）','gui.overload_sim.slot.1':'闪电坍缩矩阵：每个提供 4 并行，最多 32 个','gui.overload_sim.slot.2':'AE2 加速卡：最多 4 张','gui.overload_sim.slot.3':'配方辅助材料（默认配方无需材料）'}
+en={'item.overload_sim.blank_simulation_crystal':'Blank Simulation Crystal','item.overload_sim.simulation_crystal':'Simulation Crystal','item.overload_sim.perfect_simulation_crystal':'Perfect Simulation Crystal','block.overload_sim.overload_simulation_chamber':'Overload Simulation Chamber','itemGroup.overload_sim':'AE2 Lightning Tech: Simulation','tooltip.overload_sim.profile':'Simulation: %s','tooltip.overload_sim.progress':'Cultivation strikes: %s','tooltip.overload_sim.missing':'Missing simulation profile; operation paused','tooltip.overload_sim.guide':'Hold G to open the AE2 guide','gui.overload_sim.frequency':'Frequency','gui.overload_sim.eject':'Auto eject','gui.overload_sim.enabled':'Enabled','gui.overload_sim.disabled':'Disabled','gui.overload_sim.power':'FE: %s  Parallel: %s / %s','gui.overload_sim.slot.0':'Reusable perfect simulation crystal','gui.overload_sim.slot.1':'Lightning Collapse Matrix: 4 parallel each, up to 32','gui.overload_sim.slot.2':'AE2 acceleration cards: up to 4','gui.overload_sim.slot.3':'Auxiliary recipe input (optional)'}
 for i,(a,b) in enumerate(zip(['待机','模拟中','等待 ME 网络上线','能量或材料不足','等待输出空间','配方缺失或冲突','档案缺失，已暂停','等待返还闪电能量'],['Idle','Simulating','Waiting for active ME network','Insufficient energy or input','Waiting for output space','Missing or ambiguous recipe','Missing profile; paused','Returning lightning energy'])):zh[f'status.overload_sim.{i}']=a;en[f'status.overload_sim.{i}']=b
 for i,(a,b) in enumerate(zip(['下','上','北','南','西','东'],['D','U','N','S','W','E'])):zh[f'direction.overload_sim.{i}']=a;en[f'direction.overload_sim.{i}']=b
 zh.update({'gui.overload_sim.output_config':'输出面配置','gui.overload_sim.back':'返回模拟室','gui.overload_sim.clear_sides':'关闭所有输出面','gui.overload_sim.network_power':'在线时持续从 AE 网络充入 FE','gui.overload_sim.hv':'网络高压闪电：%s','gui.overload_sim.energy':'FE：%s','gui.overload_sim.parallel':'并行：%s / %s'})
@@ -31,8 +31,8 @@ for mob in ['wither','ender_dragon']:
     write(pathlib.Path('data/overload_sim/recipe/binding')/('deny_'+mob+'.json'),{'type':'overload_sim:mob_crystal_binding','profile':'overload_sim:mob','priority':1000,'mob':{'entity':'minecraft:'+mob,'disabled':True}})
 write(pathlib.Path('data/overload_sim/recipe/cultivation/default.json'),{'type':'overload_sim:crystal_cultivation','profile':'overload_sim:any','cultivation':{'required':10,'increment':1}})
 write(pathlib.Path('data/overload_sim/recipe/production/mob.json'),{'type':'overload_sim:overload_simulation','profile':'overload_sim:mob','production':{'ticks':200,'fe':1000,'lightning':1,'entity_loot':True}})
-write(pathlib.Path('data/overload_sim/recipe/blank_simulation_crystal.json'),{'type':'minecraft:crafting_shapeless','ingredients':[{'item':'ae2lt:electro_chime_crystal'},{'item':'ae2:fluix_crystal'},{'item':'minecraft:amethyst_shard'}],'result':{'id':'overload_sim:blank_simulation_crystal','count':1}})
-write(pathlib.Path('data/overload_sim/recipe/overload_simulation_chamber.json'),{'type':'minecraft:crafting_shaped','pattern':['GPG','IMI','GCG'],'key':{'G':{'item':'ae2:quartz_glass'},'P':{'item':'ae2:engineering_processor'},'I':{'item':'minecraft:iron_ingot'},'M':{'item':'ae2lt:lightning_collapse_matrix'},'C':{'item':'overload_sim:blank_simulation_crystal'}},'result':{'id':'overload_sim:overload_simulation_chamber','count':1}})
+from manufacturing_recipes import write_recipes
+write_recipes()
 for name in ['blank_simulation_crystal','simulation_crystal','perfect_simulation_crystal']:
     textures={'layer0':'overload_sim:item/'+name}
     if name=='perfect_simulation_crystal':textures['layer1']='overload_sim:item/perfect_simulation_crystal_lightning'
@@ -47,7 +47,7 @@ write(pathlib.Path('data/overload_sim/loot_table/blocks/overload_simulation_cham
 write(pathlib.Path('assets/overload_sim/lang/zh_cn.json'),zh);write(pathlib.Path('assets/overload_sim/lang/en_us.json'),en)
 guide='''---
 navigation:
-  title: 过载模拟
+  title: AE2 闪电科技：模拟
   icon: overload_sim:overload_simulation_chamber
   parent: ae2:items-blocks-machines/items-blocks-machines-index.md
 item_ids:
@@ -57,11 +57,11 @@ item_ids:
   - overload_sim:overload_simulation_chamber
 ---
 
-# 过载模拟
+# AE2 闪电科技：模拟
 
 <ItemImage id="overload_sim:blank_simulation_crystal" scale="3" />
 
-空白模拟电鸣水晶由电鸣水晶、福鲁伊克斯水晶和紫水晶碎片合成。
+空白模拟电鸣水晶在闪电科技原生闪电模拟室中合成：1个电鸣水晶、16个过载水晶、16个紫水晶碎片，消耗200,000 FE及32个高压闪电。每次产出1个。
 
 ## 雷击绑定
 

@@ -1,27 +1,49 @@
 {
-  "type": "minecraft:crafting_shaped",
-  "category": "equipment",
-  "pattern": [
-    "IFI",
-    "FCF",
-    " R "
-  ],
-  "key": {
-    "I": {
-      "item": "minecraft:iron_ingot"
+  "type": "ae2lt:lightning_assembly",
+  "priority": 0,
+  "inputs": [
+    {
+      "ingredient": {
+        "item": "ae2lt:lightning_collector"
+      },
+      "count": 1
     },
-    "F": {
-      "item": "ae2:fluix_crystal"
+    {
+      "ingredient": {
+        "item": "minecraft:lightning_rod"
+      },
+      "count": 1
     },
-    "C": {
-      "item": "overload_sim:perfect_simulation_crystal"
+    {
+      "ingredient": {
+        "item": "ae2lt:ultimate_overload_core"
+      },
+      "count": 4
     },
-    "R": {
-      "item": "ae2:engineering_processor"
+    {
+      "ingredient": {
+        "item": "ae2lt:overload_alloy_plate"
+      },
+      "count": 32
+    },
+    {
+      "ingredient": {
+        "item": "ae2lt:overload_processor"
+      },
+      "count": 4
+    },
+    {
+      "ingredient": {
+        "item": "ae2lt:overload_crystal"
+      },
+      "count": 4
     }
-  },
+  ],
   "result": {
     "id": "overload_sim:resonance_coil",
     "count": 1
-  }
+  },
+  "totalEnergy": 400000,
+  "lightningCost": 64,
+  "lightningTier": "extreme_high_voltage"
 }

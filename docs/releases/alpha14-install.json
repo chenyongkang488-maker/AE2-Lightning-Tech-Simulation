@@ -1,0 +1,19 @@
+{
+  "Installed": "D:\\mc\\.minecraft\\versions\\OverloadSim-Test-1.21.1\\mods\\overload_sim-0.1.0-alpha.14.jar",
+  "Bytes": 683831,
+  "SHA256": "7a913c0bf4c79aa47801f93306f0324a3d13f80f99e68b231537f3a3dd52fc78",
+  "PreviousBackup": "D:\\mc\\.minecraft\\versions\\OverloadSim-Test-1.21.1\\addon-backups\\20261003-001535\\overload_sim-0.1.0-alpha.13.jar",
+  "PreviousSHA256": "cc6c44ce5f6a96b9b9bf494a206e4fce6bb7893c92582747611443f1870bc71e",
+  "OtherModsAndSettingsUnchanged": 70,
+  "OtherMods": 13,
+  "Junit": 20,
+  "GameTestsPerEnvironment": 153,
+  "ManufacturingRecipes": 18,
+  "Environments": [
+    "base without optional mods",
+    "Mystical Agriculture 8.0.28 + Cucumber 8.0.16 + Mekanism 10.7.19.85"
+  ],
+  "ResourceParityFiles": 216,
+  "ResourceJsonFiles": 163,
+  "ClientManualVerification": "Not performed for alpha.14"
+}

@@ -1,5 +1,17 @@
 # 验证记录
 
+## 0.1.0-alpha.14（2026-10-03）
+
+最终 `build runGameTestServer` 和 `build runGameTestServer -PcropTests -PmekTests` 均退出0、BUILD SUCCESSFUL，各153项必需 GameTest 通过；20项 JUnit 无失败/错误。日志：`build/verification/alpha14-base-release.log`、`alpha14-crop-mek-release.log`。首次 `manufacturing-red.log` 的5项新增检查均在旧工作台配方下失败，修复后 `manufacturing-green.log` 通过。
+
+18项制造配方实际由固定版本 AE2LT 2.1.0 的原生 serializer 加载；空白水晶使用闪电模拟室，其余使用闪电装配室，每次产出1个。检查真实三格模拟室库存及九格装配室库存、64件材料、缺少任一材料拒绝、指定 FE/HV/EHV 成本。精准采集检查实际存储附魔，允许改名及额外附魔；普通书、无关附魔书和精准采集工具均拒绝。原生配方网络 round-trip 保留自定义材料判定，提供器展示堆栈带精准采集附魔。
+
+独立只读审查逐项核对文档、权威生成源与18份JSON的材料、数量、FE、电压及闪电数量，没有发现需要修正的缺陷；核对已安装前置字节码的网络及配方查看器材料处理。基础、线圈、多方块生成脚本共用制造入口，四份脚本语法检查通过。名称及双语线圈指南已更新，物品、方块、配方和存档ID保持不变。
+
+216个资源与最终 JAR 逐字节一致，163个资源 JSON 可解析；21个 Blockbench 工程、24个内嵌 PNG、20个模型保持通过。名称、18项配方和附魔材料均打包；测试配方与前置类未捆绑。此次没有新的客户端手动查看器或机器操作，验证范围为服务器配方集成及网络同步。
+
+已安装 `D:\mc\.minecraft\versions\OverloadSim-Test-1.21.1\mods\overload_sim-0.1.0-alpha.14.jar`，683831字节，SHA-256 `7a913c0bf4c79aa47801f93306f0324a3d13f80f99e68b231537f3a3dd52fc78`。alpha.13保存在 `addon-backups\20261003-001535`，旧包哈希与安装前一致；其它13个模组及共70个前置/设置文件哈希未变。记录见 `docs/releases/alpha14-install.json`。Git回滚标签为 `v0.1.0-alpha.14`；重新启动PCL测试实例加载。
+
 ## 0.1.0-alpha.13（2026-10-02）
 
 最终 `build runGameTestServer` 和 `build runGameTestServer -PcropTests -PmekTests` 均退出0、BUILD SUCCESSFUL，各148项必需 GameTest 通过；20项 JUnit 无失败/错误。日志：`build/verification/alpha13-base-release.log`、`alpha13-crop-mek-release.log`。可选环境实际加载用户安装版本的 Mystical Agriculture 8.0.28、Cucumber 8.0.16、Mekanism 10.7.19.85；基础环境不要求这些模组。

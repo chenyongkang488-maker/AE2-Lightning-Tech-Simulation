@@ -1,20 +1,25 @@
 {
-  "type": "minecraft:crafting_shaped",
-  "pattern": [
-    " B ",
-    "BFB",
-    " B "
-  ],
-  "key": {
-    "B": {
-      "item": "minecraft:blast_furnace"
+  "type": "ae2lt:lightning_assembly",
+  "priority": 0,
+  "inputs": [
+    {
+      "ingredient": {
+        "item": "minecraft:blast_furnace"
+      },
+      "count": 64
     },
-    "F": {
-      "item": "overload_sim:simulation_frame"
+    {
+      "ingredient": {
+        "item": "overload_sim:simulation_frame"
+      },
+      "count": 1
     }
-  },
+  ],
   "result": {
     "id": "overload_sim:simulation_smelting_module",
     "count": 1
-  }
+  },
+  "totalEnergy": 100000,
+  "lightningCost": 32,
+  "lightningTier": "extreme_high_voltage"
 }

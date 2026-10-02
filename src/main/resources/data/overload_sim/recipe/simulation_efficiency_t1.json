@@ -1,23 +1,31 @@
 {
-  "type": "minecraft:crafting_shaped",
-  "pattern": [
-    " R ",
-    "RSR",
-    " F "
-  ],
-  "key": {
-    "R": {
-      "item": "minecraft:redstone"
+  "type": "ae2lt:lightning_assembly",
+  "priority": 0,
+  "inputs": [
+    {
+      "ingredient": {
+        "item": "ae2:speed_card"
+      },
+      "count": 4
     },
-    "S": {
-      "item": "ae2:speed_card"
+    {
+      "ingredient": {
+        "item": "ae2lt:overload_crystal"
+      },
+      "count": 4
     },
-    "F": {
-      "item": "overload_sim:simulation_frame"
+    {
+      "ingredient": {
+        "item": "overload_sim:simulation_frame"
+      },
+      "count": 1
     }
-  },
+  ],
   "result": {
     "id": "overload_sim:simulation_efficiency_t1",
     "count": 1
-  }
+  },
+  "totalEnergy": 100000,
+  "lightningCost": 32,
+  "lightningTier": "extreme_high_voltage"
 }

@@ -1,20 +1,43 @@
 {
-  "type": "minecraft:crafting_shaped",
-  "pattern": [
-    " L ",
-    "LFL",
-    " L "
-  ],
-  "key": {
-    "L": {
-      "item": "minecraft:lapis_block"
+  "type": "ae2lt:lightning_assembly",
+  "priority": 0,
+  "inputs": [
+    {
+      "ingredient": {
+        "item": "ae2lt:lightning_collapse_matrix"
+      },
+      "count": 8
     },
-    "F": {
-      "item": "overload_sim:simulation_frame"
+    {
+      "ingredient": {
+        "item": "ae2lt:overload_singularity"
+      },
+      "count": 64
+    },
+    {
+      "ingredient": {
+        "item": "minecraft:dragon_egg"
+      },
+      "count": 1
+    },
+    {
+      "ingredient": {
+        "item": "ae2lt:firmament_alloy_ingot"
+      },
+      "count": 64
+    },
+    {
+      "ingredient": {
+        "item": "overload_sim:simulation_frame"
+      },
+      "count": 1
     }
-  },
+  ],
   "result": {
     "id": "overload_sim:simulation_fortune_module",
     "count": 1
-  }
+  },
+  "totalEnergy": 1600000,
+  "lightningCost": 256,
+  "lightningTier": "extreme_high_voltage"
 }

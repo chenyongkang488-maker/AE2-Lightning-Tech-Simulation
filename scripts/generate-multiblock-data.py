@@ -21,17 +21,8 @@ write(Path('data/minecraft/tags/block/mineable/pickaxe.json'),{'replace':False,'
 write(Path('data/overload_sim/tags/block/simulation_frames.json'),{'replace':False,'values':['overload_sim:simulation_frame']})
 write(Path('data/overload_sim/tags/block/simulation_glass.json'),{'replace':False,'values':['ae2:quartz_vibrant_glass']})
 write(Path('data/overload_sim/multiblock_simulation/default.json'),{'policy':{'ticks':180,'reduction_cap':104,'fortune_cap':10,'t1':2,'t2':4,'t3':8,'fe':1000,'hv':1,'overload_ehv':1,'smelting_hv':2},'smelting':[{'input':'minecraft:raw_'+s,'result':'minecraft:'+s+'_ingot','count':2} for s in ('iron','gold','copper')],'modules':[]})
-recipes={
- 'simulation_frame':(['IQI','QGQ','IQI'],{'I':'minecraft:iron_ingot','Q':'minecraft:quartz','G':'ae2:quartz_vibrant_glass'},4),
- 'simulation_controller':(['FFF','FCF','FFF'],{'F':'overload_sim:simulation_frame','C':'overload_sim:overload_simulation_chamber'},1),
- 'simulation_efficiency_t1':([' R ','RSR',' F '],{'R':'minecraft:redstone','S':'ae2:speed_card','F':'overload_sim:simulation_frame'},1),
- 'simulation_efficiency_t2':([' R ','RMR',' F '],{'R':'minecraft:redstone_block','M':'overload_sim:simulation_efficiency_t1','F':'overload_sim:simulation_frame'},1),
- 'simulation_efficiency_t3':([' D ','DMD',' F '],{'D':'minecraft:diamond','M':'overload_sim:simulation_efficiency_t2','F':'overload_sim:simulation_frame'},1),
- 'simulation_fortune_module':([' L ','LFL',' L '],{'L':'minecraft:lapis_block','F':'overload_sim:simulation_frame'},1),
- 'simulation_overload_module':([' N ','MFM',' N '],{'N':'minecraft:netherite_ingot','M':'ae2lt:lightning_collapse_matrix','F':'overload_sim:simulation_frame'},1),
- 'simulation_smelting_module':([' B ','BFB',' B '],{'B':'minecraft:blast_furnace','F':'overload_sim:simulation_frame'},1)}
-for id,(pattern,key,count) in recipes.items():
- write(Path('data/overload_sim/recipe')/(id+'.json'),{'type':'minecraft:crafting_shaped','pattern':pattern,'key':{k:{'item':v} for k,v in key.items()},'result':{'id':'overload_sim:'+id,'count':count}})
+from manufacturing_recipes import write_recipes
+write_recipes()
 for locale,index in [('zh_cn',0),('en_us',1)]:
  path=RES/'assets/overload_sim/lang'/f'{locale}.json';lang=json.loads(path.read_text(encoding='utf8'))
  lang.update({'block.overload_sim.'+id:label[index] for id,label in NAMES.items()})

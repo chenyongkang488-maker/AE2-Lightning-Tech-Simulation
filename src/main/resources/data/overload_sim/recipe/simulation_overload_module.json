@@ -1,23 +1,31 @@
 {
-  "type": "minecraft:crafting_shaped",
-  "pattern": [
-    " N ",
-    "MFM",
-    " N "
-  ],
-  "key": {
-    "N": {
-      "item": "minecraft:netherite_ingot"
+  "type": "ae2lt:lightning_assembly",
+  "priority": 0,
+  "inputs": [
+    {
+      "ingredient": {
+        "item": "ae2lt:lightning_collapse_matrix"
+      },
+      "count": 1
     },
-    "M": {
-      "item": "ae2lt:lightning_collapse_matrix"
+    {
+      "ingredient": {
+        "item": "minecraft:netherite_block"
+      },
+      "count": 16
     },
-    "F": {
-      "item": "overload_sim:simulation_frame"
+    {
+      "ingredient": {
+        "item": "overload_sim:simulation_frame"
+      },
+      "count": 1
     }
-  },
+  ],
   "result": {
     "id": "overload_sim:simulation_overload_module",
     "count": 1
-  }
+  },
+  "totalEnergy": 200000,
+  "lightningCost": 64,
+  "lightningTier": "extreme_high_voltage"
 }

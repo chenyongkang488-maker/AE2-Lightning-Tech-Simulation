@@ -1,6 +1,6 @@
 ---
 navigation:
-  title: 过载模拟
+  title: AE2 闪电科技：模拟
   icon: overload_sim:overload_simulation_chamber
   parent: ae2:items-blocks-machines/items-blocks-machines-index.md
 item_ids:
@@ -10,11 +10,11 @@ item_ids:
   - overload_sim:overload_simulation_chamber
 ---
 
-# 过载模拟
+# AE2 闪电科技：模拟
 
 <ItemImage id="overload_sim:blank_simulation_crystal" scale="3" />
 
-空白模拟电鸣水晶由电鸣水晶、福鲁伊克斯水晶和紫水晶碎片合成。
+空白模拟电鸣水晶在闪电科技原生闪电模拟室中合成：1个电鸣水晶、16个过载水晶、16个紫水晶碎片，消耗200,000 FE及32个高压闪电。每次产出1个。
 
 ## 雷击绑定
 

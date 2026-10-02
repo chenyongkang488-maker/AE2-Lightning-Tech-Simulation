@@ -1,23 +1,31 @@
 {
-  "type": "minecraft:crafting_shaped",
-  "pattern": [
-    " R ",
-    "RMR",
-    " F "
-  ],
-  "key": {
-    "R": {
-      "item": "minecraft:redstone_block"
+  "type": "ae2lt:lightning_assembly",
+  "priority": 0,
+  "inputs": [
+    {
+      "ingredient": {
+        "item": "overload_sim:simulation_efficiency_t1"
+      },
+      "count": 4
     },
-    "M": {
-      "item": "overload_sim:simulation_efficiency_t1"
+    {
+      "ingredient": {
+        "item": "ae2lt:overload_crystal_block"
+      },
+      "count": 16
     },
-    "F": {
-      "item": "overload_sim:simulation_frame"
+    {
+      "ingredient": {
+        "item": "minecraft:nether_star"
+      },
+      "count": 1
     }
-  },
+  ],
   "result": {
     "id": "overload_sim:simulation_efficiency_t2",
     "count": 1
-  }
+  },
+  "totalEnergy": 400000,
+  "lightningCost": 64,
+  "lightningTier": "extreme_high_voltage"
 }

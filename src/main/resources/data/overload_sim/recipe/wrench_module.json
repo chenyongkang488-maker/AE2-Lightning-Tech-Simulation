@@ -1,27 +1,31 @@
 {
-  "type": "minecraft:crafting_shaped",
-  "category": "equipment",
-  "pattern": [
-    "IFI",
-    "FCF",
-    "IRI"
-  ],
-  "key": {
-    "I": {
-      "item": "minecraft:iron_ingot"
+  "type": "ae2lt:lightning_assembly",
+  "priority": 0,
+  "inputs": [
+    {
+      "ingredient": {
+        "item": "ae2lt:overload_module_base"
+      },
+      "count": 1
     },
-    "F": {
-      "item": "ae2:fluix_crystal"
+    {
+      "ingredient": {
+        "item": "ae2:certus_quartz_wrench"
+      },
+      "count": 1
     },
-    "C": {
-      "item": "ae2:certus_quartz_wrench"
-    },
-    "R": {
-      "item": "ae2:engineering_processor"
+    {
+      "ingredient": {
+        "item": "ae2lt:overload_circuit_board"
+      },
+      "count": 16
     }
-  },
+  ],
   "result": {
     "id": "overload_sim:wrench_module",
     "count": 1
-  }
+  },
+  "totalEnergy": 100000,
+  "lightningCost": 128,
+  "lightningTier": "high_voltage"
 }

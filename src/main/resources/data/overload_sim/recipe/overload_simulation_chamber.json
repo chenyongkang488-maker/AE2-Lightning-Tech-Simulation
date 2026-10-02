@@ -1,29 +1,37 @@
 {
-  "type": "minecraft:crafting_shaped",
-  "pattern": [
-    "GPG",
-    "IMI",
-    "GCG"
-  ],
-  "key": {
-    "G": {
-      "item": "ae2:quartz_glass"
+  "type": "ae2lt:lightning_assembly",
+  "priority": 0,
+  "inputs": [
+    {
+      "ingredient": {
+        "item": "ae2lt:overload_machine_frame"
+      },
+      "count": 1
     },
-    "P": {
-      "item": "ae2:engineering_processor"
+    {
+      "ingredient": {
+        "item": "ae2lt:overload_processor"
+      },
+      "count": 16
     },
-    "I": {
-      "item": "minecraft:iron_ingot"
+    {
+      "ingredient": {
+        "item": "ae2lt:overload_alloy_plate"
+      },
+      "count": 16
     },
-    "M": {
-      "item": "ae2lt:lightning_collapse_matrix"
-    },
-    "C": {
-      "item": "overload_sim:blank_simulation_crystal"
+    {
+      "ingredient": {
+        "item": "ae2lt:ultimate_overload_core"
+      },
+      "count": 4
     }
-  },
+  ],
   "result": {
     "id": "overload_sim:overload_simulation_chamber",
     "count": 1
-  }
+  },
+  "totalEnergy": 600000,
+  "lightningCost": 128,
+  "lightningTier": "high_voltage"
 }
