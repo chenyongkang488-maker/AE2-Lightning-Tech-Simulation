@@ -16,6 +16,7 @@ public class SimulationData extends SimpleJsonResourceReloadListener {
     private static RecipeManager indexedManager;
     private static volatile long revision;
     public static long revision(){return revision;}
+    public static void invalidate(){indexedManager=null;INDEX.clear();revision++;}
     private static final Map<SimulationRecipe.Kind,List<RecipeHolder<SimulationRecipe>>> INDEX=new EnumMap<>(SimulationRecipe.Kind.class);
     public SimulationData(){super(new Gson(),"simulation_profile");}
     @Override protected void apply(Map<ResourceLocation,JsonElement> json,ResourceManager manager,ProfilerFiller profiler){

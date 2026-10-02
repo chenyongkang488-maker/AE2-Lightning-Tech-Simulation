@@ -10,3 +10,5 @@ Baseline: test runGameTestServer passed 19 JUnit / 81 GameTests, compatibility-b
 
 Task 1: complete (base 1a55d49; tests: test runGameTestServer -> 19 JUnit / 90 GameTests, compatibility-task1-green.log exit0). Initial RED reproduced six interaction/payment failures; callback RED reproduced both commit mutation/veto failures. FE/HV/EHV completion payment, revision guard, abort/refund journal and insert-only external templates implemented. Shift fixture corrected using PLAYER_HOTBAR semantics; legacy prepayment assertion updated to approved completion contract.
 
+
+Task 2: complete (base 69acdf6; 19 JUnit / 98 GameTests, compatibility-task2-checkpoint.log exit0). RED four original loot failures, plus neutral-context/18-table audit regression and GLM sentinel failed with context omitted. All 18 player-gated tables covered; bosses independent overrides; magma2/slime1; egg-backed non-Mob fixture and adapter; JSON conflicts/disabled/removal; exactly one normal GLM pass. Registration fixtures run only in GameTest JVM; resource-only source set keeps fixture tags/recipes out of player JARs.
