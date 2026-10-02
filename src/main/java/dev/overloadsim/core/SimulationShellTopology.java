@@ -1,5 +1,10 @@
 package dev.overloadsim.core;
 public final class SimulationShellTopology {
+    /** Canonical atlas elbow has right and bottom openings; UV rotation selects the actual neighbors. */
+    public static int cornerRotation(int n,int x,int y,int z,String face){
+        boolean right=switch(face){case "NORTH"->x==n-1;case "SOUTH"->x==0;case "WEST"->z==0;case "EAST"->z==n-1;default->throw new IllegalArgumentException("corner side");};
+        return y==0?(right?3:2):(right?0:1);
+    }
     public enum Role{NONE,ROOF,ROOF_EDGE,ROOF_CORNER,HORIZONTAL,VERTICAL,CORNER,FLOOR,GLASS}
     public static Role role(int n,int x,int y,int z){
         if(n<3||n>7||x<0||y<0||z<0||x>=n||y>=n||z>=n)return Role.NONE;

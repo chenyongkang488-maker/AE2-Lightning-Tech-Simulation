@@ -20,12 +20,24 @@ globalThis.drawMultiblockSimulation=async function(){
             g.fillStyle='#aa9bb2';g.fillRect(0,0,32,4);g.fillStyle='#f0aed3';g.fillRect(0,4,32,2);g.fillStyle='#fff3fb';g.fillRect(0,6,32,1);
             if(kind==='roofCorner'){g.fillStyle='#aa9bb2';g.fillRect(0,0,4,32);g.fillStyle='#f0aed3';g.fillRect(4,0,2,32);g.fillStyle='#fff3fb';g.fillRect(6,0,1,32);}return c;
         }
+        if(kind==='corner'){
+            // One elbow, not crossing rails: right horizontal beam joins the bottom vertical column.
+            g.fillStyle='#eeeaf2';g.fillRect(0,0,32,32);
+            g.fillStyle='#b7aabd';g.fillRect(7,7,18,25);g.fillRect(7,7,25,18);
+            g.fillStyle='#d9cfdf';g.fillRect(9,9,14,23);g.fillRect(9,9,23,14);
+            g.fillStyle='#edacd3';g.fillRect(4,4,28,2);g.fillRect(4,4,2,28);g.fillRect(26,26,6,2);g.fillRect(26,26,2,6);
+            g.fillStyle='#fff2fb';g.fillRect(6,6,26,1);g.fillRect(6,6,1,26);g.fillRect(25,25,7,1);g.fillRect(25,25,1,7);
+            // Joint plate, recessed pink pin and two bright pixels echo the Tianshu corner without repeating a frame.
+            g.fillStyle='#8e8199';g.fillRect(10,10,11,11);g.fillStyle='#f8f2fa';g.fillRect(11,11,9,9);g.fillStyle='#d99ebf';g.fillRect(13,13,5,5);g.fillStyle='#ffe6f5';g.fillRect(13,13,3,1);
+            // Copy the exact incoming beam-edge shading; do not add borders on disconnected edges.
+            const h=tile('horizontal'),v=canvas(),vg=v.getContext('2d');vg.translate(32,0);vg.rotate(Math.PI/2);vg.drawImage(h,0,0);
+            g.drawImage(h,31,0,1,32,31,0,1,32);g.drawImage(v,0,31,32,1,0,31,32,1);
+            return c;
+        }
+        // Uniform ends let horizontal and rotated vertical beams share the same corner pixel.
+        g.fillStyle='#eeeaf2';g.fillRect(0,0,32,32);
         g.fillStyle='#b7aabd';g.fillRect(0,7,32,18);g.fillStyle='#d9cfdf';g.fillRect(0,9,32,14);
         g.fillStyle='#edacd3';g.fillRect(0,4,32,2);g.fillRect(0,26,32,2);g.fillStyle='#fff2fb';g.fillRect(0,6,32,1);g.fillRect(0,25,32,1);
-        if(kind==='corner'){
-            g.fillStyle='#b7aabd';g.fillRect(7,0,18,32);g.fillStyle='#d9cfdf';g.fillRect(9,0,14,32);
-            g.fillStyle='#edacd3';g.fillRect(4,0,2,32);g.fillRect(26,0,2,32);g.fillStyle='#fff2fb';g.fillRect(6,0,1,32);g.fillRect(25,0,1,32);
-        }
         if(kind==='controller'||kind==='standaloneController'){
             g.fillStyle='#b8749e';g.fillRect(5,7,22,19);g.fillStyle='#ffc9e8';g.fillRect(6,8,20,17);g.fillStyle='#15121c';g.fillRect(8,10,16,13);
             g.fillStyle='#402d42';g.fillRect(9,11,14,1);g.fillStyle='#704761';g.fillRect(10,20,12,1);
@@ -106,6 +118,6 @@ globalThis.drawMultiblockSimulation=async function(){
     const panes=new Group({name:'四面无缝玻璃'}).init();for(const [f,t,sides]of [[[3.2,3.2,.3],[12.8,12.8,.35],['north','south']],[[3.2,3.2,15.65],[12.8,12.8,15.7],['north','south']],[[.3,3.2,3.2],[.35,12.8,12.8],['west','east']],[[15.65,3.2,3.2],[15.7,12.8,12.8],['west','east']]]){const c=box(panes,'整片内陷玻璃',f,t,pane,16);for(const [side,face]of Object.entries(c.faces))if(!sides.includes(side))face.texture=null;}
     sphere(new Group({name:'运行时能量球（预览占位）'}).init(),core,[8,8,8],.55);await save('multiblock_simulation_assembly');
     Preview.selected.loadAnglePreset({position:[32,24,40],target:[8,8,8],projection:'perspective'});Canvas.updateAll();await pause();Screencam.screenshotPreview(Preview.selected,{width:800,height:800},url=>Blockbench.writeFile(ROOT+'/art/multiblock_simulation_preview.png',{savetype:'image',content:url}));
-    write('art/multiblock-export.json',{source:'Blockbench desktop canvas and Java model codec',visualVersion:10,playerBlocks:8,glassSides:4,shellAtlasTiles:16,orbFrames:16,ecgFrames:16,roof:'frame',preview:'multiblock_simulation_preview.png'});
+    write('art/multiblock-export.json',{source:'Blockbench desktop canvas and Java model codec',visualVersion:11,playerBlocks:8,glassSides:4,shellAtlasTiles:16,orbFrames:16,ecgFrames:16,roof:'frame',preview:'multiblock_simulation_preview.png'});
     Blockbench.showQuickMessage('粉白连续外壳、无边玻璃、能量球及心电图已导出',6000);
 };

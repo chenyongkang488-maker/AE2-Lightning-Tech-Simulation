@@ -37,7 +37,7 @@ public final class SimulationShellModel extends BakedModelWrapper<BakedModel> {
             if(xb&&zb)rotation=z==0?(x==0?0:1):(x==0?3:2);else if(xb)rotation=x==0?3:1;else if(z==n-1)rotation=2;
         }else if(face.getAxis()!=Direction.Axis.Y){
             var role=cell.role();tile=role==SimulationShellTopology.Role.VERTICAL?2:role==SimulationShellTopology.Role.CORNER||role==SimulationShellTopology.Role.ROOF_CORNER?7:1;
-            if(tile==7){boolean start=switch(face){case NORTH->x==n-1;case SOUTH->x==0;case WEST->z==0;default->z==n-1;};rotation=y==0?(start?2:3):(start?1:0);}
+            if(tile==7)rotation=SimulationShellTopology.cornerRotation(n,x,y,z,face.name());
             String outward=SimulationShellTopology.outsideFace(n,x,y,z);
             if(face.name().equals(outward)&&kind!=Kind.FRAME){tile=kind==Kind.CONTROLLER?4:5;rotation=0;}
         }

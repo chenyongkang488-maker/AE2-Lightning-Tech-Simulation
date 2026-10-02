@@ -25,7 +25,7 @@ public final class MultiblockSimulationRenderer implements BlockEntityRenderer<S
         int n=be.visualSize();if(n<3||be.getLevel()==null||be.visualMin()==null)return;
         var min=be.visualMin();double ox=min.getX()-be.getBlockPos().getX(),oy=min.getY()-be.getBlockPos().getY(),oz=min.getZ()-be.getBlockPos().getZ();
         long tick=be.getLevel().getGameTime();double time=tick+partial;float center=n/2f,inner=n-2;
-        var state=SimulationOrbState.of(be.visualFlags());screen(be,poses,buffers,state.visible());
+        var state=SimulationOrbState.of(be.visualFlags());screen(be,poses,buffers,state.processing());
         poses.pushPose();poses.translate(ox,oy,oz);
         float orbY=center+(float)Math.sin(time*.055)*inner*.025f,radius=inner*.275f;
         if(state.visible()){
@@ -43,7 +43,7 @@ public final class MultiblockSimulationRenderer implements BlockEntityRenderer<S
         }
         if(state.visible()){
             var vertices=buffers.getBuffer(RenderType.lightning());var matrix=poses.last().pose();var random=RandomSource.create(be.getBlockPos().asLong()^tick/3*31);
-            for(int corner=0;corner<4;corner++)arc(matrix,vertices,random,((corner&1)==0?interior.coilLow():interior.coilHigh())+coilScale*.5f,interior.coilY(),((corner&2)==0?interior.coilLow():interior.coilHigh())+coilScale*.5f,center+((corner&1)==0?-1:1)*radius*.55f,orbY+radius*.5f,center+((corner&2)==0?-1:1)*radius*.55f,.028f);
+            if(state.processing())for(int corner=0;corner<4;corner++)arc(matrix,vertices,random,((corner&1)==0?interior.coilLow():interior.coilHigh())+coilScale*.5f,interior.coilY(),((corner&2)==0?interior.coilLow():interior.coilHigh())+coilScale*.5f,center+((corner&1)==0?-1:1)*radius*.55f,orbY+radius*.5f,center+((corner&2)==0?-1:1)*radius*.55f,.028f);
             if(state.overload()){
                 float ringRadius=inner*.38f;for(int segment=0;segment<24;segment++){
                     double a=segment*Math.PI/12+time*.09,b=(segment+1)*Math.PI/12+time*.09;

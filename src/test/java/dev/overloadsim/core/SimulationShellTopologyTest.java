@@ -2,6 +2,16 @@ package dev.overloadsim.core;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 class SimulationShellTopologyTest {
+    @Test void elbowsConnectOneHorizontalAndOneVerticalNeighbor()throws Exception{
+        var rotation=Class.forName("dev.overloadsim.core.SimulationShellTopology").getMethod("cornerRotation",int.class,int.class,int.class,int.class,String.class);
+        for(int n=3;n<=7;n++){
+            assertEquals(3,rotation.invoke(null,n,n-1,0,0,"NORTH"));assertEquals(2,rotation.invoke(null,n,0,0,0,"NORTH"));
+            assertEquals(0,rotation.invoke(null,n,n-1,n-1,0,"NORTH"));assertEquals(1,rotation.invoke(null,n,0,n-1,0,"NORTH"));
+            assertEquals(3,rotation.invoke(null,n,0,0,n-1,"SOUTH"));assertEquals(2,rotation.invoke(null,n,n-1,0,n-1,"SOUTH"));
+            assertEquals(0,rotation.invoke(null,n,0,n-1,0,"WEST"));assertEquals(1,rotation.invoke(null,n,0,n-1,n-1,"WEST"));
+            assertEquals(3,rotation.invoke(null,n,n-1,0,n-1,"EAST"));assertEquals(2,rotation.invoke(null,n,n-1,0,0,"EAST"));
+        }
+    }
     private String role(int n,int x,int y,int z)throws Exception{return Class.forName("dev.overloadsim.core.SimulationShellTopology").getMethod("role",int.class,int.class,int.class,int.class).invoke(null,n,x,y,z).toString();}
     @Test void DistinguishesVerticalRailsRoofAndCorners()throws Exception{
         for(int n=3;n<=7;n++){

@@ -32,7 +32,7 @@ inventory={'Size':49,'Items':[{'Slot':i,**crystal} for i in range(49 if variant=
 entries=[{'Slot':i,'Quantity':1024,'Item':{'id':'minecraft:'+item,'count':1}} for i,item in [(0,'iron_ingot'),(1,'gold_ingot'),(2,'copper_ingot'),(3,'diamond'),(32,'redstone'),(64,'emerald'),(96,'quartz')]]
 commands.append('data merge block 1001 180 1010 '+nbt({'SimulationMachine':{'Crystals':inventory,'Energy':2000000,'Bulk':{'Entries':entries}}}))
 if variant=='recovery':commands+=['setblock 1001 179 1010 minecraft:smooth_quartz','setblock 1001 178 1010 minecraft:air','data merge block 1001 180 1010 {SimulationMachine:{Energy:0}}']
-commands+=['clear @s','give @s overload_sim:simulation_controller','give @s overload_sim:simulation_frame 64','give @s overload_sim:simulation_efficiency_t3','give @s overload_sim:simulation_overload_module','give @s overload_sim:simulation_smelting_module','tp @s 1001.5 180 1008 0 29']
+commands+=['clear @s','give @s overload_sim:simulation_controller','give @s overload_sim:simulation_frame 64','give @s overload_sim:simulation_efficiency_t3','give @s overload_sim:simulation_overload_module','give @s overload_sim:simulation_smelting_module',f'tp @s 996 {180+N/2} 1005 -40 5']
 path.parent.mkdir(parents=True,exist_ok=True);path.write_text('\n'.join(commands)+'\n',encoding='utf8')
 print('Prepared ignored native production scene:',path)
 if N==7 and variant=='pink':

@@ -119,7 +119,7 @@ public class MultiblockGameTests {
     @GameTest(template="empty",timeoutTicks=140)
     public static void offlinePaidJobDoesNotShowWorkingEffects(GameTestHelper h){
         var c=powered(h,3);h.runAtTickTime(80,()->{c.crystals().setStackInSlot(0,ironCrystal());c.tick();h.getLevel().setBlockAndUpdate(c.getBlockPos().north(),net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());});
-        h.runAtTickTime(120,()->{h.assertTrue(c.busy()&&!c.getMainNode().isActive(),"offline job retained");h.assertTrue((c.visualFlags()&1)==0,"offline job does not show working lightning");h.succeed();});
+        h.runAtTickTime(120,()->{h.assertTrue(c.busy()&&!c.getMainNode().isActive(),"offline job retained");h.assertTrue((c.visualFlags()&8)==0&&(c.visualFlags()&1)!=0,"offline job retains orb without working lightning");h.succeed();});
     }
     @GameTest(template="empty",timeoutTicks=110)
     public static void controllerRequiresAnAEChannel(GameTestHelper h){

@@ -37,7 +37,7 @@ public final class SimulationStructureValidator {
             BlockPos p=min.offset(x,y,z);if(!level.hasChunkAt(p))return new Result(null,"unloaded",p);
             var state=level.getBlockState(p);var block=state.getBlock();
             if(SimulationStructureIndex.occupied(level,p,controller))return new Result(null,"owned",p);
-            if(boundaries==0){if(!state.isAir())return new Result(null,"interior",p);continue;}
+            if(boundaries==0){boolean ownedLight=p.equals(SimulationLightBlockEntity.center(min,n))&&state.is(MultiblockContent.LIGHT.get())&&level.getBlockEntity(p) instanceof SimulationLightBlockEntity light&&light.ownedBy(controller);if(!state.isAir()&&!ownedLight)return new Result(null,"interior",p);continue;}
             if(level.getBlockEntity(p) instanceof SimulationMemberBlockEntity member&&member.owner()!=null&&!member.ownedBy(controller))
                 return new Result(null,"owned",p);
             members.add(p.immutable());

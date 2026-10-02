@@ -22,6 +22,7 @@ public class SimulationControllerBlockEntity extends AENetworkedBlockEntity impl
     private UUID identity=UUID.randomUUID();
     private SimulationStructure structure;private String error="no_structure";private BlockPos problem;private boolean structureDirty;
     private BlockPos savedMin;private int savedSize;
+    private BlockPos lightPosition;
     private final BulkOutputBuffer outputs=new BulkOutputBuffer();
     private final SimulationGridBridge bridge=new SimulationGridBridge(this);
     private SimulationBatch batch;private int nextCrystal,status,lastVisualFlags;
@@ -78,7 +79,8 @@ public class SimulationControllerBlockEntity extends AENetworkedBlockEntity impl
     public int status(){return status;}
     public int visualSize(){return level!=null&&level.isClientSide?visualSize:structure==null?0:structure.size();}
     public BlockPos visualMin(){return level!=null&&level.isClientSide?visualMin:structure==null?worldPosition:structure.min();}
-    public int visualFlags(){return level!=null&&level.isClientSide?visualFlags:busy()&&batch.remaining>0&&structure!=null&&loaded()&&getMainNode().isActive()?1|(batch.overload?2:0)|(batch.smelting?4:0):0;}
+    public boolean hasActiveCrystal(){if(structure==null)return false;for(int slot=0;slot<structure.capacity();slot++){var item=crystals.getStackInSlot(slot);if(item.is(ModContent.PERFECT.get())&&CrystalDataAccess.read(item).isPresent())return true;}return false;}
+    public int visualFlags(){if(level!=null&&level.isClientSide)return visualFlags;if(structure==null||!loaded()||!hasActiveCrystal())return 0;return 1|(structure.overload()?2:0)|(structure.smelting()?4:0)|(busy()&&batch.remaining>0&&status==1&&getMainNode().isActive()?8:0);}
     public List<ItemStack> visualCrystals(){return level!=null&&level.isClientSide?visualCrystals:java.util.stream.IntStream.range(0,structure==null?0:structure.capacity()).mapToObj(crystals::getStackInSlot).filter(s->!s.isEmpty()).map(ItemStack::copy).toList();}
     public List<ItemStack> fixedRoll(int slot,ItemStack item,java.util.function.Supplier<List<ItemStack>> supplier){
         if(!rollGeneration.equals(MultiblockData.generation())){rolls.clear();rollGeneration=MultiblockData.generation();saveChanges();}
@@ -88,7 +90,20 @@ public class SimulationControllerBlockEntity extends AENetworkedBlockEntity impl
     }
     public void tick(){
         if(level==null||level.isClientSide)return;
-        try{tickServer();}finally{int flags=visualFlags();if(flags!=lastVisualFlags){lastVisualFlags=flags;markForClientUpdate();}}
+        try{tickServer();}finally{syncLight();int flags=visualFlags();if(flags!=lastVisualFlags){lastVisualFlags=flags;markForClientUpdate();}}
+    }
+    public void syncLight(){
+        if(level==null||level.isClientSide)return;var target=structure!=null&&loaded()&&hasActiveCrystal()?SimulationLightBlockEntity.center(structure.min(),structure.size()):null;
+        if(lightPosition!=null&&!lightPosition.equals(target))clearLight();
+        if(target==null||!level.hasChunkAt(target))return;
+        if(level.getBlockEntity(target) instanceof SimulationLightBlockEntity light&&light.ownedBy(this)){if(!target.equals(lightPosition)){lightPosition=target;saveChanges();}return;}
+        if(!level.getBlockState(target).isAir())return;
+        SimulationStructureIndex.converting(()->level.setBlockAndUpdate(target,MultiblockContent.LIGHT.get().defaultBlockState()));
+        if(level.getBlockEntity(target) instanceof SimulationLightBlockEntity light){light.bind(this);lightPosition=target;saveChanges();}
+    }
+    private void clearLight(){
+        if(lightPosition==null||level==null||!level.hasChunkAt(lightPosition))return;var pos=lightPosition;lightPosition=null;
+        if(level.getBlockEntity(pos) instanceof SimulationLightBlockEntity light&&light.ownedBy(this)&&level.getBlockState(pos).is(MultiblockContent.LIGHT.get()))SimulationStructureIndex.converting(()->level.setBlockAndUpdate(pos,net.minecraft.world.level.block.Blocks.AIR.defaultBlockState()));saveChanges();
     }
     private void tickServer(){
         if(structureDirty||level.getGameTime()%(structure==null?20:100)==0){structureDirty=false;checkStructure();}
@@ -176,7 +191,7 @@ public class SimulationControllerBlockEntity extends AENetworkedBlockEntity impl
         });saveChanges();markForClientUpdate();NeoForge.EVENT_BUS.post(new MultiblockSimulationEvents.Formed(this,formed));
     }
     public void invalidateStructure(){
-        var old=structure;structure=null;savedMin=null;savedSize=0;SimulationStructureIndex.release(this);bridge.disconnect();if(old==null||level==null)return;
+        var old=structure;structure=null;savedMin=null;savedSize=0;clearLight();SimulationStructureIndex.release(this);bridge.disconnect();if(old==null||level==null)return;
         SimulationStructureIndex.converting(()->{for(var p:old.members())if(level.hasChunkAt(p)&&level.getBlockEntity(p) instanceof SimulationMemberBlockEntity m&&m.ownedBy(this))m.restore();});
         saveChanges();markForClientUpdate();NeoForge.EVENT_BUS.post(new MultiblockSimulationEvents.Invalidated(this,old));
     }
@@ -194,18 +209,18 @@ public class SimulationControllerBlockEntity extends AENetworkedBlockEntity impl
         batch=tag.contains("Batch")?SimulationBatch.load(tag.getCompound("Batch"),r):null;rolls.clear();rollGeneration=tag.getString("RollGeneration");
         for(var v:tag.getList("Rolls",Tag.TAG_COMPOUND)){var t=(CompoundTag)v;int slot=t.getInt("Slot");if(slot<0||slot>=49)continue;var list=new ArrayList<ItemStack>();for(var item:t.getList("Outputs",Tag.TAG_COMPOUND))ItemStack.parse(r,item).ifPresent(list::add);rolls.put(slot,new Roll(ItemStack.parseOptional(r,t.getCompound("Input")),List.copyOf(list)));}
     }
-    @Override public void saveAdditional(CompoundTag tag,HolderLookup.Provider r){super.saveAdditional(tag,r);tag.put("SimulationMachine",saveMachine(r));if(savedMin!=null){tag.putLong("StructureMin",savedMin.asLong());tag.putInt("StructureSize",savedSize);}}
-    @Override public void loadTag(CompoundTag tag,HolderLookup.Provider r){super.loadTag(tag,r);loadMachine(tag.getCompound("SimulationMachine"),r);if(tag.contains("StructureMin")){savedMin=BlockPos.of(tag.getLong("StructureMin"));savedSize=Math.clamp(tag.getInt("StructureSize"),3,7);}}
+    @Override public void saveAdditional(CompoundTag tag,HolderLookup.Provider r){super.saveAdditional(tag,r);tag.put("SimulationMachine",saveMachine(r));if(lightPosition!=null)tag.putLong("OwnedLight",lightPosition.asLong());if(savedMin!=null){tag.putLong("StructureMin",savedMin.asLong());tag.putInt("StructureSize",savedSize);}}
+    @Override public void loadTag(CompoundTag tag,HolderLookup.Provider r){super.loadTag(tag,r);loadMachine(tag.getCompound("SimulationMachine"),r);lightPosition=tag.contains("OwnedLight")?BlockPos.of(tag.getLong("OwnedLight")):null;if(tag.contains("StructureMin")){savedMin=BlockPos.of(tag.getLong("StructureMin"));savedSize=Math.clamp(tag.getInt("StructureSize"),3,7);}}
     private void writeVisual(RegistryFriendlyByteBuf data){
         data.writeVarInt(visualSize());data.writeBlockPos(visualMin());data.writeByte(visualFlags());var items=visualCrystals();data.writeVarInt(items.size());for(var item:items)ItemStack.STREAM_CODEC.encode(data,item);
     }
     @Override protected void writeToStream(RegistryFriendlyByteBuf data){super.writeToStream(data);writeVisual(data);}
     @Override protected boolean readFromStream(RegistryFriendlyByteBuf data){
-        boolean changed=super.readFromStream(data);visualSize=Math.clamp(data.readVarInt(),0,7);visualMin=data.readBlockPos();visualFlags=data.readUnsignedByte()&7;int count=data.readVarInt();if(count<0||count>49)throw new IllegalArgumentException("visual crystals");
+        boolean changed=super.readFromStream(data);visualSize=Math.clamp(data.readVarInt(),0,7);visualMin=data.readBlockPos();visualFlags=data.readUnsignedByte()&15;int count=data.readVarInt();if(count<0||count>49)throw new IllegalArgumentException("visual crystals");
         var items=new ArrayList<ItemStack>();for(int i=0;i<count;i++)items.add(ItemStack.STREAM_CODEC.decode(data));visualCrystals=List.copyOf(items);SimulationShellVisuals.publish(this,visualToken);return true;
     }
     @Override protected void saveVisualState(CompoundTag tag){super.saveVisualState(tag);tag.putInt("Size",visualSize());tag.putLong("Min",visualMin().asLong());tag.putInt("Flags",visualFlags());if(level!=null){var list=new ListTag();for(var item:visualCrystals())list.add(item.save(level.registryAccess()));tag.put("VisualCrystals",list);}}
-    @Override protected void loadVisualState(CompoundTag tag){super.loadVisualState(tag);visualSize=Math.clamp(tag.getInt("Size"),0,7);visualMin=BlockPos.of(tag.getLong("Min"));visualFlags=tag.getInt("Flags")&7;if(level!=null){var list=new ArrayList<ItemStack>();for(var v:tag.getList("VisualCrystals",Tag.TAG_COMPOUND))if(list.size()<49)ItemStack.parse(level.registryAccess(),v).ifPresent(list::add);visualCrystals=List.copyOf(list);}}
+    @Override protected void loadVisualState(CompoundTag tag){super.loadVisualState(tag);visualSize=Math.clamp(tag.getInt("Size"),0,7);visualMin=BlockPos.of(tag.getLong("Min"));visualFlags=tag.getInt("Flags")&15;if(level!=null){var list=new ArrayList<ItemStack>();for(var v:tag.getList("VisualCrystals",Tag.TAG_COMPOUND))if(list.size()<49)ItemStack.parse(level.registryAccess(),v).ifPresent(list::add);visualCrystals=List.copyOf(list);}}
     @Override public void onLoad(){super.onLoad();SimulationShellVisuals.publish(this,visualToken);}
     @Override public void setRemoved(){SimulationShellVisuals.remove(this,visualToken);bridge.disconnect();super.setRemoved();}
     @Override public void onChunkUnloaded(){SimulationShellVisuals.remove(this,visualToken);bridge.disconnect();super.onChunkUnloaded();}

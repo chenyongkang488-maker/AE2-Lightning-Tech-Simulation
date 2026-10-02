@@ -1,8 +1,8 @@
 package dev.overloadsim.core;
 
-/** Visual effects follow the paid batch, including its captured upgrade state. */
-public record SimulationOrbState(boolean visible, boolean smelting, boolean overload) {
+/** Presence and module color are independent of the currently processing batch. */
+public record SimulationOrbState(boolean visible, boolean smelting, boolean overload,boolean processing) {
     public static SimulationOrbState of(int flags) {
-        return new SimulationOrbState((flags & 1) != 0, (flags & 4) != 0, (flags & 2) != 0);
+        return new SimulationOrbState((flags & 1) != 0, (flags & 4) != 0, (flags & 2) != 0,(flags&8)!=0);
     }
 }
