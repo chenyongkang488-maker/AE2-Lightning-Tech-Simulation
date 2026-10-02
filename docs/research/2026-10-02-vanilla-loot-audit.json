@@ -1,0 +1,127 @@
+{
+  "minecraft": "1.21.1",
+  "source": "Mojang minecraft_1.21.1_client.jar bundled loot tables; static analysis, not runtime GameTest",
+  "player_required_tables": [
+    {
+      "entity": "minecraft:blaze",
+      "player_required_outputs": [
+        "minecraft:blaze_rod"
+      ]
+    },
+    {
+      "entity": "minecraft:bogged",
+      "player_required_outputs": [
+        "minecraft:tipped_arrow"
+      ]
+    },
+    {
+      "entity": "minecraft:breeze",
+      "player_required_outputs": [
+        "minecraft:breeze_rod"
+      ]
+    },
+    {
+      "entity": "minecraft:cave_spider",
+      "player_required_outputs": [
+        "minecraft:spider_eye"
+      ]
+    },
+    {
+      "entity": "minecraft:drowned",
+      "player_required_outputs": [
+        "minecraft:copper_ingot"
+      ]
+    },
+    {
+      "entity": "minecraft:elder_guardian",
+      "player_required_outputs": [
+        "minecraft:gameplay/fishing/fish",
+        "minecraft:wet_sponge"
+      ]
+    },
+    {
+      "entity": "minecraft:evoker",
+      "player_required_outputs": [
+        "minecraft:emerald"
+      ]
+    },
+    {
+      "entity": "minecraft:guardian",
+      "player_required_outputs": [
+        "minecraft:gameplay/fishing/fish"
+      ]
+    },
+    {
+      "entity": "minecraft:husk",
+      "player_required_outputs": [
+        "minecraft:carrot",
+        "minecraft:iron_ingot",
+        "minecraft:potato"
+      ]
+    },
+    {
+      "entity": "minecraft:phantom",
+      "player_required_outputs": [
+        "minecraft:phantom_membrane"
+      ]
+    },
+    {
+      "entity": "minecraft:rabbit",
+      "player_required_outputs": [
+        "minecraft:rabbit_foot"
+      ]
+    },
+    {
+      "entity": "minecraft:spider",
+      "player_required_outputs": [
+        "minecraft:spider_eye"
+      ]
+    },
+    {
+      "entity": "minecraft:stray",
+      "player_required_outputs": [
+        "minecraft:tipped_arrow"
+      ]
+    },
+    {
+      "entity": "minecraft:vindicator",
+      "player_required_outputs": [
+        "minecraft:emerald"
+      ]
+    },
+    {
+      "entity": "minecraft:wither_skeleton",
+      "player_required_outputs": [
+        "minecraft:wither_skeleton_skull"
+      ]
+    },
+    {
+      "entity": "minecraft:zombie",
+      "player_required_outputs": [
+        "minecraft:carrot",
+        "minecraft:iron_ingot",
+        "minecraft:potato"
+      ]
+    },
+    {
+      "entity": "minecraft:zombie_villager",
+      "player_required_outputs": [
+        "minecraft:carrot",
+        "minecraft:iron_ingot",
+        "minecraft:potato"
+      ]
+    },
+    {
+      "entity": "minecraft:zombified_piglin",
+      "player_required_outputs": [
+        "minecraft:gold_ingot"
+      ]
+    }
+  ],
+  "special_cases": {
+    "magma_cube": "Default size 1; magma_cream requires size >= 2",
+    "wither": "Empty entity loot table; nether star in dropCustomDeathLoot",
+    "ender_dragon": "Empty entity loot table; requested custom independent drops",
+    "warden": "Vanilla only sculk_catalyst; requested override adds echo_shard and sculk"
+  }
+}
