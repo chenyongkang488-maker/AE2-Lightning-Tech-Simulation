@@ -1,5 +1,11 @@
 # 验证记录
 
+## 0.1b桌面模组导出（2026-10-03）
+
+构建与模组元数据版本均为0.1b，功能沿用alpha.14。`0.1b-release.log` 的153项必需 GameTest 通过；最终 `0.1b-export-build.log` 构建成功，20项 JUnit 无失败/错误。全部运行资源与最终JAR逐字节一致，未捆绑游戏本体或前置模组类。
+
+桌面导出单个模组文件：`C:\Users\26672\OneDrive\Desktop\AE2-Lightning-Tech-Simulation-0.1b.jar`，683830字节，SHA-256 `4d7d394e81fa36dd000946c18f9a757e9cb46d1ba044bc09883c05e51bb7dc25`，与构建产物一致。记录见 `docs/releases/0.1b-desktop.json`；Git标签为 `v0.1b`。
+
 ## 0.1.0-alpha.14（2026-10-03）
 
 最终 `build runGameTestServer` 和 `build runGameTestServer -PcropTests -PmekTests` 均退出0、BUILD SUCCESSFUL，各153项必需 GameTest 通过；20项 JUnit 无失败/错误。日志：`build/verification/alpha14-base-release.log`、`alpha14-crop-mek-release.log`。首次 `manufacturing-red.log` 的5项新增检查均在旧工作台配方下失败，修复后 `manufacturing-green.log` 通过。

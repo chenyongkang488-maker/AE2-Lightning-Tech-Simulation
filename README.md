@@ -1,8 +1,8 @@
 # AE2 闪电科技：模拟
 
-Minecraft **1.21.1 / NeoForge 21.1.252** 的 AE2 闪电科技附属模组。当前版本 **0.1.0-alpha.14**，名称更新为“AE2 闪电科技：模拟”，工具改名“过载雷鸣线圈”；18项制造配方改用闪电科技原生机器并配置指定材料、FE及闪电电压/数量。保留通用耕地作物、矿物和生物适配。
+Minecraft **1.21.1 / NeoForge 21.1.252** 的 AE2 闪电科技附属模组。当前版本 **0.1b**，名称更新为“AE2 闪电科技：模拟”，工具改名“过载雷鸣线圈”；18项制造配方改用闪电科技原生机器并配置指定材料、FE及闪电电压/数量。保留通用耕地作物、矿物和生物适配。
 
-已安装到 PCL 的 `OverloadSim-Test-1.21.1`；升级时只替换本附属模组，上一版保存在该实例的 `addon-backups/`，验收记录见 `docs/verification.md`。
+PCL 测试实例为 `OverloadSim-Test-1.21.1`，此前安装版本为 alpha.14。0.1b 以模组JAR文件导出到桌面；实例升级脚本保留上一版到 `addon-backups/`，验收记录见 `docs/verification.md`。
 
 项目在 `D:\MinecraftDev\OverloadSimulation`，独立 Git 仓库的 `codex/simulation-compatibility` 分支上。原来的 1.19.2 工程不参与构建。
 
@@ -56,7 +56,7 @@ G 使用闪电科技原生设备界面，四个装备页与右上角武器页共
 .\scripts\install-test.ps1
 ```
 
-本机脚本优先使用 D 盘已有的 Gradle 8.8；其他机器可使用 Gradle Wrapper 下载 8.8。常规构建产物为 `build/libs/overload_sim-0.1.0-alpha.14.jar`，sources jar 提供源码。通用机械 10.7.19.85 是可选运行依赖，常规测试不加载它；-Mekanism（Gradle -PmekTests）启用真实集成测试。
+本机脚本优先使用 D 盘已有的 Gradle 8.8；其他机器可使用 Gradle Wrapper 下载 8.8。常规构建产物为 `build/libs/overload_sim-0.1b.jar`，sources jar 提供源码。通用机械 10.7.19.85 是可选运行依赖，常规测试不加载它；-Mekanism（Gradle -PmekTests）启用真实集成测试。
 
 神秘农业兼容测试可用 `gradlew runGameTestServer -PcropTests -PmekTests`。将已安装的 `MysticalAgriculture-1.21.1-8.0.28.jar` 和 `Cucumber-1.21.1-8.0.16.jar` 放到本地忽略的 `libs/`；两者只用于可选测试，不是本模组前置，也不打包到发布 JAR。
 

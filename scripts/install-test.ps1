@@ -1,7 +1,7 @@
 param([string]$Instance='D:\mc\.minecraft\versions\OverloadSim-Test-1.21.1')
 $ErrorActionPreference='Stop'
 $projectRoot=Split-Path -Parent $PSScriptRoot
-$jar=Join-Path $projectRoot 'build\libs\overload_sim-0.1.0-alpha.14.jar'
+$jar=Join-Path $projectRoot 'build\libs\overload_sim-0.1b.jar'
 if(-not(Test-Path -LiteralPath $jar)){throw 'Build the mod first.'}
 if(-not(Test-Path -LiteralPath (Join-Path $Instance 'mods'))){throw 'Expected an existing test instance with a mods directory.'}
 $Instance=(Resolve-Path -LiteralPath $Instance).Path
