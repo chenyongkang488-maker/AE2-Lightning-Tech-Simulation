@@ -2,7 +2,7 @@ plugins {
     id 'java-library'
     id 'net.neoforged.moddev' version '2.0.148'
 }
-version = '0.1.0-alpha.12'
+version = '0.1.0-alpha.13'
 group = 'dev.overloadsim'
 base { archivesName = 'overload_sim' }
 java { toolchain.languageVersion = JavaLanguageVersion.of(21); withSourcesJar() }
@@ -20,6 +20,7 @@ neoForge {
 dependencies {
     compileOnly files('libs/Mekanism-1.21.1-10.7.19.85.jar')
     if(project.hasProperty('mekTests')) runtimeOnly files('libs/Mekanism-1.21.1-10.7.19.85.jar')
+    if(project.hasProperty('cropTests')) runtimeOnly files('libs/MysticalAgriculture-1.21.1-8.0.28.jar', 'libs/Cucumber-1.21.1-8.0.16.jar')
     implementation files('libs/appliedenergistics2-19.2.17.jar', 'libs/ae2lt-2.1.0.jar', 'libs/thunderbolt-2.0.0.jar', 'libs/guideme-21.1.19.jar')
     testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

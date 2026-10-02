@@ -21,7 +21,11 @@ public final class SimulationResolvers {
         var recipes=SimulationData.recipes(level,SimulationRecipe.Kind.PRODUCTION).stream().filter(r->r.value().data().profile().equals(crystal.profile())).toList();
         if(!recipes.isEmpty())return SimulationData.select(recipes).map(r->new Production(r.id(),r.value().data().production(),Optional.empty()));
         var mineral=MineralSimulationData.resolveProfile(level,crystal.profile());
-        return mineral.valid()?Optional.of(new Production(crystal.profile(),SimulationRecipe.Production.DEFAULT,mineral.mineral())):Optional.empty();
+        if(mineral.valid())return Optional.of(new Production(crystal.profile(),SimulationRecipe.Production.DEFAULT,mineral.mineral()));
+        var crop=CropSimulationData.resolveProfile(level,crystal.profile());
+        if(!crop.valid())return Optional.empty();
+        var config=new SimulationRecipe.Production(200,1000,1,List.of(),Optional.of(CropSimulationData.PROVIDER),false,Optional.empty());
+        return Optional.of(new Production(crystal.profile(),config,Optional.empty()));
     }
     private SimulationResolvers(){}
 }

@@ -20,7 +20,10 @@ public final class CrystalBinding {
         // Select the explicit physical match before its policy. Otherwise an automatic tag
         // mapping could bypass natural-only restrictions, missing profiles or author conditions.
         var matches=SimulationData.recipes(level,SimulationRecipe.Kind.BINDING).stream().filter(h->structure(level,center,h.value().data().world(),false).isPresent()).toList();
-        var chosen=SimulationData.select(matches);if(chosen.isEmpty())return matches.isEmpty()?bindMineral(level,center,stack,natural,current):stack;
+        var chosen=SimulationData.select(matches);if(chosen.isEmpty()){
+            if(!matches.isEmpty())return stack;
+            var crop=CropBinding.bind(level,center,stack,current);return crop!=stack?crop:bindMineral(level,center,stack,natural,current);
+        }
         var recipe=chosen.get().value();if(!natural&&!recipe.data().allowArtificial()||SimulationData.profile(level,recipe.data().profile()).isEmpty())return stack;
         var matched=structure(level,center,recipe.data().world());if(matched.isEmpty())return stack;var snapshots=matched.get();
         var data=new CrystalData(recipe.data().profile(),Optional.empty(),0,1);

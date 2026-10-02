@@ -14,6 +14,7 @@ public class OverloadSimulation {
     public OverloadSimulation(IEventBus bus,ModContainer container){
         if(System.getProperty("neoforge.enabledGameTestNamespaces","").contains(ID))dev.overloadsim.gametest.CompatibilityFixtures.register();
         ModContent.register(bus);container.registerConfig(ModConfig.Type.COMMON,SimulationConfig.SPEC);
+        dev.overloadsim.api.SimulationExtensions.registerOutputV2(dev.overloadsim.data.CropSimulationData.PROVIDER,dev.overloadsim.machine.SimulationCropLoot::roll);
         dev.overloadsim.multiblock.SimulationStructureIndex.register();
         NeoForge.EVENT_BUS.addListener(dev.overloadsim.command.SimulationDiagnostics::register);
         NeoForge.EVENT_BUS.addListener((AddReloadListenerEvent e)->e.addListener(new SimulationData()));

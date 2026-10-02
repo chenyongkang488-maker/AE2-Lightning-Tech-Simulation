@@ -2,6 +2,8 @@
 
 Minecraft 1.21.1 / NeoForge。现有档案 ID、CrystalData format=1 和 Java 扩展签名保留。普通与多方块模拟室共用产物解析器；普通模拟室仍在启动时收费，多方块在完成时收费。新批次使用重载后的规则，已启动批次保留抽取快照。
 
+alpha.13 耕地作物自动发现、神秘农业采收和成熟状态接口见 [作物兼容 API](crop-compatibility-api.md)。
+
 ## 矿物自动发现
 
 块标签 `c:storage_blocks/raw_<material>` 对应物品标签 `c:raw_materials/<material>`。恰好一个原矿物品时生成稳定档案 `overload_sim:auto/mineral/c/<material>`，每次基础产出一个。不同模组的同材质存储块可混用；不同材料、多个候选产物、带方块实体的材料均拒绝消耗。

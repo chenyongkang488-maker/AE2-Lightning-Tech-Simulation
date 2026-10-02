@@ -32,10 +32,12 @@ public final class SimulationDiagnostics {
         if(SimulationData.profile(crystal.profile()).isEmpty())return new Report("crystal",crystal.profile().toString(),details,"missing_profile");
         if(production.isEmpty()){
             var mineral=MineralSimulationData.resolveProfile(level,crystal.profile());
+            var crop=CropSimulationData.resolveProfile(level,crystal.profile());
             var recipes=SimulationData.recipes(level,SimulationRecipe.Kind.PRODUCTION).stream().filter(r->r.value().data().profile().equals(crystal.profile())).toList();
-            return new Report("crystal",crystal.profile().toString(),details,!recipes.isEmpty()?"ambiguous_production_recipe":mineral.error().equals("missing_mineral_profile")?"missing_production":mineral.error());
+            return new Report("crystal",crystal.profile().toString(),details,!recipes.isEmpty()?"ambiguous_production_recipe":!crop.error().equals("missing_crop_profile")?crop.error():mineral.error().equals("missing_mineral_profile")?"missing_production":mineral.error());
         }
         var p=production.get();details.add("production="+p.id());
+        CropSimulationData.resolveProfile(level,crystal.profile()).crop().ifPresent(c->details.addAll(cropDetails(c)));
         if(p.mineral().isPresent())details.addAll(mineralDetails(p.mineral().get()));
         else if(p.config().provider().isPresent()){
             var provider=p.config().provider().get();details.add("production_provider="+provider);if(!hasProvider(provider))return new Report("crystal",crystal.profile().toString(),details,"missing_provider");
@@ -43,8 +45,16 @@ public final class SimulationDiagnostics {
         details.add("random=not_evaluated");return new Report("crystal",crystal.profile().toString(),details,"");
     }
     public static Report explainBlock(ServerLevel level,BlockState state){
+        var crop=CropSimulationData.resolve(level,state);
+        if(!crop.error().equals("not_crop"))return new Report("crop_binding",BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString(),crop.crop().map(SimulationDiagnostics::cropDetails).orElse(List.of()),crop.error());
         var resolution=MineralSimulationData.resolveBinding(level,state);return new Report("binding",BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString(),resolution.mineral().map(SimulationDiagnostics::mineralDetails).orElse(List.of()),resolution.error());
     }
+    public static Report explainBlock(ServerLevel level,net.minecraft.core.BlockPos pos){
+        var report=explainBlock(level,level.getBlockState(pos));
+        if(report.category().equals("crop_binding")&&report.error().isEmpty()&&!CropSimulationData.supports(level,pos.below(),level.getBlockState(pos)))return new Report(report.category(),report.target(),report.details(),"unsupported_farmland");
+        return report;
+    }
+    private static List<String> cropDetails(CropSimulationData.Template crop){return List.of("profile="+crop.profile(),"crop="+crop.source(),"mature_state="+crop.harvest(),"icon="+crop.icon(),"harvest=BlockState.getDrops; context=machine_position; fortune=0; random=not_evaluated");}
     private static List<String> mineralDetails(ResolvedMineral m){
         var result=new ArrayList<String>();result.add("profile="+m.profile());result.add("material="+m.material());result.add("binding="+m.binding());result.add("same_block="+m.sameBlock());
         m.item().ifPresent(id->result.add("item="+id));result.add("quantity="+m.min()+".."+m.max());m.ore().ifPresent(id->result.add("block_loot="+id));m.smelting().ifPresent(s->result.add("smelting="+s.input()+" -> "+s.result()+" x"+s.count()));return List.copyOf(result);
@@ -88,7 +98,7 @@ public final class SimulationDiagnostics {
     public static void register(RegisterCommandsEvent event){
         event.getDispatcher().register(Commands.literal("overload_sim")
             .then(Commands.literal("explain").executes(ctx->{var source=ctx.getSource();send(source,explain(source.getLevel(),source.getPlayerOrException().getMainHandItem()));return 1;}))
-            .then(Commands.literal("explain_block").then(Commands.argument("pos",BlockPosArgument.blockPos()).executes(ctx->{var source=ctx.getSource();var pos=BlockPosArgument.getLoadedBlockPos(ctx,"pos");send(source,explainBlock(source.getLevel(),source.getLevel().getBlockState(pos)));return 1;})))
+            .then(Commands.literal("explain_block").then(Commands.argument("pos",BlockPosArgument.blockPos()).executes(ctx->{var source=ctx.getSource();var pos=BlockPosArgument.getLoadedBlockPos(ctx,"pos");send(source,explainBlock(source.getLevel(),pos));return 1;})))
             .then(Commands.literal("audit").requires(source->source.hasPermission(2)).executes(ctx->{
                 var source=ctx.getSource();var reports=audit(source.getLevel());var path=source.getServer().getWorldPath(LevelResource.ROOT).resolve("overload_sim-audit.json");
                 try{java.nio.file.Files.writeString(path,new GsonBuilder().setPrettyPrinting().create().toJson(reports));}

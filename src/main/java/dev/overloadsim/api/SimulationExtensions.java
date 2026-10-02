@@ -27,6 +27,11 @@ public final class SimulationExtensions {
     public static void registerMineralResolver(ResourceLocation id,MineralResolver resolver){if(MINERALS.putIfAbsent(id,resolver)!=null)throw new IllegalArgumentException("duplicate mineral resolver "+id);dev.overloadsim.data.SimulationData.invalidate();}
     public static List<ResolvedMineral> minerals(ServerLevel level,net.minecraft.world.level.block.state.BlockState state){return MINERALS.entrySet().stream().sorted(Map.Entry.comparingByKey()).flatMap(e->e.getValue().resolve(level,state).stream()).toList();}
     public static boolean hasMineralResolvers(){return !MINERALS.isEmpty();}
+    /** Pure mapping from a canonical default source state to its mature harvest; recipes/providers control quantities. */
+    @FunctionalInterface public interface CropMaturityResolver { java.util.Optional<net.minecraft.world.level.block.state.BlockState> resolve(ServerLevel level,net.minecraft.world.level.block.state.BlockState source); }
+    private static final Map<ResourceLocation,CropMaturityResolver> CROP_MATURITY=new ConcurrentHashMap<>();
+    public static void registerCropMaturityResolver(ResourceLocation id,CropMaturityResolver resolver){if(CROP_MATURITY.putIfAbsent(id,java.util.Objects.requireNonNull(resolver))!=null)throw new IllegalArgumentException("duplicate crop maturity resolver "+id);dev.overloadsim.data.SimulationData.invalidate();}
+    public static List<net.minecraft.world.level.block.state.BlockState> cropMaturity(ServerLevel level,net.minecraft.world.level.block.state.BlockState source){return CROP_MATURITY.entrySet().stream().sorted(Map.Entry.comparingByKey()).flatMap(e->e.getValue().resolve(level,source).stream()).toList();}
     private static final Map<ResourceLocation,OutputProvider> OUTPUTS = new ConcurrentHashMap<>();
     private static final Map<ResourceLocation,BindingCondition> BINDINGS = new ConcurrentHashMap<>();
     private static final Map<ResourceLocation,MobPredicate> MOBS = new ConcurrentHashMap<>();

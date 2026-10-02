@@ -1,5 +1,17 @@
 # 验证记录
 
+## 0.1.0-alpha.13（2026-10-02）
+
+最终 `build runGameTestServer` 和 `build runGameTestServer -PcropTests -PmekTests` 均退出0、BUILD SUCCESSFUL，各148项必需 GameTest 通过；20项 JUnit 无失败/错误。日志：`build/verification/alpha13-base-release.log`、`alpha13-crop-mek-release.log`。可选环境实际加载用户安装版本的 Mystical Agriculture 8.0.28、Cucumber 8.0.16、Mekanism 10.7.19.85；基础环境不要求这些模组。
+
+首次 `crop-compatibility-red.log` 复现通用作物、模组耕地和神秘农业无法绑定。新增测试覆盖实际神秘农业钻石作物的绑定和 Java 成熟采收精华、种子副产物、混合生长阶段、成熟火把花与幼苗同档案、瓜茎果实、十次培养、缓存失效后的档案恢复、两种真实机器生产、显式产物覆盖、自然雷政策优先、黑名单、混种不消耗和只读诊断。
+
+只读代码审查的四项问题均先加入测试复现（`crop-review-red.log`），再修复并通过：幼年瓶子草无需上半部分；双格作物一次性无掉落移除；成熟状态适配器统一接收来源默认状态，保存后采收映射保持一致；先尊重 NeoForge 明确的土地支持/拒绝决策，再处理默认决策的类别、标签和存活检查。稳定水晶 Data Component 格式、旧 API 和显式配方优先级保持兼容。来源耕地等级、crux、环境奖金及植株方块实体/NBT 不由自动适配复制，作者可通过配方和输出 API 控制。
+
+216个资源文件与最终 JAR 逐字节一致，163个资源 JSON 与作者示例可解析；21个 Blockbench 工程、24个内嵌 PNG、20个模型校验通过。版本及作物标签、指南已打包，测试配方和前置模组类未打包。此次使用服务器自动测试，没有进行新的客户端手动操作。
+
+已安装 `D:\mc\.minecraft\versions\OverloadSim-Test-1.21.1\mods\overload_sim-0.1.0-alpha.13.jar`，674021字节，SHA-256 `cc6c44ce5f6a96b9b9bf494a206e4fce6bb7893c92582747611443f1870bc71e`。alpha.12保存在 `addon-backups\20261002-225857`，其SHA-256与安装前一致；其它13个模组及共70个前置/设置文件哈希未变。完整安装记录见 `docs/releases/alpha13-install.json`。Git回滚标签为 `v0.1.0-alpha.13`；从PCL重新启动测试实例即可加载。
+
 ## 0.1.0-alpha.8（2026-10-01）
 
 最终 `build runGameTestServer -PmekTests` 和 `build runGameTestServer` 均退出 0、BUILD SUCCESSFUL，各 56 项必需 GameTest 通过；8 项 JUnit 无失败/错误。日志：`build/verification/alpha8-mek-release.log`、`alpha8-no-mek-release.log`。资源 86 个 JSON 均可解析，JAR 版本、水晶概率、仅客户端注册的滚轮 Mixin 和可选前置类未捆绑均已检查。

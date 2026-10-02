@@ -1,0 +1,11 @@
+{
+  "type": "overload_sim:overload_simulation",
+  "profile": "overload_sim:auto/crop/mysticalagriculture/diamond_crop",
+  "priority": 100,
+  "production": {
+    "ticks": 200,
+    "fe": 1000,
+    "lightning": 1,
+    "outputs": [{"item": "mysticalagriculture:diamond_essence", "count": 2}]
+  }
+}

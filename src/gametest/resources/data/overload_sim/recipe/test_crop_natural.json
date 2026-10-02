@@ -1,0 +1,1 @@
+{"type":"overload_sim:crystal_binding","profile":"overload_sim:test_crop_natural","allow_artificial":false,"world":{"mode":"crop","material":{"id":"overload_sim:test_natural_crop"},"soil":{"id":"minecraft:farmland"}}}
