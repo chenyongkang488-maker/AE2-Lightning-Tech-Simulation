@@ -4,7 +4,7 @@ User approved the saved spec and in-chat design with “yes”. Inline execution
 
 Pre-flight interfaces: Task1 busy/paid/visual flags consumed by Task4; bit8 processing separates presence and activity, paid reserved for settlement. Task2/3 both feed shared output path via SimulationResolvers; preserve legacy OutputProvider and existing format1. Task3 generated profiles consumed by collector/cultivation/single/multi and diagnostics; refresh at tags+rules+recipes, retain stable IDs. Task4 light modifies interior validator; only correctly owned expected center accepted. Task5 diagnostics reads the same immutable resolution and never rolls outcomes.
 
-Tasks 1–5 pending. Whole-branch review only at the end. Tests and native screenshots are gates before PCL installation.
+Tasks 1–5 complete. Whole-branch review ran once at the end; one fix pass completed. Tests and native screenshots preceded PCL installation.
 
 Baseline: test runGameTestServer passed 19 JUnit / 81 GameTests, compatibility-baseline.log exit0. Bundled Git has no Bash; plan workspace/briefs/ledger operations use native PowerShell equivalents, preserving the same paths and task bases.
 
@@ -38,3 +38,7 @@ Final: Ruling: the reviewer-set-aside native Shift/remote wireless gates retain 
 Final: Ruling: retain existing AE2LT missing-resource/ExtendedAE-condition errors without editing dependency JARs — these errors predate this work and both dependency configurations still complete all tests — cost if wrong: affected upstream recipes/pages may require a compatible dependency update later.
 
 Final: Ruling: ordinary single-chamber prepayment remains as approved — completion-time settlement applies to the multiblock controller only, and silently migrating the other machine would change existing gameplay — cost if wrong: ordinary-chamber cancellation does not have the new multiblock free-interruption semantics.
+
+Task 5: complete (base dd9b964, implementation84b967f and reviewed fixes4cb32c5; final build/tests20 JUnit/125 GameTests both environments exit0). Runtime JAR643639 bytes/SHA256 de1450a4daa2904d08c957fa45fbb1936df83984d5b07b301124fa201a568ddc, 213 resource byte parity, no fixture JSON/dependency classes. Installed only alpha.11 in PCL OverloadSim-Test-1.21.1; alpha.10 retained in addon-backups/20261002-165440 with original SHA256096012BAA8CB453A410DB330C38BAB87E24E32B2E704E2BC0821CF8F799BB6C4. All10 other mods and46 settings match fresh pre-install snapshots. Local codex/simulation-compatibility branch retained, v0.1.0-alpha.11 rollback tag created; no push/merge. Ignored review workspace retained after cleanup rejection; sibling workspaces untouched.
+
+Final: Ruling: preserve this plan's ignored review workspace instead of deleting it — automatic approval rejected the command with only “blocked by policy”; leaving review records is safe and does not affect the release — cost if wrong: temporary files continue to occupy a small amount of disk space.

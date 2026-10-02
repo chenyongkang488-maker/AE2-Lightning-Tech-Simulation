@@ -1,0 +1,11 @@
+{
+  "Installed": "D:\\mc\\.minecraft\\versions\\OverloadSim-Test-1.21.1\\mods\\overload_sim-0.1.0-alpha.11.jar",
+  "Bytes": 643639,
+  "SHA256": "de1450a4daa2904d08c957fa45fbb1936df83984d5b07b301124fa201a568ddc",
+  "PreviousBackup": "D:\\mc\\.minecraft\\versions\\OverloadSim-Test-1.21.1\\addon-backups\\20261002-165440\\overload_sim-0.1.0-alpha.10.jar",
+  "PreviousSHA256": "096012BAA8CB453A410DB330C38BAB87E24E32B2E704E2BC0821CF8F799BB6C4",
+  "OtherModsUnchanged": 10,
+  "SettingsUnchanged": 46,
+  "Junit": 20,
+  "GameTestsPerEnvironment": 125
+}

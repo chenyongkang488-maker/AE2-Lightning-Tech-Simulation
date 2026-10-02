@@ -150,6 +150,8 @@ PCL OverloadSim-Test-1.21.1 的 11 个模组与开工前 SHA-256 全部一致，
 
 原生 Blockbench 导出21工程、24内嵌PNG和20模型，字节/JSON/动画/转角边缘校验通过。原生客户端检查3～7尺寸、7³四向角部、前视无遮挡球体、换晶、重载和断电夜间常驻光球；熔炼橙色及过载效果保留。通用机械环境实际产物包含幻翼膜、凋灵之星、龙蛋/龙首/龙息、三种坚守者产物、红石/青金石、下界合金碎片及锇锭。人工召唤闪电通过采集器上方避雷针成功消耗24粗锇块并记录 `overload_sim:auto/mineral/c/osmium`，explain/audit均运行成功。客户端正常保存退出，日志 compatibility-client-final.log；截图见 screenshots/alpha11。
 
-原生 Shift+鼠标组合及远处无线接口整链路未手动复测，采用真实菜单 quickMove、外部 capability 输入不可提取、原版接口出口的 GameTest 覆盖；普通点击实机已验证。长期跨区块、多人与任意第三方死亡代码仍需整合包联调。前置 AE2LT 自带的 missing overloaded_power_supply / ExtendedAE 条件资源错误仍存在；本模组与测试夹具资源无对应加载错误。独立审查、最终打包及 PCL 交付记录在完成后补充。
+原生 Shift+鼠标组合及远处无线接口整链路未手动复测，采用真实菜单 quickMove、外部 capability 输入不可提取、原版接口出口的 GameTest 覆盖；普通点击实机已验证。长期跨区块、多人与任意第三方死亡代码仍需整合包联调。前置 AE2LT 自带的 missing overloaded_power_supply / ExtendedAE 条件资源错误仍存在；本模组与测试夹具资源无对应加载错误。独立审查与最终交付记录见下方。
 
 一次独立整分支审查后，新增四个回归先复现失败，再修复：未知产物造成整个控制器BE加载失败、无标签的JSON档案冷启动停机、冲突档案误消耗绑定材料、Java规则不能覆盖自动标签。完整 BlockEntity.loadStatic 路径现保留水晶、能源、缓冲与原始任务NBT，缺物品时暂停，主动换晶仍可退旧预付费用。最终 **20项JUnit、125项GameTest** 在常规与Mek环境均通过，记录 compatibility-review-green.log / compatibility-review-release-mek.log（exit0）。无第二轮审查、无遗留Minor。资源/样例/依赖检查通过：213份资源逐字节一致，6份作者JSON可解析，没有夹具JSON或打入前置类。光源本版固定亮度6，约五格范围已验证；可调亮度选项延后。
+
+最终JAR **643,639字节**，SHA256 `de1450a4daa2904d08c957fa45fbb1936df83984d5b07b301124fa201a568ddc`，已安装 `D:/mc/.minecraft/versions/OverloadSim-Test-1.21.1/mods/overload_sim-0.1.0-alpha.11.jar`，安装哈希与构建一致。alpha.10备份位于 `addon-backups/20261002-165440/`，与旧版原始哈希一致。另外10个模组与46份设置文件和紧邻安装前的快照全部一致。PCL存档未修改；开发世界保存/退出正常。本地保留 `codex/simulation-compatibility` 与 `v0.1.0-alpha.11` 标签；未推送或合并。作者入口见 compatibility-api.md 与 examples/compatibility。
