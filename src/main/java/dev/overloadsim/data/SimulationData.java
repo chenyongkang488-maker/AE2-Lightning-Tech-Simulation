@@ -24,7 +24,7 @@ public class SimulationData extends SimpleJsonResourceReloadListener {
         json.forEach((id,value)->{var j=value.getAsJsonObject();var kind=j.get("kind").getAsString();if(!Set.of("mineral","crop","tree","mob").contains(kind))throw new IllegalArgumentException("invalid profile kind "+id);next.put(id,new SimulationProfileView(id,kind,j.get("name").getAsString(),ResourceLocation.parse(j.get("icon").getAsString())));});
         profiles=Map.copyOf(next); indexedManager=null; INDEX.clear();revision++;
     }
-    public static Optional<SimulationProfileView> profile(ResourceLocation id){return Optional.ofNullable(profiles.get(id));}
+    public static Optional<SimulationProfileView> profile(ResourceLocation id){return Optional.ofNullable(profiles.get(id)).or(()->MineralSimulationData.view(id));}
     public static Collection<SimulationProfileView> profiles(){return profiles.values();}
     public static List<RecipeHolder<SimulationRecipe>> recipes(ServerLevel level,SimulationRecipe.Kind kind){
         var manager=level.getRecipeManager();

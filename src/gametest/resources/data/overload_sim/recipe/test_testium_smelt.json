@@ -1,0 +1,1 @@
+{"neoforge:conditions":[{"type":"neoforge:item_exists","item":"overload_sim:test_raw_material"}],"type":"minecraft:smelting","ingredient":{"item":"overload_sim:test_raw_material"},"result":{"id":"overload_sim:test_ingot"},"experience":0,"cookingtime":200}

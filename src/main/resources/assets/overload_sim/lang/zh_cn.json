@@ -42,7 +42,7 @@
   "profile.overload_sim.copper": "粗铜",
   "profile.overload_sim.gold": "粗金",
   "profile.overload_sim.diamond": "钻石",
-  "profile.overload_sim.netherite": "下界合金",
+  "profile.overload_sim.netherite": "远古残骸（下界合金矿物）",
   "profile.overload_sim.wheat": "小麦",
   "profile.overload_sim.carrot": "胡萝卜",
   "profile.overload_sim.potato": "马铃薯",
@@ -122,5 +122,10 @@
   "gui.overload_sim.multiblock.error": "结构诊断：%s",
   "gui.overload_sim.multiblock.frequency": "过载频道：%s",
   "gui.overload_sim.multiblock.recovery": "切换额外水晶回收视图（仅取出）",
-  "gui.overload_sim.multiblock.unformed": "未成型 · 库存回收"
+  "gui.overload_sim.multiblock.unformed": "未成型 · 库存回收",
+  "profile.overload_sim.redstone": "红石",
+  "profile.overload_sim.lapis": "青金石",
+  "profile.overload_sim.coal": "煤炭",
+  "profile.overload_sim.emerald": "绿宝石",
+  "profile.overload_sim.quartz": "下界石英"
 }

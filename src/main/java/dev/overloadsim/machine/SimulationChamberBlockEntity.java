@@ -105,20 +105,20 @@ public class SimulationChamberBlockEntity extends AENetworkedBlockEntity impleme
         var crystal=inventory.getStackInSlot(0).copy();var data=CrystalDataAccess.read(crystal);
         if(!crystal.is(ModContent.PERFECT.get())||data.isEmpty()){status=0;return;}if(SimulationData.profile(data.get().profile()).isEmpty()){status=6;return;}
         if(!getMainNode().isActive()){status=2;return;}
-        var matches=SimulationData.recipes(server,SimulationRecipe.Kind.PRODUCTION).stream().filter(h->h.value().data().profile().equals(data.get().profile())).toList();var chosen=SimulationData.select(matches);if(chosen.isEmpty()){status=5;return;}var production=chosen.get().value().data().production();
-        int p=outputParallel(production,maximumParallel());if(p<1){status=4;return;}
+        var chosen=SimulationResolvers.production(server,data.get());if(chosen.isEmpty()){status=5;return;}var production=chosen.get().config();
+        boolean dynamic=chosen.get().mineral().isPresent();int p=outputParallel(production,maximumParallel(),dynamic);if(p<1){status=4;return;}
         if(production.lightning()>0)p=(int)Math.min(p,LightningNetwork.extract(this,Long.MAX_VALUE,true)/production.lightning());
         if(production.input().isPresent()){var input=production.input().get();var aux=inventory.getStackInSlot(3);if(!BuiltInRegistries.ITEM.getKey(aux.getItem()).equals(input.item())){status=3;return;}p=Math.min(p,aux.getCount()/input.count());}
         if(production.fe()>0){p=(int)Math.min(p,energy.getMaxEnergyStored()/production.fe());p=(int)Math.min(p,energy.getEnergyStored()/production.fe());}
         if(p<1){status=3;return;}
         if(NeoForge.EVENT_BUS.post(new SimulationEvents.BeforeSimulation(server,worldPosition,data.get(),p)).isCanceled())return;
         // A listener may mutate inventory/energy/network. Verify the full transaction again.
-        if(!ItemStack.matches(crystal,inventory.getStackInSlot(0))||p>maximumParallel()||p>outputParallel(production,p)||energy.getEnergyStored()<SimulationRules.batchEnergy(production.fe(),p))return;
+        if(!ItemStack.matches(crystal,inventory.getStackInSlot(0))||p>maximumParallel()||p>outputParallel(production,p,dynamic)||energy.getEnergyStored()<SimulationRules.batchEnergy(production.fe(),p))return;
         if(production.input().isPresent()){var in=production.input().get();var aux=inventory.getStackInSlot(3);if(!BuiltInRegistries.ITEM.getKey(aux.getItem()).equals(in.item())||aux.getCount()<in.count()*p)return;}
         long lightningCost=SimulationRules.batchEnergy(production.lightning(),p);if(LightningNetwork.extract(this,lightningCost,true)<lightningCost)return;
         long extracted=LightningNetwork.extract(this,lightningCost,false);if(extracted!=lightningCost){lightningRefund=Math.addExact(lightningRefund,extracted);saveChanges();return;}
         // Roll only after a successful HV reservation; failed reservations cannot reroll loot.
-        var fixed=new ArrayList<ItemStack>();try{for(int op=0;op<p;op++)fixed.addAll(MobLoot.roll(server,worldPosition,data.get(),production));}catch(RuntimeException error){lightningRefund=Math.addExact(lightningRefund,extracted);status=5;saveChanges();LOG.error("Invalid simulation output for {}",chosen.get().id(),error);return;}
+        var fixed=new ArrayList<ItemStack>();try{for(int op=0;op<p;op++)fixed.addAll(chosen.get().roll(server,worldPosition,data.get(),"single"));}catch(RuntimeException error){lightningRefund=Math.addExact(lightningRefund,extracted);status=5;saveChanges();LOG.error("Invalid simulation output for {}",chosen.get().id(),error);return;}
         long feCost=SimulationRules.batchEnergy(production.fe(),p);energy.deserializeNBT(server.registryAccess(),IntTag.valueOf(energy.getEnergyStored()-(int)feCost));
         if(production.input().isPresent()){var aux=inventory.getStackInSlot(3).copy();aux.shrink(production.input().get().count()*p);inventory.setStackInSlot(3,aux);}
         pending.clear();pending.addAll(fixed);taskCrystal=data.get();taskRecipe=chosen.get().id();actualParallel=p;cardsSnapshot=getInstalledUpgrades(AEItems.SPEED_CARD);totalTicks=SimulationRules.duration(production.ticks(),cardsSnapshot);remaining=totalTicks;paidFe=feCost;paidLightning=lightningCost;taskActive=true;status=1;saveChanges();
@@ -133,10 +133,11 @@ public class SimulationChamberBlockEntity extends AENetworkedBlockEntity impleme
         int received=energy.receiveEnergy(Math.min(needed,(int)Math.floor(available)),false);
         networkFeFraction=Math.max(0,available-received);saveChanges();
     }
-    private int outputParallel(SimulationRecipe.Production production,int maximum){
+    private int outputParallel(SimulationRecipe.Production production,int maximum){return outputParallel(production,maximum,false);}
+    private int outputParallel(SimulationRecipe.Production production,int maximum,boolean dynamic){
         // Unknown loot/provider output is rolled once after EHV reservation and journaled.
         // Require an empty buffer slot; overflow waits without discarding or rerolling.
-        if(production.entityLoot()||production.provider().isPresent()){
+        if(dynamic||production.entityLoot()||production.provider().isPresent()){
             for(int slot=OUTPUT_START;slot<SLOTS;slot++)if(inventory.getStackInSlot(slot).isEmpty())return maximum;
             return 0;
         }

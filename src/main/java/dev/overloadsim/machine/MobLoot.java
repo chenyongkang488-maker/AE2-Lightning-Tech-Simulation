@@ -14,13 +14,16 @@ import net.minecraft.world.phys.Vec3;
 public final class MobLoot {
     private MobLoot(){}
     public static List<ItemStack> roll(ServerLevel level,BlockPos pos,CrystalData data,SimulationRecipe.Production production){
+        return roll(level,pos,data,production,"simulation");
+    }
+    public static List<ItemStack> roll(ServerLevel level,BlockPos pos,CrystalData data,SimulationRecipe.Production production,String machine){
         var result=new ArrayList<ItemStack>();
         if(production.provider().isPresent()){
-            result.addAll(provider(level,pos,data,production.provider().get(),level.random,"simulation",data.profile().toString()));
+            result.addAll(provider(level,pos,data,production.provider().get(),level.random,machine,data.profile().toString()));
         }else if(production.entityLoot()){
             var resolution=dev.overloadsim.data.MobSimulationData.resolve(data.entityType().orElseThrow());
             if(!resolution.enabled())throw new IllegalStateException(resolution.error());
-            result.addAll(SimulationEntityLoot.roll(level,pos,data,resolution.rule().orElseThrow()));
+            result.addAll(SimulationEntityLoot.roll(level,pos,data,resolution.rule().orElseThrow(),level.random,machine));
         }else{
             for(var output:production.outputs())if(level.random.nextDouble()<output.chance())result.add(new ItemStack(BuiltInRegistries.ITEM.getOptional(output.item()).orElseThrow(),output.count()));
         }

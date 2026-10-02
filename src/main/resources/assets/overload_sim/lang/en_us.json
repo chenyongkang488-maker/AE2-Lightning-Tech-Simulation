@@ -42,7 +42,7 @@
   "profile.overload_sim.copper": "Raw Copper",
   "profile.overload_sim.gold": "Raw Gold",
   "profile.overload_sim.diamond": "Diamond",
-  "profile.overload_sim.netherite": "Netherite",
+  "profile.overload_sim.netherite": "Ancient Debris (Netherite Mineral)",
   "profile.overload_sim.wheat": "Wheat",
   "profile.overload_sim.carrot": "Carrot",
   "profile.overload_sim.potato": "Potato",
@@ -122,5 +122,10 @@
   "gui.overload_sim.multiblock.error": "Structure diagnostic: %s",
   "gui.overload_sim.multiblock.frequency": "Overload frequency: %s",
   "gui.overload_sim.multiblock.recovery": "Toggle extra crystal recovery view",
-  "gui.overload_sim.multiblock.unformed": "Unformed · recovery"
+  "gui.overload_sim.multiblock.unformed": "Unformed · recovery",
+  "profile.overload_sim.redstone": "Redstone",
+  "profile.overload_sim.lapis": "Lapis Lazuli",
+  "profile.overload_sim.coal": "Coal",
+  "profile.overload_sim.emerald": "Emerald",
+  "profile.overload_sim.quartz": "Nether Quartz"
 }

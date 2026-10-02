@@ -267,7 +267,7 @@ public class SimulationGameTests {
         machine.inventory().setStackInSlot(4,new ItemStack(net.minecraft.world.item.Items.RAW_IRON,63));
         h.succeedWhen(()->{h.assertTrue(machine.inventory().getStackInSlot(4).getCount()==64,"one output fits");h.assertTrue(machine.actualParallel()==1,"capacity limits four installed parallels to one operation");assertPaidBatch(h,machine,1000,1);});
     }
-    private static dev.overloadsim.machine.SimulationChamberBlockEntity capacityMachine(GameTestHelper h){
+    static dev.overloadsim.machine.SimulationChamberBlockEntity capacityMachine(GameTestHelper h){
         var level=h.getLevel();var p=h.absolutePos(new BlockPos(5,1,5));var registry=net.minecraft.core.registries.BuiltInRegistries.BLOCK;
         level.setBlockAndUpdate(p,ModContent.CHAMBER.get().defaultBlockState());
         level.setBlockAndUpdate(p.west(),registry.get(net.minecraft.resources.ResourceLocation.parse("ae2:creative_energy_cell")).defaultBlockState());

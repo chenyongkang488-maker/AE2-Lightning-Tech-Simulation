@@ -22,6 +22,11 @@ public final class SimulationExtensions {
     @FunctionalInterface public interface OutputProviderV2 { List<ItemStack> generate(OutputContextV2 context); }
     @FunctionalInterface public interface EntityEligibility { boolean test(LivingEntity entity); }
     @FunctionalInterface public interface EntityTemplateInitializer { void initialize(LivingEntity unspawnedEntity); }
+    @FunctionalInterface public interface MineralResolver { java.util.Optional<ResolvedMineral> resolve(ServerLevel level,net.minecraft.world.level.block.state.BlockState state); }
+    private static final Map<ResourceLocation,MineralResolver> MINERALS=new ConcurrentHashMap<>();
+    public static void registerMineralResolver(ResourceLocation id,MineralResolver resolver){if(MINERALS.putIfAbsent(id,resolver)!=null)throw new IllegalArgumentException("duplicate mineral resolver "+id);dev.overloadsim.data.SimulationData.invalidate();}
+    public static List<ResolvedMineral> minerals(ServerLevel level,net.minecraft.world.level.block.state.BlockState state){return MINERALS.entrySet().stream().sorted(Map.Entry.comparingByKey()).flatMap(e->e.getValue().resolve(level,state).stream()).toList();}
+    public static boolean hasMineralResolvers(){return !MINERALS.isEmpty();}
     private static final Map<ResourceLocation,OutputProvider> OUTPUTS = new ConcurrentHashMap<>();
     private static final Map<ResourceLocation,BindingCondition> BINDINGS = new ConcurrentHashMap<>();
     private static final Map<ResourceLocation,MobPredicate> MOBS = new ConcurrentHashMap<>();

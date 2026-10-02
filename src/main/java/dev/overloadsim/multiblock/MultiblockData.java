@@ -27,7 +27,7 @@ public final class MultiblockData extends SimpleJsonResourceReloadListener {
     public MultiblockData(){super(new Gson(),"multiblock_simulation");}
     public static Policy policy(){return policy;}
     public static SimulationPartBlock.Kind module(Block block){return block instanceof SimulationPartBlock p?p.kind():aliases.get(BuiltInRegistries.BLOCK.getKey(block));}
-    private static Map<ResourceLocation,Smelt> defaults(){var map=new HashMap<ResourceLocation,Smelt>();for(var metal:List.of("iron","gold","copper"))map.put(ResourceLocation.parse("minecraft:raw_"+metal),new Smelt(ResourceLocation.parse("minecraft:"+metal+"_ingot"),2));return Map.copyOf(map);}
+    private static Map<ResourceLocation,Smelt> defaults(){var map=new HashMap<ResourceLocation,Smelt>();for(var metal:List.of("iron","gold","copper"))map.put(ResourceLocation.parse("minecraft:raw_"+metal),new Smelt(ResourceLocation.parse("minecraft:"+metal+"_ingot"),2));map.put(ResourceLocation.parse("minecraft:ancient_debris"),new Smelt(ResourceLocation.parse("minecraft:netherite_scrap"),2));return Map.copyOf(map);}
     private static int number(JsonObject j,String key,int fallback,int max){int n=j.has(key)?j.get(key).getAsInt():fallback;if(n<0||n>max)throw new IllegalArgumentException("invalid "+key);return n;}
     @Override protected void apply(Map<ResourceLocation,JsonElement> files,ResourceManager manager,ProfilerFiller profiler){
         Policy next=DEFAULT;var mappings=new HashMap<>(defaults());var modules=new HashMap<ResourceLocation,SimulationPartBlock.Kind>();
@@ -47,9 +47,10 @@ public final class MultiblockData extends SimpleJsonResourceReloadListener {
     public static Smelt smelt(ServerLevel level,ItemStack stack){
         var mapping=smelts.get(BuiltInRegistries.ITEM.getKey(stack.getItem()));if(mapping!=null)return mapping;
         var raw=net.minecraft.tags.TagKey.create(net.minecraft.core.registries.Registries.ITEM,ResourceLocation.parse("c:raw_materials"));
-        if(!stack.is(raw))return null;
-        var recipe=level.getRecipeManager().getRecipeFor(RecipeType.SMELTING,new SingleRecipeInput(stack),level);
-        if(recipe.isEmpty())return null;var result=recipe.get().value().getResultItem(level.registryAccess());
+        if(!stack.is(raw)&&stack.getTags().noneMatch(t->t.location().getNamespace().equals("c")&&t.location().getPath().startsWith("raw_materials/")))return null;
+        var recipes=level.getRecipeManager().getAllRecipesFor(RecipeType.SMELTING).stream().filter(r->r.value().matches(new SingleRecipeInput(stack.copyWithCount(1)),level)).toList();
+        if(recipes.isEmpty())return null;var results=recipes.stream().map(r->r.value().getResultItem(level.registryAccess())).toList();var result=results.getFirst();
+        if(result.getCount()!=1||result.getComponentsPatch().size()!=0||results.stream().anyMatch(r->!ItemStack.matches(r,result)))return null;
         var ingots=net.minecraft.tags.TagKey.create(net.minecraft.core.registries.Registries.ITEM,ResourceLocation.parse("c:ingots"));
         return result.is(ingots)?new Smelt(BuiltInRegistries.ITEM.getKey(result.getItem()),2):null;
     }

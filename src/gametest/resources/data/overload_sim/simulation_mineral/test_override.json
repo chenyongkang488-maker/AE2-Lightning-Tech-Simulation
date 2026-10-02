@@ -1,0 +1,1 @@
+{"material":"c:explicitium","profile":"overload_sim:test_override","binding":{"id":"overload_sim:test_explicit_block"},"item":"overload_sim:test_raw_material","min":3,"max":3,"smelting":{"input":"overload_sim:test_raw_material","result":"overload_sim:test_ingot","count":4}}

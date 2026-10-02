@@ -18,13 +18,15 @@ public final class SimulationBatchPlanner {
         for(int i=0;i<s.capacity()&&inputs.size()<available;i++){
             int slot=(start+i)%s.capacity();var item=host.crystals().getStackInSlot(slot);var data=CrystalDataAccess.read(item);
             if(!item.is(ModContent.PERFECT.get())||data.isEmpty()||SimulationData.profile(data.get().profile()).isEmpty())continue;
-            var recipes=SimulationData.recipes(server,SimulationRecipe.Kind.PRODUCTION).stream().filter(r->r.value().data().profile().equals(data.get().profile())).toList();
-            var chosen=SimulationData.select(recipes);if(chosen.isEmpty())continue;
-            var fixed=host.fixedRoll(slot,item,()->dev.overloadsim.machine.MobLoot.roll(server,host.getBlockPos(),data.get(),chosen.get().value().data().production()));
+            var chosen=SimulationResolvers.production(server,data.get());if(chosen.isEmpty())continue;
+            var fixed=host.fixedRoll(slot,item,()->chosen.get().roll(server,host.getBlockPos(),data.get(),"multiblock"));
             var outputs=new ArrayList<SimulationBatch.Output>();
             for(var stack:fixed){
                 var prototype=stack.copyWithCount(1);long count=stack.getCount();
-                if(s.smelting()){var smelt=MultiblockData.smelt(server,stack);if(smelt!=null){prototype=new ItemStack(BuiltInRegistries.ITEM.get(smelt.result()));count=Math.multiplyExact(count,smelt.count());}}
+                if(s.smelting()){
+                    var explicit=chosen.get().mineral().flatMap(m->m.smelting()).filter(m->BuiltInRegistries.ITEM.getKey(stack.getItem()).equals(m.input()));
+                    var smelt=explicit.map(m->new MultiblockData.Smelt(m.result(),m.count())).orElseGet(()->MultiblockData.smelt(server,stack));if(smelt!=null){prototype=new ItemStack(BuiltInRegistries.ITEM.getOptional(smelt.result()).orElseThrow());count=Math.multiplyExact(count,smelt.count());}
+                }
                 outputs.add(new SimulationBatch.Output(prototype,Math.multiplyExact(count,policy.multiplier(s))));
             }
             var next=reserve.copy();boolean fits=true;
