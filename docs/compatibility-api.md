@@ -12,6 +12,8 @@ Minecraft 1.21.1 / NeoForge。现有档案 ID、CrystalData format=1 和 Java �
 
 解析优先级：显式结构绑定配方 > `simulation_mineral` JSON > Java mineral resolver > 自动标签。显式绑定先按物理材料匹配选最高优先级，再检查档案、自然雷限制和条件；拒绝时不会绕到自动标签。培养同样先选最高优先级，拒绝时不绕到 `any`。生产配方优先于矿物产出映射，最高优先级相同的多个匹配会报告冲突。
 
+同一个矿物 profile 必须有唯一、明确的产物定义；不同绑定块但共享 profile 的同优先级 JSON 仍会冲突，在消耗24块之前拒绝。多个合法绑定材料可使用一个绑定标签统一声明。Java 定义只与其它 Java 定义比较冲突，一个唯一 Java 定义可以覆盖同 profile 的自动标签映射；JSON 仍优先。绑定与生产必须使用一致的 canonical 定义，不一致会返回 inconsistent_mineral_profile。
+
 `data/<namespace>/simulation_mineral/<id>.json`：
 
 ```json
@@ -71,6 +73,8 @@ SimulationExtensions.registerMineralResolver(ResourceLocation.parse("example:min
 ```
 
 OutputContextV2 的 machine 为 single 或 multiblock，rule 标明调用规则；由提供器自行使用明确 RNG。矿物 resolver 应是快速、确定、无副作用的映射，缓存重建会扫描块状态以恢复存档中的 profile ID。两个 resolver 返回同一状态、或同一 profile 返回不同定义会拒绝，不按注册顺序决定。
+
+服务器查档案可用 `SimulationData.profile(ServerLevel, ResourceLocation)`，它会先初始化当前规则缓存。机器在冷启动和恢复任务时也使用此路径，不要求先进行一次水晶绑定；旧 `profile(ResourceLocation)` 查询保留，适用于已初始化缓存及客户端显示。
 
 ResolvedMineral 保存 profile/material/binding、item/min/max、ore（block_loot）、smelting 和 sameBlock；不扣费、不破坏块。模板只在掉落表模式运行，输出/provider 模式不要求模板存在。GLM 只参与表模式；直接 outputs/provider 如需其它行为，由作者明确实现。
 

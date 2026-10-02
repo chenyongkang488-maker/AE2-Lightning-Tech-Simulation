@@ -17,7 +17,7 @@ public final class SimulationBatchPlanner {
         var reserve=host.outputs().copy();var out=new ArrayList<SimulationBatch.Output>();var inputs=new HashMap<Integer,ItemStack>();int nextSlot=start;
         for(int i=0;i<s.capacity()&&inputs.size()<available;i++){
             int slot=(start+i)%s.capacity();var item=host.crystals().getStackInSlot(slot);var data=CrystalDataAccess.read(item);
-            if(!item.is(ModContent.PERFECT.get())||data.isEmpty()||SimulationData.profile(data.get().profile()).isEmpty())continue;
+            if(!item.is(ModContent.PERFECT.get())||data.isEmpty()||SimulationData.profile(server,data.get().profile()).isEmpty())continue;
             var chosen=SimulationResolvers.production(server,data.get());if(chosen.isEmpty())continue;
             var fixed=host.fixedRoll(slot,item,()->chosen.get().roll(server,host.getBlockPos(),data.get(),"multiblock"));
             var outputs=new ArrayList<SimulationBatch.Output>();

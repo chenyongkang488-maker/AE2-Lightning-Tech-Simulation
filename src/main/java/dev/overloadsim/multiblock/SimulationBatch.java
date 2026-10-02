@@ -13,24 +13,28 @@ public final class SimulationBatch {
     public final MultiblockRules.Costs cost;public final boolean overload,smelting;public boolean paid,started;
     public int settlementVersion=2;
     public final String policy;
+    private ListTag unresolvedOutputs;
     public SimulationBatch(List<Output> outputs,Map<Integer,ItemStack> inputs,int duration,MultiblockRules.Costs cost,boolean overload,boolean smelting,String policy){
         this(outputs,inputs,duration,cost,overload,smelting,policy,inputs.keySet().stream().mapToInt(Integer::intValue).max().orElse(0)+1);
     }
     public SimulationBatch(List<Output> outputs,Map<Integer,ItemStack> inputs,int duration,MultiblockRules.Costs cost,boolean overload,boolean smelting,String policy,int nextSlot){
         this.outputs=List.copyOf(outputs);this.inputs=Map.copyOf(inputs);this.duration=duration;remaining=duration;this.cost=cost;this.overload=overload;this.smelting=smelting;this.policy=policy;this.nextSlot=Math.clamp(nextSlot,0,49);
     }
-    public boolean fits(BulkOutputBuffer buffer){var copy=buffer.copy();for(var output:outputs)if(copy.insert(output.prototype,output.count,false)!=output.count)return false;return true;}
+    public boolean hasUnresolvedOutputs(){return unresolvedOutputs!=null;}
+    public boolean fits(BulkOutputBuffer buffer){if(hasUnresolvedOutputs())return false;var copy=buffer.copy();for(var output:outputs)if(copy.insert(output.prototype,output.count,false)!=output.count)return false;return true;}
     public boolean flush(BulkOutputBuffer buffer){if(!fits(buffer))return false;for(var output:outputs)buffer.insert(output.prototype,output.count,false);return true;}
     public CompoundTag save(HolderLookup.Provider r){
-        var tag=new CompoundTag();var out=new ListTag();for(var o:outputs){var t=new CompoundTag();t.put("Item",o.prototype.save(r));t.putLong("Count",o.count);out.add(t);}tag.put("Outputs",out);
+        var tag=new CompoundTag();var out=new ListTag();for(var o:outputs){var t=new CompoundTag();t.put("Item",o.prototype.save(r));t.putLong("Count",o.count);out.add(t);}tag.put("Outputs",hasUnresolvedOutputs()?unresolvedOutputs.copy():out);
         var in=new ListTag();inputs.forEach((slot,item)->{var t=new CompoundTag();t.putInt("Slot",slot);t.put("Item",item.save(r));in.add(t);});tag.put("Inputs",in);
         tag.putInt("SettlementVersion",settlementVersion);tag.putBoolean("Started",started);tag.putInt("NextSlot",nextSlot);tag.putInt("Duration",duration);tag.putInt("Remaining",remaining);tag.putLong("Fe",cost.fe());tag.putLong("Hv",cost.hv());tag.putLong("Ehv",cost.ehv());tag.putBoolean("Paid",paid);tag.putBoolean("Overload",overload);tag.putBoolean("Smelting",smelting);tag.putString("Policy",policy);return tag;
     }
     public static SimulationBatch load(CompoundTag tag,HolderLookup.Provider r){
-        var outputs=new ArrayList<Output>();for(var value:tag.getList("Outputs",Tag.TAG_COMPOUND)){var t=(CompoundTag)value;outputs.add(new Output(ItemStack.parseOptional(r,t.getCompound("Item")),t.getLong("Count")));}
+        var sourceOutputs=tag.getList("Outputs",Tag.TAG_COMPOUND);boolean unresolved=false;
+        var outputs=new ArrayList<Output>();for(var value:sourceOutputs){var t=(CompoundTag)value;var item=ItemStack.parseOptional(r,t.getCompound("Item"));if(item.isEmpty()){unresolved=true;continue;}outputs.add(new Output(item,t.getLong("Count")));}
         var inputs=new HashMap<Integer,ItemStack>();for(var value:tag.getList("Inputs",Tag.TAG_COMPOUND)){var t=(CompoundTag)value;int slot=t.getInt("Slot");if(slot<0||slot>=49)throw new IllegalArgumentException("batch input");inputs.put(slot,ItemStack.parseOptional(r,t.getCompound("Item")));}
         var job=new SimulationBatch(outputs,inputs,Math.clamp(tag.getInt("Duration"),1,1_000_000),new MultiblockRules.Costs(Math.max(0,tag.getLong("Fe")),Math.max(0,tag.getLong("Hv")),Math.max(0,tag.getLong("Ehv"))),tag.getBoolean("Overload"),tag.getBoolean("Smelting"),tag.getString("Policy"));
         var restored=new SimulationBatch(job.outputs,job.inputs,job.duration,job.cost,job.overload,job.smelting,job.policy,tag.contains("NextSlot")?tag.getInt("NextSlot"):job.nextSlot);
+        if(unresolved)restored.unresolvedOutputs=sourceOutputs.copy();
         restored.paid=tag.getBoolean("Paid");restored.settlementVersion=tag.contains("SettlementVersion")?tag.getInt("SettlementVersion"):1;
         if(restored.settlementVersion<1||restored.settlementVersion>2)throw new IllegalArgumentException("batch settlement version");
         restored.started=tag.contains("Started")?tag.getBoolean("Started"):restored.paid;restored.remaining=Math.clamp(tag.getInt("Remaining"),0,job.duration);return restored;

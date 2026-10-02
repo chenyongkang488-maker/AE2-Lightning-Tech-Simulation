@@ -115,6 +115,7 @@ public class SimulationControllerBlockEntity extends AENetworkedBlockEntity impl
         if(batch==null){try{batch=SimulationBatchPlanner.plan(this,nextCrystal);}catch(RuntimeException e){status=5;org.slf4j.LoggerFactory.getLogger(getClass()).error("Invalid multiblock simulation output",e);return;}saveChanges();}
         if(batch==null){status=3;return;}
         var candidate=batch;
+        if(candidate.hasUnresolvedOutputs()){status=5;return;}
         if(!inputsMatch(candidate)){abortBatch("input_invalid");return;}
         if(!candidate.started){
             if(!candidate.paid&&!candidate.policy.equals(MultiblockData.policy().signature(structure))){batch=null;saveChanges();return;}

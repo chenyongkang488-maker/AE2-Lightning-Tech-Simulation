@@ -21,7 +21,7 @@ public final class CrystalBinding {
         // mapping could bypass natural-only restrictions, missing profiles or author conditions.
         var matches=SimulationData.recipes(level,SimulationRecipe.Kind.BINDING).stream().filter(h->structure(level,center,h.value().data().world(),false).isPresent()).toList();
         var chosen=SimulationData.select(matches);if(chosen.isEmpty())return matches.isEmpty()?bindMineral(level,center,stack,natural,current):stack;
-        var recipe=chosen.get().value();if(!natural&&!recipe.data().allowArtificial()||SimulationData.profile(recipe.data().profile()).isEmpty())return stack;
+        var recipe=chosen.get().value();if(!natural&&!recipe.data().allowArtificial()||SimulationData.profile(level,recipe.data().profile()).isEmpty())return stack;
         var matched=structure(level,center,recipe.data().world());if(matched.isEmpty())return stack;var snapshots=matched.get();
         var data=new CrystalData(recipe.data().profile(),Optional.empty(),0,1);
         if(NeoForge.EVENT_BUS.post(new SimulationEvents.BeforeBinding(level,center,data)).isCanceled())return stack;

@@ -25,6 +25,8 @@ public class SimulationData extends SimpleJsonResourceReloadListener {
         profiles=Map.copyOf(next); indexedManager=null; INDEX.clear();revision++;
     }
     public static Optional<SimulationProfileView> profile(ResourceLocation id){return Optional.ofNullable(profiles.get(id)).or(()->MineralSimulationData.view(id));}
+    /** Server lookup initializes mappings before consulting a generated or Java profile. */
+    public static Optional<SimulationProfileView> profile(ServerLevel level,ResourceLocation id){MineralSimulationData.ensure(level);return profile(id);}
     public static Collection<SimulationProfileView> profiles(){return profiles.values();}
     public static List<RecipeHolder<SimulationRecipe>> recipes(ServerLevel level,SimulationRecipe.Kind kind){
         var manager=level.getRecipeManager();

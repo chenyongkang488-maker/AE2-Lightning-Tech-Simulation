@@ -93,7 +93,7 @@ public class SimulationChamberBlockEntity extends AENetworkedBlockEntity impleme
         if(eject&&server.getGameTime()%SimulationConfig.EJECT_INTERVAL.get()==0)ejectOutputs();
         if(lightningRefund>0){lightningRefund-=LightningNetwork.refund(this,lightningRefund,legacyEhvRefund);saveChanges();if(lightningRefund>0){status=7;return;}legacyEhvRefund=false;}
         if(taskActive){
-            if(taskCrystal==null||SimulationData.profile(taskCrystal.profile()).isEmpty()){status=6;return;}
+            if(taskCrystal==null||SimulationData.profile(server,taskCrystal.profile()).isEmpty()){status=6;return;}
             if(!getMainNode().isActive()){status=2;return;}
             if(remaining>0){remaining--;status=1;saveChanges();return;}
             flushPending();if(!pending.isEmpty()){status=4;return;}
@@ -103,7 +103,7 @@ public class SimulationChamberBlockEntity extends AENetworkedBlockEntity impleme
     }
     private void start(ServerLevel server){
         var crystal=inventory.getStackInSlot(0).copy();var data=CrystalDataAccess.read(crystal);
-        if(!crystal.is(ModContent.PERFECT.get())||data.isEmpty()){status=0;return;}if(SimulationData.profile(data.get().profile()).isEmpty()){status=6;return;}
+        if(!crystal.is(ModContent.PERFECT.get())||data.isEmpty()){status=0;return;}if(SimulationData.profile(server,data.get().profile()).isEmpty()){status=6;return;}
         if(!getMainNode().isActive()){status=2;return;}
         var chosen=SimulationResolvers.production(server,data.get());if(chosen.isEmpty()){status=5;return;}var production=chosen.get().config();
         boolean dynamic=chosen.get().mineral().isPresent();int p=outputParallel(production,maximumParallel(),dynamic);if(p<1){status=4;return;}

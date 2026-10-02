@@ -66,9 +66,11 @@ public final class MineralSimulationData extends SimpleJsonResourceReloadListene
         // Multiple explicit profiles at the highest priority are also a visible conflict.
         var ruleProfiles=new HashMap<ResourceLocation,List<Rule>>();rules.values().forEach(r->ruleProfiles.computeIfAbsent(r.profile().orElseGet(()->autoId(r.material())),k->new ArrayList<>()).add(r));
         ruleProfiles.forEach((id,list)->{list.sort(Comparator.comparingInt(Rule::priority).reversed());var first=list.getFirst();byProfile.put(id,list.size()>1&&list.get(1).priority()==first.priority()?bad("ambiguous_mineral_profile"):first.disabled()?bad("disabled_mineral"):ok(first.resolved()));});
+        var javaProfiles=new HashMap<ResourceLocation,Resolution>();
         if(SimulationExtensions.hasMineralResolvers())for(var block:BuiltInRegistries.BLOCK)for(var state:block.getStateDefinition().getPossibleStates())for(var m:SimulationExtensions.minerals(level,state)){
-            if(ruleProfiles.containsKey(m.profile()))continue;var result=ok(m);var previous=byProfile.get(m.profile());byProfile.put(m.profile(),previous==null||previous.equals(result)?result:bad("ambiguous_java_profile"));
+            if(ruleProfiles.containsKey(m.profile()))continue;var result=ok(m);var previous=javaProfiles.get(m.profile());javaProfiles.put(m.profile(),previous==null||previous.equals(result)?result:bad("ambiguous_java_profile"));
         }
+        byProfile.putAll(javaProfiles);
         materials=Map.copyOf(byMaterial);bindings=Map.copyOf(byBlock);profiles=Map.copyOf(byProfile);indexedLevel=level;indexedRevision=SimulationData.revision();
     }
     /** Require equivalent full tables after normalizing only the Silk Touch ore block identity. */
@@ -79,9 +81,13 @@ public final class MineralSimulationData extends SimpleJsonResourceReloadListene
     public static Resolution resolveBinding(ServerLevel level,BlockState state){
         ensure(level);if(state.is(TagKey.create(Registries.BLOCK,ModContent.id("simulation_mineral_blacklist"))))return bad("blacklisted_mineral");
         var matches=rules.values().stream().filter(r->r.binding().matches(state)).sorted(Comparator.comparingInt(Rule::priority).reversed()).toList();
-        if(!matches.isEmpty()){var first=matches.getFirst();return matches.size()>1&&matches.get(1).priority()==first.priority()?bad("ambiguous_mineral_rule"):first.disabled()?bad("disabled_mineral"):ok(first.resolved());}
-        var javaMatches=SimulationExtensions.minerals(level,state);if(javaMatches.size()>1)return bad("ambiguous_java_mineral");if(javaMatches.size()==1){var m=javaMatches.getFirst();var old=profiles.get(m.profile());if(old!=null&&!old.equals(ok(m)))return bad("ambiguous_java_profile");var copy=new HashMap<>(profiles);copy.put(m.profile(),ok(m));profiles=Map.copyOf(copy);return ok(m);}
-        var ids=bindings.getOrDefault(state.getBlock(),List.of()).stream().distinct().toList();if(ids.size()!=1)return bad(ids.isEmpty()?"no_mineral_tags":"ambiguous_material_tags");return materials.get(ids.getFirst());
+        if(!matches.isEmpty()){var first=matches.getFirst();return matches.size()>1&&matches.get(1).priority()==first.priority()?bad("ambiguous_mineral_rule"):first.disabled()?bad("disabled_mineral"):canonical(first.resolved());}
+        var javaMatches=SimulationExtensions.minerals(level,state);if(javaMatches.size()>1)return bad("ambiguous_java_mineral");if(javaMatches.size()==1)return canonical(javaMatches.getFirst());
+        var ids=bindings.getOrDefault(state.getBlock(),List.of()).stream().distinct().toList();if(ids.size()!=1)return bad(ids.isEmpty()?"no_mineral_tags":"ambiguous_material_tags");var automatic=materials.get(ids.getFirst());return automatic.valid()?canonical(automatic.mineral().orElseThrow()):automatic;
+    }
+    private static Resolution canonical(ResolvedMineral selected){
+        var result=profiles.get(selected.profile());if(result==null)return bad("missing_mineral_profile");
+        if(!result.valid())return result;return result.equals(ok(selected))?result:bad("inconsistent_mineral_profile");
     }
     public static Resolution resolveProfile(ServerLevel level,ResourceLocation profile){ensure(level);return profiles.getOrDefault(profile,bad("missing_mineral_profile"));}
     public static Map<ResourceLocation,Resolution> audit(ServerLevel level){ensure(level);return profiles;}
