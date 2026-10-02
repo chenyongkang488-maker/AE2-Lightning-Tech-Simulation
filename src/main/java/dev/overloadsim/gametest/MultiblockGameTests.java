@@ -191,7 +191,7 @@ public class MultiblockGameTests {
         var full=new dev.overloadsim.multiblock.BulkOutputBuffer();full.insert(input,131072,false);
         h.assertTrue(!restored.flush(full)&&full.count(127)==1024,"blocked job stays intact");h.succeed();
     }
-    private static dev.overloadsim.multiblock.SimulationControllerBlockEntity powered(GameTestHelper h,int n){
+    static dev.overloadsim.multiblock.SimulationControllerBlockEntity powered(GameTestHelper h,int n){
         var min=h.absolutePos(new net.minecraft.core.BlockPos(2,1,2));var c=build(h,min,n);var p=c.getBlockPos();
         var registry=net.minecraft.core.registries.BuiltInRegistries.BLOCK;
         h.getLevel().setBlockAndUpdate(p.north(),registry.get(net.minecraft.resources.ResourceLocation.parse("ae2:creative_energy_cell")).defaultBlockState());
@@ -203,7 +203,7 @@ public class MultiblockGameTests {
         storage.insert(com.moakiee.ae2lt.me.key.LightningKey.EXTREME_HIGH_VOLTAGE,1000,appeng.api.config.Actionable.MODULATE,appeng.api.networking.security.IActionSource.empty());storage.persist();drive.getInternalInventory().setItemDirect(0,cell);
         c.checkStructure();return c;
     }
-    private static net.minecraft.world.item.ItemStack ironCrystal(){return dev.overloadsim.api.CrystalDataAccess.perfect(new dev.overloadsim.api.CrystalData(dev.overloadsim.ModContent.id("iron"),java.util.Optional.empty(),0,1));}
+    static net.minecraft.world.item.ItemStack ironCrystal(){return dev.overloadsim.api.CrystalDataAccess.perfect(new dev.overloadsim.api.CrystalData(dev.overloadsim.ModContent.id("iron"),java.util.Optional.empty(),0,1));}
     @GameTest(template="empty",timeoutTicks=110)
     public static void baseCyclePersistsFeesAndPausesWithoutStructure(GameTestHelper h){
         var c=powered(h,3);
@@ -211,7 +211,7 @@ public class MultiblockGameTests {
             h.assertTrue(c.getMainNode().isActive()&&c.energy().getEnergyStored()>0,"idle AE continuously charges FE");
             c.crystals().setStackInSlot(0,ironCrystal());c.crystals().setStackInSlot(1,ironCrystal());c.tick();
             h.assertTrue(c.busy()&&c.batch().cost.fe()==2000&&c.batch().cost.hv()==2&&c.batch().duration==180,"per crystal default cost and duration");
-            h.assertTrue(c.bridge().extract(false,Long.MAX_VALUE,true)==998,"exact HV debit");
+            h.assertTrue(c.bridge().extract(false,Long.MAX_VALUE,true)==1000,"incomplete job has no HV debit");
             for(int i=0;i<88;i++)c.tick();var remaining=c.batch().remaining;
             var saved=c.saveMachine(h.getLevel().registryAccess());c.loadMachine(saved,h.getLevel().registryAccess());
             c.invalidateStructure();c.tick();h.assertTrue(c.batch().remaining==remaining,"structure loss pauses paid work");c.checkStructure();

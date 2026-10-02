@@ -25,7 +25,9 @@ public class SimulationControllerBlockEntity extends AENetworkedBlockEntity impl
     private final BulkOutputBuffer outputs=new BulkOutputBuffer();
     private final SimulationGridBridge bridge=new SimulationGridBridge(this);
     private SimulationBatch batch;private int nextCrystal,status,lastVisualFlags;
-    private long refundHv,refundEhv;private double feFraction;
+    private long refundHv,refundEhv,feCredit,inputRevision;private double feFraction;
+    private boolean loadingInventory;
+    private final Map<Integer,ItemStack> crystalSnapshots=new HashMap<>();
     private record Roll(ItemStack input,List<ItemStack> output){}
     private final Map<Integer,Roll> rolls=new HashMap<>();
     private String rollGeneration=MultiblockData.generation();
@@ -37,15 +39,19 @@ public class SimulationControllerBlockEntity extends AENetworkedBlockEntity impl
     private final ItemStackHandler crystals=new ItemStackHandler(49){
         @Override public int getSlotLimit(int slot){return 1;}
         @Override public boolean isItemValid(int slot,ItemStack s){return s.is(ModContent.PERFECT.get())&&CrystalDataAccess.read(s).isPresent();}
-        @Override public ItemStack insertItem(int slot,ItemStack s,boolean sim){return busy()||structure==null||slot>=structure.capacity()?s:super.insertItem(slot,s,sim);}
-        @Override public ItemStack extractItem(int slot,int amount,boolean sim){return busy()?ItemStack.EMPTY:super.extractItem(slot,amount,sim);}
-        @Override protected void onContentsChanged(int slot){rolls.remove(slot);saveChanges();markForClientUpdate();}
+        @Override public ItemStack insertItem(int slot,ItemStack s,boolean sim){return structure==null||slot>=structure.capacity()?s:super.insertItem(slot,s,sim);}
+        @Override protected void onContentsChanged(int slot){
+            var current=getStackInSlot(slot);var previous=crystalSnapshots.put(slot,current.copy());
+            if(loadingInventory||ItemStack.matches(previous==null?ItemStack.EMPTY:previous,current))return;
+            if(level==null||!level.isClientSide){inputRevision++;rolls.remove(slot);abortBatch("crystal_changed");}
+            saveChanges();markForClientUpdate();
+        }
     };
     private final IItemHandler automation=new IItemHandler(){
         public int getSlots(){return 49+BulkOutputBuffer.SLOTS;}
         public ItemStack getStackInSlot(int slot){if(slot<49)return crystals.getStackInSlot(slot);return outputs.extract(slot-49,Integer.MAX_VALUE,true);}
         public ItemStack insertItem(int slot,ItemStack item,boolean sim){return slot<49?crystals.insertItem(slot,item,sim):item;}
-        public ItemStack extractItem(int slot,int amount,boolean sim){var result=slot<49?crystals.extractItem(slot,amount,sim):outputs.extract(slot-49,amount,sim);if(!sim&&!result.isEmpty())saveChanges();return result;}
+        public ItemStack extractItem(int slot,int amount,boolean sim){var result=slot<49?ItemStack.EMPTY:outputs.extract(slot-49,amount,sim);if(!sim&&!result.isEmpty())saveChanges();return result;}
         public int getSlotLimit(int slot){return slot<49?1:1024;}
         public boolean isItemValid(int slot,ItemStack item){return slot<49&&crystals.isItemValid(slot,item);}
     };
@@ -61,7 +67,14 @@ public class SimulationControllerBlockEntity extends AENetworkedBlockEntity impl
     public IItemHandler automation(){return automation;}
     public SimulationGridBridge bridge(){return bridge;}
     public SimulationBatch batch(){return batch;}
-    public boolean busy(){return batch!=null&&batch.paid;}
+    public boolean busy(){return batch!=null&&batch.started;}
+    public long inputRevision(){return inputRevision;}
+    public long availableFe(){return Math.addExact(feCredit,energy.getEnergyStored());}
+    public void abortBatch(String reason){
+        var cancelled=batch;if(cancelled==null)return;batch=null;status=0;
+        if(cancelled.paid){refundHv=Math.addExact(refundHv,cancelled.cost.hv());refundEhv=Math.addExact(refundEhv,cancelled.cost.ehv());feCredit=Math.addExact(feCredit,cancelled.cost.fe());}
+        saveChanges();markForClientUpdate();if(level!=null&&!level.isClientSide)NeoForge.EVENT_BUS.post(new MultiblockSimulationEvents.BatchAborted(this,cancelled,reason));
+    }
     public int status(){return status;}
     public int visualSize(){return level!=null&&level.isClientSide?visualSize:structure==null?0:structure.size();}
     public BlockPos visualMin(){return level!=null&&level.isClientSide?visualMin:structure==null?worldPosition:structure.min();}
@@ -86,29 +99,45 @@ public class SimulationControllerBlockEntity extends AENetworkedBlockEntity impl
         if(!getMainNode().isActive()){status=2;return;}
         if(batch==null){try{batch=SimulationBatchPlanner.plan(this,nextCrystal);}catch(RuntimeException e){status=5;org.slf4j.LoggerFactory.getLogger(getClass()).error("Invalid multiblock simulation output",e);return;}saveChanges();}
         if(batch==null){status=3;return;}
-        if(!batch.paid){
-            if(!inputsMatch(batch)||!batch.policy.equals(MultiblockData.policy().signature(structure))){batch=null;saveChanges();return;}
+        var candidate=batch;
+        if(!inputsMatch(candidate)){abortBatch("input_invalid");return;}
+        if(!candidate.started){
+            if(!candidate.paid&&!candidate.policy.equals(MultiblockData.policy().signature(structure))){batch=null;saveChanges();return;}
             if(!batch.fits(outputs)){status=4;return;}
-            var candidate=batch;
             if(NeoForge.EVENT_BUS.post(new MultiblockSimulationEvents.BeforeBatchStart(this,candidate)).isCanceled()||batch!=candidate)return;
             checkStructure();
-            if(structure==null||!loaded()||!inputsMatch(batch)||!batch.policy.equals(MultiblockData.policy().signature(structure))||!getMainNode().isActive()||!batch.fits(outputs)||energy.getEnergyStored()<batch.cost.fe())return;
-            var payment=SimulationLightningPayment.pay(bridge,batch.cost.hv(),batch.cost.ehv());
-            refundHv=Math.addExact(refundHv,payment.refundHv());refundEhv=Math.addExact(refundEhv,payment.refundEhv());saveChanges();
-            if(!payment.paid()){status=3;return;}
-            energy.deserializeNBT(level.registryAccess(),IntTag.valueOf(energy.getEnergyStored()-(int)batch.cost.fe()));
-            batch.paid=true;saveChanges();markForClientUpdate();
+            if(batch!=candidate||structure==null||!loaded()||!inputsMatch(candidate)||!getMainNode().isActive()||!candidate.fits(outputs))return;
+            candidate.started=true;saveChanges();markForClientUpdate();
         }
         status=1;
-        if(batch.remaining>0)batch.remaining--;
-        if(batch.remaining==0){
-            if(!batch.flush(outputs)){status=4;saveChanges();return;}
-            var completed=batch;batch=null;completed.inputs.keySet().forEach(rolls::remove);nextCrystal=completed.nextSlot%structure.capacity();
+        if(candidate.remaining>0)candidate.remaining--;
+        if(candidate.remaining==0){
+            if(!candidate.fits(outputs)){status=4;saveChanges();return;}
+            long revision=inputRevision;
+            if(NeoForge.EVENT_BUS.post(new MultiblockSimulationEvents.BeforeBatchCommit(this,candidate)).isCanceled()||!canCommit(candidate,revision))return;
+            if(!candidate.paid){
+                if(availableFe()<candidate.cost.fe()){status=3;return;}
+                var payment=SimulationLightningPayment.pay(bridge,candidate.cost.hv(),candidate.cost.ehv());
+                refundHv=Math.addExact(refundHv,payment.refundHv());refundEhv=Math.addExact(refundEhv,payment.refundEhv());saveChanges();
+                if(!payment.paid()){status=3;return;}
+                if(!canCommit(candidate,revision)||availableFe()<candidate.cost.fe()){
+                    refundHv=Math.addExact(refundHv,candidate.cost.hv());refundEhv=Math.addExact(refundEhv,candidate.cost.ehv());saveChanges();return;
+                }
+                long credit=Math.min(feCredit,candidate.cost.fe());feCredit-=credit;
+                energy.deserializeNBT(level.registryAccess(),IntTag.valueOf(energy.getEnergyStored()-(int)(candidate.cost.fe()-credit)));
+                candidate.paid=true;saveChanges();
+            }
+            if(!candidate.flush(outputs)){status=4;saveChanges();return;}
+            var completed=candidate;batch=null;completed.inputs.keySet().forEach(rolls::remove);nextCrystal=completed.nextSlot%structure.capacity();
             saveChanges();markForClientUpdate();NeoForge.EVENT_BUS.post(new MultiblockSimulationEvents.Completed(this,completed));bridge.export();
         }else saveChanges();
     }
+    private boolean canCommit(SimulationBatch job,long revision){
+        checkStructure();return batch==job&&inputRevision==revision&&structure!=null&&loaded()&&getMainNode().isActive()&&inputsMatch(job)&&job.fits(outputs);
+    }
     private boolean inputsMatch(SimulationBatch job){return structure!=null&&job.inputs.entrySet().stream().allMatch(e->e.getKey()>=0&&e.getKey()<structure.capacity()&&ItemStack.matches(e.getValue(),crystals.getStackInSlot(e.getKey())));}
     private void charge(){
+        if(feCredit>0){int credited=energy.receiveEnergy((int)Math.min(Integer.MAX_VALUE,feCredit),false);feCredit-=credited;if(credited>0)saveChanges();}
         var grid=getMainNode().getGrid();int needed=Math.min(10000,energy.getMaxEnergyStored()-energy.getEnergyStored());
         if(needed<=0||grid==null||!getMainNode().isActive())return;
         double ae=appeng.api.config.PowerUnit.FE.convertTo(appeng.api.config.PowerUnit.AE,Math.max(0,needed-feFraction));
@@ -152,14 +181,16 @@ public class SimulationControllerBlockEntity extends AENetworkedBlockEntity impl
         saveChanges();markForClientUpdate();NeoForge.EVENT_BUS.post(new MultiblockSimulationEvents.Invalidated(this,old));
     }
     public CompoundTag saveMachine(HolderLookup.Provider r){
-        var tag=new CompoundTag();tag.putUUID("Identity",identity);tag.put("Crystals",crystals.serializeNBT(r));tag.put("Bulk",outputs.save(r));tag.put("Energy",energy.serializeNBT(r));tag.putDouble("FeFraction",feFraction);tag.putLong("RefundHv",refundHv);tag.putLong("RefundEhv",refundEhv);tag.putInt("NextCrystal",nextCrystal);
+        var tag=new CompoundTag();tag.putUUID("Identity",identity);tag.put("Crystals",crystals.serializeNBT(r));tag.put("Bulk",outputs.save(r));tag.put("Energy",energy.serializeNBT(r));tag.putDouble("FeFraction",feFraction);tag.putLong("RefundHv",refundHv);tag.putLong("RefundEhv",refundEhv);tag.putLong("FeCredit",feCredit);tag.putLong("InputRevision",inputRevision);tag.putInt("NextCrystal",nextCrystal);
         if(batch!=null)tag.put("Batch",batch.save(r));
         var fixed=new ListTag();rolls.forEach((slot,roll)->{var t=new CompoundTag();t.putInt("Slot",slot);t.put("Input",roll.input.save(r));var list=new ListTag();for(var item:roll.output)list.add(item.save(r));t.put("Outputs",list);fixed.add(t);});tag.put("Rolls",fixed);tag.putString("RollGeneration",rollGeneration);return tag;
     }
     public void loadMachine(CompoundTag tag,HolderLookup.Provider r){
-        if(tag.hasUUID("Identity"))identity=tag.getUUID("Identity");crystals.deserializeNBT(r,tag.getCompound("Crystals"));outputs.load(tag.getCompound("Bulk"),r);if(tag.contains("Energy"))energy.deserializeNBT(r,tag.get("Energy"));
+        if(tag.hasUUID("Identity"))identity=tag.getUUID("Identity");loadingInventory=true;try{crystals.deserializeNBT(r,tag.getCompound("Crystals"));}finally{loadingInventory=false;}
+        crystalSnapshots.clear();for(int slot=0;slot<49;slot++)crystalSnapshots.put(slot,crystals.getStackInSlot(slot).copy());
+        outputs.load(tag.getCompound("Bulk"),r);if(tag.contains("Energy"))energy.deserializeNBT(r,tag.get("Energy"));
         feFraction=tag.getDouble("FeFraction");if(!Double.isFinite(feFraction)||feFraction<0||feFraction>=1)feFraction=0;
-        refundHv=Math.max(0,tag.getLong("RefundHv"));refundEhv=Math.max(0,tag.getLong("RefundEhv"));nextCrystal=Math.clamp(tag.getInt("NextCrystal"),0,48);
+        refundHv=Math.max(0,tag.getLong("RefundHv"));refundEhv=Math.max(0,tag.getLong("RefundEhv"));feCredit=Math.max(0,tag.getLong("FeCredit"));inputRevision=Math.max(0,tag.getLong("InputRevision"));nextCrystal=Math.clamp(tag.getInt("NextCrystal"),0,48);
         batch=tag.contains("Batch")?SimulationBatch.load(tag.getCompound("Batch"),r):null;rolls.clear();rollGeneration=tag.getString("RollGeneration");
         for(var v:tag.getList("Rolls",Tag.TAG_COMPOUND)){var t=(CompoundTag)v;int slot=t.getInt("Slot");if(slot<0||slot>=49)continue;var list=new ArrayList<ItemStack>();for(var item:t.getList("Outputs",Tag.TAG_COMPOUND))ItemStack.parse(r,item).ifPresent(list::add);rolls.put(slot,new Roll(ItemStack.parseOptional(r,t.getCompound("Input")),List.copyOf(list)));}
     }

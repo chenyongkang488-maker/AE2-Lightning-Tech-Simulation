@@ -22,4 +22,12 @@ public final class MultiblockSimulationEvents {
         public final SimulationControllerBlockEntity controller;public final SimulationBatch batch;
         public Completed(SimulationControllerBlockEntity c,SimulationBatch b){controller=c;batch=b;}
     }
+    public static class BeforeBatchCommit extends Event implements ICancellableEvent {
+        public final SimulationControllerBlockEntity controller;public final SimulationBatch batch;
+        public BeforeBatchCommit(SimulationControllerBlockEntity c,SimulationBatch b){controller=c;batch=b;}
+    }
+    public static class BatchAborted extends Event {
+        public final SimulationControllerBlockEntity controller;public final SimulationBatch batch;public final String reason;
+        public BatchAborted(SimulationControllerBlockEntity c,SimulationBatch b,String reason){controller=c;batch=b;this.reason=reason;}
+    }
 }

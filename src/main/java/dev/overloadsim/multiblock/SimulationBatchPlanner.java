@@ -10,7 +10,7 @@ public final class SimulationBatchPlanner {
     public static SimulationBatch plan(SimulationControllerBlockEntity host,int start){
         if(!(host.getLevel() instanceof ServerLevel server)||host.structure()==null)return null;
         var s=host.structure();var policy=MultiblockData.policy();var per=policy.cost(1,s);
-        long available=per.fe()==0?49:host.energy().getEnergyStored()/per.fe();
+        long available=per.fe()==0?49:host.availableFe()/per.fe();
         if(per.hv()>0)available=Math.min(available,host.bridge().extract(false,Long.MAX_VALUE,true)/per.hv());
         if(per.ehv()>0)available=Math.min(available,host.bridge().extract(true,Long.MAX_VALUE,true)/per.ehv());
         if(available<1)return null;

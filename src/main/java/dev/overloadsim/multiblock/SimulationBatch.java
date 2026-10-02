@@ -10,7 +10,8 @@ public final class SimulationBatch {
     }
     public final List<Output> outputs;public final Map<Integer,ItemStack> inputs;
     public final int duration,nextSlot;public int remaining;
-    public final MultiblockRules.Costs cost;public final boolean overload,smelting;public boolean paid;
+    public final MultiblockRules.Costs cost;public final boolean overload,smelting;public boolean paid,started;
+    public int settlementVersion=2;
     public final String policy;
     public SimulationBatch(List<Output> outputs,Map<Integer,ItemStack> inputs,int duration,MultiblockRules.Costs cost,boolean overload,boolean smelting,String policy){
         this(outputs,inputs,duration,cost,overload,smelting,policy,inputs.keySet().stream().mapToInt(Integer::intValue).max().orElse(0)+1);
@@ -23,13 +24,15 @@ public final class SimulationBatch {
     public CompoundTag save(HolderLookup.Provider r){
         var tag=new CompoundTag();var out=new ListTag();for(var o:outputs){var t=new CompoundTag();t.put("Item",o.prototype.save(r));t.putLong("Count",o.count);out.add(t);}tag.put("Outputs",out);
         var in=new ListTag();inputs.forEach((slot,item)->{var t=new CompoundTag();t.putInt("Slot",slot);t.put("Item",item.save(r));in.add(t);});tag.put("Inputs",in);
-        tag.putInt("NextSlot",nextSlot);tag.putInt("Duration",duration);tag.putInt("Remaining",remaining);tag.putLong("Fe",cost.fe());tag.putLong("Hv",cost.hv());tag.putLong("Ehv",cost.ehv());tag.putBoolean("Paid",paid);tag.putBoolean("Overload",overload);tag.putBoolean("Smelting",smelting);tag.putString("Policy",policy);return tag;
+        tag.putInt("SettlementVersion",settlementVersion);tag.putBoolean("Started",started);tag.putInt("NextSlot",nextSlot);tag.putInt("Duration",duration);tag.putInt("Remaining",remaining);tag.putLong("Fe",cost.fe());tag.putLong("Hv",cost.hv());tag.putLong("Ehv",cost.ehv());tag.putBoolean("Paid",paid);tag.putBoolean("Overload",overload);tag.putBoolean("Smelting",smelting);tag.putString("Policy",policy);return tag;
     }
     public static SimulationBatch load(CompoundTag tag,HolderLookup.Provider r){
         var outputs=new ArrayList<Output>();for(var value:tag.getList("Outputs",Tag.TAG_COMPOUND)){var t=(CompoundTag)value;outputs.add(new Output(ItemStack.parseOptional(r,t.getCompound("Item")),t.getLong("Count")));}
         var inputs=new HashMap<Integer,ItemStack>();for(var value:tag.getList("Inputs",Tag.TAG_COMPOUND)){var t=(CompoundTag)value;int slot=t.getInt("Slot");if(slot<0||slot>=49)throw new IllegalArgumentException("batch input");inputs.put(slot,ItemStack.parseOptional(r,t.getCompound("Item")));}
         var job=new SimulationBatch(outputs,inputs,Math.clamp(tag.getInt("Duration"),1,1_000_000),new MultiblockRules.Costs(Math.max(0,tag.getLong("Fe")),Math.max(0,tag.getLong("Hv")),Math.max(0,tag.getLong("Ehv"))),tag.getBoolean("Overload"),tag.getBoolean("Smelting"),tag.getString("Policy"));
         var restored=new SimulationBatch(job.outputs,job.inputs,job.duration,job.cost,job.overload,job.smelting,job.policy,tag.contains("NextSlot")?tag.getInt("NextSlot"):job.nextSlot);
-        restored.paid=tag.getBoolean("Paid");restored.remaining=Math.clamp(tag.getInt("Remaining"),0,job.duration);return restored;
+        restored.paid=tag.getBoolean("Paid");restored.settlementVersion=tag.contains("SettlementVersion")?tag.getInt("SettlementVersion"):1;
+        if(restored.settlementVersion<1||restored.settlementVersion>2)throw new IllegalArgumentException("batch settlement version");
+        restored.started=tag.contains("Started")?tag.getBoolean("Started"):restored.paid;restored.remaining=Math.clamp(tag.getInt("Remaining"),0,job.duration);return restored;
     }
 }
