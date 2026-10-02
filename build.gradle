@@ -2,7 +2,7 @@ plugins {
     id 'java-library'
     id 'net.neoforged.moddev' version '2.0.148'
 }
-version = '0.1.0-alpha.10'
+version = '0.1.0-alpha.11'
 group = 'dev.overloadsim'
 base { archivesName = 'overload_sim' }
 java { toolchain.languageVersion = JavaLanguageVersion.of(21); withSourcesJar() }
@@ -15,7 +15,7 @@ neoForge {
         server { server(); programArgument '--nogui'; gameDirectory = file('run-server') }
         gameTestServer { type = 'gameTestServer'; gameDirectory = file('run-gametest'); systemProperty 'neoforge.enabledGameTestNamespaces', 'overload_sim' }
     }
-    mods { overload_sim { sourceSet sourceSets.main; sourceSet sourceSets.compatibilityFixtures } }
+    mods { overload_sim { sourceSet sourceSets.main; if (gradle.startParameter.taskNames.any { it.tokenize(':').last() == 'runGameTestServer' }) sourceSet sourceSets.compatibilityFixtures } }
 }
 dependencies {
     compileOnly files('libs/Mekanism-1.21.1-10.7.19.85.jar')

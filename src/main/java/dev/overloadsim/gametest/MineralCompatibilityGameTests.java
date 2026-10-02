@@ -18,6 +18,23 @@ import net.neoforged.neoforge.gametest.*;
 @PrefixGameTestTemplate(false)
 public class MineralCompatibilityGameTests {
     @GameTest(template="empty")
+    public static void explicitNaturalOnlyRecipeCannotFallThroughToAutomaticTags(GameTestHelper h){
+        var block=BuiltInRegistries.BLOCK.get(ModContent.id("test_natural_block"));fill(h,block);var center=h.absolutePos(new BlockPos(5,1,5));var blank=new ItemStack(ModContent.BLANK.get());
+        h.assertTrue(CrystalBinding.bindStructure(h.getLevel(),center,blank,false)==blank&&h.getLevel().getBlockState(center.offset(1,0,0)).is(block),"explicit natural-only recipe denies automatic artificial fallback");
+        h.assertTrue(CrystalBinding.bindStructure(h.getLevel(),center,blank,true).is(ModContent.BOUND.get()),"same explicit recipe permits natural lightning");h.succeed();
+    }
+    @GameTest(template="empty")
+    public static void explicitConditionCannotFallThroughToAutomaticTags(GameTestHelper h){
+        var block=BuiltInRegistries.BLOCK.get(ModContent.id("test_denied_block"));fill(h,block);var center=h.absolutePos(new BlockPos(5,1,5));var blank=new ItemStack(ModContent.BLANK.get());
+        h.assertTrue(CrystalBinding.bindStructure(h.getLevel(),center,blank,true)==blank&&h.getLevel().getBlockState(center.offset(1,0,0)).is(block),"explicit condition denies automatic tag binding without consuming blocks");h.succeed();
+    }
+    @GameTest(template="empty")
+    public static void explicitCultivationPolicyCannotFallThroughToAnyRecipe(GameTestHelper h){
+        var data=new CrystalData(ModContent.id("test_natural_profile"),Optional.empty(),0,1);var bound=CrystalDataAccess.bound(data);var pos=h.absolutePos(new BlockPos(5,1,5));
+        h.assertTrue(ItemStack.matches(bound,CrystalBinding.cultivate(h.getLevel(),pos,bound,false)),"natural-only cultivation denies lower any fallback");
+        h.assertTrue(CrystalBinding.cultivate(h.getLevel(),pos,bound,true).is(ModContent.PERFECT.get()),"natural cultivation applies explicit required1");h.succeed();
+    }
+    @GameTest(template="empty")
     public static void gemTagsUseOreLootAndRejectHeterogeneousTables(GameTestHelper h){
         var bound=bind(h,BuiltInRegistries.BLOCK.get(ModContent.id("test_gem_storage")));h.assertTrue(bound.is(ModContent.BOUND.get()),"tagged gem storage binds");var data=CrystalDataAccess.read(bound).orElseThrow();
         var p=SimulationResolvers.production(h.getLevel(),data).orElseThrow();for(int i=0;i<64;i++){var drops=p.roll(h.getLevel(),h.absolutePos(new BlockPos(5,1,5)),data,"test");h.assertTrue(drops.size()==1&&drops.getFirst().is(BuiltInRegistries.ITEM.get(ModContent.id("test_gem")))&&drops.getFirst().getCount()>=2&&drops.getFirst().getCount()<=4,"third-party ore table controls quantity");}
@@ -62,6 +79,19 @@ public class MineralCompatibilityGameTests {
     public static void generatedMineralRunsInSingleChamber(GameTestHelper h){
         var c=SimulationGameTests.capacityMachine(h);c.inventory().setStackInSlot(0,CrystalDataAccess.perfect(new CrystalData(ModContent.id("auto/mineral/c/testium"),Optional.empty(),0,1)));
         h.runAtTickTime(80,()->{for(int i=0;i<250;i++)c.tick();int count=0;for(int slot=4;slot<13;slot++){var out=c.inventory().getStackInSlot(slot);if(out.is(BuiltInRegistries.ITEM.get(ModContent.id("test_raw_material"))))count+=out.getCount();}h.assertTrue(count>0,"single chamber consumes the same generated resolver");h.succeed();});
+    }
+    @GameTest(template="empty")
+    public static void rawMaterialWinsOverRefinedDustTags(GameTestHelper h){
+        SimulationData.invalidate();
+        var raw=MineralSimulationData.resolveBinding(h.getLevel(),BuiltInRegistries.BLOCK.get(ModContent.id("test_raw_block")).defaultBlockState());
+        h.assertTrue(raw.valid()&&raw.mineral().orElseThrow().item().orElseThrow().equals(ModContent.id("test_raw_material")),"raw/dust/ore material resolves to raw item: "+raw.error());
+        var refined=MineralSimulationData.resolveBinding(h.getLevel(),BuiltInRegistries.BLOCK.get(ModContent.id("test_refined_block")).defaultBlockState());
+        h.assertTrue(refined.error().equals("no_mineral_tags"),"refined metal block requires explicit binding when raw storage exists");
+        var osmium=BuiltInRegistries.BLOCK.getOptional(net.minecraft.resources.ResourceLocation.parse("mekanism:block_raw_osmium"));
+        if(osmium.isPresent()){
+            var actual=MineralSimulationData.resolveBinding(h.getLevel(),osmium.get().defaultBlockState());
+            h.assertTrue(actual.valid()&&actual.mineral().orElseThrow().item().orElseThrow().toString().equals("mekanism:raw_osmium"),"real Mek raw Osmium resolves without dust ambiguity: "+actual.error());
+        }h.succeed();
     }
     static ItemStack bind(GameTestHelper h,Block block){
         fill(h,block);

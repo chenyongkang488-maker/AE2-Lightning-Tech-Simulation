@@ -127,5 +127,7 @@
   "profile.overload_sim.lapis": "青金石",
   "profile.overload_sim.coal": "煤炭",
   "profile.overload_sim.emerald": "绿宝石",
-  "profile.overload_sim.quartz": "下界石英"
+  "profile.overload_sim.quartz": "下界石英",
+  "commands.overload_sim.audit": "已检查 %s 项；报告保存到 %s",
+  "commands.overload_sim.audit_failed": "报告无法保存：%s"
 }

@@ -214,7 +214,11 @@ public class MultiblockGameTests {
             h.assertTrue(c.bridge().extract(false,Long.MAX_VALUE,true)==1000,"incomplete job has no HV debit");
             for(int i=0;i<88;i++)c.tick();var remaining=c.batch().remaining;
             var saved=c.saveMachine(h.getLevel().registryAccess());c.loadMachine(saved,h.getLevel().registryAccess());
-            c.invalidateStructure();c.tick();h.assertTrue(c.batch().remaining==remaining,"structure loss pauses paid work");c.checkStructure();
+            // Actually break a member: invalidating an intact shell can legitimately auto-form
+            // again on the scan tick, depending on the GameTest world's current time.
+            var corner=c.structure().min();h.getLevel().setBlockAndUpdate(corner,net.minecraft.world.level.block.Blocks.AIR.defaultBlockState());
+            c.invalidateStructure();c.tick();h.assertTrue(c.batch().remaining==remaining,"broken structure pauses the started job");
+            h.getLevel().setBlockAndUpdate(corner,dev.overloadsim.multiblock.MultiblockContent.FRAME.get().defaultBlockState());c.checkStructure();
             for(int i=0;i<remaining;i++)c.tick();
             h.assertTrue(c.outputs().count(0)==2&&!c.busy(),"180 processing ticks yield exactly two raw iron");
             h.assertTrue(c.bridge().extract(false,Long.MAX_VALUE,true)==998,"reload does not recharge paid work");h.succeed();

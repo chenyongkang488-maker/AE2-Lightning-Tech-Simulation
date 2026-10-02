@@ -1,4 +1,6 @@
-# 数据包与 Java API（0.1.0-alpha.8）
+# 数据包与 Java API（0.1.0-alpha.11）
+
+矿物标签自动适配、生物掉落规则、第二版输出接口和诊断命令见 [兼容 API](compatibility-api.md)。本页的“启动扣费”和“加工时锁输入”描述仅用于单方块模拟室；多方块的完成结算与可随时编辑水晶见 [多方块 API](multiblock-api.md)。
 
 面向 Minecraft 1.21.1，数据目录使用单数 `recipe`、`loot_table`、`tags/block`。建议覆盖本模组现有配方 ID；新增匹配配方应给明确的更高 priority，避免最高优先级相同造成冲突。
 
@@ -51,7 +53,7 @@ condition 是 Java 注册的结构条件 ID。未知条件拒绝匹配。含方�
 }
 ```
 
-entity 为实体 ID、#实体类型标签或 *。只考虑存活 Mob，半径为三维球形，先挑选每个候选生物的最高优先级规则，再挑选允许记录的最近生物，最后抽取一次概率。probability 默认 0.33，数据包显式设置的概率仍优先。disabled=true 可以配置黑名单。每位玩家每道雷只处理一次。成功只记录 EntityType ID，不记录个体 NBT。
+entity 为实体 ID、#实体类型标签或 *。只考虑存活 LivingEntity，且属于 Mob、有刷怪蛋或 Java eligibility 允许，排除玩家。半径为三维球形，先挑选每个候选生物的最高优先级规则，再挑选允许记录的最近生物，最后抽取一次概率。probability 默认 0.33，数据包显式设置的概率仍优先。disabled=true 可以配置黑名单。每位玩家每道雷只处理一次。成功只记录 EntityType ID，不记录个体 NBT。
 
 玩家记录监听真实 EntityStruckByLightningEvent，接收已取消事件，不依赖伤害判定，适用于创造模式；不会解除原版效果或伤害保护的取消状态。纯 visualOnly 闪电不触发实体雷击事件。BeforeBinding 仍可由整合包取消，以禁止记录；人工雷仍受 allow_artificial 配方字段控制。
 

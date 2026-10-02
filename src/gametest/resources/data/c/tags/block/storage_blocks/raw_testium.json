@@ -1,1 +1,1 @@
-{"values":[{"id":"overload_sim:test_raw_block","required":false},{"id":"overload_sim:test_raw_block_other","required":false},{"id":"overload_sim:test_ambiguous_block","required":false}]}
+{"values":[{"id":"overload_sim:test_raw_block","required":false},{"id":"overload_sim:test_raw_block_other","required":false},{"id":"overload_sim:test_ambiguous_block","required":false},{"id":"overload_sim:test_natural_block","required":false},{"id":"overload_sim:test_denied_block","required":false}]}

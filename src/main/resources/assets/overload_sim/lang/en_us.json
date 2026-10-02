@@ -127,5 +127,7 @@
   "profile.overload_sim.lapis": "Lapis Lazuli",
   "profile.overload_sim.coal": "Coal",
   "profile.overload_sim.emerald": "Emerald",
-  "profile.overload_sim.quartz": "Nether Quartz"
+  "profile.overload_sim.quartz": "Nether Quartz",
+  "commands.overload_sim.audit": "Inspected %s entries; report saved to %s",
+  "commands.overload_sim.audit_failed": "Cannot save report: %s"
 }

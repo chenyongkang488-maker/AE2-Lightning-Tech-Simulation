@@ -143,3 +143,11 @@ PCL OverloadSim-Test-1.21.1 的 11 个模组与开工前 SHA-256 全部一致，
 四台独立 7³ 模拟室、每台 49 个水晶同时工作，本机 i5-12400F / RTX 3060 Ti，854×480、垂直同步开启的场景中，两次 F3 观察均为 60 FPS，服务器约 2.9 ms/tick；见 `alpha10-four-machines-fps.png`。这是有界场景检查，不代表复杂整合包的普遍性能。客户端正常保存关闭，Gradle runClient 退出码 0，日志 `visual-delivery-client.log`。方案中的可选独立半透明外晕和亮度呼吸尚未实现，现有球体为全亮动画表面。
 
 最终运行 JAR 为 **531,646 字节**，SHA-256 `096012baa8cb453a410db330c38bab87e24e32b2e704e2bc0821cf8f799bb6c4`。已安装到 PCL 的 `OverloadSim-Test-1.21.1/mods/overload_sim-0.1.0-alpha.10.jar`，与构建产物哈希一致。alpha.9 保存在 `addon-backups/20261002-025906/`，备份哈希与安装前一致；另外十个模组及 46 份启动器/游戏设置与安装前哈希全部一致。未改动 PCL 存档，用户重启测试实例后即可加载新版本。
+
+## 2026-10-02 alpha.11 兼容性检查
+
+七项兼容性、交互和外观修订已实现。完成时结算、实际换晶中断、旧付款退款、FE 信用、外部模板保护、18种玩家限定掉落、生物规则/刷怪蛋、矿物标签与真实数量、常驻光球、五格实际光照及 L 型转角均有回归覆盖。最终检查 **20项 JUnit、121项必需 GameTest** 在常规与通用机械10.7.19.85环境均通过（compatibility-final-base.log / compatibility-native-osmium-green.log）。诊断及规则优先级先复现失败再修复；实机额外发现粗矿与粉末标签假冲突，专门加入回归并修复。
+
+原生 Blockbench 导出21工程、24内嵌PNG和20模型，字节/JSON/动画/转角边缘校验通过。原生客户端检查3～7尺寸、7³四向角部、前视无遮挡球体、换晶、重载和断电夜间常驻光球；熔炼橙色及过载效果保留。通用机械环境实际产物包含幻翼膜、凋灵之星、龙蛋/龙首/龙息、三种坚守者产物、红石/青金石、下界合金碎片及锇锭。人工召唤闪电通过采集器上方避雷针成功消耗24粗锇块并记录 `overload_sim:auto/mineral/c/osmium`，explain/audit均运行成功。客户端正常保存退出，日志 compatibility-client-final.log；截图见 screenshots/alpha11。
+
+原生 Shift+鼠标组合及远处无线接口整链路未手动复测，采用真实菜单 quickMove、外部 capability 输入不可提取、原版接口出口的 GameTest 覆盖；普通点击实机已验证。长期跨区块、多人与任意第三方死亡代码仍需整合包联调。前置 AE2LT 自带的 missing overloaded_power_supply / ExtendedAE 条件资源错误仍存在；本模组与测试夹具资源无对应加载错误。独立审查、最终打包及 PCL 交付记录在完成后补充。

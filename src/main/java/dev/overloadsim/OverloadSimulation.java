@@ -15,6 +15,7 @@ public class OverloadSimulation {
         if(System.getProperty("neoforge.enabledGameTestNamespaces","").contains(ID))dev.overloadsim.gametest.CompatibilityFixtures.register();
         ModContent.register(bus);container.registerConfig(ModConfig.Type.COMMON,SimulationConfig.SPEC);
         dev.overloadsim.multiblock.SimulationStructureIndex.register();
+        NeoForge.EVENT_BUS.addListener(dev.overloadsim.command.SimulationDiagnostics::register);
         NeoForge.EVENT_BUS.addListener((AddReloadListenerEvent e)->e.addListener(new SimulationData()));
         NeoForge.EVENT_BUS.addListener((AddReloadListenerEvent e)->e.addListener(new dev.overloadsim.data.MobSimulationData()));
         NeoForge.EVENT_BUS.addListener((AddReloadListenerEvent e)->e.addListener(new dev.overloadsim.data.MineralSimulationData()));

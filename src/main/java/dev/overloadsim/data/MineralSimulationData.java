@@ -45,6 +45,9 @@ public final class MineralSimulationData extends SimpleJsonResourceReloadListene
         for(var tag:tags){
             String name=tag.getPath().substring("storage_blocks/".length());boolean raw=name.startsWith("raw_");String material=raw?name.substring(4):name;
             var key=ResourceLocation.fromNamespaceAndPath("c",material);var bind=blocks(tag);if(bind.isEmpty())continue;
+            // Ore/dust discovery is only for materials without raw storage, e.g. redstone.
+            // Mek metals expose both branches; they share one stable material profile.
+            if(!raw&&!blocks(ResourceLocation.parse("c:storage_blocks/raw_"+material)).isEmpty())continue;
             var resources=raw?items(ResourceLocation.parse("c:raw_materials/"+material)):new ArrayList<Item>();
             var ores=blocks(ResourceLocation.parse("c:ores/"+material));
             if(!raw){resources.addAll(items(ResourceLocation.parse("c:gems/"+material)));resources.addAll(items(ResourceLocation.parse("c:dusts/"+material)));resources=resources.stream().distinct().toList();if(resources.isEmpty()||ores.isEmpty())continue;}

@@ -1,0 +1,1 @@
+{"entity":"minecraft:ender_dragon","priority":200,"outputs":[{"item":"minecraft:dragon_egg","chance":0.25},{"item":"minecraft:dragon_head","chance":0.25},{"item":"minecraft:dragon_breath","chance":1}]}
