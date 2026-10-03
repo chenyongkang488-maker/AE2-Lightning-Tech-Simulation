@@ -1,0 +1,18 @@
+name: Feature request / 功能建议
+description: Suggest a feature or a modpack API improvement.
+title: "[Feature] "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Use case / 使用需求
+      description: Describe the player or modpack problem.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior / 期望行为
+      description: Explain the expected behavior, affected mods and configuration needs.
+    validations:
+      required: true

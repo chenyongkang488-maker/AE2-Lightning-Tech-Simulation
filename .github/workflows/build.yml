@@ -1,0 +1,68 @@
+name: Build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Java 21 / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2025]
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Set up Java 21
+        uses: actions/setup-java@dd06d9cba3e5552c54d9f8ea23572deb30010f7c # v6.0.0
+        with:
+          java-version: "21"
+          distribution: temurin
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6.3.0
+        with:
+          cache-read-only: ${{ github.event_name == 'pull_request' }}
+      - name: Enable wrapper execution
+        if: runner.os != 'Windows'
+        shell: bash
+        run: chmod +x gradlew
+      - name: Download dependencies, build and run tests
+        run: ./scripts/build.ps1 -GameTests
+      - name: Verify artifacts and release tag
+        run: |
+          if ($env:GITHUB_REF_TYPE -eq 'tag') {
+            python scripts/verify-release.py --tag $env:GITHUB_REF_NAME
+          } else {
+            python scripts/verify-release.py
+          }
+          if ($LASTEXITCODE -ne 0) { throw 'Release verification failed.' }
+      - name: Upload mod artifacts
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: overload-sim-${{ matrix.os }}-${{ github.sha }}
+          path: build/libs/*.jar
+          if-no-files-found: error
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: test-reports-${{ matrix.os }}-${{ github.sha }}
+          path: |
+            build/reports/tests/
+            build/test-results/
+            run-gametest/logs/latest.log
+          if-no-files-found: warn

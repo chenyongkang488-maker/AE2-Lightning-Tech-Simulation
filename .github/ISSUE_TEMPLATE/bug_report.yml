@@ -1,0 +1,36 @@
+name: Bug report / 问题反馈
+description: Report a crash, incorrect simulation or compatibility problem.
+title: "[Bug] "
+body:
+  - type: textarea
+    id: versions
+    attributes:
+      label: Versions / 版本
+      description: Include addon, Minecraft, NeoForge, AE2, AE2LT Reborn, Thunderbolt and GuideME versions; include other involved mods.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction / 复现步骤
+      description: List steps and the expected versus actual result. For a multiblock, include dimensions, upgrades and crystal profile.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs and screenshots / 日志与截图
+      description: Attach latest.log or a crash report, plus screenshots where useful. Remove private information before uploading.
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment / 环境
+      options:
+        - Singleplayer / 单人
+        - Dedicated server / 独立服务器
+        - Both / 两者
+  - type: textarea
+    id: datapack
+    attributes:
+      label: Pack changes / 魔改
+      description: Include relevant datapack recipes, tags or API adapters, if any.

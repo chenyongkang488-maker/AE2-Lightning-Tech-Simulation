@@ -1,4 +1,14 @@
-# 更新记录
+# Changelog / 更新记录
+
+## [0.1.1-beta.1] — 2026-10-03
+
+- Prepare the existing 0.1b gameplay for public source release; no gameplay or registry ID changes.
+- Add qiqi author metadata and bundle the full MIT license, artwork scope and attribution in binary/source JARs.
+- Use one declared version and a checksum-pinned Gradle 8.8 wrapper; remove machine-specific build paths.
+- Add bilingual documentation, contribution/issue templates, Windows/Linux build CI and artifact verification.
+
+本版整理开源发布所需的许可、文档、构建和反馈流程。玩法沿用 0.1b；物品、方块、
+配方和存档 ID 保持不变。属于 Beta 测试版本，仍需更多长期存档与第三方模组联调。
 
 ## 0.1b — 2026-10-03
 

@@ -2,7 +2,7 @@ plugins {
     id 'java-library'
     id 'net.neoforged.moddev' version '2.0.148'
 }
-version = '0.1b'
+version = providers.gradleProperty('mod_version').get()
 group = 'dev.overloadsim'
 base { archivesName = 'overload_sim' }
 java { toolchain.languageVersion = JavaLanguageVersion.of(21); withSourcesJar() }
@@ -27,8 +27,30 @@ dependencies {
 }
 tasks.named('test') { useJUnitPlatform() }
 tasks.named('processResources') {
+    inputs.property('mod_version', project.version)
+    filesMatching('META-INF/neoforge.mods.toml') { expand(mod_version: project.version) }
+    from('LICENSE') { into 'META-INF' }
+    from('LICENSES.md') { into 'META-INF' }
     from('THIRD_PARTY_NOTICES.md') { into 'META-INF' }
     from('art/licenses/AE2LT-LICENSE_ASSETS.md') { into 'META-INF' }
+}
+tasks.named('sourcesJar') {
+    from(['LICENSE', 'LICENSES.md', 'THIRD_PARTY_NOTICES.md', 'art/licenses/AE2LT-LICENSE_ASSETS.md']) { into 'META-INF' }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+tasks.register('verifyReleaseVersion') {
+    group = 'verification'
+    description = 'Reject a release tag that does not match the declared mod version.'
+    doLast {
+        String expected = providers.gradleProperty('releaseModVersion').getOrElse(project.version.toString())
+        if (expected != project.version.toString()) {
+            throw new GradleException("Release version ${expected} does not match mod_version=${project.version}")
+        }
+        if (!file('CHANGELOG.md').text.contains("## [${project.version}]")) {
+            throw new GradleException("Missing changelog section for ${project.version}")
+        }
+        logger.lifecycle("Verified release version ${project.version}")
+    }
 }
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
 tasks.withType(Jar).configureEach { preserveFileTimestamps = false; reproducibleFileOrder = true }

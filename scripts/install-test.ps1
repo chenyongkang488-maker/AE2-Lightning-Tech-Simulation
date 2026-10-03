@@ -1,7 +1,10 @@
-param([string]$Instance='D:\mc\.minecraft\versions\OverloadSim-Test-1.21.1')
+param([Parameter(Mandatory=$true)][string]$Instance)
 $ErrorActionPreference='Stop'
 $projectRoot=Split-Path -Parent $PSScriptRoot
-$jar=Join-Path $projectRoot 'build\libs\overload_sim-0.1b.jar'
+$versionLine = Get-Content -LiteralPath (Join-Path $projectRoot 'gradle.properties') | Where-Object { $_ -match '^mod_version=' }
+if (@($versionLine).Count -ne 1) { throw 'Expected one mod_version in gradle.properties.' }
+$version = $versionLine.Split('=', 2)[1].Trim()
+$jar=Join-Path $projectRoot "build/libs/overload_sim-$version.jar"
 if(-not(Test-Path -LiteralPath $jar)){throw 'Build the mod first.'}
 if(-not(Test-Path -LiteralPath (Join-Path $Instance 'mods'))){throw 'Expected an existing test instance with a mods directory.'}
 $Instance=(Resolve-Path -LiteralPath $Instance).Path
