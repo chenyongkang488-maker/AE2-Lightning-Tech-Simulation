@@ -59,4 +59,4 @@ Files: new `multiblock/SimulationAutoConstruction.java`, `multiblock/MultiblockS
 - [x] Integrate language strings, instructions and alpha.3 changelog/version.
 - [x] Run unit/GameTests, asset and standalone JAR checks; obtain an independent review.
 - [x] Inspect the sphere and automatic-build UI in the native game client.
-- [ ] Save a Git rollback point, build the integrated checkout and install into the existing test instance with prior JAR backup and unchanged other-mod hashes.
+- [x] Save a Git rollback point, build the integrated checkout and install into the existing test instance with prior JAR backup and unchanged other-mod hashes.

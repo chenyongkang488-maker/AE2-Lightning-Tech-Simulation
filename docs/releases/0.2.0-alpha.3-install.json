@@ -1,0 +1,20 @@
+{
+  "version": "0.2.0-alpha.3",
+  "date": "2026-10-05",
+  "implementation_commit": "f8c5044",
+  "installed": "D:\\mc\\.minecraft\\versions\\OverloadSim-Test-1.21.1\\mods\\overload_sim-0.2.0-alpha.3.jar",
+  "bytes": 951821,
+  "sha256": "0373818ED3F4CA391B0C984116CEF613DE8C0E0C88216BE08D829C904C3E59E2",
+  "backup": "D:\\mc\\.minecraft\\versions\\OverloadSim-Test-1.21.1\\addon-backups\\20261005-004238\\overload_sim-0.2.0-alpha.2.jar",
+  "backup_sha256": "0A09412BF1CE8D3FA8078F934A0A78C6E6990FE7365850AF6F8635F5B30B408F",
+  "other_mods_unchanged": 13,
+  "configuration_files_unchanged": 49,
+  "unit_tests": 49,
+  "game_tests": 210,
+  "native_previews": [
+    "art/previews/laser-smooth-receiver.png",
+    "art/previews/laser-auto-build.png",
+    "art/previews/simulation-auto-build.png"
+  ],
+  "build_log": "automatic-construction-integrated-green.log"
+}

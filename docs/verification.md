@@ -210,3 +210,5 @@ alpha.12 JAR 为 644,061 字节，SHA256 `e13a4303f41477580ff91832c9a6062141fd31
 原生截图最初显示背面环肋被玻璃深度遮挡，追踪到共享透明缓冲在切换光束缓冲时提前提交。注册固定透明缓冲后，同视角确认三条完整肋；其它模组已注册同缓冲时复用它，释放未使用的新缓冲。mesh几何和服务器资源策略未改。两次客户端正常保存关闭，runClient退出0；最终日志automatic-construction-client-green.log。前置AE2LT仍有既有ExtendedAE条件配方与指南索引提示，本模组未新增对应资源错误。没有宣称大型整合包性能或多人跨权限插件已实测。
 
 预览见art/previews/laser-smooth-receiver.png、laser-auto-build.png、simulation-auto-build.png。Java与整合包作者入口见docs/construction-api.md、laser-particle-api.md与multiblock-api.md。独立只读审查记录见docs/reviews/2026-10-05-smooth-receiver-autobuild.md。最终集成构建、PCL安装哈希和旧版本备份在交付记录中保存。
+
+主工作区集成后的可选Mek/神秘农业/应用通量环境再次通过49项JUnit与210项GameTest、版本和构建（automatic-construction-integrated-green.log，exit0）。资源/独立JAR检查通过。最终951,821字节JAR的SHA256为`0373818ed3f4ca391b0c984116cef613de8c0e0c88216be08d829c904c3e59e2`，已安装OverloadSim-Test-1.21.1；alpha.2备份位于`D:/mc/.minecraft/versions/OverloadSim-Test-1.21.1/addon-backups/20261005-004238/overload_sim-0.2.0-alpha.2.jar`。另外13个模组和49份配置/PCL/选项文件与安装前哈希一致。安装记录见docs/releases/0.2.0-alpha.3-install.json。
