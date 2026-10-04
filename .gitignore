@@ -5,6 +5,7 @@ libs/
 .idea/
 *.iml
 .superpowers/
+.worktrees/
 *.log
 __pycache__/
 *.py[cod]
