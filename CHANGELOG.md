@@ -1,5 +1,14 @@
 # Changelog / 更新记录
 
+## [0.2.0-alpha.1] — 2026-10-04
+
+- 添加高能激光发射器、约束/强化/爆发/偏折/聚焦矩阵、坍缩核心与粒子约束器，以及共用粉白建材。
+- 服务器按 20 tick 结算真实 FE / 极高压；聚焦束在第七格进入核心，粒子从核心另一侧向前送至约束器。
+- 约束器保存 long 粒子与 1024P FE 缓存，使用密封耗材窗口转化；支持可选应用通量 FE 存储与过载接口。
+- 加入创造模式安全空地演示指令、控制界面、基础动画、Blockbench 占位工程和 G 键搭建指南。
+- 耗材 JSON、服务器事件与命名 Java 扩展接口供整合包作者修改。此版为本地玩法原型，暂未添加生存合成配方。
+
+
 ## [0.1.1-beta.1] — 2026-10-03
 
 - Prepare the existing 0.1b gameplay for public source release; no gameplay or registry ID changes.

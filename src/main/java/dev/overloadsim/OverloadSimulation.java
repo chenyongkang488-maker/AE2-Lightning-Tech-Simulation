@@ -14,14 +14,19 @@ public class OverloadSimulation {
     public OverloadSimulation(IEventBus bus,ModContainer container){
         if(System.getProperty("neoforge.enabledGameTestNamespaces","").contains(ID))dev.overloadsim.gametest.CompatibilityFixtures.register();
         ModContent.register(bus);container.registerConfig(ModConfig.Type.COMMON,SimulationConfig.SPEC);
+        container.registerConfig(ModConfig.Type.COMMON,dev.overloadsim.laser.LaserSettings.SPEC,"overload_sim-laser.toml");
         dev.overloadsim.api.SimulationExtensions.registerOutputV2(dev.overloadsim.data.CropSimulationData.PROVIDER,dev.overloadsim.machine.SimulationCropLoot::roll);
         dev.overloadsim.multiblock.SimulationStructureIndex.register();
+        dev.overloadsim.laser.LaserStructureIndex.register();
+        NeoForge.EVENT_BUS.addListener(dev.overloadsim.laser.LaserExplosion::tick);
+        NeoForge.EVENT_BUS.addListener(dev.overloadsim.laser.LaserDemo::register);
         NeoForge.EVENT_BUS.addListener(dev.overloadsim.command.SimulationDiagnostics::register);
         NeoForge.EVENT_BUS.addListener((AddReloadListenerEvent e)->e.addListener(new SimulationData()));
         NeoForge.EVENT_BUS.addListener((AddReloadListenerEvent e)->e.addListener(new dev.overloadsim.data.MobSimulationData()));
         NeoForge.EVENT_BUS.addListener((AddReloadListenerEvent e)->e.addListener(new dev.overloadsim.data.MineralSimulationData()));
         NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.TagsUpdatedEvent e)->{SimulationData.invalidate();dev.overloadsim.binding.SimulationEntityEligibility.rebuildEggIndex();});
         NeoForge.EVENT_BUS.addListener((AddReloadListenerEvent e)->e.addListener(new dev.overloadsim.multiblock.MultiblockData()));
+        NeoForge.EVENT_BUS.addListener((AddReloadListenerEvent e)->e.addListener(new dev.overloadsim.laser.ParticleFuelData()));
         NeoForge.EVENT_BUS.addListener(net.neoforged.bus.api.EventPriority.LOWEST,true,PlayerLightningHandler::struck);
         bus.addListener(ModContent::capabilities);
         bus.addListener(ModContent::setup);

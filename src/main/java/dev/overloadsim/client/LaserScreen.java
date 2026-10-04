@@ -1,0 +1,152 @@
+package dev.overloadsim.client;
+
+import java.util.List;
+import java.util.Optional;
+import appeng.client.gui.AEBaseScreen;
+import appeng.client.gui.Icon;
+import appeng.client.gui.style.StyleManager;
+import appeng.menu.SlotSemantics;
+import dev.overloadsim.laser.LaserKind;
+import dev.overloadsim.laser.LaserMenu;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Tooltip;
+import net.minecraft.client.resources.language.I18n;
+import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Inventory;
+
+/** Compact AE-style prototype; all controls send validated menu actions. */
+public final class LaserScreen extends AEBaseScreen<LaserMenu> {
+    private static final int TEXT = 0x413F54;
+    private Button enable, less, more;
+    private final Button[] sides = new Button[6];
+
+    public LaserScreen(LaserMenu menu, Inventory inventory, Component title) {
+        super(menu, inventory, title, StyleManager.loadStyleDoc("/screens/overload_sim/laser.json"));
+    }
+
+    @Override protected void init() {
+        super.init();
+        setTextHidden(TEXT_ID_DIALOG_TITLE, true);
+        enable = addRenderableWidget(Button.builder(Component.empty(), b -> menu.toggleEnabled())
+                .bounds(leftPos + 148, topPos + 25, 66, 18).build());
+        if (menu.kind() == LaserKind.ENHANCEMENT) {
+            less = addRenderableWidget(Button.builder(Component.literal("−100k"), b -> menu.changeBoost(-1))
+                    .bounds(leftPos + 10, topPos + 99, 96, 18).build());
+            more = addRenderableWidget(Button.builder(Component.literal("+100k"), b -> menu.changeBoost(1))
+                    .bounds(leftPos + 118, topPos + 99, 96, 18).build());
+        }
+        if (menu.kind() == LaserKind.DEFLECTOR) for (Direction direction : Direction.values()) {
+            int side = direction.get3DDataValue();
+            sides[side] = addRenderableWidget(Button.builder(Component.empty(), b -> menu.toggleSide(side))
+                    .bounds(leftPos + 10 + side % 3 * 69, topPos + 99 + side / 3 * 21, 66, 18).build());
+        }
+        updateControls();
+    }
+
+    @Override protected void updateBeforeRender() { super.updateBeforeRender(); updateControls(); }
+
+    private void updateControls() {
+        if (enable == null) return;
+        enable.setMessage(Component.translatable("gui.overload_sim.laser." + (menu.enabled ? "on" : "off")));
+        enable.active = menu.enabled || menu.formed;
+        enable.setTooltip(Tooltip.create(Component.translatable("gui.overload_sim.laser.control_hint")));
+        if (less != null) { less.active = menu.formed && menu.boost > 100_000; more.active = menu.formed && menu.boost < 9_000_000; }
+        for (int side = 0; side < 6; side++) if (sides[side] != null) {
+            boolean input = side == menu.inputSide;
+            var face = Component.translatable("gui.overload_sim.laser.face." + Direction.from3DDataValue(side).getName());
+            sides[side].setMessage(Component.translatable("gui.overload_sim.laser.side", face,
+                    Component.translatable("gui.overload_sim.laser." + (input ? "input" : (menu.outputMask & (1 << side)) != 0 ? "on" : "off"))));
+            sides[side].active = menu.formed && !input;
+            sides[side].setTooltip(Tooltip.create(Component.translatable("gui.overload_sim.laser.split_hint")));
+        }
+    }
+
+    @Override public void drawBG(GuiGraphics g, int x, int y, int mx, int my, float partial) {
+        g.fill(x, y, x + imageWidth, y + imageHeight, 0xFF77768C);
+        g.fill(x + 1, y + 1, x + imageWidth - 1, y + imageHeight - 1, 0xFFFDF8FC);
+        g.fill(x + 3, y + 3, x + imageWidth - 3, y + imageHeight - 3, 0xFFD8D7E1);
+        g.fill(x + 5, y + 5, x + imageWidth - 5, y + 19, 0xFFF4D4E8);
+        for (var slot : menu.slots) if (slot.isActive())
+            SimulationScreen.icon(g, Icon.SLOT_BACKGROUND, x + slot.x - 1, y + slot.y - 1);
+        if (menu.kind() == LaserKind.RECEIVER) {
+            bar(g, x + 10, y + 98, 204, menu.particleCount, 125_000, 0xFF7AC5E8);
+            bar(g, x + 10, y + 107, 204, menu.energy, menu.energyCapacity, 0xFFEE98C4);
+        }
+    }
+
+    private static void bar(GuiGraphics g, int x, int y, int width, long amount, long capacity, int color) {
+        g.fill(x, y, x + width, y + 6, 0xFF88879B);
+        // This is display-only; synchronized inventory values remain exact longs.
+        int filled = capacity <= 0 ? 0 : (int) (width * Math.clamp((double) amount / capacity, 0, 1));
+        g.fill(x, y, x + filled, y + 6, color);
+    }
+
+    @Override public void drawFG(GuiGraphics g, int x, int y, int mx, int my) {
+        g.drawString(font, font.plainSubstrByWidth(title.getString(), 208), 8, 7, TEXT, false);
+        line(g, "gui.overload_sim.laser." + (menu.formed ? "formed" : "unformed"), 10, 28);
+        line(g, "gui.overload_sim.laser.network", 10, 45,
+                Component.translatable("gui.overload_sim.laser." + (menu.network ? "online" : "offline")));
+        line(g, "gui.overload_sim.laser.power", 10, 60, compact(menu.power));
+        switch (menu.kind()) {
+            case ENHANCEMENT -> {
+                line(g, "gui.overload_sim.laser.boost", 10, 78, compact(menu.boost));
+                line(g, "gui.overload_sim.laser.boost_cost", 10, 123);
+            }
+            case DEFLECTOR -> line(g, "gui.overload_sim.laser.outputs", 10, 81);
+            case CORE -> {
+                line(g, "gui.overload_sim.laser.core_remainder", 10, 79, compact(menu.coreRemainder));
+                line(g, "gui.overload_sim.laser.core_hint", 10, 96);
+                line(g, "gui.overload_sim.laser.forward_hint", 10, 113);
+            }
+            case RECEIVER -> {
+                line(g, "gui.overload_sim.laser.particles", 10, 76, menu.particleCount);
+                line(g, "gui.overload_sim.laser.energy", 10, 89, compact(menu.energy));
+                line(g, "gui.overload_sim.laser.fuel", 10, 118);
+                line(g, "gui.overload_sim.laser.fuel_ticks", 92, 133, menu.fuelRemaining);
+            }
+            case BURST -> {
+                line(g, "gui.overload_sim.laser.burst_hint", 10, 80);
+                line(g, "gui.overload_sim.laser.ehv", 10, 98, menu.extremeLightning);
+            }
+            case FOCUS -> line(g, "gui.overload_sim.laser.focus_hint", 10, 80);
+            default -> line(g, "gui.overload_sim.laser.range_hint", 10, 80);
+        }
+        g.drawString(font, Component.translatable("container.inventory"), 31, 150, TEXT, false);
+    }
+
+    private void line(GuiGraphics g, String key, int x, int y, Object... args) {
+        g.drawString(font, font.plainSubstrByWidth(Component.translatable(key, args).getString(), 204), x, y, TEXT, false);
+    }
+
+    /** Integer display conversion avoids rounding PFE values through a double. */
+    public static String compact(long value) {
+        long unit = 1; String suffix = "";
+        if (value >= 1_000_000_000_000_000L) { unit = 1_000_000_000_000_000L; suffix = "P"; }
+        else if (value >= 1_000_000_000L) { unit = 1_000_000_000L; suffix = "G"; }
+        else if (value >= 1_000_000L) { unit = 1_000_000L; suffix = "M"; }
+        else if (value >= 1_000L) { unit = 1_000L; suffix = "k"; }
+        if (unit == 1) return Long.toString(value);
+        long hundredths = value % unit / (unit / 100);
+        return value / unit + (hundredths == 0 ? "" : "." + (hundredths < 10 ? "0" : "") + hundredths) + suffix;
+    }
+
+    @Override public void render(GuiGraphics g, int mx, int my, float partial) {
+        super.render(g, mx, my, partial);
+        var slot = getSlotUnderMouse();
+        if (slot != null && menu.getSlotSemantic(slot) == SlotSemantics.MACHINE_INPUT)
+            g.renderTooltip(font, List.of(Component.translatable("gui.overload_sim.laser.sealed_fuel"),
+                    Component.translatable("gui.overload_sim.laser.active_fuel", menu.activeFuel, menu.particleRemaining)), Optional.empty(), mx, my);
+        else if (mx >= leftPos + 8 && mx <= leftPos + 215 && my >= topPos + 45 && my <= topPos + 116)
+            g.renderTooltip(font, List.of(Component.translatable("gui.overload_sim.laser.status", diagnostic()),
+                    Component.translatable("gui.overload_sim.laser.exact_power", menu.power),
+                    Component.translatable("gui.overload_sim.laser.exact_energy", menu.energy, menu.energyCapacity),
+                    Component.translatable("gui.overload_sim.laser.guide_hint")), Optional.empty(), mx, my);
+    }
+
+    private Component diagnostic() {
+        String key = "gui.overload_sim.laser.status." + menu.status;
+        return I18n.exists(key) ? Component.translatable(key) : Component.literal(menu.status);
+    }
+}

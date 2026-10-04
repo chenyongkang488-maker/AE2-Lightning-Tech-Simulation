@@ -1,0 +1,27 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "overload_sim:block/collapse_core"
+    },
+    "facing=south": {
+      "model": "overload_sim:block/collapse_core",
+      "y": 180
+    },
+    "facing=east": {
+      "model": "overload_sim:block/collapse_core",
+      "y": 90
+    },
+    "facing=west": {
+      "model": "overload_sim:block/collapse_core",
+      "y": 270
+    },
+    "facing=up": {
+      "model": "overload_sim:block/collapse_core",
+      "x": 270
+    },
+    "facing=down": {
+      "model": "overload_sim:block/collapse_core",
+      "x": 90
+    }
+  }
+}

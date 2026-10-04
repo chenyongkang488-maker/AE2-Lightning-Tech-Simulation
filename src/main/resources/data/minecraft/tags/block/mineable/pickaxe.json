@@ -9,6 +9,7 @@
     "overload_sim:simulation_efficiency_t3",
     "overload_sim:simulation_fortune_module",
     "overload_sim:simulation_overload_module",
-    "overload_sim:simulation_smelting_module"
+    "overload_sim:simulation_smelting_module",
+    "#overload_sim:laser_mineable"
   ]
 }

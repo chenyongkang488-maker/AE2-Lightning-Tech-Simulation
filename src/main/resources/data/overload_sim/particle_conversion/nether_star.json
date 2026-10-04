@@ -1,0 +1,7 @@
+{
+  "type": "overload_sim:particle_conversion",
+  "ingredient": { "item": "minecraft:nether_star" },
+  "consumable_duration_ticks": 100,
+  "particle_interval_ticks": 100,
+  "energy_per_particle": "512GFE"
+}

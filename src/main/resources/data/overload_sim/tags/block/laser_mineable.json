@@ -1,0 +1,17 @@
+{
+  "replace": false,
+  "values": [
+    "overload_sim:high_energy_laser_emitter",
+    "overload_sim:laser_constraint_matrix",
+    "overload_sim:laser_enhancement_matrix",
+    "overload_sim:laser_burst_matrix",
+    "overload_sim:laser_deflector_matrix",
+    "overload_sim:laser_focus_matrix",
+    "overload_sim:collapse_core",
+    "overload_sim:particle_constrainer",
+    "overload_sim:laser_frame",
+    "overload_sim:laser_glass",
+    "overload_sim:laser_source_crystal",
+    "overload_sim:laser_optical_port"
+  ]
+}

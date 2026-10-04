@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "overload_sim:block/laser_source_crystal"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "includes": ["../common/common.json"],
+  "generatedBackground": {"width": 224, "height": 238},
+  "helpTopic": "overload_sim:laser-particle.md",
+  "slots": {
+    "MACHINE_INPUT": {"left": 10, "top": 131, "grid": "BREAK_AFTER_9COLS"},
+    "PLAYER_INVENTORY": {"left": 31, "top": 162, "grid": "BREAK_AFTER_9COLS"},
+    "PLAYER_HOTBAR": {"left": 31, "top": 217, "grid": "BREAK_AFTER_9COLS"}
+  }
+}

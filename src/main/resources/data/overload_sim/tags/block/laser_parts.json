@@ -1,0 +1,9 @@
+{
+  "replace": false,
+  "values": [
+    "overload_sim:laser_frame",
+    "overload_sim:laser_glass",
+    "overload_sim:laser_source_crystal",
+    "overload_sim:laser_optical_port"
+  ]
+}

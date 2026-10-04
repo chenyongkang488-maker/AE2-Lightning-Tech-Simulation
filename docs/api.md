@@ -1,5 +1,7 @@
 # 数据包与 Java API（0.1.0-alpha.11）
 
+新增激光与粒子子系统见 [激光 API](laser-particle-api.md)。
+
 矿物标签自动适配、生物掉落规则、第二版输出接口和诊断命令见 [兼容 API](compatibility-api.md)。本页的“启动扣费”和“加工时锁输入”描述仅用于单方块模拟室；多方块的完成结算与可随时编辑水晶见 [多方块 API](multiblock-api.md)。
 
 面向 Minecraft 1.21.1，数据目录使用单数 `recipe`、`loot_table`、`tags/block`。建议覆盖本模组现有配方 ID；新增匹配配方应给明确的更高 priority，避免最高优先级相同造成冲突。
