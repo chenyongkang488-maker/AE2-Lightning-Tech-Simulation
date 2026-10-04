@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.Icon;
+import appeng.client.gui.widgets.IconButton;
 import appeng.client.gui.style.StyleManager;
 import appeng.menu.SlotSemantics;
 import dev.overloadsim.laser.LaserKind;
@@ -21,9 +22,24 @@ public final class LaserScreen extends AEBaseScreen<LaserMenu> {
     private static final int TEXT = 0x413F54;
     private Button enable, less, more;
     private final Button[] sides = new Button[6];
+    private final Button build;
 
     public LaserScreen(LaserMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title, StyleManager.loadStyleDoc("/screens/overload_sim/laser.json"));
+        build=addToLeftToolbar(new IconButton(b->menu.autoBuild()) {
+            @Override protected Icon getIcon(){return Icon.PLACEMENT_BLOCK;}
+            @Override public List<Component> getTooltipMessage(){
+                var lines=new java.util.ArrayList<Component>();
+                lines.add(Component.translatable("gui.overload_sim.construction.auto_build"));
+                lines.add(Component.translatable("gui.overload_sim.construction.auto_build_hint"));
+                if(!menu.buildFeedback.isEmpty()&&minecraft.level!=null) {
+                    var feedback=Component.Serializer.fromJson(menu.buildFeedback,minecraft.level.registryAccess());
+                    if(feedback!=null)lines.add(feedback);
+                }
+                return lines;
+            }
+        });
+        build.setMessage(Component.translatable("gui.overload_sim.construction.auto_build"));
     }
 
     @Override protected void init() {
@@ -52,6 +68,7 @@ public final class LaserScreen extends AEBaseScreen<LaserMenu> {
         enable.setMessage(Component.translatable("gui.overload_sim.laser." + (menu.enabled ? "on" : "off")));
         enable.active = menu.enabled || menu.formed;
         enable.setTooltip(Tooltip.create(Component.translatable("gui.overload_sim.laser.control_hint")));
+        build.active=!menu.formed;
         if (less != null) { less.active = menu.formed && menu.boost > 100_000; more.active = menu.formed && menu.boost < 9_000_000; }
         for (int side = 0; side < 6; side++) if (sides[side] != null) {
             boolean input = side == menu.inputSide;

@@ -208,3 +208,7 @@ FFFFFFF
 FFFFFFF
 FFFFFFF
 ```
+
+## Automatic construction
+
+After placing the controller, use the left-toolbar size selector to choose an external size of 3–7, then click Automatically build chamber. The shell grows behind the controller, with the controller near the middle of the bottom front edge. Missing floor/roof/edges use frames; four side panels use AE vibrant quartz glass. Existing legal upgrade modules, tagged frame/glass alternatives and one legal interface are preserved. Backpack materials are used first, with shortages drawn from the controller's connected AE storage. Offline backpack and free creative construction also work. Formed structures are not resized, and repeating a completed build consumes nothing. Obstructions, missing materials, unloaded cells and ownership conflicts are reported; cancelled placements refund their materials.

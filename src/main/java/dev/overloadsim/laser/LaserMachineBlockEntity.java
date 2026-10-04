@@ -42,6 +42,9 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
     private LaserStructure structure;
     private boolean structureDirty = true, wasFormed, visualFormed, visualNetworkActive, explosionTriggered;
     private boolean receiverRebuildPending;
+    private final Object receiverVisualToken = new Object();
+    private BlockPos visualCenter;
+    private Direction visualFacing;
     private long refundExtreme;
     private final LongEnergyBuffer energy;
     private final LaserGridBridge bridge = new LaserGridBridge(this);
@@ -100,7 +103,13 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
 
     public LaserKind kind() { return ((LaserMachineBlock) getBlockState().getBlock()).kind(); }
     public Direction forward() { return getBlockState().getValue(LaserMachineBlock.FACING).getOpposite(); }
-    public BlockPos center() { return structure == null ? worldPosition.offset(LaserStructureGeometry.centerOffset(kind(), forward().getOpposite())) : structure.center(); }
+    public BlockPos center() {
+        if (level != null && level.isClientSide && visualCenter != null) return visualCenter;
+        return structure == null ? worldPosition.offset(LaserStructureGeometry.centerOffset(kind(), forward().getOpposite())) : structure.center();
+    }
+    public Direction receiverVisualFacing() { return visualFacing == null ? getBlockState().getValue(LaserMachineBlock.FACING) : visualFacing; }
+    public boolean receiverSkinVisible() { return ReceiverShellVisuals.visible(this, receiverVisualToken); }
+    public void publishReceiverVisuals() { ReceiverShellVisuals.publish(this, receiverVisualToken); }
     public UUID identity() { return identity; }
     public LaserStructure structure() { return structure; }
     public boolean formed() { return level != null && level.isClientSide ? visualFormed && !isRemoved()
@@ -322,6 +331,7 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
     @Override protected void writeToStream(RegistryFriendlyByteBuf data) {
         super.writeToStream(data);
         data.writeBoolean(formed()); data.writeBoolean(networkActive()); data.writeBoolean(enabled); data.writeBoolean(explosionTriggered);
+        data.writeBlockPos(center()); data.writeByte(getBlockState().getValue(LaserMachineBlock.FACING).get3DDataValue());
         data.writeLong(boost); data.writeLong(extremeLightning); data.writeLong(coreRemainder); data.writeLong(activeUntil); data.writeLong(lastPower);
         data.writeLong(energy.stored()); data.writeLong(particles.stored()); data.writeByte(outputMask);
         data.writeVarInt(fuelRemaining); data.writeVarInt(particleRemaining); data.writeUtf(boundedText(activeFuel), 256); data.writeUtf(boundedText(status), 256);
@@ -333,6 +343,8 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
     @Override protected boolean readFromStream(RegistryFriendlyByteBuf data) {
         super.readFromStream(data);
         visualFormed = data.readBoolean(); visualNetworkActive = data.readBoolean(); enabled = data.readBoolean(); explosionTriggered = data.readBoolean();
+        visualCenter = data.readBlockPos();
+        int facing = data.readUnsignedByte(); visualFacing = facing < 6 ? Direction.from3DDataValue(facing) : getBlockState().getValue(LaserMachineBlock.FACING);
         boost = Math.clamp(data.readLong(), 100_000L, 9_000_000L); extremeLightning = Math.max(0, data.readLong());
         coreRemainder = Math.clamp(data.readLong(), 0L, LaserMath.PARTICLE_COST - 1); activeUntil = Math.max(0, data.readLong()); lastPower = Math.clamp(data.readLong(), 0L, LaserMath.MAX_BEAM);
         energy.load(Math.max(0, data.readLong())); particles.load(Math.max(0, data.readLong())); outputMask = data.readUnsignedByte() & 63;
@@ -342,26 +354,33 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
         int count = data.readVarInt(); if (count < 0 || count > 128) throw new IllegalArgumentException("laser segment count");
         var next = new ArrayList<LaserSegment>(count); for (int index = 0; index < count; index++) next.add(LaserSegment.read(data));
         segments = next;
+        publishReceiverVisuals();
         return true;
     }
 
     @Override protected void saveVisualState(CompoundTag tag) {
         super.saveVisualState(tag);
         tag.putBoolean("LaserFormed", formed()); tag.putBoolean("LaserNetwork", networkActive());
+        tag.putLong("LaserCenter", center().asLong()); tag.putInt("LaserFacing", getBlockState().getValue(LaserMachineBlock.FACING).get3DDataValue());
         if (level != null) tag.put("LaserMachine", saveMachine(level.registryAccess()));
     }
     @Override protected void loadVisualState(CompoundTag tag) {
         super.loadVisualState(tag);
         visualFormed = tag.getBoolean("LaserFormed"); visualNetworkActive = tag.getBoolean("LaserNetwork");
+        visualCenter = tag.contains("LaserCenter") ? BlockPos.of(tag.getLong("LaserCenter")) : null;
+        int facing = tag.getInt("LaserFacing");
+        visualFacing = tag.contains("LaserFacing") && facing >= 0 && facing < 6 ? Direction.from3DDataValue(facing) : getBlockState().getValue(LaserMachineBlock.FACING);
         if (level != null && tag.contains("LaserMachine")) loadMachine(tag.getCompound("LaserMachine"), level.registryAccess());
+        publishReceiverVisuals();
     }
 
     @Override public void onLoad() {
         super.onLoad();
+        publishReceiverVisuals();
         if (level != null && !level.isClientSide) { clearBeam(); LaserStructureIndex.register(this); LaserNetwork.register(this); checkStructure(); }
     }
-    @Override public void setRemoved() { LaserStructureIndex.unregister(this); LaserNetwork.unregister(this); bridge.disconnect(); clearBeam(); super.setRemoved(); }
-    @Override public void onChunkUnloaded() { LaserStructureIndex.unregister(this); LaserNetwork.unregister(this); bridge.disconnect(); clearBeam(); super.onChunkUnloaded(); }
+    @Override public void setRemoved() { ReceiverShellVisuals.remove(this, receiverVisualToken); LaserStructureIndex.unregister(this); LaserNetwork.unregister(this); bridge.disconnect(); clearBeam(); super.setRemoved(); }
+    @Override public void onChunkUnloaded() { ReceiverShellVisuals.remove(this, receiverVisualToken); LaserStructureIndex.unregister(this); LaserNetwork.unregister(this); bridge.disconnect(); clearBeam(); super.onChunkUnloaded(); }
     @Override protected void onOrientationChanged(BlockOrientation orientation) { super.onOrientationChanged(orientation); invalidateStructure(); structureDirty = true; }
     @Override public IGridNode getActionableNode() { return getMainNode().getNode(); }
     @Override public Set<Direction> getGridConnectableSides(BlockOrientation orientation) { return EnumSet.allOf(Direction.class); }

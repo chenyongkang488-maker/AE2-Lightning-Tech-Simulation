@@ -5,7 +5,10 @@ public final class SimulationStructureIndex {
     private record Owner(net.minecraft.core.BlockPos controller,java.util.UUID identity){}
     private static final java.util.Map<net.minecraft.world.level.Level,java.util.Map<net.minecraft.core.BlockPos,Owner>> OWNERS=new java.util.WeakHashMap<>();
     public static boolean occupied(net.minecraft.world.level.Level level,net.minecraft.core.BlockPos pos,SimulationControllerBlockEntity host){
-        var map=OWNERS.get(level);if(map==null)return false;var owner=map.get(pos);if(owner==null||owner.identity.equals(host.identity())&&owner.controller.equals(host.getBlockPos()))return false;
+        return occupiedByOther(level,pos,host);
+    }
+    public static boolean occupiedByOther(net.minecraft.world.level.Level level,net.minecraft.core.BlockPos pos,net.minecraft.world.level.block.entity.BlockEntity host){
+        var map=OWNERS.get(level);if(map==null)return false;var owner=map.get(pos);if(owner==null||host instanceof SimulationControllerBlockEntity c&&owner.identity.equals(c.identity())&&owner.controller.equals(c.getBlockPos()))return false;
         if(!level.hasChunkAt(owner.controller))return true;
         if(level.getBlockEntity(owner.controller) instanceof SimulationControllerBlockEntity c&&c.identity().equals(owner.identity)&&c.structure()!=null)return true;
         map.remove(pos);return false;

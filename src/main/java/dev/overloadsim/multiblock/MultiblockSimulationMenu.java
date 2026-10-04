@@ -31,13 +31,16 @@ public class MultiblockSimulationMenu extends AEBaseMenu {
     @GuiSync(42) public long hvCost;
     @GuiSync(43) public long ehvCost;
     @GuiSync(44) public int frequency=-1;
+    @GuiSync(45) public int buildSize=3;
+    @GuiSync(46) public String constructionFeedback="";
     private final SimulationControllerBlockEntity host;
+    private final UUID hostIdentity;
     private final ItemStackHandler display=new ItemStackHandler(VISIBLE_OUTPUTS);
     private final int[] quantities=new int[VISIBLE_OUTPUTS];
     private int revision;private boolean force=true;
     public static MenuType<MultiblockSimulationMenu> createType(){return MenuTypeBuilder.create(MultiblockSimulationMenu::new,SimulationControllerBlockEntity.class).withMenuTitle(h->Component.translatable("block.overload_sim.simulation_controller")).buildUnregistered(ModContent.id("simulation_controller"));}
     public MultiblockSimulationMenu(int id,Inventory inventory,SimulationControllerBlockEntity host){
-        super(MultiblockContent.MENU.get(),id,inventory,host);this.host=host;capacity=host.structure()==null?0:host.structure().capacity();
+        super(MultiblockContent.MENU.get(),id,inventory,host);this.host=host;hostIdentity=host.identity();capacity=host.structure()==null?0:host.structure().capacity();
         var crystals=new PlatformInventoryWrapper(host.crystals());var output=new PlatformInventoryWrapper(display);
         for(int i=0;i<49;i++){final int slot=i;addSlot(new SimulationCrystalSlot(crystals,i){
             @Override public boolean mayPickup(Player p){return true;}
@@ -49,10 +52,28 @@ public class MultiblockSimulationMenu extends AEBaseMenu {
         },SlotSemantics.MACHINE_OUTPUT);
         createPlayerInventorySlots(inventory);
         registerClientAction("bulkPage",Integer.class,p->{if(p>=0&&p<PAGES&&stillValid(inventory.player)){page=p;force=true;refresh();}});
+        registerClientAction("simulationSize",Integer.class,size->{
+            if(size==null||size<3||size>7||!validAction()||host.structure()!=null)return;
+            buildSize=size;constructionFeedback="";broadcastChanges();
+        });
+        registerClientAction("simulationBuild",()->{
+            if(!validAction()||!(getPlayer() instanceof ServerPlayer player))return;
+            var result=SimulationAutoConstruction.build(player,host,buildSize);
+            constructionFeedback=Component.Serializer.toJson(result.message(),host.getLevel().registryAccess());
+            broadcastChanges();
+        });
     }
     public SimulationControllerBlockEntity host(){return host;}
     public int quantity(int slot){return quantities[slot];}
     public int revision(){return revision;}
+    private boolean validAction(){return isServerSide()&&getPlayer().containerMenu==this&&stillValid(getPlayer());}
+    public void changeBuildSize(int size){sendClientAction("simulationSize",size);}
+    public void requestBuild(){sendClientAction("simulationBuild");}
+    public Component constructionFeedbackComponent(){
+        if(constructionFeedback.isEmpty()||host.getLevel()==null)return Component.empty();
+        var message=Component.Serializer.fromJson(constructionFeedback,host.getLevel().registryAccess());
+        return message==null?Component.empty():message;
+    }
     public void changePage(int value){sendClientAction("bulkPage",value);}
     public void requestTake(int visible,int mode){net.neoforged.neoforge.network.PacketDistributor.sendToServer(new MultiblockPackets.Take(containerId,page,revision,visible,mode));}
     @Override public void clicked(int slot,int button,ClickType click,Player player){if(slot>=OUTPUT_START&&slot<OUTPUT_START+VISIBLE_OUTPUTS)return;super.clicked(slot,button,click,player);}
@@ -102,7 +123,11 @@ public class MultiblockSimulationMenu extends AEBaseMenu {
             if(s!=null&&s.networkInterface()!=null&&host.getLevel().hasChunkAt(s.networkInterface())&&host.getLevel().getBlockEntity(s.networkInterface()) instanceof com.moakiee.ae2lt.blockentity.OverloadedInterfaceBlockEntity port)frequency=port.getFrequencyBinding().getFrequencyId();
         }super.broadcastChanges();
     }
-    @Override public boolean stillValid(Player player){return !host.isRemoved()&&player.level()==host.getLevel()&&player.distanceToSqr(host.getBlockPos().getCenter())<=64;}
+    @Override public boolean stillValid(Player player){
+        return !host.isRemoved()&&host.identity().equals(hostIdentity)&&host.getLevel()!=null&&player.level()==host.getLevel()
+                &&host.getLevel().hasChunkAt(host.getBlockPos())&&host.getLevel().getBlockEntity(host.getBlockPos())==host
+                &&player.distanceToSqr(host.getBlockPos().getCenter())<=64;
+    }
     @Override protected List<Slot> getQuickMoveDestinationSlots(ItemStack item,boolean fromPlayer){
         if(!fromPlayer)return super.getQuickMoveDestinationSlots(item,false);
         return getSlots(SlotSemantics.MACHINE_INPUT).stream().filter(s->s.mayPlace(item)).toList();

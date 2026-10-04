@@ -197,3 +197,16 @@ PCL OverloadSim-Test-1.21.1 的 11 个模组与开工前 SHA-256 全部一致，
 修改前的白色粒子检查在 16 个实体方块模型上失败，修改后全部通过；纹理透明度为 255，RGB 最小值均超过 210。21 份 Blockbench 工程、24 份内嵌 PNG、20 份运行模型及 JSON 校验通过。`build test` 退出码 0，20 项 JUnit 无失败或错误；JAR 内 213 份资源与源码逐字节一致。开发客户端启动到独立存档后，用户实测反馈“正常修复了”；未完成自动化落地和破坏截图验收。本次只更改客户端资源，未重复服务器 GameTest。
 
 alpha.12 JAR 为 644,061 字节，SHA256 `e13a4303f41477580ff91832c9a6062141fd313ebaeba753755601a7818ed3fb`。已更新 PCL 测试实例，alpha.11 备份位于 `addon-backups/20261002-182637/`，备份与旧版哈希一致；另外 10 个模组及 40 份配置/启动器文件与安装前快照一致。安装记录见 `docs/releases/alpha12-install.json`，构建记录见 `build/verification/particle-alpha12-build.log`。
+
+
+## 2026-10-05 alpha.3 平滑约束器与自动搭建
+
+新增通用服务器搭建事务和八种激光/粒子设备、原多方块模拟室的适配器。模拟室可选外尺寸3..7，保留合法底面升级、接口及材料别名；计划检查所有壳体和内部空格，使用两个结构索引，背包/副手优先，宿主活动AE网络补齐。保护取消、AE实际短提取、退款拒收和背包满的材料守恒均通过真实网络与放置事件测试，关闭菜单、替换宿主和重复点击也有覆盖。
+
+最终服务器改动通过49项JUnit和210项必需GameTest、版本与构建检查（automatic-construction-final-green.log，exit0）。48个激光设备/朝向组合、20个模拟室尺寸/朝向组合由真实搭建覆盖。最初一个测试撞到夹具隐形顶边界，诊断确认minecraft:barrier后将测试原点下移一格；没有修改生产代码以绕过障碍。材质/工具提示的客户端修正后，test、verifyReleaseVersion和build再次成功（automatic-construction-client-fix-build.log）。
+
+原生客户端在独立开发世界、854×480窗口及Mek/神秘农业/应用通量可选环境检查。实际按钮搭建约束器97个部件并成型；模拟室从3循环到5，搭建97个部件并自动切换25个模板槽。工具提示显示背包/AE规则和结果，激光按钮重复提示已实机复现并修正。球壳跨四个区块，半径3.3、三条连续粉白肋与粉色槽、原控制器和端口均显示；未充能端口移除后立即恢复普通壳体方块。F3+A区块重建、F3+T资源重载、远离约600格再返回后的完整加载均正常恢复。
+
+原生截图最初显示背面环肋被玻璃深度遮挡，追踪到共享透明缓冲在切换光束缓冲时提前提交。注册固定透明缓冲后，同视角确认三条完整肋；其它模组已注册同缓冲时复用它，释放未使用的新缓冲。mesh几何和服务器资源策略未改。两次客户端正常保存关闭，runClient退出0；最终日志automatic-construction-client-green.log。前置AE2LT仍有既有ExtendedAE条件配方与指南索引提示，本模组未新增对应资源错误。没有宣称大型整合包性能或多人跨权限插件已实测。
+
+预览见art/previews/laser-smooth-receiver.png、laser-auto-build.png、simulation-auto-build.png。Java与整合包作者入口见docs/construction-api.md、laser-particle-api.md与multiblock-api.md。独立只读审查记录见docs/reviews/2026-10-05-smooth-receiver-autobuild.md。最终集成构建、PCL安装哈希和旧版本备份在交付记录中保存。

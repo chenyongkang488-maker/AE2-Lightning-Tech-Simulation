@@ -13,7 +13,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 public final class MultiblockSimulationScreen extends AEBaseScreen<MultiblockSimulationMenu> {
-    private MultiblockMenuLayout layout;private boolean recovery;private final Button recoveryButton;
+    private MultiblockMenuLayout layout;private boolean recovery;private final Button recoveryButton,buildButton,sizeButton;
     public MultiblockSimulationScreen(MultiblockSimulationMenu menu,Inventory inventory,Component title){
         super(menu,inventory,title,StyleManager.loadStyleDoc("/screens/overload_sim/multiblock.json"));
         // AE2 populates its persistent toolbar during init; register this control exactly once.
@@ -22,6 +22,26 @@ public final class MultiblockSimulationScreen extends AEBaseScreen<MultiblockSim
         });
         recoveryButton.setMessage(Component.translatable("gui.overload_sim.multiblock.recovery"));
         recoveryButton.setTooltip(Tooltip.create(Component.translatable("gui.overload_sim.multiblock.recovery")));
+        buildButton=addToLeftToolbar(new IconButton(b->menu.requestBuild()){
+            @Override protected Icon getIcon(){return Icon.CRAFT_HAMMER;}
+            @Override public java.util.List<Component> getTooltipMessage(){
+                var lines=new java.util.ArrayList<Component>();lines.add(Component.translatable("gui.overload_sim.multiblock.auto_build"));
+                lines.add(Component.translatable("gui.overload_sim.multiblock.auto_build_hint"));
+                if(!menu.constructionFeedback.isEmpty())lines.add(menu.constructionFeedbackComponent());
+                return lines;
+            }
+        });
+        buildButton.setMessage(Component.translatable("gui.overload_sim.multiblock.auto_build"));
+        sizeButton=addToLeftToolbar(new IconButton(b->menu.changeBuildSize(menu.buildSize>=7?3:menu.buildSize+1)){
+            @Override protected Icon getIcon(){return Icon.SORT_BY_AMOUNT;}
+            @Override public java.util.List<Component> getTooltipMessage(){return java.util.List.of(
+                    Component.translatable("gui.overload_sim.multiblock.build_size",menu.buildSize),
+                    Component.translatable("gui.overload_sim.multiblock.build_size_hint"));}
+            @Override public void renderWidget(GuiGraphics g,int mx,int my,float partial){
+                super.renderWidget(g,mx,my,partial);
+                g.drawString(font,Integer.toString(menu.buildSize),getX()+getWidth()-8,getY()+getHeight()-10,0xFFFFFF,true);
+            }
+        });
     }
     @Override protected void init(){
         layout=MultiblockMenuLayout.of(menu.capacity,recovery);imageWidth=layout.width();imageHeight=layout.height();
@@ -37,6 +57,9 @@ public final class MultiblockSimulationScreen extends AEBaseScreen<MultiblockSim
         var hotbar=menu.getSlots(SlotSemantics.PLAYER_HOTBAR);for(int i=0;i<hotbar.size();i++)position(hotbar.get(i),layout.hotbar(i));
         boolean extra=false;for(int i=menu.capacity;i<49;i++)if(!menu.slots.get(i).getItem().isEmpty()){extra=true;break;}
         recoveryButton.visible=recovery||menu.capacity>0&&extra;recoveryButton.active=recoveryButton.visible;
+        buildButton.active=menu.capacity==0;
+        sizeButton.visible=menu.capacity==0;sizeButton.active=sizeButton.visible;
+        sizeButton.setMessage(Component.translatable("gui.overload_sim.multiblock.build_size",menu.buildSize));
     }
     private static void position(Slot slot,MultiblockMenuLayout.Point p){slot.x=p.x();slot.y=p.y();}
     @Override protected void updateBeforeRender(){
@@ -58,7 +81,7 @@ public final class MultiblockSimulationScreen extends AEBaseScreen<MultiblockSim
         int color=0x413F54,right=layout.outputLeft(),present=0;
         for(int i=0;i<menu.capacity;i++)if(!menu.slots.get(i).getItem().isEmpty())present++;
         g.drawString(font,title,8,6,color,false);
-        g.drawString(font,menu.capacity==0?Component.translatable("gui.overload_sim.multiblock.unformed"):Component.translatable("gui.overload_sim.multiblock.crystals",present,menu.capacity),10,20,color,false);
+        g.drawString(font,menu.capacity==0?Component.translatable("gui.overload_sim.multiblock.unformed_size",menu.buildSize,menu.buildSize,menu.buildSize):Component.translatable("gui.overload_sim.multiblock.crystals",present,menu.capacity),10,20,color,false);
         g.drawString(font,Component.translatable("gui.overload_sim.multiblock.outputs",menu.page+1),right,20,color,false);
         g.drawString(font,Component.literal(menu.duration+" tick · ×"+menu.multiplier),right,128,color,false);
         g.drawString(font,Component.literal("FE "+menu.fe+" / 2000000"),right,141,color,false);

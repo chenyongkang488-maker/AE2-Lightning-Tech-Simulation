@@ -33,7 +33,9 @@ public final class LaserMenu extends AEBaseMenu {
     @GuiSync(43) public String activeFuel = "";
     @GuiSync(44) public String status = "";
     @GuiSync(45) public long extremeLightning;
+    @GuiSync(46) public String buildFeedback="";
     private final LaserMachineBlockEntity host;
+    private final java.util.UUID hostIdentity;
 
     public static MenuType<LaserMenu> createType() {
         return MenuTypeBuilder.create(LaserMenu::new, LaserMachineBlockEntity.class)
@@ -44,6 +46,7 @@ public final class LaserMenu extends AEBaseMenu {
     public LaserMenu(int id, Inventory inventory, LaserMachineBlockEntity host) {
         super(LaserContent.MENU.get(), id, inventory, host);
         this.host = host;
+        hostIdentity=host.identity();
         inputSide = host.forward().getOpposite().get3DDataValue();
         if (host.kind() == LaserKind.RECEIVER) {
             var fuel = host.fuelInput();
@@ -85,6 +88,12 @@ public final class LaserMenu extends AEBaseMenu {
             if (side == input) return;
             host.setOutputMask((host.outputMask() ^ (1 << side)) & 63 & ~(1 << input));
         });
+        registerClientAction("laserBuild",()->{
+            if(!validAction()||!host.identity().equals(hostIdentity)||!(getPlayer() instanceof net.minecraft.server.level.ServerPlayer player))return;
+            var result=LaserAutoConstruction.build(player,host);
+            buildFeedback=Component.Serializer.toJson(result.message(),player.registryAccess());
+            player.displayClientMessage(result.message(),false);broadcastChanges();
+        });
     }
 
     private boolean validAction() {
@@ -100,6 +109,7 @@ public final class LaserMenu extends AEBaseMenu {
     public void toggleEnabled() { sendClientAction("laserEnabled"); }
     public void changeBoost(int step) { sendClientAction("laserBoost", step); }
     public void toggleSide(int side) { sendClientAction("laserSide", side); }
+    public void autoBuild() { sendClientAction("laserBuild"); }
 
     @Override public void broadcastChanges() {
         if (isServerSide()) {

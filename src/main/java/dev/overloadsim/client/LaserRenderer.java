@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import dev.overloadsim.ModContent;
+import dev.overloadsim.core.ReceiverShellMesh;
 import dev.overloadsim.laser.LaserKind;
 import dev.overloadsim.laser.LaserMachineBlockEntity;
 import dev.overloadsim.laser.LaserSegment;
@@ -14,9 +15,11 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
@@ -32,7 +35,7 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
 
     @Override public AABB getRenderBoundingBox(LaserMachineBlockEntity be) {
         AABB box = new AABB(be.getBlockPos());
-        if (be.formed()) box = box.minmax(new AABB(be.center()).inflate(1.6));
+        if (be.formed()) box = box.minmax(new AABB(be.center()).inflate(be.kind() == LaserKind.RECEIVER ? 3.6 : 1.6));
         int count = 0;
         for (LaserSegment segment : be.segments()) {
             if (++count > MAX_SEGMENTS) break;
@@ -47,6 +50,7 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
         double time = be.getLevel().getGameTime() + partial;
         Vec3 origin = Vec3.atLowerCornerOf(be.getBlockPos());
         Vec3 center = Vec3.atCenterOf(be.center()).subtract(origin);
+        if (be.kind() == LaserKind.RECEIVER && be.receiverSkinVisible()) receiverShell(center, poses, buffers, light);
         if (be.kind() == LaserKind.EMITTER) crystal(be, center, time, poses, buffers);
         boolean active = be.activeUntil() > be.getLevel().getGameTime();
         if (be.kind() == LaserKind.CORE && active) orb(center, time, poses, buffers);
@@ -81,6 +85,36 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
         Vec3 start = segment.start(), end = segment.end();
         return finite(start) && finite(end) && start.distanceToSqr(end) > .0001
                 && start.distanceToSqr(end) <= 128 * 128;
+    }
+
+    private static void receiverShell(Vec3 center, PoseStack poses, MultiBufferSource buffers, int light) {
+        var sprite = Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(ModContent.id("block/laser_pixel_atlas"));
+        var porcelain = buffers.getBuffer(RenderType.entitySolid(InventoryMenu.BLOCK_ATLAS));
+        for (int axis = 0; axis < 3; axis++) {
+            shellMesh(ReceiverShellMesh.rib(axis), poses.last(), porcelain, sprite, center, light, 80.5f, .5f, 15, 15);
+            // A raised, unbroken pink channel follows the outside of each curved porcelain rib.
+            shellMesh(ReceiverShellMesh.channel(axis), poses.last(), porcelain, sprite, center, light, 22, 38, 1, 1);
+        }
+        var glass = buffers.getBuffer(RenderType.entityTranslucent(InventoryMenu.BLOCK_ATLAS));
+        // This pale panel already carries its glass alpha in the existing atlas.
+        shellMesh(ReceiverShellMesh.glass(), poses.last(), glass, sprite, center, light, 65, 1, 14, 14);
+    }
+
+    private static void shellMesh(java.util.List<ReceiverShellMesh.Quad> mesh, PoseStack.Pose pose, VertexConsumer vertices,
+            TextureAtlasSprite sprite, Vec3 center, int light, float u, float v, float width, float height) {
+        for (var quad : mesh) {
+            shellVertex(quad.a(), pose, vertices, sprite, center, light, u, v, width, height);
+            shellVertex(quad.b(), pose, vertices, sprite, center, light, u, v, width, height);
+            shellVertex(quad.c(), pose, vertices, sprite, center, light, u, v, width, height);
+            shellVertex(quad.d(), pose, vertices, sprite, center, light, u, v, width, height);
+        }
+    }
+
+    private static void shellVertex(ReceiverShellMesh.Vertex vertex, PoseStack.Pose pose, VertexConsumer vertices,
+            TextureAtlasSprite sprite, Vec3 center, int light, float u, float v, float width, float height) {
+        vertices.addVertex(pose.pose(), (float) (vertex.x() + center.x), (float) (vertex.y() + center.y), (float) (vertex.z() + center.z))
+                .setColor(255, 255, 255, 255).setUv(sprite.getU((float) (u + vertex.u() * width) / 128), sprite.getV((float) (v + vertex.v() * height) / 128))
+                .setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose, (float) vertex.nx(), (float) vertex.ny(), (float) vertex.nz());
     }
 
     private static boolean finite(Vec3 v) {

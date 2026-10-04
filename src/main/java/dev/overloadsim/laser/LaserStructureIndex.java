@@ -24,10 +24,15 @@ public final class LaserStructureIndex {
     private LaserStructureIndex() {}
 
     public static boolean occupied(Level level, BlockPos pos, LaserMachineBlockEntity host) {
+        return occupiedByOther(level,pos,host);
+    }
+
+    /** Cross-system construction checks must also respect reserved empty laser apertures. */
+    public static boolean occupiedByOther(Level level,BlockPos pos,net.minecraft.world.level.block.entity.BlockEntity host) {
         var owners = OWNERS.get(level);
         if (owners == null) return false;
         var owner = owners.get(pos);
-        if (owner == null || owner.controller.equals(host.getBlockPos()) && owner.identity.equals(host.identity())) return false;
+        if (owner == null || host instanceof LaserMachineBlockEntity laser && owner.controller.equals(laser.getBlockPos()) && owner.identity.equals(laser.identity())) return false;
         if (!level.hasChunkAt(owner.controller)) return true;
         if (level.getBlockEntity(owner.controller) instanceof LaserMachineBlockEntity current && !current.isRemoved()
                 && current.identity().equals(owner.identity) && current.structure() != null) return true;

@@ -32,6 +32,8 @@
 
 ## Java API
 
+控制器界面提供外部尺寸 3..7 的选择和自动搭建。控制器放在底面前边的中间位置，结构向朝向的反方向延伸；偶数尺寸使用 `(size-1)/2` 的整数下取整位置。已有合法框架、玻璃、底面升级和单个过载接口会保留；已成型结构不能用此按钮调整尺寸。`SimulationAutoConstruction.plan(host, size)` 和 `build(player, host, size)` 使用 [通用自动搭建事务](construction-api.md)，材料优先背包，不足从宿主连接的活动 AE 网络补齐。
+
 继续使用 CrystalDataAccess 和 SimulationExtensions.registerOutput 注册水晶数据与产物提供器。新的事件位于 dev.overloadsim.api.MultiblockSimulationEvents，投递到 NeoForge.EVENT_BUS：
 
 - BeforeStructureForm：可取消；提供 controller 与 immutable structure。事件后重新校验结构。
