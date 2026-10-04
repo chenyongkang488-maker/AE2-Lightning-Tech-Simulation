@@ -65,6 +65,7 @@
   "gui.overload_sim.laser.status.interface_position": "过载接口必须唯一且位于上游框架",
   "gui.overload_sim.laser.status.structure_changed": "结构已改变，光路停止",
   "gui.overload_sim.laser.status.particle_overflow": "粒子库存过载",
+  "gui.overload_sim.laser.status.receiver_rebuild_required": "旧版约束器已安全暂停，请重建球形外壳",
   "gui.overload_sim.laser.status.invalid_loop_or_input": "光路回环或重复入射",
   "gui.overload_sim.laser.status.beam_limit": "超过单束强度上限",
   "gui.overload_sim.laser.status.modifier_cancelled": "矩阵操作被扩展事件取消",

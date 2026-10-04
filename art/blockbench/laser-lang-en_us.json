@@ -65,6 +65,7 @@
   "gui.overload_sim.laser.status.interface_position": "Use one overload interface in an upstream frame",
   "gui.overload_sim.laser.status.structure_changed": "Structure changed; beams stopped",
   "gui.overload_sim.laser.status.particle_overflow": "Particle containment overflow",
+  "gui.overload_sim.laser.status.receiver_rebuild_required": "Legacy receiver safely paused; rebuild its spherical shell",
   "gui.overload_sim.laser.status.invalid_loop_or_input": "Loop or duplicate input",
   "gui.overload_sim.laser.status.beam_limit": "Beam power limit exceeded",
   "gui.overload_sim.laser.status.modifier_cancelled": "Modifier cancelled by extension",

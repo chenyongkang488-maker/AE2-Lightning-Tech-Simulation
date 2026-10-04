@@ -1,5 +1,5 @@
 {
-  "credit": "Overload Simulation laser prototype; existing textures retain original licenses.",
+  "credit": "qiqi: powder-white laser artwork painted in Blockbench; reused crystals retain CC BY-NC-SA 3.0.",
   "parent": "minecraft:block/block",
   "ambientocclusion": false,
   "render_type": "minecraft:cutout",
@@ -9,697 +9,1041 @@
   ],
   "textures": {
     "particle": "minecraft:block/white_concrete",
-    "pink": "overload_sim:block/simulation_frame",
-    "frame": "overload_sim:block/simulation_frame_formed"
+    "atlas": "overload_sim:block/laser_pixel_atlas"
   },
   "elements": [
     {
-      "name": "crystal layer 0",
+      "name": "ceramic pedestal",
       "from": [
-        7,
         2,
-        7
+        0,
+        2
       ],
       "to": [
-        9,
-        4,
-        9
+        14,
+        2,
+        14
       ],
       "faces": {
         "north": {
           "uv": [
-            1,
-            1,
+            0,
+            4,
             2,
-            2
+            6
           ],
-          "texture": "#pink"
+          "texture": "#atlas"
         },
         "east": {
           "uv": [
-            1,
-            1,
+            0,
+            4,
             2,
-            2
+            6
           ],
-          "texture": "#pink"
+          "texture": "#atlas"
         },
         "south": {
           "uv": [
-            1,
-            1,
+            0,
+            4,
             2,
-            2
+            6
           ],
-          "texture": "#pink"
+          "texture": "#atlas"
         },
         "west": {
           "uv": [
-            1,
-            1,
+            0,
+            4,
             2,
-            2
+            6
           ],
-          "texture": "#pink"
+          "texture": "#atlas"
         },
         "up": {
           "uv": [
-            1,
-            1,
+            0,
+            4,
             2,
-            2
+            6
           ],
-          "texture": "#pink"
+          "texture": "#atlas"
         },
         "down": {
           "uv": [
-            1,
-            1,
+            0,
+            4,
             2,
-            2
+            6
           ],
-          "texture": "#pink"
+          "texture": "#atlas"
         }
       }
     },
     {
-      "name": "crystal layer 1",
+      "name": "recessed capacitor",
       "from": [
-        6,
         4,
-        6
+        2,
+        4
       ],
       "to": [
-        10,
-        6,
-        10
+        12,
+        3,
+        12
       ],
       "faces": {
         "north": {
           "uv": [
-            1,
-            1,
-            2,
+            6,
+            0,
+            8,
             2
           ],
-          "texture": "#pink"
+          "texture": "#atlas"
         },
         "east": {
           "uv": [
-            1,
-            1,
-            2,
+            6,
+            0,
+            8,
             2
           ],
-          "texture": "#pink"
+          "texture": "#atlas"
         },
         "south": {
           "uv": [
-            1,
-            1,
-            2,
+            6,
+            0,
+            8,
             2
           ],
-          "texture": "#pink"
+          "texture": "#atlas"
         },
         "west": {
           "uv": [
-            1,
-            1,
-            2,
+            6,
+            0,
+            8,
             2
           ],
-          "texture": "#pink"
+          "texture": "#atlas"
         },
         "up": {
           "uv": [
-            1,
-            1,
-            2,
+            6,
+            0,
+            8,
             2
           ],
-          "texture": "#pink"
+          "texture": "#atlas"
         },
         "down": {
           "uv": [
-            1,
-            1,
-            2,
+            6,
+            0,
+            8,
             2
           ],
-          "texture": "#pink"
+          "texture": "#atlas"
         }
       }
     },
     {
-      "name": "crystal layer 2",
+      "name": "pink central socket",
       "from": [
         5,
-        6,
+        3,
         5
       ],
       "to": [
         11,
-        10,
+        4,
         11
       ],
       "faces": {
         "north": {
           "uv": [
-            1,
-            1,
-            2,
-            2
+            14,
+            4,
+            16,
+            6
           ],
-          "texture": "#pink"
+          "texture": "#atlas"
         },
         "east": {
           "uv": [
-            1,
-            1,
-            2,
-            2
+            14,
+            4,
+            16,
+            6
           ],
-          "texture": "#pink"
+          "texture": "#atlas"
         },
         "south": {
           "uv": [
-            1,
-            1,
-            2,
-            2
+            14,
+            4,
+            16,
+            6
           ],
-          "texture": "#pink"
+          "texture": "#atlas"
         },
         "west": {
           "uv": [
-            1,
-            1,
-            2,
-            2
+            14,
+            4,
+            16,
+            6
           ],
-          "texture": "#pink"
+          "texture": "#atlas"
         },
         "up": {
           "uv": [
-            1,
-            1,
-            2,
-            2
+            14,
+            4,
+            16,
+            6
           ],
-          "texture": "#pink"
+          "texture": "#atlas"
         },
         "down": {
           "uv": [
-            1,
-            1,
-            2,
-            2
+            14,
+            4,
+            16,
+            6
           ],
-          "texture": "#pink"
+          "texture": "#atlas"
         }
       }
     },
     {
-      "name": "crystal layer 3",
+      "name": "floating crystal stabilizer",
       "from": [
+        2,
+        2,
+        2
+      ],
+      "to": [
+        4,
         6,
-        10,
+        4
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "south": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "floating crystal stabilizer",
+      "from": [
+        2,
+        2,
+        12
+      ],
+      "to": [
+        4,
+        6,
+        14
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "south": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "floating crystal stabilizer",
+      "from": [
+        12,
+        2,
+        2
+      ],
+      "to": [
+        14,
+        6,
+        4
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "south": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "floating crystal stabilizer",
+      "from": [
+        12,
+        2,
+        12
+      ],
+      "to": [
+        14,
+        6,
+        14
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "south": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "collapse field rail",
+      "from": [
+        3,
+        6,
+        3
+      ],
+      "to": [
+        13,
+        7,
+        4
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            6,
+            4,
+            8,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            6,
+            4,
+            8,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "south": {
+          "uv": [
+            6,
+            4,
+            8,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            6,
+            4,
+            8,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            6,
+            4,
+            8,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            6,
+            4,
+            8,
+            6
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "collapse field rail",
+      "from": [
+        3,
+        6,
+        12
+      ],
+      "to": [
+        13,
+        7,
+        13
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            6,
+            4,
+            8,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            6,
+            4,
+            8,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "south": {
+          "uv": [
+            6,
+            4,
+            8,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            6,
+            4,
+            8,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            6,
+            4,
+            8,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            6,
+            4,
+            8,
+            6
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "collapse field rail",
+      "from": [
+        3,
+        6,
+        4
+      ],
+      "to": [
+        4,
+        7,
+        12
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            6,
+            4,
+            8,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            6,
+            4,
+            8,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "south": {
+          "uv": [
+            6,
+            4,
+            8,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            6,
+            4,
+            8,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            6,
+            4,
+            8,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            6,
+            4,
+            8,
+            6
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "collapse field rail",
+      "from": [
+        12,
+        6,
+        4
+      ],
+      "to": [
+        13,
+        7,
+        12
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            6,
+            4,
+            8,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            6,
+            4,
+            8,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "south": {
+          "uv": [
+            6,
+            4,
+            8,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            6,
+            4,
+            8,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            6,
+            4,
+            8,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            6,
+            4,
+            8,
+            6
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "collapse field rail",
+      "from": [
+        5,
+        11,
+        5
+      ],
+      "to": [
+        11,
+        12,
+        6
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            6,
+            4,
+            8,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            6,
+            4,
+            8,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "south": {
+          "uv": [
+            6,
+            4,
+            8,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            6,
+            4,
+            8,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            6,
+            4,
+            8,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            6,
+            4,
+            8,
+            6
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "collapse field rail",
+      "from": [
+        5,
+        11,
+        10
+      ],
+      "to": [
+        11,
+        12,
+        11
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            6,
+            4,
+            8,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            6,
+            4,
+            8,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "south": {
+          "uv": [
+            6,
+            4,
+            8,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            6,
+            4,
+            8,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            6,
+            4,
+            8,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            6,
+            4,
+            8,
+            6
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "collapse field rail",
+      "from": [
+        5,
+        11,
         6
       ],
       "to": [
-        10,
+        6,
         12,
         10
       ],
       "faces": {
         "north": {
           "uv": [
-            1,
-            1,
-            2,
-            2
+            6,
+            4,
+            8,
+            6
           ],
-          "texture": "#pink"
+          "texture": "#atlas"
         },
         "east": {
           "uv": [
-            1,
-            1,
-            2,
-            2
+            6,
+            4,
+            8,
+            6
           ],
-          "texture": "#pink"
+          "texture": "#atlas"
         },
         "south": {
           "uv": [
-            1,
-            1,
-            2,
-            2
+            6,
+            4,
+            8,
+            6
           ],
-          "texture": "#pink"
+          "texture": "#atlas"
         },
         "west": {
           "uv": [
-            1,
-            1,
-            2,
-            2
+            6,
+            4,
+            8,
+            6
           ],
-          "texture": "#pink"
+          "texture": "#atlas"
         },
         "up": {
           "uv": [
-            1,
-            1,
-            2,
-            2
+            6,
+            4,
+            8,
+            6
           ],
-          "texture": "#pink"
+          "texture": "#atlas"
         },
         "down": {
           "uv": [
-            1,
-            1,
-            2,
-            2
+            6,
+            4,
+            8,
+            6
           ],
-          "texture": "#pink"
+          "texture": "#atlas"
         }
       }
     },
     {
-      "name": "crystal layer 4",
+      "name": "collapse field rail",
       "from": [
-        7,
+        10,
+        11,
+        6
+      ],
+      "to": [
+        11,
         12,
-        7
-      ],
-      "to": [
-        9,
-        14,
-        9
+        10
       ],
       "faces": {
         "north": {
           "uv": [
-            1,
-            1,
-            2,
-            2
+            6,
+            4,
+            8,
+            6
           ],
-          "texture": "#pink"
+          "texture": "#atlas"
         },
         "east": {
           "uv": [
-            1,
-            1,
-            2,
-            2
+            6,
+            4,
+            8,
+            6
           ],
-          "texture": "#pink"
+          "texture": "#atlas"
         },
         "south": {
           "uv": [
-            1,
-            1,
-            2,
-            2
+            6,
+            4,
+            8,
+            6
           ],
-          "texture": "#pink"
+          "texture": "#atlas"
         },
         "west": {
           "uv": [
-            1,
-            1,
-            2,
-            2
+            6,
+            4,
+            8,
+            6
           ],
-          "texture": "#pink"
+          "texture": "#atlas"
         },
         "up": {
           "uv": [
-            1,
-            1,
-            2,
-            2
+            6,
+            4,
+            8,
+            6
           ],
-          "texture": "#pink"
+          "texture": "#atlas"
         },
         "down": {
           "uv": [
-            1,
-            1,
-            2,
-            2
+            6,
+            4,
+            8,
+            6
           ],
-          "texture": "#pink"
-        }
-      }
-    },
-    {
-      "name": "crystal support",
-      "from": [
-        4,
-        0,
-        4
-      ],
-      "to": [
-        12,
-        2,
-        12
-      ],
-      "faces": {
-        "north": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#frame"
-        },
-        "east": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#frame"
-        },
-        "south": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#frame"
-        },
-        "west": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#frame"
-        },
-        "up": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#frame"
-        },
-        "down": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#frame"
-        }
-      }
-    },
-    {
-      "name": "core stabilizer",
-      "from": [
-        2,
-        0,
-        2
-      ],
-      "to": [
-        4,
-        6,
-        4
-      ],
-      "faces": {
-        "north": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#frame"
-        },
-        "east": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#frame"
-        },
-        "south": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#frame"
-        },
-        "west": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#frame"
-        },
-        "up": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#frame"
-        },
-        "down": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#frame"
-        }
-      }
-    },
-    {
-      "name": "core stabilizer",
-      "from": [
-        2,
-        0,
-        12
-      ],
-      "to": [
-        4,
-        6,
-        14
-      ],
-      "faces": {
-        "north": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#frame"
-        },
-        "east": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#frame"
-        },
-        "south": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#frame"
-        },
-        "west": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#frame"
-        },
-        "up": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#frame"
-        },
-        "down": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#frame"
-        }
-      }
-    },
-    {
-      "name": "core stabilizer",
-      "from": [
-        12,
-        0,
-        2
-      ],
-      "to": [
-        14,
-        6,
-        4
-      ],
-      "faces": {
-        "north": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#frame"
-        },
-        "east": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#frame"
-        },
-        "south": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#frame"
-        },
-        "west": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#frame"
-        },
-        "up": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#frame"
-        },
-        "down": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#frame"
-        }
-      }
-    },
-    {
-      "name": "core stabilizer",
-      "from": [
-        12,
-        0,
-        12
-      ],
-      "to": [
-        14,
-        6,
-        14
-      ],
-      "faces": {
-        "north": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#frame"
-        },
-        "east": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#frame"
-        },
-        "south": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#frame"
-        },
-        "west": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#frame"
-        },
-        "up": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#frame"
-        },
-        "down": {
-          "uv": [
-            0,
-            0,
-            16,
-            16
-          ],
-          "texture": "#frame"
+          "texture": "#atlas"
         }
       }
     }

@@ -1,5 +1,5 @@
 {
-  "credit": "Overload Simulation laser prototype; existing textures retain original licenses.",
+  "credit": "qiqi: powder-white laser artwork painted in Blockbench; reused crystals retain CC BY-NC-SA 3.0.",
   "parent": "minecraft:block/block",
   "ambientocclusion": false,
   "render_type": "minecraft:cutout",
@@ -9,20 +9,709 @@
   ],
   "textures": {
     "particle": "minecraft:block/white_concrete",
-    "case": "overload_sim:block/simulation_controller",
-    "screen": "overload_sim:block/simulation_controller_front",
-    "pink": "overload_sim:block/simulation_frame"
+    "atlas": "overload_sim:block/laser_pixel_atlas",
+    "ecg": "overload_sim:block/simulation_controller_ecg"
   },
   "elements": [
     {
-      "name": "white housing and dark pink screen",
+      "name": "bevelled ceramic body",
+      "from": [
+        0.5,
+        0.5,
+        1
+      ],
+      "to": [
+        15.5,
+        15.5,
+        15.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            2,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            2,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            2,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            2,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            2,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            2,
+            2
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "recessed screen bezel",
+      "from": [
+        2,
+        2,
+        0.5
+      ],
+      "to": [
+        14,
+        14,
+        1
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            10,
+            4,
+            12,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            10,
+            4,
+            12,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "south": {
+          "uv": [
+            10,
+            4,
+            12,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            10,
+            4,
+            12,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            10,
+            4,
+            12,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            10,
+            4,
+            12,
+            6
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "equipment function glyph",
+      "from": [
+        4,
+        6,
+        0.35
+      ],
+      "to": [
+        12,
+        14,
+        0.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            2,
+            2,
+            4
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            0,
+            2,
+            2,
+            4
+          ],
+          "texture": "#atlas"
+        },
+        "south": {
+          "uv": [
+            0,
+            2,
+            2,
+            4
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            0,
+            2,
+            2,
+            4
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            0,
+            2,
+            2,
+            4
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            0,
+            2,
+            2,
+            4
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "dynamic pink ECG",
+      "from": [
+        4,
+        3,
+        0.3
+      ],
+      "to": [
+        12,
+        5,
+        0.48
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#ecg"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#ecg"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#ecg"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#ecg"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#ecg"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#ecg"
+        }
+      }
+    },
+    {
+      "name": "status lamp",
+      "from": [
+        2.5,
+        3,
+        0.2
+      ],
+      "to": [
+        3.5,
+        4,
+        0.4
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            12,
+            4,
+            14,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            12,
+            4,
+            14,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "south": {
+          "uv": [
+            12,
+            4,
+            14,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            12,
+            4,
+            14,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            12,
+            4,
+            14,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            12,
+            4,
+            14,
+            6
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "pink conductor rail",
       "from": [
         0,
+        1,
+        0
+      ],
+      "to": [
+        2,
+        15,
+        1.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "south": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "white rear spine",
+      "from": [
         0,
-        0.05
+        1,
+        14
+      ],
+      "to": [
+        2,
+        15,
+        16
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            4,
+            2,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            0,
+            4,
+            2,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "south": {
+          "uv": [
+            0,
+            4,
+            2,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            0,
+            4,
+            2,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            0,
+            4,
+            2,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            0,
+            4,
+            2,
+            6
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "pink conductor rail",
+      "from": [
+        14,
+        1,
+        0
       ],
       "to": [
         16,
+        15,
+        1.5
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "south": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "white rear spine",
+      "from": [
+        14,
+        1,
+        14
+      ],
+      "to": [
+        16,
+        15,
+        16
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            4,
+            2,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            0,
+            4,
+            2,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "south": {
+          "uv": [
+            0,
+            4,
+            2,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            0,
+            4,
+            2,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            0,
+            4,
+            2,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            0,
+            4,
+            2,
+            6
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "ceramic edge brace",
+      "from": [
+        2,
+        0,
+        0
+      ],
+      "to": [
+        14,
+        2,
+        16
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            4,
+            2,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            0,
+            4,
+            2,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "south": {
+          "uv": [
+            0,
+            4,
+            2,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            0,
+            4,
+            2,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            0,
+            4,
+            2,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            0,
+            4,
+            2,
+            6
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "ceramic edge brace",
+      "from": [
+        2,
+        14,
+        0
+      ],
+      "to": [
+        14,
         16,
         16
       ],
@@ -30,131 +719,194 @@
         "north": {
           "uv": [
             0,
-            0,
-            16,
-            16
+            4,
+            2,
+            6
           ],
-          "texture": "#screen",
-          "cullface": "north"
+          "texture": "#atlas"
         },
         "east": {
           "uv": [
             0,
-            0,
-            16,
-            16
+            4,
+            2,
+            6
           ],
-          "texture": "#case",
-          "cullface": "east"
+          "texture": "#atlas"
         },
         "south": {
           "uv": [
             0,
-            0,
-            16,
-            16
+            4,
+            2,
+            6
           ],
-          "texture": "#case",
-          "cullface": "south"
+          "texture": "#atlas"
         },
         "west": {
           "uv": [
             0,
-            0,
-            16,
-            16
+            4,
+            2,
+            6
           ],
-          "texture": "#case",
-          "cullface": "west"
+          "texture": "#atlas"
         },
         "up": {
           "uv": [
             0,
-            0,
-            16,
-            16
+            4,
+            2,
+            6
           ],
-          "texture": "#case",
-          "cullface": "up"
+          "texture": "#atlas"
         },
         "down": {
           "uv": [
             0,
-            0,
-            16,
-            16
+            4,
+            2,
+            6
           ],
-          "texture": "#case",
-          "cullface": "down"
+          "texture": "#atlas"
         }
       }
     },
     {
-      "name": "function marker 1",
+      "name": "side carbon vent",
       "from": [
-        3.0,
-        2,
-        0
+        0,
+        5,
+        4
       ],
       "to": [
-        4.0,
-        3,
-        0.04
+        0.4,
+        11,
+        12
       ],
       "faces": {
         "north": {
           "uv": [
-            1,
-            1,
-            2,
-            2
+            4,
+            4,
+            6,
+            6
           ],
-          "texture": "#pink"
+          "texture": "#atlas"
         },
         "east": {
           "uv": [
-            1,
-            1,
-            2,
-            2
+            4,
+            4,
+            6,
+            6
           ],
-          "texture": "#pink"
+          "texture": "#atlas"
         },
         "south": {
           "uv": [
-            1,
-            1,
-            2,
-            2
+            4,
+            4,
+            6,
+            6
           ],
-          "texture": "#pink"
+          "texture": "#atlas"
         },
         "west": {
           "uv": [
-            1,
-            1,
-            2,
-            2
+            4,
+            4,
+            6,
+            6
           ],
-          "texture": "#pink"
+          "texture": "#atlas"
         },
         "up": {
           "uv": [
-            1,
-            1,
-            2,
-            2
+            4,
+            4,
+            6,
+            6
           ],
-          "texture": "#pink"
+          "texture": "#atlas"
         },
         "down": {
           "uv": [
-            1,
-            1,
-            2,
-            2
+            4,
+            4,
+            6,
+            6
           ],
-          "texture": "#pink"
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "side carbon vent",
+      "from": [
+        15.6,
+        5,
+        4
+      ],
+      "to": [
+        16.0,
+        11,
+        12
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            4,
+            6,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            4,
+            4,
+            6,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "south": {
+          "uv": [
+            4,
+            4,
+            6,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            4,
+            4,
+            6,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            4,
+            4,
+            6,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            4,
+            4,
+            6,
+            6
+          ],
+          "texture": "#atlas"
         }
       }
     }

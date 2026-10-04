@@ -200,5 +200,12 @@
   "gui.overload_sim.laser.status.fuel_rule_changed": "已支付耗材的配方发生改变",
   "gui.overload_sim.laser.status.conversion_cancelled": "粒子转化事件已取消",
   "gui.overload_sim.laser.status.particle_overflow": "粒子库存溢出",
-  "death.attack.overload_sim.high_energy_laser": "%1$s 被高能激光击穿"
+  "death.attack.overload_sim.high_energy_laser": "%1$s 被高能激光击穿",
+  "gui.overload_sim.laser.status.controller": "控制器无效",
+  "gui.overload_sim.laser.status.frame": "缺少激光框架",
+  "gui.overload_sim.laser.status.glass": "缺少通光玻璃",
+  "gui.overload_sim.laser.status.source": "缺少源水晶",
+  "gui.overload_sim.laser.status.port": "缺少光口",
+  "gui.overload_sim.laser.status.air": "内部或光孔被占用",
+  "gui.overload_sim.laser.status.receiver_rebuild_required": "旧版约束器已安全暂停，请重建球形外壳"
 }

@@ -200,5 +200,12 @@
   "gui.overload_sim.laser.status.fuel_rule_changed": "Fuel rule changed",
   "gui.overload_sim.laser.status.conversion_cancelled": "Conversion cancelled",
   "gui.overload_sim.laser.status.particle_overflow": "Particle overflow",
-  "death.attack.overload_sim.high_energy_laser": "%1$s was pierced by a high energy laser"
+  "death.attack.overload_sim.high_energy_laser": "%1$s was pierced by a high energy laser",
+  "gui.overload_sim.laser.status.controller": "Invalid controller",
+  "gui.overload_sim.laser.status.frame": "Missing laser frame",
+  "gui.overload_sim.laser.status.glass": "Missing laser glass",
+  "gui.overload_sim.laser.status.source": "Missing source crystal",
+  "gui.overload_sim.laser.status.port": "Missing optical port",
+  "gui.overload_sim.laser.status.air": "Interior or aperture obstructed",
+  "gui.overload_sim.laser.status.receiver_rebuild_required": "Legacy receiver safely paused; rebuild its spherical shell"
 }

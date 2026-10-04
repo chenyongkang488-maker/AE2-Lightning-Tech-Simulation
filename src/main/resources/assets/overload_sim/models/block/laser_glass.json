@@ -1,5 +1,5 @@
 {
-  "credit": "Overload Simulation laser prototype; existing textures retain original licenses.",
+  "credit": "qiqi: powder-white laser artwork painted in Blockbench; reused crystals retain CC BY-NC-SA 3.0.",
   "parent": "minecraft:block/block",
   "ambientocclusion": false,
   "render_type": "minecraft:translucent",
@@ -9,11 +9,11 @@
   ],
   "textures": {
     "particle": "minecraft:block/white_concrete",
-    "glass": "overload_sim:block/simulation_chamber_glass"
+    "glass": "overload_sim:block/simulation_glass_north"
   },
   "elements": [
     {
-      "name": "transparent vanilla style glass",
+      "name": "borderless pale pink observation glass",
       "from": [
         0,
         0,

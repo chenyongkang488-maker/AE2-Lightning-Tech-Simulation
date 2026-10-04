@@ -1,5 +1,5 @@
 {
-  "credit": "Overload Simulation laser prototype; existing textures retain original licenses.",
+  "credit": "qiqi: powder-white laser artwork painted in Blockbench; reused crystals retain CC BY-NC-SA 3.0.",
   "parent": "minecraft:block/block",
   "ambientocclusion": false,
   "render_type": "minecraft:cutout",
@@ -9,11 +9,11 @@
   ],
   "textures": {
     "particle": "minecraft:block/white_concrete",
-    "frame": "overload_sim:block/simulation_frame_formed"
+    "atlas": "overload_sim:block/laser_pixel_atlas"
   },
   "elements": [
     {
-      "name": "white pink structural frame",
+      "name": "ceramic frame with continuous pink channels",
       "from": [
         0,
         0,
@@ -27,62 +27,62 @@
       "faces": {
         "north": {
           "uv": [
-            0,
-            0,
-            16,
-            16
+            2,
+            4,
+            4,
+            6
           ],
-          "texture": "#frame",
+          "texture": "#atlas",
           "cullface": "north"
         },
         "east": {
           "uv": [
-            0,
-            0,
-            16,
-            16
+            2,
+            4,
+            4,
+            6
           ],
-          "texture": "#frame",
+          "texture": "#atlas",
           "cullface": "east"
         },
         "south": {
           "uv": [
-            0,
-            0,
-            16,
-            16
+            2,
+            4,
+            4,
+            6
           ],
-          "texture": "#frame",
+          "texture": "#atlas",
           "cullface": "south"
         },
         "west": {
           "uv": [
-            0,
-            0,
-            16,
-            16
+            2,
+            4,
+            4,
+            6
           ],
-          "texture": "#frame",
+          "texture": "#atlas",
           "cullface": "west"
         },
         "up": {
           "uv": [
             0,
-            0,
-            16,
-            16
+            4,
+            2,
+            6
           ],
-          "texture": "#frame",
+          "texture": "#atlas",
           "cullface": "up"
         },
         "down": {
           "uv": [
             0,
-            0,
-            16,
-            16
+            4,
+            2,
+            6
           ],
-          "texture": "#frame",
+          "texture": "#atlas",
           "cullface": "down"
         }
       }

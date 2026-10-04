@@ -36,6 +36,7 @@ def verify():
             assert all(0 <= c <= 16 for c in element['from'] + element['to']), name
             for face in element['faces'].values():
                 assert face['texture'][1:] in model['textures'], (name, face)
+                assert all(0 <= value <= 16 for value in face['uv']), (name, face)
         assert len(groups[name]['children']) == len(model['elements']), name
         # The workshop preview and exported voxel geometry must be identical, up to group placement.
         offset = groups[name]['origin']
@@ -43,6 +44,11 @@ def verify():
             authored = project_elements[child]
             for edge in ('from', 'to'):
                 assert authored[edge] == [element[edge][i] + offset[i] for i in range(3)], (name, edge)
+            for face_name, face in element['faces'].items():
+                painted = authored['faces'][face_name]
+                texture = project['textures'][painted['texture']]
+                scales = [texture['uv_width']/16,texture['uv_height']/16]*2
+                assert painted['uv'] == [v*s for v,s in zip(face['uv'],scales)], (name, face_name)
         state = read(ASSETS / f'blockstates/{name}.json')['variants']
         if name in MACHINES:
             assert set(state) == {f'facing={face}' for face in ('north', 'south', 'east', 'west', 'up', 'down')}, name
@@ -52,6 +58,12 @@ def verify():
         loot = read(ROOT / f'src/main/resources/data/overload_sim/loot_table/blocks/{name}.json')
         assert loot['pools'][0]['entries'][0]['name'] == f'overload_sim:{name}', name
     assert read(ASSETS / 'models/block/laser_glass.json')['render_type'] == 'minecraft:translucent'
+    assert read(ASSETS / 'models/block/laser_glass.json')['textures']['glass'] == 'overload_sim:block/simulation_glass_north'
+    atlas_project=read(ROOT / 'art/blockbench/laser-pixel-atlas.bbmodel')
+    assert atlas_project['textures'][0]['layers'], 'Native Blockbench painted layer missing'
+    for texture in project['textures']:
+        if texture['name'] == 'simulation_controller_ecg.png':
+            assert (texture['uv_width'],texture['uv_height']) == (32,16), 'Animated ECG UV must use one frame'
     style = read(ROOT / 'src/main/resources/assets/ae2/screens/overload_sim/laser.json')
     assert style['helpTopic'] == 'overload_sim:laser-particle.md'
     for folder in ('', '_zh_cn/'):
@@ -63,7 +75,7 @@ def verify():
         for name in MACHINES + PARTS:
             assert f'block.overload_sim.{name}' in snippets
     print(f'Laser resources verified: {len(MACHINES + PARTS)} block/item/state/loot sets, '
-          f'{len(project["elements"])} matching Blockbench elements, {len(project["textures"])} embedded existing textures; six facing variants, guides and language snippets.')
+          f'{len(project["elements"])} matching Blockbench elements, {len(project["textures"])} embedded textures; UV parity, native paint layer, six facing variants, guides and language snippets.')
 
 if __name__ == '__main__':
     verify()

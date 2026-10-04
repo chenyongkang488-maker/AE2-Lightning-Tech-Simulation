@@ -15,8 +15,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageType;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.common.util.FakePlayerFactory;
@@ -196,9 +194,8 @@ public final class LaserNetwork {
         var hits=new HashMap<LivingEntity,Float>();
         for(var line:lines){
             if(line.particle())continue;
-            var bounds=new AABB(line.start(),line.end()).inflate(.24);var delta=line.end().subtract(line.start());double length=delta.lengthSqr();
-            for(var entity:level.getEntitiesOfClass(LivingEntity.class,bounds,e->e.isAlive()&&!e.isSpectator())){
-                if(!entity.getBoundingBox().inflate(.16).contains(line.start())&&entity.getBoundingBox().inflate(.16).clip(line.start(),line.end()).isEmpty())continue;
+            for(var entity:level.getEntitiesOfClass(LivingEntity.class,line.bounds(),e->e.isAlive()&&!e.isSpectator())){
+                if(!line.intersects(entity.getBoundingBox()))continue;
                 float amount=(float)Math.min(1_000_000D,line.energy()/10000D*LaserSettings.damageScale());hits.merge(entity,amount,Math::max);
             }
         }

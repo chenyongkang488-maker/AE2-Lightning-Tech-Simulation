@@ -1,5 +1,5 @@
 {
-  "credit": "Overload Simulation laser prototype; existing textures retain original licenses.",
+  "credit": "qiqi: powder-white laser artwork painted in Blockbench; reused crystals retain CC BY-NC-SA 3.0.",
   "parent": "minecraft:block/block",
   "ambientocclusion": false,
   "render_type": "minecraft:cutout",
@@ -9,421 +9,835 @@
   ],
   "textures": {
     "particle": "minecraft:block/white_concrete",
-    "pink": "overload_sim:block/simulation_frame",
-    "frame": "overload_sim:block/simulation_frame_formed"
+    "atlas": "overload_sim:block/laser_pixel_atlas",
+    "metal": "overload_sim:item/resonance_coil_body"
   },
   "elements": [
     {
-      "name": "crystal layer 0",
+      "name": "ceramic pedestal",
       "from": [
-        7,
         2,
-        7
-      ],
-      "to": [
-        9,
-        4,
-        9
-      ],
-      "faces": {
-        "north": {
-          "uv": [
-            1,
-            1,
-            2,
-            2
-          ],
-          "texture": "#pink"
-        },
-        "east": {
-          "uv": [
-            1,
-            1,
-            2,
-            2
-          ],
-          "texture": "#pink"
-        },
-        "south": {
-          "uv": [
-            1,
-            1,
-            2,
-            2
-          ],
-          "texture": "#pink"
-        },
-        "west": {
-          "uv": [
-            1,
-            1,
-            2,
-            2
-          ],
-          "texture": "#pink"
-        },
-        "up": {
-          "uv": [
-            1,
-            1,
-            2,
-            2
-          ],
-          "texture": "#pink"
-        },
-        "down": {
-          "uv": [
-            1,
-            1,
-            2,
-            2
-          ],
-          "texture": "#pink"
-        }
-      }
-    },
-    {
-      "name": "crystal layer 1",
-      "from": [
-        6,
-        4,
-        6
-      ],
-      "to": [
-        10,
-        6,
-        10
-      ],
-      "faces": {
-        "north": {
-          "uv": [
-            1,
-            1,
-            2,
-            2
-          ],
-          "texture": "#pink"
-        },
-        "east": {
-          "uv": [
-            1,
-            1,
-            2,
-            2
-          ],
-          "texture": "#pink"
-        },
-        "south": {
-          "uv": [
-            1,
-            1,
-            2,
-            2
-          ],
-          "texture": "#pink"
-        },
-        "west": {
-          "uv": [
-            1,
-            1,
-            2,
-            2
-          ],
-          "texture": "#pink"
-        },
-        "up": {
-          "uv": [
-            1,
-            1,
-            2,
-            2
-          ],
-          "texture": "#pink"
-        },
-        "down": {
-          "uv": [
-            1,
-            1,
-            2,
-            2
-          ],
-          "texture": "#pink"
-        }
-      }
-    },
-    {
-      "name": "crystal layer 2",
-      "from": [
-        5,
-        6,
-        5
-      ],
-      "to": [
-        11,
-        10,
-        11
-      ],
-      "faces": {
-        "north": {
-          "uv": [
-            1,
-            1,
-            2,
-            2
-          ],
-          "texture": "#pink"
-        },
-        "east": {
-          "uv": [
-            1,
-            1,
-            2,
-            2
-          ],
-          "texture": "#pink"
-        },
-        "south": {
-          "uv": [
-            1,
-            1,
-            2,
-            2
-          ],
-          "texture": "#pink"
-        },
-        "west": {
-          "uv": [
-            1,
-            1,
-            2,
-            2
-          ],
-          "texture": "#pink"
-        },
-        "up": {
-          "uv": [
-            1,
-            1,
-            2,
-            2
-          ],
-          "texture": "#pink"
-        },
-        "down": {
-          "uv": [
-            1,
-            1,
-            2,
-            2
-          ],
-          "texture": "#pink"
-        }
-      }
-    },
-    {
-      "name": "crystal layer 3",
-      "from": [
-        6,
-        10,
-        6
-      ],
-      "to": [
-        10,
-        12,
-        10
-      ],
-      "faces": {
-        "north": {
-          "uv": [
-            1,
-            1,
-            2,
-            2
-          ],
-          "texture": "#pink"
-        },
-        "east": {
-          "uv": [
-            1,
-            1,
-            2,
-            2
-          ],
-          "texture": "#pink"
-        },
-        "south": {
-          "uv": [
-            1,
-            1,
-            2,
-            2
-          ],
-          "texture": "#pink"
-        },
-        "west": {
-          "uv": [
-            1,
-            1,
-            2,
-            2
-          ],
-          "texture": "#pink"
-        },
-        "up": {
-          "uv": [
-            1,
-            1,
-            2,
-            2
-          ],
-          "texture": "#pink"
-        },
-        "down": {
-          "uv": [
-            1,
-            1,
-            2,
-            2
-          ],
-          "texture": "#pink"
-        }
-      }
-    },
-    {
-      "name": "crystal layer 4",
-      "from": [
-        7,
-        12,
-        7
-      ],
-      "to": [
-        9,
-        14,
-        9
-      ],
-      "faces": {
-        "north": {
-          "uv": [
-            1,
-            1,
-            2,
-            2
-          ],
-          "texture": "#pink"
-        },
-        "east": {
-          "uv": [
-            1,
-            1,
-            2,
-            2
-          ],
-          "texture": "#pink"
-        },
-        "south": {
-          "uv": [
-            1,
-            1,
-            2,
-            2
-          ],
-          "texture": "#pink"
-        },
-        "west": {
-          "uv": [
-            1,
-            1,
-            2,
-            2
-          ],
-          "texture": "#pink"
-        },
-        "up": {
-          "uv": [
-            1,
-            1,
-            2,
-            2
-          ],
-          "texture": "#pink"
-        },
-        "down": {
-          "uv": [
-            1,
-            1,
-            2,
-            2
-          ],
-          "texture": "#pink"
-        }
-      }
-    },
-    {
-      "name": "crystal support",
-      "from": [
-        4,
         0,
+        2
+      ],
+      "to": [
+        14,
+        2,
+        14
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            4,
+            2,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            0,
+            4,
+            2,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "south": {
+          "uv": [
+            0,
+            4,
+            2,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            0,
+            4,
+            2,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            0,
+            4,
+            2,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            0,
+            4,
+            2,
+            6
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "recessed capacitor",
+      "from": [
+        4,
+        2,
         4
       ],
       "to": [
         12,
-        2,
+        3,
         12
       ],
       "faces": {
         "north": {
           "uv": [
+            6,
             0,
-            0,
-            16,
-            16
+            8,
+            2
           ],
-          "texture": "#frame"
+          "texture": "#atlas"
         },
         "east": {
           "uv": [
+            6,
             0,
-            0,
-            16,
-            16
+            8,
+            2
           ],
-          "texture": "#frame"
+          "texture": "#atlas"
         },
         "south": {
           "uv": [
+            6,
             0,
-            0,
-            16,
-            16
+            8,
+            2
           ],
-          "texture": "#frame"
+          "texture": "#atlas"
         },
         "west": {
           "uv": [
+            6,
             0,
-            0,
-            16,
-            16
+            8,
+            2
           ],
-          "texture": "#frame"
+          "texture": "#atlas"
         },
         "up": {
           "uv": [
+            6,
             0,
-            0,
-            16,
-            16
+            8,
+            2
           ],
-          "texture": "#frame"
+          "texture": "#atlas"
         },
         "down": {
           "uv": [
+            6,
             0,
-            0,
-            16,
-            16
+            8,
+            2
           ],
-          "texture": "#frame"
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "pink central socket",
+      "from": [
+        5,
+        3,
+        5
+      ],
+      "to": [
+        11,
+        4,
+        11
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            14,
+            4,
+            16,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            14,
+            4,
+            16,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "south": {
+          "uv": [
+            14,
+            4,
+            16,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            14,
+            4,
+            16,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            14,
+            4,
+            16,
+            6
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            14,
+            4,
+            16,
+            6
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "floating crystal stabilizer",
+      "from": [
+        2,
+        2,
+        2
+      ],
+      "to": [
+        4,
+        6,
+        4
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "south": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "floating crystal stabilizer",
+      "from": [
+        2,
+        2,
+        12
+      ],
+      "to": [
+        4,
+        6,
+        14
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "south": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "floating crystal stabilizer",
+      "from": [
+        12,
+        2,
+        2
+      ],
+      "to": [
+        14,
+        6,
+        4
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "south": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "floating crystal stabilizer",
+      "from": [
+        12,
+        2,
+        12
+      ],
+      "to": [
+        14,
+        6,
+        14
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "east": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "south": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "west": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "up": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        },
+        "down": {
+          "uv": [
+            4,
+            0,
+            6,
+            2
+          ],
+          "texture": "#atlas"
+        }
+      }
+    },
+    {
+      "name": "pink crystal facet 0",
+      "from": [
+        7.0,
+        6,
+        7.0
+      ],
+      "to": [
+        9.0,
+        8,
+        9.0
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#metal"
+        },
+        "east": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#metal"
+        },
+        "south": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#metal"
+        },
+        "west": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#metal"
+        },
+        "up": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#metal"
+        },
+        "down": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#metal"
+        }
+      }
+    },
+    {
+      "name": "pink crystal facet 1",
+      "from": [
+        6.0,
+        8,
+        6.0
+      ],
+      "to": [
+        10.0,
+        10,
+        10.0
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#metal"
+        },
+        "east": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#metal"
+        },
+        "south": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#metal"
+        },
+        "west": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#metal"
+        },
+        "up": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#metal"
+        },
+        "down": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#metal"
+        }
+      }
+    },
+    {
+      "name": "pink crystal facet 2",
+      "from": [
+        5.0,
+        10,
+        5.0
+      ],
+      "to": [
+        11.0,
+        12,
+        11.0
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#metal"
+        },
+        "east": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#metal"
+        },
+        "south": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#metal"
+        },
+        "west": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#metal"
+        },
+        "up": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#metal"
+        },
+        "down": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#metal"
+        }
+      }
+    },
+    {
+      "name": "pink crystal facet 3",
+      "from": [
+        6.0,
+        12,
+        6.0
+      ],
+      "to": [
+        10.0,
+        14,
+        10.0
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#metal"
+        },
+        "east": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#metal"
+        },
+        "south": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#metal"
+        },
+        "west": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#metal"
+        },
+        "up": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#metal"
+        },
+        "down": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#metal"
+        }
+      }
+    },
+    {
+      "name": "pink crystal facet 4",
+      "from": [
+        7.0,
+        14,
+        7.0
+      ],
+      "to": [
+        9.0,
+        16,
+        9.0
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#metal"
+        },
+        "east": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#metal"
+        },
+        "south": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#metal"
+        },
+        "west": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#metal"
+        },
+        "up": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#metal"
+        },
+        "down": {
+          "uv": [
+            8,
+            0,
+            12,
+            4
+          ],
+          "texture": "#metal"
         }
       }
     }

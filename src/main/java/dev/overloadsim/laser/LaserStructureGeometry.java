@@ -49,8 +49,10 @@ public final class LaserStructureGeometry {
                 part = distance >= 7 && distance <= 12 ? Part.FRAME : Part.AIR;
                 if (Math.abs(x) + Math.abs(y) + Math.abs(z) == 3 && (Math.abs(x) == 3 || Math.abs(y) == 3 || Math.abs(z) == 3)) part = Part.PORT;
             } else {
-                int boundaries = (Math.abs(x) == 3 ? 1 : 0) + (Math.abs(y) == 3 ? 1 : 0) + (Math.abs(z) == 3 ? 1 : 0);
-                part = boundaries >= 2 ? Part.FRAME : boundaries == 1 ? Part.GLASS : Part.AIR;
+                int distance = x * x + y * y + z * z;
+                boolean shell = distance >= 7 && distance <= 12;
+                // Three great-circle ribs frame transparent faces on the same voxel sphere as the deflector.
+                part = shell ? (x == 0 || y == 0 || z == 0 ? Part.FRAME : Part.GLASS) : Part.AIR;
                 if (x == 0 && y == 0 && z == -3) part = Part.PORT;
             }
             result.put(offset.immutable(), part);

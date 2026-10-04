@@ -41,6 +41,7 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
     private UUID identity = UUID.randomUUID();
     private LaserStructure structure;
     private boolean structureDirty = true, wasFormed, visualFormed, visualNetworkActive, explosionTriggered;
+    private boolean receiverRebuildPending;
     private long refundExtreme;
     private final LongEnergyBuffer energy;
     private final LaserGridBridge bridge = new LaserGridBridge(this);
@@ -189,15 +190,18 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
         structureDirty = false;
         if (!error.isEmpty()) {
             boolean previouslyFormed = structure != null || wasFormed;
-            boolean chargedBreak = (structure != null || wasFormed) && !error.equals("unloaded") && kind() == LaserKind.RECEIVER && particles.stored() > 0;
-            invalidateStructure(); status = error;
+            boolean chargedBreak = !receiverRebuildPending && previouslyFormed && !error.equals("unloaded") && kind() == LaserKind.RECEIVER && particles.stored() > 0;
+            String previousStatus = status;
+            invalidateStructure(); status = receiverRebuildPending && !error.equals("unloaded") ? "receiver_rebuild_required" : error;
             if (error.equals("unloaded")) wasFormed = previouslyFormed;
             if (chargedBreak) LaserExplosion.trigger(this);
+            if (receiverRebuildPending && !status.equals(previousStatus)) sync();
             return;
         }
         var next = new LaserStructure(worldPosition.offset(LaserStructureGeometry.centerOffset(kind(), forward().getOpposite())), members, networkInterface);
         boolean changed = !next.equals(structure);
         structure = next; wasFormed = true;
+        receiverRebuildPending = false; // A valid sphere rearms the normal charged-containment safety policy.
         if (changed) LaserStructureIndex.bind(this, next);
         if (changed) { status = "idle"; sync(); }
     }
@@ -212,7 +216,7 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
 
     public void memberRemoved() {
         if (level == null || level.isClientSide) return;
-        boolean charged = kind() == LaserKind.RECEIVER && particles.stored() > 0;
+        boolean charged = !receiverRebuildPending && kind() == LaserKind.RECEIVER && particles.stored() > 0;
         invalidateStructure(); status = "structure_changed"; structureDirty = true;
         if (charged) LaserExplosion.trigger(this);
     }
@@ -280,6 +284,10 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
         tag.putString("Status", status); tag.putInt("ParticleDirection", particleDirection.get3DDataValue());
         tag.put("FuelInput", fuelInput.serializeNBT(registries)); tag.putBoolean("HadStructure", structure != null || wasFormed);
         tag.putBoolean("ExplosionTriggered", explosionTriggered); tag.putDouble("AeInputFraction", aeInputFraction); tag.putDouble("AeOutputFraction", aeOutputFraction);
+        if (kind() == LaserKind.RECEIVER) {
+            tag.putInt("ReceiverShapeVersion", 1);
+            tag.putBoolean("ReceiverRebuildPending", receiverRebuildPending);
+        }
         return tag;
     }
 
@@ -300,6 +308,10 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
         var fuelTag = tag.getCompound("FuelInput").copy(); fuelTag.putInt("Size", 4);
         fuelInput.deserializeNBT(registries, fuelTag);
         wasFormed = tag.getBoolean("HadStructure"); explosionTriggered = tag.getBoolean("ExplosionTriggered");
+        // Old cubic receivers must pause for reconstruction, not explode merely because their saved template changed.
+        // This flag survives intermediate saves until a valid sphere forms; no resources or paid clocks are reset.
+        receiverRebuildPending = kind() == LaserKind.RECEIVER && (tag.getBoolean("ReceiverRebuildPending")
+                || tag.getInt("ReceiverShapeVersion") < 1 && (wasFormed || particles.stored() > 0));
         aeInputFraction = fraction(tag.getDouble("AeInputFraction")); aeOutputFraction = fraction(tag.getDouble("AeOutputFraction"));
         segments = new ArrayList<>(); // Light paths are recomputed after loaded-world validation; saved paths cannot survive a stale owner.
     }

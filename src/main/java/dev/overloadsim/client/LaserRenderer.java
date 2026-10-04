@@ -36,7 +36,7 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
         int count = 0;
         for (LaserSegment segment : be.segments()) {
             if (++count > MAX_SEGMENTS) break;
-            if (valid(segment)) box = box.minmax(new AABB(segment.start(), segment.end()).inflate(.3));
+            if (valid(segment)) box = box.minmax(segment.bounds());
         }
         return box;
     }
@@ -69,9 +69,9 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
                             .035, .035, .4f, .8f, 1, .85f);
                 }
             } else {
-                double endRadius = segment.focused() ? .018 : .16;
-                tube(matrix, vertices, start, end, .16, endRadius, 1, .35f, .73f, .32f);
-                tube(matrix, vertices, start, end, .06, segment.focused() ? .006 : .06,
+                double startRadius = segment.startRadius(), endRadius = segment.endRadius();
+                tube(matrix, vertices, start, end, startRadius, endRadius, 1, .35f, .73f, .32f);
+                tube(matrix, vertices, start, end, startRadius * .375, endRadius * .375,
                         1, .9f, .98f, .65f);
             }
         }
