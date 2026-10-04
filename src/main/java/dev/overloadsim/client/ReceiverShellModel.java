@@ -14,7 +14,7 @@ import net.neoforged.neoforge.client.model.BakedModelWrapper;
 import net.neoforged.neoforge.client.model.data.ModelData;
 import net.neoforged.neoforge.client.model.data.ModelProperty;
 
-/** Suppresses only owned receiver voxels while preserving normal loose parts and item models. */
+/** Suppresses only the formed machine's owned frame/glass cells; loose parts keep their baked model. */
 public final class ReceiverShellModel extends BakedModelWrapper<BakedModel> {
     private static final ModelProperty<Boolean> HIDDEN = new ModelProperty<>();
     public ReceiverShellModel(BakedModel original) { super(original); }

@@ -26,20 +26,21 @@ public final class LaserAutoConstructionGameTests {
         h.getLevel().setBlockAndUpdate(pos,LaserContent.machine(kind).defaultBlockState().setValue(LaserMachineBlock.FACING,face));
         return (LaserMachineBlockEntity)h.getLevel().getBlockEntity(pos);
     }
-    @GameTest(template="laser_empty") public static void allEightDevicesBuildInAllSixFacings(GameTestHelper h) {
-        // Keep all six orientations below the fixture's y=13 barrier ceiling.
-        var pos=h.absolutePos(new BlockPos(8,6,8));var p=player(h,pos,GameType.CREATIVE);
+    @GameTest(template="laser_pedestal_empty") public static void allEightDevicesBuildInAllSixFacings(GameTestHelper h) {
+        var pos=h.absolutePos(new BlockPos(12,10,12));var p=player(h,pos,GameType.CREATIVE);
         for(var kind:LaserKind.values())for(var face:Direction.values()) {
             var host=controller(h,pos,kind,face);
             var result=LaserAutoConstruction.build(p,host);
             h.assertTrue(result.successful()&&host.formed(),kind+" forms in "+face+" (result="+result+", status="+host.status()+")");
+            if(kind==LaserKind.RECEIVER)h.assertTrue(result.placed()==195&&host.structure().members().size()==441,"new receiver builds both pedestal layers in "+face);
             h.assertTrue(LaserAutoConstruction.build(p,host).placed()==0,"formed repeat never rebuilds "+kind);
             host.invalidateStructure();
-            for(var offset:LaserStructureGeometry.template(kind,face).keySet())h.getLevel().setBlockAndUpdate(pos.offset(offset),Blocks.AIR.defaultBlockState());
+            for(var cell:LaserAutoConstruction.plan(host).cells().keySet())h.getLevel().setBlockAndUpdate(cell,Blocks.AIR.defaultBlockState());
         }h.succeed();
     }
     @GameTest(template="laser_empty") public static void receiverCanBeCompletedWithoutResettingItsResources(GameTestHelper h) {
         var pos=h.absolutePos(new BlockPos(8,2,8));var host=controller(h,pos,LaserKind.RECEIVER,Direction.NORTH);var p=player(h,pos,GameType.SURVIVAL);
+        var legacy=host.saveMachine(h.getLevel().registryAccess());legacy.remove("ReceiverPedestalLayout");host.loadMachine(legacy,h.getLevel().registryAccess());
         var existing=LaserStructureGeometry.template(LaserKind.RECEIVER,Direction.NORTH).entrySet().stream().filter(e->e.getValue()==LaserStructureGeometry.Part.FRAME).findFirst().orElseThrow().getKey();
         h.getLevel().setBlockAndUpdate(pos.offset(existing),LaserContent.FRAME.get().defaultBlockState());
         p.getInventory().add(new ItemStack(LaserContent.FRAME.get(),39));p.getInventory().add(new ItemStack(LaserContent.GLASS.get(),56));p.getInventory().add(new ItemStack(LaserContent.PORT.get(),1));

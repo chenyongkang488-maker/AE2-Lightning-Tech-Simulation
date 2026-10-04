@@ -3,6 +3,7 @@ from pathlib import Path
 import base64
 import hashlib
 import json
+import math
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / 'src/main/resources/assets/overload_sim'
@@ -58,9 +59,26 @@ def verify():
         loot = read(ROOT / f'src/main/resources/data/overload_sim/loot_table/blocks/{name}.json')
         assert loot['pools'][0]['entries'][0]['name'] == f'overload_sim:{name}', name
     assert read(ASSETS / 'models/block/laser_glass.json')['render_type'] == 'minecraft:translucent'
-    assert read(ASSETS / 'models/block/laser_glass.json')['textures']['glass'] == 'overload_sim:block/simulation_glass_north'
+    glass_model = read(ASSETS / 'models/block/laser_glass.json')
+    assert glass_model['textures']['glass'] == 'overload_sim:block/laser_pixel_atlas'
+    assert all(face['uv'] == [8,0,10,2] for face in glass_model['elements'][0]['faces'].values()), 'Framed glass must use native painted tile4'
     atlas_project=read(ROOT / 'art/blockbench/laser-pixel-atlas.bbmodel')
     assert atlas_project['textures'][0]['layers'], 'Native Blockbench painted layer missing'
+    native_atlas=base64.b64decode(atlas_project['textures'][0]['source'].split(',',1)[1])
+    assert native_atlas == (ASSETS / 'textures/block/laser_pixel_atlas.png').read_bytes(), 'Native painted project differs from runtime atlas'
+    formed=read(ROOT / 'art/blockbench/particle-constrainer-formed.bbmodel')
+    assert formed['meta']['model_format'] == 'free' and len(formed['outliner']) == 3
+    assert 1000 < len(formed['elements']) < 4000, 'Formed workshop mesh must remain bounded'
+    assert base64.b64decode(formed['textures'][0]['source'].split(',',1)[1]) == native_atlas
+    for element in formed['elements']:
+        assert element['type'] == 'mesh'
+        for coordinates in element['vertices'].values():
+            assert all(math.isfinite(value) for value in coordinates)
+            assert -56.1 <= coordinates[0] <= 56.1 and -88.1 <= coordinates[1] <= 56.1 and -56.1 <= coordinates[2] <= 56.1
+        for face in element['faces'].values():
+            assert len(set(face['vertices'])) >= 3
+            assert all(vertex in element['vertices'] for vertex in face['vertices'])
+            assert all(0 <= value <= 128 for pair in face['uv'].values() for value in pair)
     for texture in project['textures']:
         if texture['name'] == 'simulation_controller_ecg.png':
             assert (texture['uv_width'],texture['uv_height']) == (32,16), 'Animated ECG UV must use one frame'

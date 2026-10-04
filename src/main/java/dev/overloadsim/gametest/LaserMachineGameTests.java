@@ -29,7 +29,13 @@ public final class LaserMachineGameTests {
             if (entry.getValue() == LaserStructureGeometry.Part.CONTROLLER) state = state.setValue(LaserMachineBlock.FACING, facing);
             h.getLevel().setBlockAndUpdate(controller.offset(entry.getKey()), state);
         }
-        return (LaserMachineBlockEntity) h.getLevel().getBlockEntity(controller);
+        var host = (LaserMachineBlockEntity) h.getLevel().getBlockEntity(controller);
+        if (kind == LaserKind.RECEIVER) {
+            // This helper represents already-existing spherical machines for runtime regression tests.
+            var legacy = host.saveMachine(h.getLevel().registryAccess());
+            legacy.remove("ReceiverPedestalLayout"); host.loadMachine(legacy, h.getLevel().registryAccess());
+        }
+        return host;
     }
 
     @GameTest(template = "laser_empty")

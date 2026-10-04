@@ -7,10 +7,11 @@ import static org.junit.jupiter.api.Assertions.*;
 class ReceiverShellMeshTest {
     private static final double EPSILON = 1.0e-10;
 
-    @Test void glassSurfaceIsClosedRoundAndHasOutwardFaces() throws Exception {
+    @Test void facetedGlassSurfaceStaysClosedAndHasOutwardFaces() throws Exception {
         var mesh = Class.forName("dev.overloadsim.core.ReceiverShellMesh");
         var quads = (List<?>) mesh.getMethod("glass").invoke(null);
-        assertTrue(quads.size() >= 1000, "Sphere resolution must remove visible voxel corners");
+        assertTrue(quads.size() >= 100 && quads.size() <= 512,
+                "Industrial glass must keep visible facets and a bounded mesh");
         for (var quad : quads) {
             var vertices = vertices(quad);
             for (var vertex : vertices) {
@@ -28,13 +29,15 @@ class ReceiverShellMeshTest {
         var mesh = Class.forName("dev.overloadsim.core.ReceiverShellMesh");
         for (int axis = 0; axis < 3; axis++) {
             var quads = (List<?>) mesh.getMethod("rib", int.class).invoke(null, axis);
-            assertTrue(quads.size() >= 1000);
+            assertTrue(quads.size() >= 64 && quads.size() <= 256,
+                    "The seam backing must use a few planar panels, not a smooth high-resolution torus");
             for (var quad : quads) {
                 for (var vertex : vertices(quad)) {
                     double x = number(vertex, "x"), y = number(vertex, "y"), z = number(vertex, "z");
                     double radial = axis == 0 ? Math.hypot(y, z) : axis == 1 ? Math.hypot(x, z) : Math.hypot(x, y);
                     double axial = axis == 0 ? x : axis == 1 ? y : z;
-                    assertEquals(.12, Math.hypot(radial - 3.3, axial), EPSILON);
+                    assertTrue(radial >= 3.12 && radial <= 3.5);
+                    assertTrue(Math.abs(axial) <= .16);
                 }
             }
             assertClosedEdges(quads);

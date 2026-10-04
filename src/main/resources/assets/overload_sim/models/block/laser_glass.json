@@ -9,11 +9,11 @@
   ],
   "textures": {
     "particle": "minecraft:block/white_concrete",
-    "glass": "overload_sim:block/simulation_glass_north"
+    "glass": "overload_sim:block/laser_pixel_atlas"
   },
   "elements": [
     {
-      "name": "borderless pale pink observation glass",
+      "name": "framed pale pink observation glass",
       "from": [
         0,
         0,
@@ -27,60 +27,60 @@
       "faces": {
         "north": {
           "uv": [
+            8,
             0,
-            0,
-            16,
-            16
+            10,
+            2
           ],
           "texture": "#glass",
           "cullface": "north"
         },
         "east": {
           "uv": [
+            8,
             0,
-            0,
-            16,
-            16
+            10,
+            2
           ],
           "texture": "#glass",
           "cullface": "east"
         },
         "south": {
           "uv": [
+            8,
             0,
-            0,
-            16,
-            16
+            10,
+            2
           ],
           "texture": "#glass",
           "cullface": "south"
         },
         "west": {
           "uv": [
+            8,
             0,
-            0,
-            16,
-            16
+            10,
+            2
           ],
           "texture": "#glass",
           "cullface": "west"
         },
         "up": {
           "uv": [
+            8,
             0,
-            0,
-            16,
-            16
+            10,
+            2
           ],
           "texture": "#glass",
           "cullface": "up"
         },
         "down": {
           "uv": [
+            8,
             0,
-            0,
-            16,
-            16
+            10,
+            2
           ],
           "texture": "#glass",
           "cullface": "down"

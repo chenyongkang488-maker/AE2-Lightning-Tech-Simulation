@@ -28,7 +28,7 @@ public final class ReceiverShellVisuals {
 
     public static void publish(LaserMachineBlockEntity controller, Object token) {
         var level = controller.getLevel();
-        if (level == null || !level.isClientSide || controller.kind() != LaserKind.RECEIVER) return;
+        if (level == null || !level.isClientSide || controller.kind() == LaserKind.CORE) return;
         var owner = controller.getBlockPos();
         if (controller.isRemoved() || !chunkLoaded(level, owner) || level.getBlockEntity(owner) != controller) {
             remove(controller, token);
@@ -37,11 +37,14 @@ public final class ReceiverShellVisuals {
         var world = world(level);
         synchronized (world) { world.controllers.put(owner, new WeakReference<>(controller)); }
         var cells = new HashSet<ReceiverShellRegistry.Point>();
-        if (controller.formed() && shellChunksLoaded(level, controller.center())) {
-            var template = LaserStructureGeometry.template(LaserKind.RECEIVER, controller.receiverVisualFacing());
+        var template = controller.structureTemplate();
+        if (controller.formed() && shellChunksLoaded(level, owner, template)) {
             for (var entry : template.entrySet()) {
                 var pos = owner.offset(entry.getKey());
-                if (entry.getValue() == LaserStructureGeometry.Part.FRAME || entry.getValue() == LaserStructureGeometry.Part.GLASS)
+                var block = level.getBlockState(pos).getBlock();
+                // Optional network interfaces retain their own baked model and interaction faces.
+                if ((entry.getValue() == LaserStructureGeometry.Part.FRAME && block == LaserContent.FRAME.get())
+                        || (entry.getValue() == LaserStructureGeometry.Part.GLASS && block == LaserContent.GLASS.get()))
                     cells.add(new ReceiverShellRegistry.Point(pos.getX(), pos.getY(), pos.getZ()));
             }
         }
@@ -84,14 +87,14 @@ public final class ReceiverShellVisuals {
         if (world != null) synchronized (world) { world.pending = true; }
     }
 
-    /** Chunk load events can precede FULL promotion; defer receiver republication to the next client tick. */
+    /** Chunk load events can precede FULL promotion; defer skin republication to the next client tick. */
     public static void refreshPending() {
         ArrayList<World> worlds;
         synchronized (WORLDS) { worlds = new ArrayList<>(WORLDS.values()); }
         for (var world : worlds) {
             var level = world.level.get();
             if (level == null) continue;
-            // Cached chunk identities keep this bounded to at most four checks per formed receiver per tick.
+            // Cached chunk identities avoid cell scans during ordinary per-tick availability checks.
             refresh(level, world.registry.pruneUnavailable((x, z) -> level.getChunkSource().hasChunk(x, z)));
             ArrayList<LaserMachineBlockEntity> controllers = new ArrayList<>();
             synchronized (world) {
@@ -114,10 +117,14 @@ public final class ReceiverShellVisuals {
         // ClientLevel.hasChunkAt always returns true; ChunkSource checks FULL with load=false.
         return level.getChunkSource().hasChunk(pos.getX() >> 4, pos.getZ() >> 4);
     }
-    private static boolean shellChunksLoaded(Level level, BlockPos center) {
-        for (int x = (center.getX() - 3) >> 4; x <= (center.getX() + 3) >> 4; x++)
-            for (int z = (center.getZ() - 3) >> 4; z <= (center.getZ() + 3) >> 4; z++)
-                if (!level.getChunkSource().hasChunk(x, z)) return false;
+    private static boolean shellChunksLoaded(Level level, BlockPos owner, Map<BlockPos,LaserStructureGeometry.Part> template) {
+        var chunks = new HashSet<Long>();
+        for (var entry : template.entrySet()) {
+            if (entry.getValue() == LaserStructureGeometry.Part.AIR) continue;
+            var pos = owner.offset(entry.getKey());
+            long chunk = ((long) (pos.getX() >> 4) << 32) ^ ((pos.getZ() >> 4) & 0xffffffffL);
+            if (chunks.add(chunk) && !chunkLoaded(level,pos)) return false;
+        }
         return true;
     }
     private static void refresh(Level level, Set<ReceiverShellRegistry.Point> changed) {

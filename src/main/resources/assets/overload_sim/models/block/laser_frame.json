@@ -13,7 +13,7 @@
   },
   "elements": [
     {
-      "name": "ceramic frame with continuous pink channels",
+      "name": "bolted ceramic frame with pink channels",
       "from": [
         0,
         0,
@@ -27,60 +27,60 @@
       "faces": {
         "north": {
           "uv": [
-            2,
-            4,
-            4,
-            6
+            12,
+            8,
+            14,
+            10
           ],
           "texture": "#atlas",
           "cullface": "north"
         },
         "east": {
           "uv": [
-            2,
-            4,
-            4,
-            6
+            12,
+            8,
+            14,
+            10
           ],
           "texture": "#atlas",
           "cullface": "east"
         },
         "south": {
           "uv": [
-            2,
-            4,
-            4,
-            6
+            12,
+            8,
+            14,
+            10
           ],
           "texture": "#atlas",
           "cullface": "south"
         },
         "west": {
           "uv": [
-            2,
-            4,
-            4,
-            6
+            12,
+            8,
+            14,
+            10
           ],
           "texture": "#atlas",
           "cullface": "west"
         },
         "up": {
           "uv": [
-            0,
-            4,
-            2,
-            6
+            10,
+            8,
+            12,
+            10
           ],
           "texture": "#atlas",
           "cullface": "up"
         },
         "down": {
           "uv": [
-            0,
-            4,
-            2,
-            6
+            10,
+            8,
+            12,
+            10
           ],
           "texture": "#atlas",
           "cullface": "down"

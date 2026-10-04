@@ -88,11 +88,11 @@ for index, name in enumerate(MACHINES):
         models[name] = make_model(elements, {'atlas':'overload_sim:block/laser_pixel_atlas',
                                            'ecg':'overload_sim:block/simulation_controller_ecg'})
 
-frame=cube('ceramic frame with continuous pink channels', [0,0,0], [16,16,16], 'atlas', tile(17), cull=True)
-frame['faces']['up']['uv']=tile(16);frame['faces']['down']['uv']=tile(16)
+frame=cube('bolted ceramic frame with pink channels', [0,0,0], [16,16,16], 'atlas', tile(38), cull=True)
+frame['faces']['up']['uv']=tile(37);frame['faces']['down']['uv']=tile(37)
 models['laser_frame'] = make_model([frame], {'atlas':'overload_sim:block/laser_pixel_atlas'})
-models['laser_glass'] = make_model([cube('borderless pale pink observation glass', [0,0,0], [16,16,16], 'glass', cull=True)],
-                                  {'glass':'overload_sim:block/simulation_glass_north'}, True)
+models['laser_glass'] = make_model([cube('framed pale pink observation glass', [0,0,0], [16,16,16], 'glass', tile(4), cull=True)],
+                                  {'glass':'overload_sim:block/laser_pixel_atlas'}, True)
 models['laser_source_crystal'] = make_model(socket_elements(), {'atlas':'overload_sim:block/laser_pixel_atlas',
                                                               'metal':'overload_sim:item/resonance_coil_body'})
 port = []
@@ -264,7 +264,7 @@ F.....F
 ..FCF..
 ```
 
-约束器为外径 7 格的像素球壳。以球心为原点，x、y、z 均为 -3～3，距离平方 x²+y²+z² 在 7～12 的格子属于外壳；外壳中任一坐标为 0 的格子使用激光框架，形成三道交叉大圆，其余外壳用通光玻璃，其它格子保持空气。共需 40 个框架、56 个玻璃、1 个控制器和 1 个光口。控制器放在球体最下方中央，光口放在朝向核心的球面中央；竖直光路以北为结构上方。核心应与光口同轴。创造模式可用 `/overload_sim laser build receiver` 自动搭建。旧版方形笼架更新后安全暂停并保留库存，重建球壳后恢复。发射器控制器在背面中央，源水晶在向前两格的中心，出光口再向前两格。
+约束器为外径 7 格的像素球壳。以球心为原点，x、y、z 均为 -3～3，距离平方 x²+y²+z² 在 7～12 的格子属于外壳；外壳中任一坐标为 0 的格子使用激光框架，形成三道交叉大圆，其余外壳用通光玻璃，其它格子保持空气。新约束器在球壳下方增加两层 7×7 框架底座，控制器放在底座上层正面中央。以控制器为原点，底座向后延伸 0～6 格、向左右各 3 格，底层在下方一格；球心位于向后三格、向上四格，总外尺寸 7×9×7。共需 138 个框架、56 个玻璃、1 个控制器和 1 个光口。光口放在朝向核心的球面中央；竖直光路以北为结构上方。核心应与光口同轴。创造模式可用 `/overload_sim laser build receiver` 自动搭建。已保存的旧球壳保留原控制器位置、库存和计时，不要求重建；更早的方形笼架仍安全暂停并保留库存，重建球壳后恢复。发射器控制器在背面中央，源水晶在向前两格的中心，出光口再向前两格。
 
 发射器每 20 tick 支付 100000 FE，基础射程 6 格。约束矩阵支付 100000 FE 并重新给予 6 格射程；强化矩阵增加并支付界面所选的 100000～9000000 FE；爆发矩阵支付 64 极高压，使强度翻倍。偏折矩阵平分强度至选中的输出面，输入面不能选作输出，关闭全部输出会停机。单束强度上限为 1P FE。无有效入射的矩阵不扣运行费用。
 
@@ -307,7 +307,7 @@ F.....F
 ..FCF..
 ```
 
-The receiver is a voxel sphere seven blocks across. Relative to its center, x/y/z range from -3 to 3. Shell cells have squared distance x²+y²+z² from 7 through 12 inclusive. Shell cells with any coordinate equal to zero use laser frame (three intersecting great-circle ribs); remaining shell cells use glass, and every other cell is air. It uses 40 frames, 56 glass, one controller at the bottom pole and one optical port at the upstream pole. For vertical beams, the construction up direction is north. Align the core with the port. Creative administrators can build it with `/overload_sim laser build receiver`. A saved legacy cube safely pauses and retains inventory until rebuilt as this sphere. The emitter controller sits at the back center, its source crystal is two blocks forward, and its output port is another two blocks forward.
+The receiver is a voxel sphere seven blocks across. Relative to its center, x/y/z range from -3 to 3. Shell cells have squared distance x²+y²+z² from 7 through 12 inclusive. Shell cells with any coordinate equal to zero use laser frame (three intersecting great-circle ribs); remaining shell cells use glass, and every other cell is air. New receivers add a two-layer 7×7 frame plinth below the sphere, with the controller at the front centre of the upper layer. Relative to the controller the plinth extends 0..6 blocks forward, -3..3 sideways, and -1..0 along construction up. The sphere centre is three blocks forward and four blocks up: overall size 7×9×7. It uses 138 frames, 56 glass, one front-plinth controller and one upstream optical port. For vertical beams, the construction up direction is north. Align the core with the port. Creative administrators can build it with `/overload_sim laser build receiver`. Saved sphere receivers retain their original controller position, inventory and paid clocks. Earlier cube receivers still safely pause and retain inventory until rebuilt as a sphere. The emitter controller sits at the back center, its source crystal is two blocks forward, and its output port is another two blocks forward.
 
 The emitter pays 100000 FE every 20 ticks and starts with a six-block range. A constraint matrix pays 100000 FE and renews six blocks of range. An enhancement matrix adds and pays the selected 100000–9000000 FE. A burst matrix pays 64 EHV to double power. A deflector splits power among enabled output faces; its input face is locked, and closing every output stops incoming work. The maximum beam power is 1P FE. Matrices without valid incoming light pay no running cost.
 
@@ -330,8 +330,8 @@ The FE buffer debits only energy accepted by the AE network. Particle overflow, 
 
 Right-click a controller for power and controls. Hover over the status area for exact long values, diagnostics and consumable timers. Press G to open this page. Creative administrators can use `/overload_sim laser build <kind>` in an empty area to place one structure, or `/overload_sim laser demo` for a complete chain precharged with finite resources. The demo uses enhancement, 16 burst matrices, range constraints, focus, the core and a forward receiver. Powder-white panels, pink channels and eight equipment glyphs are painted in Blockbench; recessed screens reuse the animated ECG and the sphere uses borderless pale glass.
 '''
-zh += '\n## 自动搭建\n\n先放置并确定控制器朝向，打开控制器界面，点击左侧工具栏的「自动搭建」。生存模式先使用背包和副手材料，不足部分从控制器当前已连接的 AE 网络补齐；可直接接 AE 线缆。未连接时仍可使用背包。创造模式无需材料。只补放缺失部件，保留合法的过载接口；材料不足、区域受阻或未加载时不开始搭建。放置保护取消或取材发生变化时会退还本次材料，无法退入 AE/背包的部分掉落给玩家。重复搭建完整结构不收费。\n\n约束器成型后使用连续的曲面球壳和粉白圆环显示，实际仍按上述方块模板搭建和判定；破坏或卸载后恢复普通方块显示。\n'
-en += "\n## Automatic construction\n\nPlace and orient a controller, open its screen, then click Automatic build in the left toolbar. Survival uses the main inventory and offhand first, then the controller's currently connected AE network; direct AE cabling works before formation. Backpack-only construction also works offline. Creative needs no materials. Only missing parts are placed and valid interfaces are preserved. Missing materials, obstructions or unloaded cells prevent construction. Cancelled placement or changed extraction refunds the withdrawn materials; anything rejected by both AE and the backpack is dropped for the player. Repeating a complete build is free.\n\nThe formed constrainer renders as a continuous curved glass sphere and pink/white ribs; validation still uses the voxel template above. Breaking or unloading restores normal construction blocks.\n"
+zh += '\n## 自动搭建\n\n先放置并确定控制器朝向，打开控制器界面，点击左侧工具栏的「自动搭建」。生存模式先使用背包和副手材料，不足部分从控制器当前已连接的 AE 网络补齐；可直接接 AE 线缆。未连接时仍可使用背包。创造模式无需材料。只补放缺失部件，保留合法的过载接口；材料不足、区域受阻或未加载时不开始搭建。放置保护取消或取材发生变化时会退还本次材料，无法退入 AE/背包的部分掉落给玩家。重复搭建完整结构不收费。\n\n约束器成型后显示淡粉球壳、分段装甲环、螺栓与散热口，单块玻璃带白粉边框。内部粒子库存越多，环绕光点越密（最多96个），空库存无光点，暂停生产不影响已有粒子显示。其它成型激光设备共享粉白机械细节；实际仍按上述方块模板搭建和判定，破坏或卸载后恢复普通方块显示。\n'
+en += "\n## Automatic construction\n\nPlace and orient a controller, open its screen, then click Automatic build in the left toolbar. Survival uses the main inventory and offhand first, then the controller's currently connected AE network; direct AE cabling works before formation. Backpack-only construction also works offline. Creative needs no materials. Only missing parts are placed and valid interfaces are preserved. Missing materials, obstructions or unloaded cells prevent construction. Cancelled placement or changed extraction refunds the withdrawn materials; anything rejected by both AE and the backpack is dropped for the player. Repeating a complete build is free.\n\nThe formed constrainer has pale pink glass, segmented armour ribs, bolts and cooling slots. Individual glass blocks have a white/pink border. Stored particles drive interior orbiting dots (up to 96): no storage means no dots, while pausing does not hide stored particles. Other formed laser machines share the same industrial style. Validation uses the voxel template above; breaking or unloading restores normal construction blocks.\n"
 for folder, title, body in [('ae2guide', 'Laser and particles', en), ('ae2guide/_zh_cn', '激光与粒子', zh)]:
     path = ASSETS / folder / 'laser-particle.md'
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -350,16 +350,29 @@ the workshop, voxel models, blockstates, item models, loot tables, tags, guide
 pages and language snippets. Run `python scripts/verify-laser-resources.py` to
 check their parity and references. The new pixel atlas is painted in native
 Blockbench by loading art/laser_art_workshop.js and using its Tools action.
-laser-pixel-atlas.bbmodel preserves its editable layer. Existing PNGs are unchanged. The scripts do not change registries,
+laser-pixel-atlas.bbmodel preserves its editable layer. Crystal and screen PNGs
+retain their existing artwork. The scripts do not change registries,
 central language files, recipes, or existing tags. Merge the two language JSON
 snippets into the central language files; append `#overload_sim:laser_mineable`
 to Minecraft's `mineable/pickaxe` block tag during integration.
 
 Texture attribution and licenses remain in `LICENSES.md`, `THIRD_PARTY_NOTICES.md`
 and `art/licenses/AE2LT-LICENSE_ASSETS.md`. Reusing these textures does not change
-their license. White concrete is used for runtime destruction particles. Glass
-uses the existing borderless pale glass texture. All controller models support six
+their license. White concrete is used for runtime destruction particles. Individual glass blocks use native painted atlas tile4 with a white/pink border;
+formed glass samples only its transparent pink centre. Tiles32..39 contain shared
+armour, vents, bolts, light channels and plinth panels. All controller models support six
 facing directions. Formed/active properties, if added, can reuse these variants.
+
+Open `particle-constrainer-formed.bbmodel` to edit the combined industrial sphere,
+glass and controller plinth as native Blockbench meshes. Its three groups come
+from the same Java mesh builders used by the renderer, including the port and
+controller openings. Runtime orbiting particles and functional blocks are drawn
+separately. After compiling the Java sources, reproduce this workshop with:
+
+`java --class-path build/classes/java/main scripts/ExportIndustrialWorkshop.java .`
+
+Run the resource verifier after exporting; it checks the embedded native atlas,
+mesh bounds, face references and UVs against the runtime assets.
 '''
 (WORKSHOP / 'laser-prototype-README.md').write_text(readme, encoding='utf-8')
 print(f'Generated {len(models)} detailed laser block exports and Blockbench workshop; atlas painted in Blockbench.')

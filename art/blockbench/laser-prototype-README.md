@@ -11,13 +11,26 @@ the workshop, voxel models, blockstates, item models, loot tables, tags, guide
 pages and language snippets. Run `python scripts/verify-laser-resources.py` to
 check their parity and references. The new pixel atlas is painted in native
 Blockbench by loading art/laser_art_workshop.js and using its Tools action.
-laser-pixel-atlas.bbmodel preserves its editable layer. Existing PNGs are unchanged. The scripts do not change registries,
+laser-pixel-atlas.bbmodel preserves its editable layer. Crystal and screen PNGs
+retain their existing artwork. The scripts do not change registries,
 central language files, recipes, or existing tags. Merge the two language JSON
 snippets into the central language files; append `#overload_sim:laser_mineable`
 to Minecraft's `mineable/pickaxe` block tag during integration.
 
 Texture attribution and licenses remain in `LICENSES.md`, `THIRD_PARTY_NOTICES.md`
 and `art/licenses/AE2LT-LICENSE_ASSETS.md`. Reusing these textures does not change
-their license. White concrete is used for runtime destruction particles. Glass
-uses the existing borderless pale glass texture. All controller models support six
+their license. White concrete is used for runtime destruction particles. Individual glass blocks use native painted atlas tile4 with a white/pink border;
+formed glass samples only its transparent pink centre. Tiles32..39 contain shared
+armour, vents, bolts, light channels and plinth panels. All controller models support six
 facing directions. Formed/active properties, if added, can reuse these variants.
+
+Open `particle-constrainer-formed.bbmodel` to edit the combined industrial sphere,
+glass and controller plinth as native Blockbench meshes. Its three groups come
+from the same Java mesh builders used by the renderer, including the port and
+controller openings. Runtime orbiting particles and functional blocks are drawn
+separately. After compiling the Java sources, reproduce this workshop with:
+
+`java --class-path build/classes/java/main scripts/ExportIndustrialWorkshop.java .`
+
+Run the resource verifier after exporting; it checks the embedded native atlas,
+mesh bounds, face references and UVs against the runtime assets.

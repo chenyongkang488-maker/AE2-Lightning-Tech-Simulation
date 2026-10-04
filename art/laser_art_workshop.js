@@ -18,7 +18,12 @@
         tile(1,()=>{panel();for(let y=4;y<13;y+=3){rect(4,y,8,1,'dark');rect(4,y+1,8,1,'shade');}});
         tile(2,()=>{panel();rect(4,3,2,10,'rose');rect(6,3,1,10,'pink');rect(9,3,2,10,'pink');rect(11,3,1,10,'glow');});
         tile(3,()=>{rect(0,0,16,16,'dark');rect(1,1,14,14,'black');for(let y=3;y<14;y+=3){rect(2,y,12,1,'#59485f');rect(2,y+1,12,1,'#282330');}});
-        tile(4,()=>{rect(0,0,16,16,'rgba(248,224,239,.10)');rect(3,3,2,1,'rgba(255,250,253,.13)');rect(4,4,1,2,'rgba(255,250,253,.13)');});
+        // The block has a visible ceramic rim. Formed spheres sample only the
+        // transparent 12x12 centre, so the large window has no tiled borders.
+        tile(4,()=>{rect(0,0,16,16,'silver');rect(1,1,14,14,'pink');
+            g.clearRect(2,2,12,12);rect(2,2,12,12,'rgba(248,213,233,.16)');
+            rect(3,3,2,1,'rgba(255,250,253,.20)');rect(4,4,1,2,'rgba(255,250,253,.20)');
+            [[1,1],[14,1],[1,14],[14,14]].forEach(([x,y])=>rect(x,y,1,1,'light'));});
         tile(5,()=>rect(0,0,16,16,'white'));
         tile(6,()=>rect(0,0,16,16,'pink'));
         tile(7,()=>rect(0,0,16,16,'dark'));
@@ -47,13 +52,34 @@
         tile(21,()=>{rect(0,0,16,16,'rose');rect(1,1,14,14,'pink');rect(2,2,12,12,'black');rect(3,12,10,1,'#704761');});
         tile(22,()=>{rect(0,0,16,16,'dark');rect(3,3,10,10,'#477d92');rect(4,4,8,8,'blue');rect(5,5,2,6,'light');});
         tile(23,()=>{panel();rect(4,3,8,10,'dark');rect(3,4,10,8,'dark');rect(5,4,6,8,'pink');rect(4,5,8,6,'pink');rect(6,5,4,6,'black');rect(5,6,6,4,'black');});
+        // Industrial armour, cooling slots, fasteners and base panels. These
+        // original 16px tiles are shared by all formed laser equipment.
+        tile(32,()=>{panel();rect(4,3,8,9,'shade');rect(5,3,6,8,'white');
+            rect(5,3,6,1,'light');rect(3,13,10,1,'rose');rect(4,14,8,1,'pink');});
+        tile(33,()=>{panel();rect(3,3,10,10,'dark');for(let y=4;y<13;y+=2){
+            rect(4,y,8,1,'black');rect(4,y+1,8,1,'#685f74');}
+            rect(3,2,10,1,'pink');rect(4,2,8,1,'glow');});
+        tile(34,()=>{rect(0,0,16,16,'shade');rect(2,2,12,12,'silver');
+            rect(4,2,8,1,'light');rect(2,4,1,8,'light');rect(4,4,8,8,'dark');
+            rect(5,5,6,6,'white');rect(7,6,2,4,'silver');rect(6,7,4,2,'silver');});
+        tile(35,()=>{rect(0,0,16,16,'dark');rect(0,3,16,10,'rose');
+            rect(0,5,16,6,'pink');rect(0,7,16,2,'glow');});
+        tile(36,()=>{rect(0,0,16,16,'dark');rect(2,2,12,12,'silver');
+            rect(3,3,10,10,'#edc59e');rect(4,4,8,8,'#fff3c9');rect(5,5,2,6,'light');});
+        tile(37,()=>{rect(0,0,16,16,'white');rect(0,0,16,1,'silver');
+            rect(0,0,1,16,'silver');rect(1,1,14,1,'light');rect(2,13,12,1,'shade');
+            [[3,3],[11,3],[3,11],[11,11]].forEach(([x,y])=>{rect(x,y,2,2,'silver');rect(x,y,1,1,'light');});});
+        tile(38,()=>{panel();rect(3,3,10,2,'shade');rect(3,5,10,1,'light');
+            rect(0,9,16,1,'rose');rect(0,10,16,2,'pink');rect(0,12,16,1,'glow');});
+        tile(39,()=>{panel('shade');rect(5,2,6,12,'white');
+            rect(5,2,1,12,'light');rect(9,2,2,12,'silver');rect(6,7,3,3,'pink');});
         newProject(Formats.java_block); Project.name='Laser pixel atlas';
         Project.texture_width=Project.texture_height=128; Project.ambientocclusion=false;
         const t=new Texture({name:'laser_pixel_atlas.png',namespace:'overload_sim',folder:'block',
             width:128,height:128,uv_width:128,uv_height:128}).fromDataURL(c.toDataURL()).add();
         await new Promise(r=>setTimeout(r,150));
         t.layers_enabled=true;t.layers.length=0;
-        t.layers.push(new TextureLayer({name:'粉白金属 · 导光槽 · 八种设备图标 · 透明观察玻璃',
+        t.layers.push(new TextureLayer({name:'粉白装甲 · 螺栓散热 · 导光槽 · 设备图标 · 带框玻璃',
             width:128,height:128,image_data:g.getImageData(0,0,128,128),opacity:100,visible:true,blend_mode:'default'},t));
         t.selected_layer=t.layers[0];t.updateLayerChanges(true);
         const path=ROOT+'/src/main/resources/assets/overload_sim/textures/block/laser_pixel_atlas.png';
@@ -67,7 +93,7 @@
     }
     Plugin.register('laser_art_workshop',{
         title:'模拟：激光像素绘制',author:'qiqi',description:'粉白激光设备的原生 Blockbench 绘制与导出',
-        icon:'bolt',version:'0.2.0',variant:'desktop',
+        icon:'bolt',version:'0.2.0-alpha.4',variant:'desktop',
         onload(){action=new Action('overload_sim_laser_draw',{name:'绘制激光粉白像素图集',icon:'bolt',click(){
             new Dialog({id:'laser_art_root',title:'激光像素图集',form:{root:{label:'模组工程目录',type:'text',value:'D:/MinecraftDev/OverloadSimulation'}},
                 onConfirm(values){this.hide();draw(values.root.replace(/\\/g,'/')).catch(e=>Blockbench.showMessageBox({title:'绘制失败',message:String(e.stack||e)}));}}).show();

@@ -61,7 +61,11 @@ public final class LaserGeometryGameTests {
             if (part == 'C') state = state.setValue(LaserMachineBlock.FACING, facing);
             h.getLevel().setBlockAndUpdate(center.offset(local(facing, x, y, z)), state);
         }
-        return (LaserMachineBlockEntity) h.getLevel().getBlockEntity(controller);
+        var host = (LaserMachineBlockEntity) h.getLevel().getBlockEntity(controller);
+        // This independent historical fixture models receivers loaded from an unmarked save.
+        var legacy = host.saveMachine(h.getLevel().registryAccess()); legacy.remove("ReceiverPedestalLayout");
+        host.loadMachine(legacy, h.getLevel().registryAccess());
+        return host;
     }
 
     private static void sphereForms(GameTestHelper h, Direction facing) {

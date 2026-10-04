@@ -98,7 +98,7 @@ public final class LaserRuntimeGameTests {
             h.assertTrue(emitter!=null&&!emitter.segments().isEmpty(),"complete demo has a paid optical path");
             LaserMachineBlockEntity receiver=null;
             for(var segment:emitter.segments())if(segment.particle()){
-                var port=BlockPos.containing(segment.end());var pos=port.east(3).below(3);
+                var port=BlockPos.containing(segment.end());var pos=port.below(4);
                 if(h.getLevel().getBlockEntity(pos) instanceof LaserMachineBlockEntity r)receiver=r;
             }
             h.assertTrue(receiver!=null&&receiver.energy().stored()>0,"forward receiver actually converts generated particles into FE");

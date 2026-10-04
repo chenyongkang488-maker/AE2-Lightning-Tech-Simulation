@@ -14,6 +14,7 @@ import dev.overloadsim.core.ParticleClock;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
@@ -42,6 +43,7 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
     private LaserStructure structure;
     private boolean structureDirty = true, wasFormed, visualFormed, visualNetworkActive, explosionTriggered;
     private boolean receiverRebuildPending;
+    private boolean receiverPedestalLayout = true;
     private final Object receiverVisualToken = new Object();
     private BlockPos visualCenter;
     private Direction visualFacing;
@@ -105,7 +107,12 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
     public Direction forward() { return getBlockState().getValue(LaserMachineBlock.FACING).getOpposite(); }
     public BlockPos center() {
         if (level != null && level.isClientSide && visualCenter != null) return visualCenter;
-        return structure == null ? worldPosition.offset(LaserStructureGeometry.centerOffset(kind(), forward().getOpposite())) : structure.center();
+        return structure == null ? worldPosition.offset(LaserStructureGeometry.centerOffset(kind(), forward().getOpposite(), receiverPedestalLayout())) : structure.center();
+    }
+    public boolean receiverPedestalLayout() { return kind() == LaserKind.RECEIVER && receiverPedestalLayout; }
+    public Map<BlockPos, LaserStructureGeometry.Part> structureTemplate() {
+        var facing = level != null && level.isClientSide ? receiverVisualFacing() : getBlockState().getValue(LaserMachineBlock.FACING);
+        return LaserStructureGeometry.template(kind(), facing, receiverPedestalLayout());
     }
     public Direction receiverVisualFacing() { return visualFacing == null ? getBlockState().getValue(LaserMachineBlock.FACING) : visualFacing; }
     public boolean receiverSkinVisible() { return ReceiverShellVisuals.visible(this, receiverVisualToken); }
@@ -155,7 +162,7 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
         return true;
     }
 
-    /** <=343 cell reads, each guarded against chunk loading. AIR cells reserve the aperture too. */
+    /** <=441 cell reads, each guarded against chunk loading. AIR cells reserve the aperture too. */
     public void checkStructure() {
         if (level == null || level.isClientSide || isRemoved() || explosionTriggered) return;
         LaserStructureIndex.register(this);
@@ -165,7 +172,7 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
             structureDirty = false;
             return;
         }
-        var template = LaserStructureGeometry.template(kind(), forward().getOpposite());
+        var template = structureTemplate();
         var members = new ArrayList<BlockPos>(template.size());
         BlockPos networkInterface = null;
         String error = "";
@@ -207,7 +214,7 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
             if (receiverRebuildPending && !status.equals(previousStatus)) sync();
             return;
         }
-        var next = new LaserStructure(worldPosition.offset(LaserStructureGeometry.centerOffset(kind(), forward().getOpposite())), members, networkInterface);
+        var next = new LaserStructure(worldPosition.offset(LaserStructureGeometry.centerOffset(kind(), forward().getOpposite(), receiverPedestalLayout())), members, networkInterface);
         boolean changed = !next.equals(structure);
         structure = next; wasFormed = true;
         receiverRebuildPending = false; // A valid sphere rearms the normal charged-containment safety policy.
@@ -294,6 +301,7 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
         tag.put("FuelInput", fuelInput.serializeNBT(registries)); tag.putBoolean("HadStructure", structure != null || wasFormed);
         tag.putBoolean("ExplosionTriggered", explosionTriggered); tag.putDouble("AeInputFraction", aeInputFraction); tag.putDouble("AeOutputFraction", aeOutputFraction);
         if (kind() == LaserKind.RECEIVER) {
+            tag.putBoolean("ReceiverPedestalLayout", receiverPedestalLayout);
             tag.putInt("ReceiverShapeVersion", 1);
             tag.putBoolean("ReceiverRebuildPending", receiverRebuildPending);
         }
@@ -317,6 +325,8 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
         var fuelTag = tag.getCompound("FuelInput").copy(); fuelTag.putInt("Size", 4);
         fuelInput.deserializeNBT(registries, fuelTag);
         wasFormed = tag.getBoolean("HadStructure"); explosionTriggered = tag.getBoolean("ExplosionTriggered");
+        // The independent layout marker is absent in all pre-pedestal saves, including valid charged spheres.
+        receiverPedestalLayout = kind() == LaserKind.RECEIVER && tag.getBoolean("ReceiverPedestalLayout");
         // Old cubic receivers must pause for reconstruction, not explode merely because their saved template changed.
         // This flag survives intermediate saves until a valid sphere forms; no resources or paid clocks are reset.
         receiverRebuildPending = kind() == LaserKind.RECEIVER && (tag.getBoolean("ReceiverRebuildPending")
@@ -331,6 +341,7 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
     @Override protected void writeToStream(RegistryFriendlyByteBuf data) {
         super.writeToStream(data);
         data.writeBoolean(formed()); data.writeBoolean(networkActive()); data.writeBoolean(enabled); data.writeBoolean(explosionTriggered);
+        data.writeBoolean(receiverPedestalLayout());
         data.writeBlockPos(center()); data.writeByte(getBlockState().getValue(LaserMachineBlock.FACING).get3DDataValue());
         data.writeLong(boost); data.writeLong(extremeLightning); data.writeLong(coreRemainder); data.writeLong(activeUntil); data.writeLong(lastPower);
         data.writeLong(energy.stored()); data.writeLong(particles.stored()); data.writeByte(outputMask);
@@ -343,6 +354,7 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
     @Override protected boolean readFromStream(RegistryFriendlyByteBuf data) {
         super.readFromStream(data);
         visualFormed = data.readBoolean(); visualNetworkActive = data.readBoolean(); enabled = data.readBoolean(); explosionTriggered = data.readBoolean();
+        receiverPedestalLayout = data.readBoolean();
         visualCenter = data.readBlockPos();
         int facing = data.readUnsignedByte(); visualFacing = facing < 6 ? Direction.from3DDataValue(facing) : getBlockState().getValue(LaserMachineBlock.FACING);
         boost = Math.clamp(data.readLong(), 100_000L, 9_000_000L); extremeLightning = Math.max(0, data.readLong());
@@ -361,12 +373,14 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
     @Override protected void saveVisualState(CompoundTag tag) {
         super.saveVisualState(tag);
         tag.putBoolean("LaserFormed", formed()); tag.putBoolean("LaserNetwork", networkActive());
+        tag.putBoolean("LaserReceiverPedestalLayout", receiverPedestalLayout());
         tag.putLong("LaserCenter", center().asLong()); tag.putInt("LaserFacing", getBlockState().getValue(LaserMachineBlock.FACING).get3DDataValue());
         if (level != null) tag.put("LaserMachine", saveMachine(level.registryAccess()));
     }
     @Override protected void loadVisualState(CompoundTag tag) {
         super.loadVisualState(tag);
         visualFormed = tag.getBoolean("LaserFormed"); visualNetworkActive = tag.getBoolean("LaserNetwork");
+        receiverPedestalLayout = kind() == LaserKind.RECEIVER && tag.getBoolean("LaserReceiverPedestalLayout");
         visualCenter = tag.contains("LaserCenter") ? BlockPos.of(tag.getLong("LaserCenter")) : null;
         int facing = tag.getInt("LaserFacing");
         visualFacing = tag.contains("LaserFacing") && facing >= 0 && facing < 6 ? Direction.from3DDataValue(facing) : getBlockState().getValue(LaserMachineBlock.FACING);

@@ -46,12 +46,13 @@ public final class LaserDemo {
         }
         along+=2;machines.add(new Machine(origin.relative(forward,along).below(3),LaserKind.FOCUS,facing));
         var core=origin.relative(forward,along+7);machines.add(new Machine(core,LaserKind.CORE,facing));
-        machines.add(new Machine(core.relative(forward,6).below(3),LaserKind.RECEIVER,facing));
+        var receiverCenter=core.relative(forward,6);
+        machines.add(new Machine(receiverCenter.subtract(LaserStructureGeometry.centerOffset(LaserKind.RECEIVER,facing,true)),LaserKind.RECEIVER,facing));
         return place(source,machines,true);
     }
     private static int place(CommandSourceStack source,List<Machine> machines,boolean demo){
         var level=source.getLevel();var plan=new LinkedHashMap<BlockPos,BlockState>();
-        for(var m:machines)for(var entry:LaserStructureGeometry.template(m.kind(),m.facing()).entrySet()){
+        for(var m:machines)for(var entry:LaserStructureGeometry.template(m.kind(),m.facing(),m.kind()==LaserKind.RECEIVER).entrySet()){
             var block=switch(entry.getValue()){
                 case CONTROLLER->LaserContent.machine(m.kind());case FRAME->LaserContent.FRAME.get();case GLASS->LaserContent.GLASS.get();case PORT->LaserContent.PORT.get();case SOURCE->LaserContent.SOURCE.get();case AIR->Blocks.AIR;
             };

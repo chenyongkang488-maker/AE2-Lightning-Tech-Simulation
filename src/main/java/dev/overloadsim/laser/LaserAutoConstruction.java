@@ -16,8 +16,9 @@ public final class LaserAutoConstruction {
     public static AutomaticConstruction.Plan plan(LaserMachineBlockEntity host) {
         var level=host.getLevel();var identity=host.identity();var controller=host.getBlockPos();
         var kind=host.kind();var facing=host.getBlockState().getValue(LaserMachineBlock.FACING);
+        boolean receiverPedestalLayout=host.receiverPedestalLayout();
         var cells=new LinkedHashMap<BlockPos,BlockState>();int interfaces=0;
-        for(var entry:LaserStructureGeometry.template(kind,facing).entrySet()) {
+        for(var entry:host.structureTemplate().entrySet()) {
             var pos=controller.offset(entry.getKey());
             if(!level.hasChunkAt(pos))throw new IllegalArgumentException("unloaded");
             var block=switch(entry.getValue()) {
@@ -37,6 +38,7 @@ public final class LaserAutoConstruction {
         return new AutomaticConstruction.Plan(cells,()->host.getLevel()==level&&!host.isRemoved()
                 &&host.identity().equals(identity)&&level.hasChunkAt(controller)&&level.getBlockEntity(controller)==host
                 &&host.getBlockState().getValue(LaserMachineBlock.FACING)==facing
+                &&host.receiverPedestalLayout()==receiverPedestalLayout
                 &&cells.keySet().stream().noneMatch(pos->LaserStructureIndex.occupied(level,pos,host)||LaserStructureIndex.touching(level,pos,host)));
     }
     public static AutomaticConstruction.Result build(ServerPlayer player,LaserMachineBlockEntity host) {

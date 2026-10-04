@@ -16,19 +16,30 @@ public final class LaserStructureGeometry {
     }
 
     public static BlockPos centerOffset(LaserKind kind, Direction facing) {
+        return centerOffset(kind, facing, false);
+    }
+
+    public static BlockPos centerOffset(LaserKind kind, Direction facing, boolean receiverPedestalLayout) {
         Direction forward = facing.getOpposite();
         if (kind == LaserKind.CORE) return BlockPos.ZERO;
+        if (kind == LaserKind.RECEIVER && receiverPedestalLayout)
+            return BlockPos.ZERO.relative(forward, 3).relative(basisUp(forward), 4);
         return kind == LaserKind.EMITTER ? BlockPos.ZERO.relative(forward, 2) : BlockPos.ZERO.relative(basisUp(forward), 3);
     }
 
-    /** Argument is the controller's FACING, toward the player/upstream. */
+    /** Historical templates; existing receiver spheres retain their original controller anchor. */
     public static Map<BlockPos, Part> template(LaserKind kind, Direction facing) {
+        return template(kind, facing, false);
+    }
+
+    /** Argument is the controller's FACING, toward the player/upstream. */
+    public static Map<BlockPos, Part> template(LaserKind kind, Direction facing, boolean receiverPedestalLayout) {
         var result = new LinkedHashMap<BlockPos, Part>();
         if (kind == LaserKind.CORE) { result.put(BlockPos.ZERO, Part.CONTROLLER); return Collections.unmodifiableMap(result); }
         Direction forward = facing.getOpposite(), up = basisUp(forward);
         var u = up.getNormal(); var f = forward.getNormal();
         var right = new BlockPos(u.getY() * f.getZ() - u.getZ() * f.getY(), u.getZ() * f.getX() - u.getX() * f.getZ(), u.getX() * f.getY() - u.getY() * f.getX());
-        BlockPos center = centerOffset(kind, facing);
+        BlockPos center = centerOffset(kind, facing, receiverPedestalLayout);
         int radius = kind == LaserKind.EMITTER ? 2 : 3;
         boolean ring = kind == LaserKind.CONSTRAINT || kind == LaserKind.ENHANCEMENT || kind == LaserKind.BURST || kind == LaserKind.FOCUS;
         for (int x = -radius; x <= radius; x++) for (int y = -radius; y <= radius; y++) for (int z = ring ? 0 : -radius; z <= (ring ? 0 : radius); z++) {
@@ -56,6 +67,14 @@ public final class LaserStructureGeometry {
                 if (x == 0 && y == 0 && z == -3) part = Part.PORT;
             }
             result.put(offset.immutable(), part);
+        }
+        if (kind == LaserKind.RECEIVER && receiverPedestalLayout) {
+            for (int x = -3; x <= 3; x++) for (int y = -1; y <= 0; y++) for (int z = 0; z <= 6; z++) {
+                var offset = new BlockPos(right.getX() * x + u.getX() * y + f.getX() * z,
+                        right.getY() * x + u.getY() * y + f.getY() * z,
+                        right.getZ() * x + u.getZ() * y + f.getZ() * z);
+                result.put(offset, Part.FRAME);
+            }
         }
         // On the deflector the bottom controller also serves as the sixth optical endpoint.
         result.put(BlockPos.ZERO, Part.CONTROLLER);

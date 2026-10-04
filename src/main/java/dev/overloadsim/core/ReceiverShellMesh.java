@@ -7,7 +7,7 @@ import java.util.List;
 public final class ReceiverShellMesh {
     public static final double RADIUS = 3.3;
     public static final double RIB_RADIUS = .12;
-    private static final int LATITUDES = 32, LONGITUDES = 64, RING_SEGMENTS = 96, RIB_SIDES = 16;
+    private static final int LATITUDES = 12, LONGITUDES = 24, RING_SEGMENTS = 24, RIB_SIDES = 4;
     public record Vertex(double x, double y, double z, double nx, double ny, double nz, double u, double v) {}
     public record Quad(Vertex a, Vertex b, Vertex c, Vertex d) {}
     private static final List<Quad> GLASS = glassMesh();
@@ -23,11 +23,24 @@ public final class ReceiverShellMesh {
         var result = new ArrayList<Quad>(LATITUDES * LONGITUDES);
         for (int latitude = 0; latitude < LATITUDES; latitude++) {
             for (int longitude = 0; longitude < LONGITUDES; longitude++) {
-                result.add(new Quad(sphere(latitude, longitude), sphere(latitude, longitude + 1),
-                        sphere(latitude + 1, longitude + 1), sphere(latitude + 1, longitude)));
+                result.add(flat(new Quad(sphere(latitude, longitude), sphere(latitude, longitude + 1),
+                        sphere(latitude + 1, longitude + 1), sphere(latitude + 1, longitude))));
             }
         }
         return List.copyOf(result);
+    }
+
+    /** A single outward normal gives each pane an intentional low-poly reflection. */
+    private static Quad flat(Quad quad) {
+        double nx=quad.a.nx+quad.b.nx+quad.c.nx+quad.d.nx;
+        double ny=quad.a.ny+quad.b.ny+quad.c.ny+quad.d.ny;
+        double nz=quad.a.nz+quad.b.nz+quad.c.nz+quad.d.nz;
+        double length=Math.sqrt(nx*nx+ny*ny+nz*nz);
+        return new Quad(normal(quad.a,nx/length,ny/length,nz/length),normal(quad.b,nx/length,ny/length,nz/length),
+                normal(quad.c,nx/length,ny/length,nz/length),normal(quad.d,nx/length,ny/length,nz/length));
+    }
+    private static Vertex normal(Vertex v,double nx,double ny,double nz) {
+        return new Vertex(v.x,v.y,v.z,nx,ny,nz,v.u,v.v);
     }
 
     private static Vertex sphere(int latitude, int longitude) {
