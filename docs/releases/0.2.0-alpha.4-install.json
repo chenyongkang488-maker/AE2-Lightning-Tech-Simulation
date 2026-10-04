@@ -1,0 +1,22 @@
+{
+  "version": "0.2.0-alpha.4",
+  "date": "2026-10-05",
+  "implementation_commit": "2ff529299a228e7ced4df19618cee240a284812e",
+  "rollback_commit": "022b538519843df407a2aa2a96d30884be0fe78a",
+  "installed": "D:\\mc\\.minecraft\\versions\\OverloadSim-Test-1.21.1\\mods\\overload_sim-0.2.0-alpha.4.jar",
+  "bytes": 984208,
+  "sha256": "9E64F9951422B3158760AAA8168C97966ED265735519126A7DBE5CD57CDA6E08",
+  "backup": "D:\\mc\\.minecraft\\versions\\OverloadSim-Test-1.21.1\\addon-backups\\20261005-020709\\overload_sim-0.2.0-alpha.3.jar",
+  "backup_sha256": "0373818ED3F4CA391B0C984116CEF613DE8C0E0C88216BE08D829C904C3E59E2",
+  "other_mods_unchanged": 13,
+  "configuration_files_unchanged": 50,
+  "unit_tests": 56,
+  "game_tests": 221,
+  "native_previews": [
+    "art/previews/industrial-constrainer.png",
+    "art/previews/industrial-matrices.png",
+    "art/previews/industrial-simulation-chamber.png",
+    "art/previews/industrial-glass.png"
+  ],
+  "build_log": "industrial-final-green.log"
+}
