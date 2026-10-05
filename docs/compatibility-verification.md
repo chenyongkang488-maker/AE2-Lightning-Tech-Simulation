@@ -12,7 +12,7 @@ Java 21，Minecraft 1.21.1，AE2 19.2.17，GuideME 21.1.19。
 - 24 项 JUnit 测试通过，0 失败、0 错误、0 跳过；含四项实际处理后 TOML 的依赖范围回归测试。
 - 修复前已重现：新前置被精确版本限制拒绝；放宽限制后，服务端状态构造器 `NoSuchMethodError` 与客户端滚轮 Mixin `InjectionError`。
 - 修复后的功能测试覆盖线圈共享设备界面状态、手持槽选择及轨道炮行为保留，并验证新 EHV 标志为关闭。
-- 对照原发布 JAR，215 个运行资源逐字节一致（版本/依赖元数据除外），未修改注册 ID、配方或贴图。
+- 兼容修复完成时，对照原发布 JAR 的 215 个运行资源逐字节一致（版本/依赖元数据除外）。随后统一展示名称为“闪电科技：模拟”；仅额外调整创造栏/指南中的名称，未修改注册 ID、配方或贴图。
 - 最终以最低支持的 NeoForge 21.1.252 和 Reborn API 编译；同一 Java 实现通过上述运行环境测试。
 - `verifyReleaseVersion`、`build`、`scripts/verify-release.py --tag v0.1.1-beta.2` 及 `git diff --check` 通过。
 - 发布 JAR 与源码 JAR 包含四份原有许可/署名文件；没有打包 Minecraft、前置 JAR 或开发测试数据包。
@@ -22,6 +22,6 @@ Java 21，Minecraft 1.21.1，AE2 19.2.17，GuideME 21.1.19。
 
 ## 安装要点
 
-用 `overload_sim-0.1.1-beta.2.jar` 替换旧 Simulation JAR。推荐另外安装 AE2LT 2.1.1 与 Thunderbolt 2.0.2。
+用 `lightning-tech-simulation-0.1.1-beta.2.jar` 替换旧模组 JAR（包括使用旧文件名的 beta.2）。推荐另外安装 AE2LT 2.1.1 与 Thunderbolt 2.0.2。
 错误报告中的实例实际缺少这两个前置，替换本附属模组后仍需补装。Reborn 与主项目 ID 相同，每种前置只保留一份。
 源码 JAR 和源码 ZIP 用于开发，不能放进游戏 mods 文件夹。本次制作了本地修复包，未自动上传 CurseForge 或 GitHub。

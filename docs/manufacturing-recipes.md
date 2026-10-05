@@ -1,4 +1,4 @@
-# AE2 闪电科技：模拟 — 制造配方（0.1b）
+# 闪电科技：模拟 — 制造配方（0.1b）
 
 Minecraft 1.21.1 / NeoForge，固定前置 AE2LT 2.1.0。每次制造产出1个对应物品；k = 1,000，HV为高压，EHV为极高压。
 
@@ -37,4 +37,4 @@ Minecraft 1.21.1 / NeoForge，固定前置 AE2LT 2.1.0。每次制造产出1个�
 
 仅接受含指定存储附魔、达到最低等级的附魔书；允许其它附魔、改名及额外组件。普通书、无相关附魔的书和附魔工具均拒绝。展示堆栈携带对应附魔，网络同步保留材料判定。作者可修改 `enchantment` 和 `min_level`，最低等级范围1～255。
 
-名称修改：模组列表、创造栏及指南显示“AE2 闪电科技：模拟”；线圈显示“过载雷鸣线圈”。英文分别为“AE2 Lightning Tech: Simulation”和“Overload Lightning Coil”。
+名称修改：模组列表、创造栏及指南显示“闪电科技：模拟”；线圈显示“过载雷鸣线圈”。英文分别为“Lightning Tech: Simulation”和“Overload Lightning Coil”。

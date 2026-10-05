@@ -4,7 +4,7 @@ license="MIT (code); CC BY-NC-SA 3.0 (derived crystal and module artwork)"
 [[mods]]
 modId="overload_sim"
 version="${mod_version}"
-displayName="AE2 闪电科技：模拟"
+displayName="闪电科技：模拟"
 authors="qiqi"
 logoFile="logo.png"
 description='''A data-driven AE2 Lightning Tech addon for lightning-grown simulation crystals and resource simulation.'''

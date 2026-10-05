@@ -1,4 +1,4 @@
-# AE2 闪电科技：模拟
+# 闪电科技：模拟
 
 [English](README.en.md) · [更新记录](CHANGELOG.md) · [许可范围](LICENSES.md)
 

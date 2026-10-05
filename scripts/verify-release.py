@@ -30,7 +30,7 @@ def verify(tag=None):
     }
     artifacts = []
     for classifier in ("", "-sources"):
-        path = ROOT / f"build/libs/overload_sim-{version}{classifier}.jar"
+        path = ROOT / f"build/libs/lightning-tech-simulation-{version}{classifier}.jar"
         with zipfile.ZipFile(path) as jar:
             names = jar.namelist()
             if len(names) != len(set(names)):

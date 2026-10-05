@@ -3,7 +3,7 @@
   "item.overload_sim.simulation_crystal": "模拟电鸣水晶",
   "item.overload_sim.perfect_simulation_crystal": "完美模拟电鸣水晶",
   "block.overload_sim.overload_simulation_chamber": "过载模拟室",
-  "itemGroup.overload_sim": "AE2 闪电科技：模拟",
+  "itemGroup.overload_sim": "闪电科技：模拟",
   "tooltip.overload_sim.profile": "模拟对象：%s",
   "tooltip.overload_sim.progress": "已培养雷击：%s 次",
   "tooltip.overload_sim.missing": "模拟档案已被移除，暂时无法工作",

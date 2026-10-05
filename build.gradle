@@ -4,7 +4,7 @@ plugins {
 }
 version = providers.gradleProperty('mod_version').get()
 group = 'dev.overloadsim'
-base { archivesName = 'overload_sim' }
+base { archivesName = 'lightning-tech-simulation' }
 java { toolchain.languageVersion = JavaLanguageVersion.of(21); withSourcesJar() }
 sourceSets { compatibilityFixtures { resources.srcDir 'src/gametest/resources' } }
 repositories { mavenCentral() }

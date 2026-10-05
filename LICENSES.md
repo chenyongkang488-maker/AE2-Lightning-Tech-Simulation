@@ -6,8 +6,8 @@ replace the license of artwork derived from AE2 Lightning Tech.
 
 | Component | License | Attribution |
 | --- | --- | --- |
-| Addon Java code, scripts and documentation | MIT | qiqi and Overload Simulation contributors |
-| Original chamber/coil geometry, metal textures and separately drawn lightning | MIT | qiqi and Overload Simulation contributors |
+| Addon Java code, scripts and documentation | MIT | qiqi and Lightning Tech: Simulation contributors |
+| Original chamber/coil geometry, metal textures and separately drawn lightning | MIT | qiqi and Lightning Tech: Simulation contributors |
 | Simulation crystal sprites, crystal logo and embedded copies | CC BY-NC-SA 3.0 | Adapted from AE2 Lightning Tech Reborn contributors |
 | Seven coil module icons, upstream module base and derived previews | CC BY-NC-SA 3.0 | Adapted from AE2 Lightning Tech Reborn contributors |
 

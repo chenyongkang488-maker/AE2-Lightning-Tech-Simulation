@@ -2,6 +2,8 @@
 
 ## [0.1.1-beta.2] — 2026-10-05
 
+- 统一对外名称为“闪电科技：模拟” / “Lightning Tech: Simulation”；构件文件名使用 `lightning-tech-simulation`，保留内部 ID 与存档兼容。
+
 - Support the migrated CurseForge AE2 Lightning Tech 2.1.1 and Thunderbolt Core 2.0.2 releases while retaining Reborn 2.1.0 / 2.0.0 support.
 - Adapt the coil's shared device-hub status to both constructor signatures; the new railgun EHV-beam flag stays disabled for coils.
 - Handle the coil's seven configuration rows without depending on the removed inline railgun setting count.

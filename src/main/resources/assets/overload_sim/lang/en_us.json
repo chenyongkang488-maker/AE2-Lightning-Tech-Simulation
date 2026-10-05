@@ -3,7 +3,7 @@
   "item.overload_sim.simulation_crystal": "Simulation Crystal",
   "item.overload_sim.perfect_simulation_crystal": "Perfect Simulation Crystal",
   "block.overload_sim.overload_simulation_chamber": "Overload Simulation Chamber",
-  "itemGroup.overload_sim": "AE2 Lightning Tech: Simulation",
+  "itemGroup.overload_sim": "Lightning Tech: Simulation",
   "tooltip.overload_sim.profile": "Simulation: %s",
   "tooltip.overload_sim.progress": "Cultivation strikes: %s",
   "tooltip.overload_sim.missing": "Missing simulation profile; operation paused",
