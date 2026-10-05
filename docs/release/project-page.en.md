@@ -5,7 +5,7 @@ Author: qiqi
 **Summary:** Grow simulation crystals with lightning and produce resources through AE2-powered chambers.
 
 Lightning Tech: Simulation is an independent addon for Minecraft 1.21.1
-and AE2 Lightning Tech Reborn. Bind crystals to minerals, crops, trees or mobs,
+and AE2 Lightning Tech / Reborn. Bind crystals to minerals, crops, trees or mobs,
 cultivate them with lightning, and reuse perfect crystals as production templates.
 
 ## Features
@@ -21,9 +21,12 @@ cultivate them with lightning, and reuse perfect crystals as production template
 ## Requirements
 
 Minecraft 1.21.1, Java 21 and NeoForge 21.1.252 or later within 21.1.x.
-Required mods: **AE2 19.2.17**, **AE2 Lightning Tech Reborn 2.1.0**,
-**Thunderbolt Core Reborn 2.0.0**, **GuideME 21.1.19**.
-The original Lightning Tech is not interchangeable with Reborn.
+Required mods: **AE2 19.2.17**, **GuideME 21.1.19**,
+[AE2 Lightning Tech 2.1.1](https://www.curseforge.com/minecraft/mc-mods/ae2-lightning-tech/files/9024605),
+and [Thunderbolt Core 2.0.2](https://www.curseforge.com/minecraft/mc-mods/thunderbolt-core/files/9055479).
+The original Reborn 2.1.0 / 2.0.0 pair is also supported. Reborn migrated to the main
+projects and retains the same mod IDs: install only one copy of each dependency.
+Pre-Reborn Lightning Tech 2.0.x is unsupported. AE2 and GuideME alone are insufficient.
 Mekanism support is optional, tested on 10.7.19.85.
 Mystical Agriculture 8.0.28 / Cucumber 8.0.16 were used for optional crop tests.
 
@@ -32,7 +35,10 @@ upgrading and remove older addon JARs. Development source archives do not go in 
 
 ## Beta status and compatibility
 
-Version 0.1.1-beta.1 retains the gameplay of 0.1b. Generic matching is extensible
+Version 0.1.1-beta.2 fixes compatibility with current dependencies and the coil
+device hub while retaining beta.1 gameplay. Verified locally: 24 unit tests,
+153 GameTests per three runtime profiles, and old/current client device-hub checks.
+Generic matching is extensible
 but does not promise support for every mod: entity equipment/NBT, special crop
 environments and block entities are not cloned. Long-term and multiplayer testing
 is still needed. Please report exact versions, reproduction steps and a log.
@@ -47,4 +53,4 @@ THIRD_PARTY_NOTICES.md in the source repository and JAR for full attribution.
 
 Upstream: https://github.com/AE2-Lightning-Tech-Reborn/AE2-Lightning-Tech-Reborn
 
-Source and issue links should be set to this project's actual repository when created.
+Source and issues: https://github.com/chenyongkang488-maker/AE2-Lightning-Tech-Simulation

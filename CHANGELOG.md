@@ -1,6 +1,6 @@
 # Changelog / 更新记录
 
-## [0.1.1-beta.2] — 2026-10-05
+## [0.1.1-beta.2] — 2026-10-06
 
 - 统一对外名称为“闪电科技：模拟” / “Lightning Tech: Simulation”；构件文件名使用 `lightning-tech-simulation`，保留内部 ID 与存档兼容。
 
