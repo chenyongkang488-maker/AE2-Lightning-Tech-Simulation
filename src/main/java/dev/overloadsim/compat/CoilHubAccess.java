@@ -20,7 +20,7 @@ public final class CoilHubAccess {
         var settings=CoilSettings.read(stack);var configs=new ArrayList<DeviceStatusModel.ModuleConfigInfo>();
         for(int i=0;i<7;i++)configs.add(new DeviceStatusModel.ModuleConfigInfo(Integer.toString(i),"",Integer.toString(CoilConfiguration.value(settings,i)),editable(stack,i)));
         boolean power=CoilModules.hasCore(stack)&&(CoilEnergy.read(stack)>0||com.moakiee.ae2lt.device.network.RailgunNetworkBinding.INSTANCE.resolve(stack,p).success());
-        return new DeviceStatusModel(stack.getHoverName().getString(),CoilModules.hasCore(stack),power,modules,selected,configs,false,false,false,false,RailgunExecutionMode.NORMAL,false);
+        return CoilStatusFactory.create(stack.getHoverName().getString(),CoilModules.hasCore(stack),power,modules,selected,configs);
     }
     public static boolean editable(ItemStack stack,int action){return CoilModules.has(stack,switch(action){case 0->CoilModuleItem.Type.EXTREME;case 1,2->CoilModuleItem.Type.EFFICIENCY;case 3->CoilModuleItem.Type.FORTUNE;case 4->CoilModuleItem.Type.SILK;default->CoilModuleItem.Type.WRENCH;});}
 }

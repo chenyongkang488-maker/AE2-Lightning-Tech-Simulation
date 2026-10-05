@@ -1,5 +1,15 @@
 [
   {
+    "file": "ae2lt-2.1.1.jar",
+    "url": "https://mediafilez.forgecdn.net/files/9024/605/ae2lt-2.1.1.jar",
+    "sha256": "38ab438c2afc1af897e9fdb28fa89db47417a346774da718b1132829dfc517c5"
+  },
+  {
+    "file": "thunderbolt-2.0.2.jar",
+    "url": "https://mediafilez.forgecdn.net/files/9055/479/thunderbolt-2.0.2.jar",
+    "sha256": "62a719e8cf706a2cb8f5e25e4fb853df4fcd3914a32b47fafdc8a1f373539b67"
+  },
+  {
     "file": "ae2lt-2.1.0.jar",
     "url": "https://mediafilez.forgecdn.net/files/8927/344/ae2lt-2.1.0.jar",
     "sha256": "6025e78a78ae282545ffc5d8b6aef5613a9684b4e3a65caf62e421469b8b8651"

@@ -4,7 +4,7 @@
 
 作者：**qiqi**。为 **Minecraft 1.21.1 / NeoForge** 制作的 AE2 Lightning Tech Reborn 附属模组，用雷击培养可重复使用的模拟水晶，通过 ME 网络生产矿物、作物、木材和生物战利品。
 
-当前版本：**0.1.1-beta.1**。玩法沿用 0.1b，本次补齐开源发布所需的许可、文档和构建流程。属于 Beta 测试版本。
+当前版本：**0.1.1-beta.2**。本次兼容迁回 CurseForge 主项目的新版前置；保留已有玩法、注册 ID 与存档数据。属于 Beta 测试版本。
 
 ![完美模拟水晶与普通水晶](art/crystal_preview.png)
 
@@ -15,13 +15,15 @@
 | 必需组件 | 支持版本 |
 | --- | --- |
 | Minecraft | 1.21.1 |
-| NeoForge | 21.1.252～21.1.x，已验证 21.1.252 |
+| NeoForge | 21.1.252～21.1.x |
 | Applied Energistics 2 | 19.2.17 |
-| AE2 Lightning Tech **Reborn** | 2.1.0 |
-| Thunderbolt Core **Reborn** | 2.0.0 |
+| AE2 Lightning Tech / Reborn | 2.1.0～2.1.1 |
+| Thunderbolt Core / Reborn | 2.0.0～2.0.2 |
 | GuideME | 21.1.19 |
 
-当前依赖范围按上述版本声明。原版闪电科技与 Reborn 的接口不同，不能直接互换。Mekanism 为可选兼容模组，已验证 10.7.19.85；Mystical Agriculture / Cucumber 为可选作物兼容测试环境，已验证 8.0.28 / 8.0.16。
+推荐安装 [AE2 Lightning Tech 2.1.1](https://www.curseforge.com/minecraft/mc-mods/ae2-lightning-tech/files/9024605) 与 [Thunderbolt Core 2.0.2](https://www.curseforge.com/minecraft/mc-mods/thunderbolt-core/files/9055479)，或保留原 Reborn 2.1.0 / 2.0.0 组合。Reborn 已迁回上述主项目；内部 mod ID 仍是 `ae2lt` / `thunderbolt`，不要同时安装两份同 ID 的前置。
+
+只装 AE2、GuideME 和本附属模组仍会报缺少前置，必须另行安装闪电科技与 Thunderbolt。2.0.x 的早期闪电科技不在本版支持范围内。Mekanism 为可选兼容模组，已验证 10.7.19.85；Mystical Agriculture / Cucumber 为可选作物兼容测试环境，已验证 8.0.28 / 8.0.16。测试组合和构建命令见 [兼容说明](docs/curseforge-compatibility.md)。
 
 本项目不分发 Minecraft 本体或前置模组。固定的开发依赖下载地址及 SHA-256 见 [依赖清单](scripts/dependencies.json)。
 

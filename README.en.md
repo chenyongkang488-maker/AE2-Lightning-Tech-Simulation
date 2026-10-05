@@ -6,8 +6,8 @@ By **qiqi**. A **Minecraft 1.21.1 / NeoForge** addon for AE2 Lightning Tech
 Reborn. Grow reusable simulation crystals with lightning, then use an ME network
 to produce minerals, crops, wood and mob loot.
 
-Current version: **0.1.1-beta.1**. This beta prepares the existing 0.1b gameplay
-for public source distribution, with licensing, documentation and portable builds.
+Current version: **0.1.1-beta.2**. This beta supports the migrated CurseForge
+dependencies while preserving gameplay, registry IDs and existing save data.
 
 ![Simulation crystals](art/crystal_preview.png)
 
@@ -21,14 +21,19 @@ ZIP are development downloads, not game mods.
 | Required component | Supported version |
 | --- | --- |
 | Minecraft | 1.21.1 |
-| NeoForge | 21.1.252–21.1.x; tested on 21.1.252 |
+| NeoForge | 21.1.252–21.1.x |
 | Applied Energistics 2 | 19.2.17 |
-| AE2 Lightning Tech **Reborn** | 2.1.0 |
-| Thunderbolt Core **Reborn** | 2.0.0 |
+| AE2 Lightning Tech / Reborn | 2.1.0–2.1.1 |
+| Thunderbolt Core / Reborn | 2.0.0–2.0.2 |
 | GuideME | 21.1.19 |
 
-Dependency ranges are declared for these versions. The original Lightning Tech
-and Reborn have different interfaces and cannot be substituted directly.
+Install [AE2 Lightning Tech 2.1.1](https://www.curseforge.com/minecraft/mc-mods/ae2-lightning-tech/files/9024605)
+and [Thunderbolt Core 2.0.2](https://www.curseforge.com/minecraft/mc-mods/thunderbolt-core/files/9055479),
+or retain the original Reborn 2.1.0 / 2.0.0 stack. Reborn migrated to those main
+projects; the runtime IDs are still `ae2lt` / `thunderbolt`. Install one copy of
+each dependency. AE2, GuideME and this addon alone are insufficient. Pre-Reborn
+Lightning Tech 2.0.x is unsupported. See [compatibility notes](docs/curseforge-compatibility.md)
+for test profiles and reproducible commands.
 Mekanism is optional; compatibility was tested with 10.7.19.85.
 Mystical Agriculture 8.0.28 and Cucumber 8.0.16 are optional crop test mods.
 Minecraft and dependency binaries are not distributed by this repository.

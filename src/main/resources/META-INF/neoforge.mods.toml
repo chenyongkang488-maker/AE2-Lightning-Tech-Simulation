@@ -26,12 +26,12 @@ ordering="AFTER"
 [[dependencies.overload_sim]]
 modId="ae2lt"
 type="required"
-versionRange="[2.1.0]"
+versionRange="[2.1.0,2.1.2)"
 ordering="AFTER"
 [[dependencies.overload_sim]]
 modId="thunderbolt"
 type="required"
-versionRange="[2.0.0]"
+versionRange="[2.0.0,2.0.3)"
 ordering="AFTER"
 [[dependencies.overload_sim]]
 modId="guideme"

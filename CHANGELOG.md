@@ -1,5 +1,16 @@
 # Changelog / 更新记录
 
+## [0.1.1-beta.2] — 2026-10-05
+
+- Support the migrated CurseForge AE2 Lightning Tech 2.1.1 and Thunderbolt Core 2.0.2 releases while retaining Reborn 2.1.0 / 2.0.0 support.
+- Adapt the coil's shared device-hub status to both constructor signatures; the new railgun EHV-beam flag stays disabled for coils.
+- Handle the coil's seven configuration rows without depending on the removed inline railgun setting count.
+- Add processed-metadata regression tests and selectable runtime dependency versions for compatibility testing.
+- Preserve gameplay, recipes, registry IDs and existing save data. Required dependencies remain required.
+
+修复 CurseForge 新前置被精确版本限制拒绝的问题，以及新版设备配置界面的状态构造器和滚轮注入兼容问题。
+旧 Reborn 前置继续支持；闪电科技与 Thunderbolt 仍须安装，不能通过移除必需依赖让模组独立运行。
+
 ## [0.1.1-beta.1] — 2026-10-03
 
 - Prepare the existing 0.1b gameplay for public source release; no gameplay or registry ID changes.

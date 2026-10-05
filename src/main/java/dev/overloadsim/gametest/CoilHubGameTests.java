@@ -16,11 +16,15 @@ public class CoilHubGameTests {
     private static net.minecraft.server.level.ServerPlayer player(GameTestHelper h){return net.neoforged.neoforge.common.util.FakePlayerFactory.get(h.getLevel(),new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(),"coil-hub-test"));}
     private static ItemStack coil(){var s=ModContent.COIL.toStack();CoilModules.setCore(s,com.moakiee.ae2lt.registry.ModItems.ULTIMATE_OVERLOAD_CORE.toStack());s.set(ModContent.COIL_FE.get(),10000L);return s;}
     @GameTest(template="empty")
-    public static void sharedHubUsesHeldWeaponSlotAndPreservesGun(GameTestHelper h){
+    public static void sharedHubUsesHeldWeaponSlotAndPreservesGun(GameTestHelper h) throws ReflectiveOperationException {
         var p=player(h);var coil=coil();p.setItemInHand(InteractionHand.MAIN_HAND,coil);
         var menu=new DeviceHubMenu(1,p.getInventory(),DeviceHubMenu.TAB_RAILGUN);menu.setPlayer(p);menu.broadcastChanges();
         h.assertTrue((menu.getTabAvailability()&(1<<DeviceHubMenu.TAB_RAILGUN))!=0,"coil occupies the native weapon tab");
         var status=DeviceStatusModel.fromRailgunStack(coil,p,-1);h.assertTrue(status.displayName().equals(coil.getHoverName().getString())&&status.hasCore(),"coil status in original hub");
+        h.assertTrue(status.powered()&&status.selectedModuleIndex()==-1&&status.moduleConfigs().size()==7,"status preserves coil power and all seven configuration rows");
+        h.assertTrue(!status.terrainDestruction()&&!status.pvp()&&!status.soundEnabled()&&!status.chainDamage()&&!status.chargedSplash()&&status.executionMode()==com.moakiee.ae2lt.item.railgun.RailgunExecutionMode.NORMAL,"native gun settings remain disabled on a coil");
+        for(var component:status.getClass().getRecordComponents())if(component.getName().equals("ehvBeamEnabled"))
+            h.assertTrue(Boolean.FALSE.equals(component.getAccessor().invoke(status)),"new native EHV-beam setting remains disabled on a coil");
         var gun=com.moakiee.ae2lt.registry.ModItems.ELECTROMAGNETIC_RAILGUN.toStack();p.setItemInHand(InteractionHand.MAIN_HAND,gun);p.setItemInHand(InteractionHand.OFF_HAND,coil);menu.broadcastChanges();
         h.assertTrue(dev.overloadsim.compat.CoilHubAccess.weapon(p)==gun,"main-hand gun wins over off-hand coil");
         p.setItemInHand(InteractionHand.MAIN_HAND,coil);p.setItemInHand(InteractionHand.OFF_HAND,gun);

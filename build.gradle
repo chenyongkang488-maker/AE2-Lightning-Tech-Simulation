@@ -9,7 +9,7 @@ java { toolchain.languageVersion = JavaLanguageVersion.of(21); withSourcesJar() 
 sourceSets { compatibilityFixtures { resources.srcDir 'src/gametest/resources' } }
 repositories { mavenCentral() }
 neoForge {
-    version = '21.1.252'
+    version = providers.gradleProperty('neoForgeVersion').getOrElse('21.1.252')
     runs {
         client { client(); gameDirectory = file('run-client'); if (project.hasProperty('uiReviewWorld')) { programArguments.addAll('--quickPlaySingleplayer', project.property('uiReviewWorld').toString()) } }
         server { server(); programArgument '--nogui'; gameDirectory = file('run-server') }
@@ -21,8 +21,16 @@ dependencies {
     compileOnly files('libs/Mekanism-1.21.1-10.7.19.85.jar')
     if(project.hasProperty('mekTests')) runtimeOnly files('libs/Mekanism-1.21.1-10.7.19.85.jar')
     if(project.hasProperty('cropTests')) runtimeOnly files('libs/MysticalAgriculture-1.21.1-8.0.28.jar', 'libs/Cucumber-1.21.1-8.0.16.jar')
-    implementation files('libs/appliedenergistics2-19.2.17.jar', 'libs/ae2lt-2.1.0.jar', 'libs/thunderbolt-2.0.0.jar', 'libs/guideme-21.1.19.jar')
+    implementation files('libs/appliedenergistics2-19.2.17.jar', 'libs/guideme-21.1.19.jar')
+    // Compile against the original supported API; exercise the same binary on newer runtimes.
+    compileOnly files('libs/ae2lt-2.1.0.jar', 'libs/thunderbolt-2.0.0.jar')
+    runtimeOnly files("libs/ae2lt-${providers.gradleProperty('ae2ltRuntimeVersion').getOrElse('2.1.0')}.jar",
+            "libs/thunderbolt-${providers.gradleProperty('thunderboltRuntimeVersion').getOrElse('2.0.0')}.jar")
+    testImplementation files('libs/ae2lt-2.1.0.jar', 'libs/thunderbolt-2.0.0.jar')
     testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
+    // Use the same TOML/version-range semantics as the loader in metadata regression tests.
+    testImplementation 'com.electronwill.night-config:toml:3.8.3'
+    testImplementation 'org.apache.maven:maven-artifact:3.8.5'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 tasks.named('test') { useJUnitPlatform() }
