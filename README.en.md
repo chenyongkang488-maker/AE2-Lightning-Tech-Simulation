@@ -1,4 +1,4 @@
-# AE2 Lightning Tech: Simulation
+# Lightning Tech: Simulation
 
 [简体中文](README.md) · [Changelog](CHANGELOG.md) · [License scope](LICENSES.md)
 

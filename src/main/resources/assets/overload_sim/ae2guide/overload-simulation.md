@@ -1,6 +1,6 @@
 ---
 navigation:
-  title: AE2 闪电科技：模拟
+  title: 闪电科技：模拟
   icon: overload_sim:overload_simulation_chamber
   parent: ae2:items-blocks-machines/items-blocks-machines-index.md
 item_ids:
@@ -10,7 +10,7 @@ item_ids:
   - overload_sim:overload_simulation_chamber
 ---
 
-# AE2 闪电科技：模拟
+# 闪电科技：模拟
 
 <ItemImage id="overload_sim:blank_simulation_crystal" scale="3" />
 

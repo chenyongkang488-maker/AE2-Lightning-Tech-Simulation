@@ -15,7 +15,7 @@
 4. 等待 GitHub Actions 的 Windows/Linux 构建通过。该工作流只构建与上传 CI 产物，
    不会自动公开 Release。
 5. 创建 Release，选择该标签，标题为
-   `AE2 Lightning Tech: Simulation 0.1.1-beta.1`，勾选 Pre-release，
+   `Lightning Tech: Simulation 0.1.1-beta.1`，勾选 Pre-release，
    粘贴 `docs/release/0.1.1-beta.1.md`，附件使用发布包中的普通 JAR、
    sources JAR 和 SHA256SUMS.txt。源码 ZIP 也可以附上。
 

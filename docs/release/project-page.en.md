@@ -1,10 +1,10 @@
-# AE2 Lightning Tech: Simulation
+# Lightning Tech: Simulation
 
 Author: qiqi
 
 **Summary:** Grow simulation crystals with lightning and produce resources through AE2-powered chambers.
 
-AE2 Lightning Tech: Simulation is an independent addon for Minecraft 1.21.1
+Lightning Tech: Simulation is an independent addon for Minecraft 1.21.1
 and AE2 Lightning Tech Reborn. Bind crystals to minerals, crops, trees or mobs,
 cultivate them with lightning, and reuse perfect crystals as production templates.
 
