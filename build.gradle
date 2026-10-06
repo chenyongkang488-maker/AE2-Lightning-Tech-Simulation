@@ -9,7 +9,7 @@ java { toolchain.languageVersion = JavaLanguageVersion.of(21); withSourcesJar() 
 sourceSets { compatibilityFixtures { resources.srcDir 'src/gametest/resources' } }
 repositories { mavenCentral() }
 neoForge {
-    version = '21.1.252'
+    version = providers.gradleProperty('neoForgeVersion').getOrElse('21.1.252')
     runs {
         client { client(); gameDirectory = file('run-client'); if (project.hasProperty('uiReviewWorld')) { programArguments.addAll('--quickPlaySingleplayer', project.property('uiReviewWorld').toString()) } }
         server { server(); programArgument '--nogui'; gameDirectory = file('run-server') }
@@ -22,9 +22,17 @@ dependencies {
     if(project.hasProperty('mekTests')) runtimeOnly files('libs/Mekanism-1.21.1-10.7.19.85.jar')
     if(project.hasProperty('cropTests')) runtimeOnly files('libs/MysticalAgriculture-1.21.1-8.0.28.jar', 'libs/Cucumber-1.21.1-8.0.16.jar')
     if(project.hasProperty('fluxTests')) runtimeOnly files('libs/AppliedFlux-2.1.6.jar', 'libs/Glodium-2.2.jar')
-    implementation files('libs/appliedenergistics2-19.2.17.jar', 'libs/ae2lt-2.1.0.jar', 'libs/thunderbolt-2.0.0.jar', 'libs/guideme-21.1.19.jar')
+    implementation files('libs/guideme-21.1.19.jar')
+    // Keep one binary compiled against the oldest supported API while testing newer runtimes.
+    compileOnly files('libs/appliedenergistics2-19.2.17.jar', 'libs/ae2lt-2.1.0.jar', 'libs/thunderbolt-2.0.0.jar')
+    runtimeOnly files("libs/appliedenergistics2-${providers.gradleProperty('ae2RuntimeVersion').getOrElse('19.2.18')}.jar",
+            "libs/ae2lt-${providers.gradleProperty('ae2ltRuntimeVersion').getOrElse('2.1.1')}.jar",
+            "libs/thunderbolt-${providers.gradleProperty('thunderboltRuntimeVersion').getOrElse('2.0.2')}.jar")
+    testImplementation files('libs/appliedenergistics2-19.2.17.jar', 'libs/ae2lt-2.1.0.jar', 'libs/thunderbolt-2.0.0.jar')
     testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
     testImplementation 'com.google.code.gson:gson:2.10.1'
+    testImplementation 'com.electronwill.night-config:toml:3.8.3'
+    testImplementation 'org.apache.maven:maven-artifact:3.8.5'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 tasks.named('test') { useJUnitPlatform() }

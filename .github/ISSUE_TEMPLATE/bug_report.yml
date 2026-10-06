@@ -6,7 +6,7 @@ body:
     id: versions
     attributes:
       label: Versions / 版本
-      description: Include addon, Minecraft, NeoForge, AE2, AE2LT Reborn, Thunderbolt and GuideME versions; include other involved mods.
+      description: Include addon, Minecraft, NeoForge, AE2, AE2LT (main project or Reborn), Thunderbolt and GuideME versions; include other involved mods.
     validations:
       required: true
   - type: textarea

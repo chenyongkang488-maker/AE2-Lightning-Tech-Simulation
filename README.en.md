@@ -2,12 +2,14 @@
 
 [简体中文](README.md) · [Changelog](CHANGELOG.md) · [License scope](LICENSES.md)
 
-By **qiqi**. A **Minecraft 1.21.1 / NeoForge** addon for AE2 Lightning Tech
-Reborn. Grow reusable simulation crystals with lightning, then use an ME network
+By **qiqi**. A **Minecraft 1.21.1 / NeoForge** addon for AE2 Lightning Tech.
+Grow reusable simulation crystals with lightning, then use an ME network
 to produce minerals, crops, wood and mob loot.
 
-Current version: **0.1.1-beta.1**. This beta prepares the existing 0.1b gameplay
-for public source distribution, with licensing, documentation and portable builds.
+Current development version: **0.2.0-alpha.5**. Includes lasers, particle
+constrainers and automatic multiblock construction, with the stable branch's
+compatibility fixes for the current non-Reborn Lightning Tech and AE2.
+The new laser/particle devices are experimental and have no survival recipes yet.
 
 ![Simulation crystals](art/crystal_preview.png)
 
@@ -21,14 +23,16 @@ ZIP are development downloads, not game mods.
 | Required component | Supported version |
 | --- | --- |
 | Minecraft | 1.21.1 |
-| NeoForge | 21.1.252–21.1.x; tested on 21.1.252 |
-| Applied Energistics 2 | 19.2.17 |
-| AE2 Lightning Tech **Reborn** | 2.1.0 |
-| Thunderbolt Core **Reborn** | 2.0.0 |
-| GuideME | 21.1.19 |
+| NeoForge | ≥21.1.252, <21.2; tested 21.1.252 / 21.1.255 |
+| Applied Energistics 2 | ≥19.2.17, <20; tested 19.2.17 / 19.2.18 |
+| AE2 Lightning Tech | ≥2.1.0, <3; tested old Reborn 2.1.0 / current main project 2.1.1 |
+| Thunderbolt Core | ≥2.0.0, <3; tested 2.0.0 / 2.0.2 |
+| GuideME | ≥21.1.19, <21.2; tested 21.1.19 |
 
-Dependency ranges are declared for these versions. The original Lightning Tech
-and Reborn have different interfaces and cannot be substituted directly.
+Metadata admits later updates in these series; tested versions are listed separately.
+Future API changes may still require adaptation, and upstream dependency ranges
+also apply. Reborn and the current main project share mod IDs: install one set,
+never both. See the [compatibility matrix](docs/development-upstream-compatibility.md).
 Mekanism is optional; compatibility was tested with 10.7.19.85.
 Mystical Agriculture 8.0.28 and Cucumber 8.0.16 are optional crop test mods.
 Minecraft and dependency binaries are not distributed by this repository.
@@ -69,6 +73,12 @@ Minecraft and dependency binaries are not distributed by this repository.
   Fortune V, Silk Touch, native T1/T2/T3 energy modules and wrench mode.
   Wrench mode supports AE2 and the optional Mekanism configurator.
   **Shift + scroll** cycles configurator modes.
+- **Lasers and particles:** a high-energy laser emitter, five matrix types,
+  collapse core and spherical particle constrainer, with server energy/lightning
+  accounting, particle storage and optional Applied Flux integration.
+- **Automatic construction:** laser/particle controllers and the simulation chamber
+  take materials from player inventory first, then the connected AE network.
+  Constrainers use a two-layer base with a front-mounted controller.
 
 Hold **G** over an item for its guide. Press G while holding the coil for equipment
 configuration. See [manufacturing recipes](docs/manufacturing-recipes.md) for all
@@ -85,6 +95,7 @@ custom integration. No direct KubeJS dependency is required.
 - [Mineral/entity compatibility](docs/compatibility-api.md)
 - [Crop and Mystical Agriculture compatibility](docs/crop-compatibility-api.md)
 - [Multiblock structure, upgrades and settlement](docs/multiblock-api.md)
+- [Laser and particle configuration/API](docs/laser-particle-api.md)
 
 Explicit recipes take precedence over automatic matching. Automatic simulation does
 not clone individual entity equipment/NBT, source farmland tiers, crux requirements

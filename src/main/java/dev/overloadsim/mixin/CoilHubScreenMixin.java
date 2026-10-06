@@ -27,8 +27,12 @@ public abstract class CoilHubScreenMixin extends AbstractContainerScreen<DeviceH
     @Unique private boolean overloadSim$editable(int i){var values=menu.getModuleConfigEditable();return i<values.size()&&values.get(i);}
     @Inject(method="railgunStack",at=@At("HEAD"),cancellable=true)
     private static void weapon(Player p,CallbackInfoReturnable<ItemStack> cir){var s=CoilHubAccess.weapon(p);if(CoilModules.isCoil(s))cir.setReturnValue(s);}
-    @ModifyConstant(method="mouseScrolled",constant=@Constant(intValue=6))
-    private int settingCount(int count){return overloadSim$coil()?7:count;}
+    @Inject(method="mouseScrolled",at=@At("HEAD"),cancellable=true)
+    private void coilSettingsScroll(double mx,double my,double horizontal,double vertical,CallbackInfoReturnable<Boolean> cir){
+        if(!overloadSim$coil()||mx<leftPos+8||mx>leftPos+175||my<topPos+144||my>topPos+223)return;
+        configScrollOffset=Math.clamp(configScrollOffset-(int)Math.signum(vertical),0,4);
+        cir.setReturnValue(true);
+    }
     @Inject(method="renderRailgunSettings",at=@At("HEAD"),cancellable=true)
     private void settings(GuiGraphics g,int mx,int my,CallbackInfo ci){
         if(!overloadSim$coil())return;ci.cancel();configScrollOffset=Math.clamp(configScrollOffset,0,4);

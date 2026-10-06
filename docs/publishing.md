@@ -1,5 +1,9 @@
 # 发布操作单
 
+> 本文首次发布步骤保留 0.1.1-beta.1 的历史信息。当前开发版为 0.2.0-alpha.5；
+> 版本和前置要求以 README 及 [开发版兼容记录](development-upstream-compatibility.md) 为准。
+> 现有 GitHub 仓库为 https://github.com/chenyongkang488-maker/AE2-Lightning-Tech-Simulation 。
+
 当前候选版本：**0.1.1-beta.1**；作者昵称：**qiqi**。
 本地准备阶段没有创建线上仓库或提交平台审核。GitHub 账号和仓库名仍需由作者确定；
 昵称 qiqi 不被自动当成 GitHub 用户名。
@@ -39,8 +43,9 @@ git push origin v0.1.1-beta.1
 `docs/release/project-page.en.md`；中文正文作为补充。选择 Minecraft 1.21.1、
 NeoForge、Beta，并上传**普通模组 JAR**。sources JAR 和源码 ZIP 不作为游戏文件。
 
-将 AE2 19.2.17、AE2 Lightning Tech Reborn 2.1.0、Thunderbolt Core Reborn 2.0.0、
-GuideME 21.1.19 标为 Required Dependency；Mekanism 标为 Optional Dependency。
+当前文件将 Applied Energistics 2、AE2 Lightning Tech 主项目、Thunderbolt Core 主项目、
+GuideME 标为 Required Dependency；Mekanism 标为 Optional Dependency。
+当前推荐测试组合为 AE2 19.2.18 / AE2LT 2.1.1 / Thunderbolt 2.0.2 / GuideME 21.1.19。
 项目关系通常不能替代精确版本说明，正文应保留兼容表。神秘农业/Cucumber 只是可选
 兼容内容，不是本模组强制前置。
 
@@ -56,7 +61,7 @@ GuideME 21.1.19 标为 Required Dependency；Mekanism 标为 Optional Dependency
 
 ## Modrinth
 
-使用相同标题、描述、支持版本和拆分许可说明。先确认四个固定版本前置是否在
+使用相同标题、描述、支持版本和拆分许可说明。先确认所选前置是否在
 Modrinth 可用，再设置平台依赖；若只有其它平台提供，应在描述中明确手动安装地址，
 不要填错为旧版闪电科技。无需同时发布全部平台，先完成 GitHub 和 CurseForge 即可。
 

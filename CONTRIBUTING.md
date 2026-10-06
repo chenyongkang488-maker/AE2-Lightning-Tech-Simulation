@@ -25,6 +25,20 @@ Optional integration checks:
 - Mystical Agriculture: place `MysticalAgriculture-1.21.1-8.0.28.jar` and
   `Cucumber-1.21.1-8.0.16.jar` in ignored `libs/`, then add `-PcropTests`.
 - Both: `gradlew.bat build runGameTestServer -PcropTests -PmekTests`.
+- Applied Flux: place `AppliedFlux-2.1.6.jar` and `Glodium-2.2.jar` in ignored
+  `libs/`, then add `-PfluxTests`.
+
+Compilation targets AE2 19.2.17 / AE2LT 2.1.0 / Thunderbolt 2.0.0. The default
+runtime uses AE2 19.2.18 / AE2LT 2.1.1 / Thunderbolt 2.0.2. To test the same
+classes against the original runtime without editing sources:
+
+```powershell
+.\gradlew.bat runGameTestServer '-Pae2RuntimeVersion=19.2.17' '-Pae2ltRuntimeVersion=2.1.0' '-PthunderboltRuntimeVersion=2.0.0'
+```
+
+Select another 1.21.1 loader with `'-PneoForgeVersion=21.1.255'`. For runtime
+version overrides, supply the corresponding JARs in `libs/`. The bootstrap
+manifest contains both tested upstream sets with SHA-256 checksums.
 
 Do not install fixtures into a normal game. `src/gametest/resources` is loaded
 only by the GameTest run and excluded from release archives. Existing GameTest
@@ -34,7 +48,8 @@ classes use a dedicated test-server setup.
 
 Explain the concrete player or modpack problem and the changed behavior. Run the
 tests relevant to gameplay changes, then the release checks for a release candidate.
-Keep Minecraft, loader and dependency versions pinned unless an upgrade is tested.
+Keep build/test dependencies checksum-pinned. Distinguish metadata admission ranges
+from versions verified in real runtime tests; do not claim untested future API compatibility.
 Preserve existing registry IDs and serialized component formats or provide a migration.
 The public APIs and datapack examples are linked from the README; update them when
 changing observable behavior.
@@ -44,7 +59,7 @@ the matching changelog section. Gradle expands the packaged mod metadata.
 Verify a tag before creating it:
 
 ```powershell
-.\gradlew.bat verifyReleaseVersion '-PreleaseModVersion=0.1.1-beta.1'
+.\gradlew.bat verifyReleaseVersion '-PreleaseModVersion=0.2.0-alpha.5'
 ```
 
 Release tags are `v<mod_version>`. Preserve existing tags and previously published

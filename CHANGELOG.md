@@ -1,5 +1,13 @@
 # Changelog / 更新记录
 
+## [0.2.0-alpha.5] — 2026-10-06
+
+- 同步稳定版 beta.2 / beta.3 的前置适配：兼容新版非 Reborn AE2 Lightning Tech 2.1.1、Thunderbolt Core 2.0.2 和 AE2 19.2.18，同时保留旧 Reborn 2.1.0 / 2.0.0 及 AE2 19.2.17 支持。
+- 线圈状态桥接新旧构造器；共享设备配置界面滚动不再依赖上游固定的配置项数量，保留电磁炮原生设置。
+- 前置声明放宽为 AE2 ≥19.2.17、<20，AE2LT ≥2.1.0、<3，Thunderbolt ≥2.0.0、<3，GuideME ≥21.1.19、<21.2；Minecraft 仍为 1.21.1，NeoForge ≥21.1.252、<21.2。范围内未来版本需按 API 变化复测。
+- 开发构建针对旧版 API 编译，默认使用新版前置运行，提供运行时版本参数及新旧两套校验和依赖；CI 复测同一代码在新旧前置下的表现。
+- 保留激光、粒子约束器、自动搭建、现有美术及全部存档 ID；对外名称为“闪电科技：模拟”，新 JAR 前缀为 `lightning-tech-simulation`。
+
 ## [0.2.0-alpha.4] — 2026-10-05
 
 - 统一对外名称为“闪电科技：模拟” / “Lightning Tech: Simulation”；构件文件名使用 `lightning-tech-simulation`，保留内部 ID 与存档兼容。
