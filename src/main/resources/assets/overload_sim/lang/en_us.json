@@ -230,5 +230,8 @@
   "message.overload_sim.construction.controllers": "Another controller is in the construction area.",
   "message.overload_sim.construction.interface_position": "Move the Overloaded ME Interface to a valid structure position.",
   "message.overload_sim.construction.duplicates": "Duplicate interface, overload module or smelting module.",
-  "message.overload_sim.construction.formation_cancelled": "Placed %s blocks, but formation was denied. Check structure diagnostics."
+  "message.overload_sim.construction.formation_cancelled": "Placed %s blocks, but formation was denied. Check structure diagnostics.",
+  "gui.overload_sim.laser.current_strength": "Current laser: %s FE/pulse",
+  "gui.overload_sim.laser.exact_strength": "Current laser strength: %s FE/pulse",
+  "subtitles.overload_sim.collapse_transition": "Subspace contracts and expands"
 }

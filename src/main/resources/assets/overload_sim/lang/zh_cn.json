@@ -230,5 +230,8 @@
   "message.overload_sim.construction.controllers": "搭建区域中存在其他控制器。",
   "message.overload_sim.construction.interface_position": "过载接口位置不符合搭建要求，请调整。",
   "message.overload_sim.construction.duplicates": "结构中有重复的过载接口、过载模块或熔炼模块。",
-  "message.overload_sim.construction.formation_cancelled": "已补放 %s 个方块，但成型被阻止；请查看结构诊断。"
+  "message.overload_sim.construction.formation_cancelled": "已补放 %s 个方块，但成型被阻止；请查看结构诊断。",
+  "gui.overload_sim.laser.current_strength": "当前激光强度：%s FE／次",
+  "gui.overload_sim.laser.exact_strength": "当前激光强度：%s FE／次",
+  "subtitles.overload_sim.collapse_transition": "亚空间收缩并展开"
 }

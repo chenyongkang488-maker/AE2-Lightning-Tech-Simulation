@@ -26,3 +26,8 @@ new. These icons, `art/reference/overload_module_base.png`, their preview sheet
 and the embedded base sprite in `art/resonance_coil_workshop.js` retain
 **CC BY-NC-SA 3.0** under the same attribution above. The coil geometry, body
 atlas and eight-frame converging arcs are original addon artwork (MIT).
+
+The matrix outer collars, pixel rune cartridges, blue-white collapse orb and
+procedurally synthesized `collapse_transition.ogg` are original qiqi/addon work
+under MIT. Reference images inform the design; no image pixels or recorded audio
+were extracted from them. The orb reuses the addon's original voxel sphere geometry.

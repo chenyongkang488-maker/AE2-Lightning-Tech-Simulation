@@ -19,6 +19,12 @@ public class ClientRegistration {
         try{event.registerRenderBuffer(glow,buffer);}
         catch(IllegalStateException duplicate){buffer.close();}
     }
+    @SubscribeEvent public static void energySurfaceBuffer(RegisterRenderBuffersEvent event){
+        var glow=RenderType.beaconBeam(InventoryMenu.BLOCK_ATLAS,true);
+        var buffer=new ByteBufferBuilder(glow.bufferSize());
+        try{event.registerRenderBuffer(glow,buffer);}
+        catch(IllegalStateException duplicate){buffer.close();}
+    }
     @SubscribeEvent public static void receiverGlassBuffer(RegisterRenderBuffersEvent event){
         var glass=RenderType.entityTranslucent(InventoryMenu.BLOCK_ATLAS);
         // Keep glass queued until LevelRenderer has flushed the opaque block-atlas sheet.
@@ -44,7 +50,7 @@ public class ClientRegistration {
     @SubscribeEvent public static void screens(RegisterMenuScreensEvent event){event.register(ModContent.MENU.get(),SimulationScreen::new);event.register(ModContent.COIL_MENU.get(),CoilScreen::new);event.register(dev.overloadsim.multiblock.MultiblockContent.MENU.get(),MultiblockSimulationScreen::new);event.register(dev.overloadsim.laser.LaserContent.MENU.get(),LaserScreen::new);}
     @SubscribeEvent public static void renderers(EntityRenderersEvent.RegisterRenderers event){event.registerBlockEntityRenderer(ModContent.CHAMBER_ENTITY.get(),SimulationChamberRenderer::new);event.registerBlockEntityRenderer(dev.overloadsim.multiblock.MultiblockContent.CONTROLLER_ENTITY.get(),MultiblockSimulationRenderer::new);event.registerBlockEntityRenderer(dev.overloadsim.laser.LaserContent.MACHINE_ENTITY.get(),LaserRenderer::new);}
     @SubscribeEvent public static void extraModels(net.neoforged.neoforge.client.event.ModelEvent.RegisterAdditional event){
-        for(var name:java.util.List.of("simulation_emitter","simulation_shell_atlas","simulation_energy_orb","simulation_energy_orb_orange","simulation_controller_ecg"))
+        for(var name:java.util.List.of("simulation_emitter","simulation_shell_atlas","simulation_energy_orb","simulation_energy_orb_orange","simulation_controller_ecg","collapse_energy_orb"))
             event.register(net.minecraft.client.resources.model.ModelResourceLocation.standalone(ModContent.id("block/"+name)));
     }
 }

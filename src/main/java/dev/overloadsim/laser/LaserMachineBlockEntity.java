@@ -54,6 +54,7 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
 
     boolean enabled = true;
     long boost = 100_000, extremeLightning, coreRemainder, activeUntil, lastPower;
+    private final dev.overloadsim.core.CoreCollapseCycle collapse = new dev.overloadsim.core.CoreCollapseCycle();
     int outputMask = 63, fuelRemaining, particleRemaining;
     String activeFuel = "", status = "no_structure";
     Direction particleDirection = Direction.SOUTH;
@@ -127,6 +128,9 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
     public long extremeLightning() { return extremeLightning; }
     public long coreRemainder() { return coreRemainder; }
     public long lastPower() { return lastPower; }
+    public long currentPower() { return level != null && enabled && formed() && activeUntil > level.getGameTime() ? lastPower : 0; }
+    public long collapseStartTick() { return collapse.startTick(); }
+    void stopCollapseVisuals(){collapse.stop();}
     public long activeUntil() { return activeUntil; }
     public int outputMask() { return outputMask; }
     public int fuelRemaining() { return fuelRemaining; }
@@ -143,7 +147,7 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
     public LaserGridBridge bridge() { return bridge; }
     public boolean explosionTriggered() { return explosionTriggered; }
 
-    public void setEnabled(boolean value) { enabled = value; LaserNetwork.unregister(this); clearBeam(); sync(); }
+    public void setEnabled(boolean value) { enabled = value; LaserNetwork.unregister(this); clearBeam(); if(!value)collapse.stop(); sync(); }
     public void setBoost(long value) { if (value < 100_000 || value > 9_000_000) return; boost = value; LaserNetwork.unregister(this); clearBeam(); sync(); }
     public void setOutputMask(int value) { if (value < 0 || value > 63) return; outputMask = value; LaserNetwork.unregister(this); clearBeam(); sync(); }
     public void setExtremeLightning(long value) { extremeLightning = Math.max(0, value); saveChanges(); }
@@ -153,7 +157,7 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
         return true;
     }
     public void markStructureDirty() { structureDirty = true; }
-    private void clearBeam() { segments = new ArrayList<>(); activeUntil = 0; lastPower = 0; }
+    private void clearBeam() { segments = new ArrayList<>(); activeUntil = 0; lastPower = 0; collapse.stop(); }
     public void sync() { saveChanges(); markForClientUpdate(); }
 
     public boolean loaded() {
@@ -281,6 +285,7 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
                 || !level.hasChunkAt(worldPosition) || level.getBlockEntity(worldPosition) != this) return 0;
         coreRemainder = event.remainder(); lastPower = fe; particleDirection = incoming;
         activeUntil = saturatingAdd(tick, 21);
+        if(collapse.accept(tick))server.playSound(null,worldPosition,LaserContent.COLLAPSE_TRANSITION.get(),net.minecraft.sounds.SoundSource.BLOCKS,.65f,1);
         sync(); return event.particles();
     }
 
@@ -295,6 +300,7 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
         tag.putUUID("Identity", identity); tag.putBoolean("Enabled", enabled); tag.putLong("Boost", boost);
         tag.putLong("ExtremeLightning", extremeLightning); tag.putLong("RefundExtreme", refundExtreme);
         tag.putLong("CoreRemainder", coreRemainder); tag.putLong("ActiveUntil", activeUntil); tag.putLong("LastPower", lastPower);
+        tag.putLong("CollapseStart",collapse.startTick()); tag.putLong("CollapseInput",collapse.lastInputTick());
         tag.putLong("Energy", energy.stored()); tag.putLong("Particles", particles.stored()); tag.putInt("OutputMask", outputMask);
         tag.putInt("FuelRemaining", fuelRemaining); tag.putInt("ParticleRemaining", particleRemaining); tag.putString("ActiveFuel", activeFuel);
         tag.putString("Status", status); tag.putInt("ParticleDirection", particleDirection.get3DDataValue());
@@ -316,6 +322,7 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
         extremeLightning = Math.max(0, tag.getLong("ExtremeLightning")); refundExtreme = Math.max(0, tag.getLong("RefundExtreme"));
         coreRemainder = Math.clamp(tag.getLong("CoreRemainder"), 0L, LaserMath.PARTICLE_COST - 1);
         activeUntil = Math.max(0, tag.getLong("ActiveUntil")); lastPower = Math.clamp(tag.getLong("LastPower"), 0L, LaserMath.MAX_BEAM);
+        collapse.restore(tag.contains("CollapseStart")?tag.getLong("CollapseStart"):-1,tag.contains("CollapseInput")?tag.getLong("CollapseInput"):-1);
         energy.load(Math.max(0, tag.getLong("Energy"))); particles.load(Math.max(0, tag.getLong("Particles")));
         outputMask = tag.contains("OutputMask") ? tag.getInt("OutputMask") & 63 : 63;
         fuelRemaining = Math.clamp(tag.getInt("FuelRemaining"), 0, ParticleClock.MAX_DURATION);
@@ -344,6 +351,7 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
         data.writeBoolean(receiverPedestalLayout());
         data.writeBlockPos(center()); data.writeByte(getBlockState().getValue(LaserMachineBlock.FACING).get3DDataValue());
         data.writeLong(boost); data.writeLong(extremeLightning); data.writeLong(coreRemainder); data.writeLong(activeUntil); data.writeLong(lastPower);
+        data.writeLong(collapse.startTick()); data.writeLong(collapse.lastInputTick());
         data.writeLong(energy.stored()); data.writeLong(particles.stored()); data.writeByte(outputMask);
         data.writeVarInt(fuelRemaining); data.writeVarInt(particleRemaining); data.writeUtf(boundedText(activeFuel), 256); data.writeUtf(boundedText(status), 256);
         data.writeByte(particleDirection.get3DDataValue());
@@ -359,6 +367,7 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
         int facing = data.readUnsignedByte(); visualFacing = facing < 6 ? Direction.from3DDataValue(facing) : getBlockState().getValue(LaserMachineBlock.FACING);
         boost = Math.clamp(data.readLong(), 100_000L, 9_000_000L); extremeLightning = Math.max(0, data.readLong());
         coreRemainder = Math.clamp(data.readLong(), 0L, LaserMath.PARTICLE_COST - 1); activeUntil = Math.max(0, data.readLong()); lastPower = Math.clamp(data.readLong(), 0L, LaserMath.MAX_BEAM);
+        collapse.restore(data.readLong(),data.readLong());
         energy.load(Math.max(0, data.readLong())); particles.load(Math.max(0, data.readLong())); outputMask = data.readUnsignedByte() & 63;
         fuelRemaining = Math.clamp(data.readVarInt(), 0, ParticleClock.MAX_DURATION); particleRemaining = Math.clamp(data.readVarInt(), 0, ParticleClock.MAX_DURATION);
         activeFuel = data.readUtf(256); status = data.readUtf(256);

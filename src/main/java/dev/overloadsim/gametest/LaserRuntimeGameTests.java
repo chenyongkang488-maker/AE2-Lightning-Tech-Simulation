@@ -2,6 +2,7 @@ package dev.overloadsim.gametest;
 
 import dev.overloadsim.OverloadSimulation;
 import dev.overloadsim.laser.*;
+import dev.overloadsim.core.LaserMath;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.gametest.framework.GameTest;
@@ -102,6 +103,16 @@ public final class LaserRuntimeGameTests {
                 if(h.getLevel().getBlockEntity(pos) instanceof LaserMachineBlockEntity r)receiver=r;
             }
             h.assertTrue(receiver!=null&&receiver.energy().stored()>0,"forward receiver actually converts generated particles into FE");
+            LaserMachineBlockEntity core=null;
+            for(var segment:emitter.segments())if(segment.focused()){
+                var candidate=h.getLevel().getBlockEntity(BlockPos.containing(segment.end()));
+                if(candidate instanceof LaserMachineBlockEntity c&&c.kind()==LaserKind.CORE)core=c;
+            }
+            h.assertTrue(core!=null&&core.collapseStartTick()>=0&&core.collapseStartTick()<=h.getLevel().getGameTime()-40,"Repeated network pulses preserve the first animation timestamp");
+            emitter.setEnabled(false);
+            h.assertTrue(core.collapseStartTick()==-1,"Stopping upstream instantly resets the downstream visual cycle");
+            emitter.setEnabled(true);core.acceptCore(LaserMath.CORE_THRESHOLD,Direction.EAST,h.getLevel().getGameTime());
+            h.assertTrue(core.collapseStartTick()==h.getLevel().getGameTime(),"A rapid upstream restart can trigger animation again");
             receiver.particles().load(0);receiver.setEnabled(false);emitter.setEnabled(false);h.succeed();
         });
     }

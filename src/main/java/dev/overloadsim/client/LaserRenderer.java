@@ -2,11 +2,11 @@ package dev.overloadsim.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mojang.math.Axis;
 import dev.overloadsim.ModContent;
 import dev.overloadsim.core.ReceiverShellMesh;
 import dev.overloadsim.core.IndustrialMachineMesh;
 import dev.overloadsim.core.EmitterReactorMesh;
+import dev.overloadsim.core.GateMatrixMesh;
 import dev.overloadsim.core.ReceiverParticleVisuals;
 import dev.overloadsim.laser.LaserContent;
 import dev.overloadsim.laser.LaserKind;
@@ -25,7 +25,6 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.inventory.InventoryMenu;
@@ -53,7 +52,8 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
         AABB box = new AABB(be.getBlockPos());
         if (be.formed()) {
             Vec3 center=Vec3.atCenterOf(be.center());
-            double radius=be.kind()==LaserKind.CORE?1.7:be.kind()==LaserKind.EMITTER?2.85:3.65;
+            double radius=be.kind()==LaserKind.CORE?1.7:be.kind()==LaserKind.EMITTER?2.85:
+                    be.kind()==LaserKind.CONSTRAINT||be.kind()==LaserKind.FOCUS?4.2:3.65;
             box=box.minmax(new AABB(center,center).inflate(radius));
             if(be.kind()==LaserKind.RECEIVER&&be.receiverPedestalLayout()) {
                 var basis=basis(be);
@@ -81,12 +81,17 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
         if (be.kind()==LaserKind.CORE) industrialMesh(IndustrialMachineMesh.coreAttachments(),poses.last(),
                 buffers.getBuffer(RenderType.entitySolid(InventoryMenu.BLOCK_ATLAS)),atlas(),center,light,basis(be));
         boolean active = be.activeUntil() > be.getLevel().getGameTime();
-        if (be.kind() == LaserKind.CORE && active) orb(center, time, poses, buffers);
+        if (be.kind() == LaserKind.CORE && active) LaserEnergyEffects.core(context,center,time,be.collapseStartTick(),poses,buffers);
         VertexConsumer vertices = buffers.getBuffer(RenderType.lightning());
         Matrix4f matrix = poses.last().pose();
         if (be.kind() == LaserKind.RECEIVER)
             containment(matrix, vertices, center, time, be.particles().stored(), be.particles().capacity());
         if (!active) return;
+        if(be.kind()==LaserKind.BURST&&be.lastPower()>0){
+            var b=basis(be);LaserEnergyEffects.burst(matrix,vertices,center,b.right,b.up,b.forward,time,be.getBlockPos().asLong());
+        }
+        var energySprite=Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(ModContent.id("block/simulation_energy_orb"));
+        var energyVertices=buffers.getBuffer(RenderType.beaconBeam(InventoryMenu.BLOCK_ATLAS,true));
         int count = 0, dotBudget = MAX_DOTS;
         for (LaserSegment segment : be.segments()) {
             if (++count > MAX_SEGMENTS) break;
@@ -102,9 +107,8 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
                 }
             } else {
                 double startRadius = segment.startRadius(), endRadius = segment.endRadius();
-                tube(matrix, vertices, start, end, startRadius, endRadius, 1, .35f, .73f, .32f);
-                tube(matrix, vertices, start, end, startRadius * .375, endRadius * .375,
-                        1, .9f, .98f, .65f);
+                LaserEnergyEffects.beam(poses.last(),energyVertices,energySprite,start,end,startRadius,endRadius,.38f);
+                LaserEnergyEffects.beam(poses.last(),energyVertices,energySprite,start,end,startRadius*.375,endRadius*.375,.9f);
             }
         }
     }
@@ -130,7 +134,7 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
         var porcelain = buffers.getBuffer(RenderType.entitySolid(InventoryMenu.BLOCK_ATLAS));
         var basis=basis(be);
         var skin=skin(be,basis);
-        var emissive = be.kind()==LaserKind.EMITTER
+        var emissive = be.kind()==LaserKind.EMITTER||be.kind()==LaserKind.CONSTRAINT||be.kind()==LaserKind.FOCUS
                 ? buffers.getBuffer(RenderType.beaconBeam(InventoryMenu.BLOCK_ATLAS,false)) : porcelain;
         industrialMesh(skin.mesh,poses.last(),porcelain,sprite,center,light,basis,emissive);
         if(be.kind()==LaserKind.RECEIVER) {
@@ -180,6 +184,7 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
         } else if(be.kind()==LaserKind.CONSTRAINT||be.kind()==LaserKind.ENHANCEMENT
                 ||be.kind()==LaserKind.BURST||be.kind()==LaserKind.FOCUS) {
             result.addAll(IndustrialMachineMesh.armouredRing(2,3.05));
+            if(be.kind()==LaserKind.CONSTRAINT||be.kind()==LaserKind.FOCUS)result.addAll(GateMatrixMesh.outer(be.kind()==LaserKind.FOCUS));
             for(var opening:openings) {
                 var local=basis.local(Vec3.atLowerCornerOf(opening).subtract(centerOffset));
                 result=new ArrayList<>(IndustrialMachineMesh.withoutCell(result,local.x,local.y,local.z));
@@ -257,20 +262,6 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
 
     private static boolean finite(Vec3 v) {
         return Double.isFinite(v.x) && Double.isFinite(v.y) && Double.isFinite(v.z);
-    }
-
-    private void orb(Vec3 center, double time, PoseStack poses, MultiBufferSource buffers) {
-        var model = Minecraft.getInstance().getModelManager().getModel(
-                ModelResourceLocation.standalone(ModContent.id("block/simulation_energy_orb")));
-        poses.pushPose();
-        poses.translate(center.x, center.y, center.z);
-        poses.mulPose(Axis.YP.rotationDegrees((float) (time * .8)));
-        poses.scale(4, 4, 4); // Existing 12/16 block voxel sphere becomes three blocks across.
-        poses.translate(-.5, -.5, -.5);
-        context.getBlockRenderDispatcher().getModelRenderer().renderModel(poses.last(),
-                buffers.getBuffer(RenderType.cutout()), null, model, 1, 1, 1,
-                LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
-        poses.popPose();
     }
 
     private static void containment(Matrix4f m,VertexConsumer v,Vec3 center,double time,long stored,long capacity) {

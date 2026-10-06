@@ -105,7 +105,7 @@ public final class LaserScreen extends AEBaseScreen<LaserMenu> {
         line(g, "gui.overload_sim.laser." + (menu.formed ? "formed" : "unformed"), 10, 28);
         line(g, "gui.overload_sim.laser.network", 10, 45,
                 Component.translatable("gui.overload_sim.laser." + (menu.network ? "online" : "offline")));
-        line(g, "gui.overload_sim.laser.power", 10, 60, compact(menu.power));
+        line(g, matrixStrength() ? "gui.overload_sim.laser.current_strength" : "gui.overload_sim.laser.power", 10, 60, compact(menu.power));
         switch (menu.kind()) {
             case ENHANCEMENT -> {
                 line(g, "gui.overload_sim.laser.boost", 10, 78, compact(menu.boost));
@@ -133,6 +133,8 @@ public final class LaserScreen extends AEBaseScreen<LaserMenu> {
         g.drawString(font, Component.translatable("container.inventory"), 31, 150, TEXT, false);
     }
 
+    private boolean matrixStrength(){return menu.kind()==LaserKind.CONSTRAINT||menu.kind()==LaserKind.FOCUS;}
+
     private void line(GuiGraphics g, String key, int x, int y, Object... args) {
         g.drawString(font, font.plainSubstrByWidth(Component.translatable(key, args).getString(), 204), x, y, TEXT, false);
     }
@@ -157,7 +159,7 @@ public final class LaserScreen extends AEBaseScreen<LaserMenu> {
                     Component.translatable("gui.overload_sim.laser.active_fuel", menu.activeFuel, menu.particleRemaining)), Optional.empty(), mx, my);
         else if (mx >= leftPos + 8 && mx <= leftPos + 215 && my >= topPos + 45 && my <= topPos + 116)
             g.renderTooltip(font, List.of(Component.translatable("gui.overload_sim.laser.status", diagnostic()),
-                    Component.translatable("gui.overload_sim.laser.exact_power", menu.power),
+                    Component.translatable(matrixStrength()?"gui.overload_sim.laser.exact_strength":"gui.overload_sim.laser.exact_power", menu.power),
                     Component.translatable("gui.overload_sim.laser.exact_energy", menu.energy, menu.energyCapacity),
                     Component.translatable("gui.overload_sim.laser.guide_hint")), Optional.empty(), mx, my);
     }

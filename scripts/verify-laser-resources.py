@@ -92,6 +92,21 @@ def verify():
     for texture in project['textures']:
         if texture['name'] == 'simulation_controller_ecg.png':
             assert (texture['uv_width'],texture['uv_height']) == (32,16), 'Animated ECG UV must use one frame'
+    for kind in ('constraint','focus'):
+        gate=read(ROOT/f'art/blockbench/laser-{kind}-gate-formed.bbmodel')
+        assert gate['meta']['model_format']=='free' and len(gate['outliner'])==2
+        assert 1000<len(gate['elements'])<4000
+        assert base64.b64decode(gate['textures'][0]['source'].split(',',1)[1])==native_atlas
+        assert all(abs(v)<4.2*16 for e in gate['elements'] for p in e['vertices'].values() for v in p)
+    blue=read(ROOT/'art/blockbench/collapse-energy-orb.bbmodel')
+    blue_png=(ASSETS/'textures/block/collapse_energy_orb.png').read_bytes()
+    assert base64.b64decode(blue['textures'][0]['source'].split(',',1)[1])==blue_png
+    assert blue['textures'][0]['uv_height']==32 and len(blue['elements'])==112
+    animation=read(ASSETS/'textures/block/collapse_energy_orb.png.mcmeta')['animation']
+    assert animation=={'width':32,'height':32,'frametime':2,'interpolate':False}
+    assert read(ASSETS/'models/block/collapse_energy_orb.json')['textures']['0']=='overload_sim:block/collapse_energy_orb'
+    assert (ASSETS/'sounds/collapse_transition.ogg').read_bytes().startswith(b'OggS')
+    assert read(ASSETS/'sounds.json')['collapse_transition']['sounds'][0]['attenuation_distance']==24
     style = read(ROOT / 'src/main/resources/assets/ae2/screens/overload_sim/laser.json')
     assert style['helpTopic'] == 'overload_sim:laser-particle.md'
     for folder in ('', '_zh_cn/'):

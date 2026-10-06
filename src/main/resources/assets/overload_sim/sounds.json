@@ -1,0 +1,11 @@
+{
+  "collapse_transition": {
+    "subtitle": "subtitles.overload_sim.collapse_transition",
+    "sounds": [
+      {
+        "name": "overload_sim:collapse_transition",
+        "attenuation_distance": 24
+      }
+    ]
+  }
+}

@@ -55,14 +55,17 @@ public final class LaserNetwork {
         return true;
     }
     private static void clear(LaserMachineBlockEntity root){
+        clear(root,true);
+    }
+    private static void clear(LaserMachineBlockEntity root,boolean stopped){
         var old=PATHS.remove(root);
-        if(old!=null)for(var node:old.nodes()){node.activeUntil=0;node.lastPower=0;node.sync();}
+        if(old!=null)for(var node:old.nodes()){node.activeUntil=0;node.lastPower=0;if(stopped)node.stopCollapseVisuals();node.sync();}
         if(!root.segments.isEmpty()||root.lastPower!=0){root.segments=List.of();root.lastPower=0;root.activeUntil=0;root.sync();}
     }
     public static void processEmitter(LaserMachineBlockEntity root){
         if(!(root.getLevel() instanceof ServerLevel level))return;
-        clear(root);root.checkStructure();
-        if(!root.enabled()||!root.formed()||!root.tryPay(LaserSettings.emitterFe(),0,false)){root.status="no_energy";root.sync();return;}
+        var previous=PATHS.get(root);clear(root,false);root.checkStructure();
+        if(!root.enabled()||!root.formed()||!root.tryPay(LaserSettings.emitterFe(),0,false)){stopLostCores(previous,List.of());root.status="no_energy";root.sync();return;}
         long now=level.getGameTime();
         var candidates=LaserStructureIndex.controllers(level).stream().limit(256).toList();
         for(var node:candidates)node.checkStructure();
@@ -143,7 +146,10 @@ public final class LaserNetwork {
         if(root.isRemoved()||level.getBlockEntity(root.getBlockPos())!=root||!root.formed()||!root.enabled())return;
         root.segments=List.copyOf(lines);root.lastPower=LaserSettings.emitterFe();root.activeUntil=now+22;root.status="working";
         var path=new Path(List.copyOf(nodes),List.copyOf(clearCells),Map.copyOf(watched));
-        PATHS.put(root,path);if(!valid(level,path)){clear(root);return;}root.sync();root.saveChanges();
+        PATHS.put(root,path);stopLostCores(previous,nodes);if(!valid(level,path)){clear(root);return;}root.sync();root.saveChanges();
+    }
+    private static void stopLostCores(Path previous,List<LaserMachineBlockEntity> next){
+        if(previous!=null)for(var node:previous.nodes())if(node.kind()==LaserKind.CORE&&!next.contains(node)){node.stopCollapseVisuals();node.sync();}
     }
     private static void add(List<LaserSegment> lines,BlockPos from,BlockPos to,long power,boolean focus,boolean particle){if(lines.size()<128&&!from.equals(to))lines.add(new LaserSegment(from.getCenter(),to.getCenter(),power,focus,particle));}
     private static void focus(ServerLevel level,LaserMachineBlockEntity matrix,long energy,long now,List<LaserSegment> lines,List<LaserMachineBlockEntity> nodes,List<BlockPos> clearCells){

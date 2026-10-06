@@ -114,7 +114,7 @@ public final class LaserMenu extends AEBaseMenu {
     @Override public void broadcastChanges() {
         if (isServerSide()) {
             enabled = host.enabled(); formed = host.formed(); network = host.networkActive();
-            boost = host.boost(); power = host.lastPower();
+            boost = host.boost(); power = host.currentPower();
             energy = host.energy().stored(); energyCapacity = host.energy().capacity();
             particleCount = host.particles().stored(); coreRemainder = host.coreRemainder();
             outputMask = host.outputMask(); inputSide = host.forward().getOpposite().get3DDataValue();

@@ -37,6 +37,8 @@ public final class LaserContent {
     public static final DeferredBlock<LaserPartBlock> PORT = part("laser_optical_port", false);
     private static final DeferredRegister<BlockEntityType<?>> ENTITIES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, OverloadSimulation.ID);
     private static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(Registries.MENU, OverloadSimulation.ID);
+    private static final DeferredRegister<net.minecraft.sounds.SoundEvent> SOUNDS = DeferredRegister.create(Registries.SOUND_EVENT, OverloadSimulation.ID);
+    public static final DeferredHolder<net.minecraft.sounds.SoundEvent,net.minecraft.sounds.SoundEvent> COLLAPSE_TRANSITION = SOUNDS.register("collapse_transition", () -> net.minecraft.sounds.SoundEvent.createVariableRangeEvent(ModContent.id("collapse_transition")));
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<LaserMachineBlockEntity>> MACHINE_ENTITY = ENTITIES.register("laser_machine", () -> BlockEntityType.Builder.of(LaserMachineBlockEntity::new, BLOCK_MAP.values().stream().map(DeferredBlock::get).toArray(Block[]::new)).build(null));
     public static final DeferredHolder<MenuType<?>, MenuType<LaserMenu>> MENU = MENUS.register("laser_machine", LaserMenu::createType);
     private LaserContent() {}
@@ -48,7 +50,7 @@ public final class LaserContent {
         blocks.addAll(List.of(FRAME.get(), GLASS.get(), SOURCE.get(), PORT.get()));
         return List.copyOf(blocks);
     }
-    public static void register(IEventBus bus) { ENTITIES.register(bus); MENUS.register(bus); }
+    public static void register(IEventBus bus) { ENTITIES.register(bus); MENUS.register(bus); SOUNDS.register(bus); }
     public static void setup() {
         for (var block : BLOCK_MAP.values()) {
             block.get().setBlockEntity(LaserMachineBlockEntity.class, MACHINE_ENTITY.get(), null, (level, pos, state, host) -> host.tick());

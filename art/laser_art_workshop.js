@@ -92,6 +92,15 @@
             rect(2,2,12,12,'black');for(let y=3;y<13;y+=3){
                 rect(3,y,10,1,'#6b5976');rect(4,y+1,8,1,'#332a3e');}
             rect(2,1,12,1,'#ff82c7');rect(3,1,10,1,'#ffc2e5');});
+        // New gate cartridges: original pixel runes, distinct pink containment
+        // and cyan focusing strokes, retaining every previous atlas pixel.
+        for(let i=46;i<50;i++)tile(i,()=>{
+            rect(0,0,16,16,'dark');rect(1,1,14,14,'silver');rect(2,2,12,12,'black');
+            const ink=i%2?'#91e7ff':'#ff82c7',hi=i%2?'#e8fcff':'#fff0fa';
+            const strokes=i<48?[[4,4,2,8],[10,4,2,8],[6,4,4,2],[6,10,4,2],[7,7,2,2]]:
+                [[3,7,10,2],[7,3,2,10],[4,4,2,2],[10,10,2,2]];
+            strokes.forEach(([x,y,w,h])=>rect(x,y,w,h,ink));rect(4,4,2,1,hi);rect(7,7,2,2,hi);
+        });
         newProject(Formats.java_block); Project.name='Laser pixel atlas';
         Project.texture_width=Project.texture_height=128; Project.ambientocclusion=false;
         const t=new Texture({name:'laser_pixel_atlas.png',namespace:'overload_sim',folder:'block',
@@ -108,11 +117,29 @@
         Canvas.updateAll();
         Project.save_path=ROOT+'/art/blockbench/laser-pixel-atlas.bbmodel';
         Blockbench.writeFile(Project.save_path,{savetype:'text',content:Codecs.project.compile()});Project.saved=true;
+        // A separately editable animated blue-white core layer, painted natively.
+        const flow=document.createElement('canvas');flow.width=32;flow.height=512;
+        const fg=flow.getContext('2d');fg.imageSmoothingEnabled=false;
+        const palette=['#141f6b','#284edf','#42beff','#eefbff'];
+        for(let f=0;f<16;f++)for(let y=0;y<32;y++)for(let x=0;x<32;x++){
+            const band=Math.sin(x*.43+Math.sin(y*.32+f*.32)*2.2-f*.52)+Math.sin(y*.35-x*.16+f*.42);
+            fg.fillStyle=palette[(x*17+y*31+f*3)%53===0?3:band>.9?3:band>-.8?2:1];fg.fillRect(x,y+f*32,1,1);
+        }
+        newProject(Formats.java_block);Project.name='Collapse energy orb';Project.texture_width=Project.texture_height=32;Project.ambientocclusion=false;
+        const blue=new Texture({name:'collapse_energy_orb.png',namespace:'overload_sim',folder:'block',width:32,height:512,uv_width:32,uv_height:32}).fromDataURL(flow.toDataURL()).add();
+        await new Promise(r=>setTimeout(r,150));blue.layers_enabled=true;blue.layers.length=0;
+        blue.layers.push(new TextureLayer({name:'原创蓝白像素能量流 · 16帧',width:32,height:512,image_data:fg.getImageData(0,0,32,512),opacity:100,visible:true,blend_mode:'default'},blue));
+        blue.selected_layer=blue.layers[0];blue.updateLayerChanges(true);blue.frame_time=2;
+        blue.path=ROOT+'/src/main/resources/assets/overload_sim/textures/block/collapse_energy_orb.png';Blockbench.writeFile(blue.path,{savetype:'image',content:flow.toDataURL()});blue.saved=true;
+        const template=JSON.parse(require('fs').readFileSync(ROOT+'/src/main/resources/assets/overload_sim/models/block/simulation_energy_orb.json','utf8'));
+        const group=new Group({name:'蓝白体素球壳 · 与模拟室同款几何'}).init();
+        for(const e of template.elements){const q=new Cube({name:'像素球壳',from:e.from,to:e.to,box_uv:false}).init().addTo(group);for(const [side,face]of Object.entries(q.faces)){const source=e.faces[side];face.texture=source?blue.uuid:null;if(source)face.uv=source.uv;}}
+        Canvas.updateAll();Project.save_path=ROOT+'/art/blockbench/collapse-energy-orb.bbmodel';Blockbench.writeFile(Project.save_path,{savetype:'text',content:Codecs.project.compile()});Project.saved=true;
         Blockbench.showQuickMessage('激光像素图集已绘制并导出到开发工程',5000);
     }
     Plugin.register('laser_art_workshop',{
         title:'模拟：激光像素绘制',author:'qiqi',description:'粉白激光设备的原生 Blockbench 绘制与导出',
-        icon:'bolt',version:'0.2.0-alpha.6',variant:'desktop',
+        icon:'bolt',version:'0.2.0-alpha.7',variant:'desktop',
         onload(){action=new Action('overload_sim_laser_draw',{name:'绘制激光粉白像素图集',icon:'bolt',click(){
             new Dialog({id:'laser_art_root',title:'激光像素图集',form:{root:{label:'模组工程目录',type:'text',value:'D:/MinecraftDev/OverloadSimulation'}},
                 onConfirm(values){this.hide();draw(values.root.replace(/\\/g,'/')).catch(e=>Blockbench.showMessageBox({title:'绘制失败',message:String(e.stack||e)}));}}).show();

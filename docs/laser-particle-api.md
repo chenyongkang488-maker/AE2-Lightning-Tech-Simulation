@@ -72,3 +72,7 @@ AE 连线或结构上游半面的一处闪电科技过载接口可连接网络�
 `LaserEvents` 中 `BeforeModifier`、`BeforeCoreEmission`、`BeforeParticleConversion`、`BeforeExplosion` 均可取消。修改数值必须经 setter，受上限校验；核心/转换事件不能增加请求粒子或产能。结算会重新检查事件后的宿主与库存。光路包含已访问节点和有界预算，闭环不能反复增幅或复制本批能量。
 
 客户端仅按有界快照绘制光束、核心与少量演出粒子；不会根据渲染帧扣费或为每个库存粒子建立实体。新增 Blockbench 占位工程在 `art/blockbench/laser-prototype.bbmodel`；沿用已有美术许可范围，代码仍按项目 MIT 许可。
+
+alpha.7 视觉接口：`LaserMachineBlockEntity.currentPower()` 返回已成型、启用且脉冲未过期的当前激光 FE／次，停机返回 0；不同于控制器本地 FE 缓冲。`collapseStartTick()` 为服务器同步的动画起始世界 tick，未启动为 -1。`CoreCollapseCycle` 独立于每次脉冲重建的光路，间隔超过 20 ticks 或明确停机会开启下一次 40-tick 动画。上游停机和光路失效也会重置下游核心。`BeforeCoreEmission` 取消或宿主校验失败时不会启动动画或音效。
+
+约束和聚焦外环几何分别在 `GateMatrixMesh.outer(false/true)`；UV 使用原生图集 46～49 区域。核心流纹由 `collapse_energy_orb.png` 的 16 个 32×32 帧组成；资源包可替换纹理与 `overload_sim:collapse_transition` 音效。`art/blockbench/laser-constraint-gate-formed.bbmodel`、`laser-focus-gate-formed.bbmodel` 和 `collapse-energy-orb.bbmodel` 可编辑；新外环、球体流纹及音效属于原创 MIT 素材。视觉不改变 `LaserSegment` 的宽度、碰撞或服务器费用。
