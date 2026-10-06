@@ -8,12 +8,12 @@ for locale,text in [('zh_cn','当前激光强度：%s FE／次'),('en_us','Curre
     data['gui.overload_sim.laser.current_strength']=text
     data['gui.overload_sim.laser.exact_strength']='当前激光强度：%s FE／次' if locale=='zh_cn' else 'Current laser strength: %s FE/pulse'
     data['subtitles.overload_sim.collapse_transition']='亚空间收缩并展开' if locale=='zh_cn' else 'Subspace contracts and expands'
-    p.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+    p.write_text(json.dumps(data,ensure_ascii=False,indent=2)+'\n',encoding='utf-8',newline='\n')
 model=json.loads((assets/'models/block/simulation_energy_orb.json').read_text())
 model['textures']['0']='overload_sim:block/collapse_energy_orb'
-(assets/'models/block/collapse_energy_orb.json').write_text(json.dumps(model,indent=2)+'\n')
-(assets/'textures/block/collapse_energy_orb.png.mcmeta').write_text(json.dumps({'animation':{'width':32,'height':32,'frametime':2,'interpolate':False}},indent=2)+'\n')
-(assets/'sounds.json').write_text(json.dumps({'collapse_transition':{'subtitle':'subtitles.overload_sim.collapse_transition','sounds':[{'name':'overload_sim:collapse_transition','attenuation_distance':24}]}},indent=2)+'\n')
+(assets/'models/block/collapse_energy_orb.json').write_text(json.dumps(model,indent=2)+'\n',newline='\n')
+(assets/'textures/block/collapse_energy_orb.png.mcmeta').write_text(json.dumps({'animation':{'width':32,'height':32,'frametime':2,'interpolate':False}},indent=2)+'\n',newline='\n')
+(assets/'sounds.json').write_text(json.dumps({'collapse_transition':{'subtitle':'subtitles.overload_sim.collapse_transition','sounds':[{'name':'overload_sim:collapse_transition','attenuation_distance':24}]}},indent=2)+'\n',newline='\n')
 folder=root/'run-client/saves/laser-review/datapacks/visual-review/data/overload_sim_review/function'
 assert (root/'run-client/saves/laser-review/level.dat').exists()
 commands={
