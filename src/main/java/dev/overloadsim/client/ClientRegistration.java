@@ -11,6 +11,14 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.world.inventory.InventoryMenu;
 @EventBusSubscriber(modid=OverloadSimulation.ID,bus=EventBusSubscriber.Bus.MOD,value=Dist.CLIENT)
 public class ClientRegistration {
+    @SubscribeEvent public static void reactorGlowBuffer(RegisterRenderBuffersEvent event){
+        var glow=RenderType.beaconBeam(InventoryMenu.BLOCK_ATLAS,false);
+        // The beacon shader preserves pixel colours without entity directional
+        // shading. A fixed buffer queues this opaque light after the armour.
+        var buffer=new ByteBufferBuilder(glow.bufferSize());
+        try{event.registerRenderBuffer(glow,buffer);}
+        catch(IllegalStateException duplicate){buffer.close();}
+    }
     @SubscribeEvent public static void receiverGlassBuffer(RegisterRenderBuffersEvent event){
         var glass=RenderType.entityTranslucent(InventoryMenu.BLOCK_ATLAS);
         // Keep glass queued until LevelRenderer has flushed the opaque block-atlas sheet.

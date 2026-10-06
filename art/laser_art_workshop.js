@@ -73,6 +73,25 @@
             rect(0,9,16,1,'rose');rect(0,10,16,2,'pink');rect(0,12,16,1,'glow');});
         tile(39,()=>{panel('shade');rect(5,2,6,12,'white');
             rect(5,2,1,12,'light');rect(9,2,2,12,'silver');rect(6,7,3,3,'pink');});
+        // Original reactor tiles: crisp pixel strokes, bright pink optics and
+        // ceramic/dark capacitor details. Preserve all established atlas tiles.
+        tile(40,()=>{rect(0,0,16,16,'#ff4ba7');rect(1,1,14,14,'#ff91d1');
+            rect(3,3,10,10,'#ffc1e4');rect(5,4,6,8,'#ffe5f4');
+            rect(4,5,8,6,'#ffe5f4');rect(6,6,4,4,'#fff8fd');});
+        tile(41,()=>{rect(0,0,16,16,'#ff43a2');rect(0,2,16,12,'#ff82c7');
+            rect(0,5,16,6,'#ffc2e5');rect(0,7,16,2,'#fff0fa');});
+        tile(42,()=>rect(0,0,16,16,'#ff9bd6'));
+        tile(43,()=>{rect(0,0,16,16,'black');rect(2,2,12,12,'#764665');
+            rect(3,3,10,10,'dark');rect(5,5,6,6,'#ff4ba7');
+            rect(6,6,4,4,'#ffc2e5');});
+        tile(44,()=>{rect(0,0,16,16,'dark');rect(1,1,14,14,'silver');
+            rect(2,2,12,12,'white');rect(2,2,12,1,'light');
+            rect(2,2,1,12,'light');rect(3,12,10,1,'shade');
+            rect(2,14,12,1,'rose');[[3,3],[12,3]].forEach(([x,y])=>rect(x,y,1,1,'dark'));});
+        tile(45,()=>{rect(0,0,16,16,'dark');rect(1,1,14,14,'silver');
+            rect(2,2,12,12,'black');for(let y=3;y<13;y+=3){
+                rect(3,y,10,1,'#6b5976');rect(4,y+1,8,1,'#332a3e');}
+            rect(2,1,12,1,'#ff82c7');rect(3,1,10,1,'#ffc2e5');});
         newProject(Formats.java_block); Project.name='Laser pixel atlas';
         Project.texture_width=Project.texture_height=128; Project.ambientocclusion=false;
         const t=new Texture({name:'laser_pixel_atlas.png',namespace:'overload_sim',folder:'block',
@@ -93,9 +112,9 @@
     }
     Plugin.register('laser_art_workshop',{
         title:'模拟：激光像素绘制',author:'qiqi',description:'粉白激光设备的原生 Blockbench 绘制与导出',
-        icon:'bolt',version:'0.2.0-alpha.4',variant:'desktop',
+        icon:'bolt',version:'0.2.0-alpha.6',variant:'desktop',
         onload(){action=new Action('overload_sim_laser_draw',{name:'绘制激光粉白像素图集',icon:'bolt',click(){
-            new Dialog({id:'laser_art_root',title:'激光像素图集',form:{root:{label:'模组工程目录',type:'text',value:'D:/MinecraftDev/OverloadSimulation'}},
+            new Dialog({id:'laser_art_root',title:'激光像素图集',form:{root:{label:'模组工程目录',type:'text',value:'D:/MinecraftDev/OverloadSimulation/.worktrees/laser-particle'}},
                 onConfirm(values){this.hide();draw(values.root.replace(/\\/g,'/')).catch(e=>Blockbench.showMessageBox({title:'绘制失败',message:String(e.stack||e)}));}}).show();
         }});MenuBar.addAction(action,'tools');},
         onunload(){action?.delete();}

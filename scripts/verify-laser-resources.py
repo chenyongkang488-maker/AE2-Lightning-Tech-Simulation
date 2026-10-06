@@ -79,6 +79,16 @@ def verify():
             assert len(set(face['vertices'])) >= 3
             assert all(vertex in element['vertices'] for vertex in face['vertices'])
             assert all(0 <= value <= 128 for pair in face['uv'].values() for value in pair)
+    reactor=read(ROOT / 'art/blockbench/laser-emitter-reactor-formed.bbmodel')
+    assert reactor['meta']['model_format']=='free' and len(reactor['outliner'])==5
+    assert 100 < len(reactor['elements']) < 3000, 'Pixel reactor must stay within its fixed mesh budget'
+    assert base64.b64decode(reactor['textures'][0]['source'].split(',',1)[1])==native_atlas
+    for element in reactor['elements']:
+        assert element['type']=='mesh'
+        assert all(math.isfinite(v) and abs(v)<2.85*16 for p in element['vertices'].values() for v in p)
+        for face in element['faces'].values():
+            assert len(set(face['vertices']))>=3 and all(v in element['vertices'] for v in face['vertices'])
+            assert all(0<=v<=128 for pair in face['uv'].values() for v in pair)
     for texture in project['textures']:
         if texture['name'] == 'simulation_controller_ecg.png':
             assert (texture['uv_width'],texture['uv_height']) == (32,16), 'Animated ECG UV must use one frame'

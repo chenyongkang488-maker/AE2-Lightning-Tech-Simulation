@@ -24,7 +24,7 @@ TEXTURES = ['block/laser_pixel_atlas', 'block/simulation_controller_ecg',
 
 def write(path, value):
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    path.write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n', encoding='utf-8', newline='\n')
 
 def cube(name, start, end, texture='case', uv=None, front=None, cull=False):
     faces = {}
@@ -332,18 +332,20 @@ Right-click a controller for power and controls. Hover over the status area for 
 '''
 zh += '\n## 自动搭建\n\n先放置并确定控制器朝向，打开控制器界面，点击左侧工具栏的「自动搭建」。生存模式先使用背包和副手材料，不足部分从控制器当前已连接的 AE 网络补齐；可直接接 AE 线缆。未连接时仍可使用背包。创造模式无需材料。只补放缺失部件，保留合法的过载接口；材料不足、区域受阻或未加载时不开始搭建。放置保护取消或取材发生变化时会退还本次材料，无法退入 AE/背包的部分掉落给玩家。重复搭建完整结构不收费。\n\n约束器成型后显示淡粉球壳、分段装甲环、螺栓与散热口，单块玻璃带白粉边框。内部粒子库存越多，环绕光点越密（最多96个），空库存无光点，暂停生产不影响已有粒子显示。其它成型激光设备共享粉白机械细节；实际仍按上述方块模板搭建和判定，破坏或卸载后恢复普通方块显示。\n'
 en += "\n## Automatic construction\n\nPlace and orient a controller, open its screen, then click Automatic build in the left toolbar. Survival uses the main inventory and offhand first, then the controller's currently connected AE network; direct AE cabling works before formation. Backpack-only construction also works offline. Creative needs no materials. Only missing parts are placed and valid interfaces are preserved. Missing materials, obstructions or unloaded cells prevent construction. Cancelled placement or changed extraction refunds the withdrawn materials; anything rejected by both AE and the backpack is dropped for the player. Repeating a complete build is free.\n\nThe formed constrainer has pale pink glass, segmented armour ribs, bolts and cooling slots. Individual glass blocks have a white/pink border. Stored particles drive interior orbiting dots (up to 96): no storage means no dots, while pausing does not hide stored particles. Other formed laser machines share the same industrial style. Validation uses the voxel template above; breaking or unloading restores normal construction blocks.\n"
+zh += '\n成型高能激光发射器采用阶梯式像素反应堆外壳、分段电容装甲与亮粉同心导光环；光芯对齐输出方向，后方控制器和可选过载接口保持可见。\n'
+en += '\nThe formed emitter uses stepped voxel reactor armour, capacitor pods and bright pink concentric light channels. Its optical core follows the laser output direction; the rear controller and optional overload interface remain exposed.\n'
 for folder, title, body in [('ae2guide', 'Laser and particles', en), ('ae2guide/_zh_cn', '激光与粒子', zh)]:
     path = ASSETS / folder / 'laser-particle.md'
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(header % title + body, encoding='utf-8')
+    path.write_text(header % title + body, encoding='utf-8', newline='\n')
 
 readme = '''# Laser prototype Blockbench workshop
 
 Open `laser-prototype.bbmodel` in Blockbench. Each named group is the geometry of
 one matching `assets/overload_sim/models/block/<group>.json` export. Groups are
 spaced apart for editing; they are individual blocks, not a multiblock blueprint.
-The existing perfect crystal item and animated energy orb are rendered in-world
-by the block entity renderer. The core orb is three blocks across when active.
+The formed emitter uses the pixel reactor skin and bright pink optical core.
+The core energy orb is three blocks across when active.
 
 Run `python scripts/generate-laser-prototype.py` from the repository to reproduce
 the workshop, voxel models, blockstates, item models, loot tables, tags, guide
@@ -373,6 +375,18 @@ separately. After compiling the Java sources, reproduce this workshop with:
 
 Run the resource verifier after exporting; it checks the embedded native atlas,
 mesh bounds, face references and UVs against the runtime assets.
+
+## Pixel reactor emitter
+
+Open `laser-emitter-reactor-formed.bbmodel` for the formed high-energy emitter.
+Five groups preserve stepped ceramic armour, capacitor pods, concentric pink
+light channels, the optical cap and cooling/bolt details. All original vertices
+use the 1/16-block grid. The rear opening leaves the true controller accessible.
+Optional network interface holes are clipped to their actual in-world positions.
+Tiles40..45 were painted and exported by the native Blockbench workshop.
+Reproduce after Java compilation and native atlas export:
+
+`java --class-path build/classes/java/main scripts/ExportIndustrialWorkshop.java . emitter`
 '''
-(WORKSHOP / 'laser-prototype-README.md').write_text(readme, encoding='utf-8')
+(WORKSHOP / 'laser-prototype-README.md').write_text(readme, encoding='utf-8', newline='\n')
 print(f'Generated {len(models)} detailed laser block exports and Blockbench workshop; atlas painted in Blockbench.')

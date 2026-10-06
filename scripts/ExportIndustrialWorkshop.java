@@ -1,4 +1,5 @@
 import dev.overloadsim.core.IndustrialMachineMesh;
+import dev.overloadsim.core.EmitterReactorMesh;
 import dev.overloadsim.core.ReceiverShellMesh;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,6 +18,18 @@ class ExportIndustrialWorkshop {
     private static int sequence;
     public static void main(String[] args) throws Exception {
         Path root = Path.of(args.length == 0 ? "." : args[0]).toAbsolutePath().normalize();
+        boolean emitter = args.length > 1 && args[1].equals("emitter");
+        if (emitter) {
+            for (String name : EmitterReactorMesh.pieces().stream().map(EmitterReactorMesh.Piece::group).distinct().toList()) {
+                group(name, () -> {
+                    var surfaces = new ArrayList<IndustrialMachineMesh.Surface>();
+                    for (var piece : EmitterReactorMesh.pieces()) if (piece.group().equals(name)) {
+                        IndustrialMachineMesh.box(surfaces,piece.tile(),piece.x0(),piece.y0(),piece.z0(),piece.x1(),piece.y1(),piece.z1());
+                    }
+                    for (var face : IndustrialMachineMesh.withoutCell(surfaces,0,0,-2)) mesh(face.quad(),face.tile(),false);
+                });
+            }
+        } else {
         group("01 · 分段装甲骨架", () -> {
             var surfaces = new ArrayList<IndustrialMachineMesh.Surface>();
             for (int axis = 0; axis < 3; axis++) {
@@ -33,15 +46,17 @@ class ExportIndustrialWorkshop {
             for (var face : ReceiverShellMesh.glass()) surfaces.add(new IndustrialMachineMesh.Surface(face,4,false));
             for (var face : IndustrialMachineMesh.withoutCell(surfaces,0,0,-3)) mesh(face.quad(),4,true);
         });
+        }
         byte[] atlas = Files.readAllBytes(root.resolve("src/main/resources/assets/overload_sim/textures/block/laser_pixel_atlas.png"));
         String texture = "{\"name\":\"laser_pixel_atlas.png\",\"id\":\"0\",\"width\":128,\"height\":128,\"uv_width\":128,\"uv_height\":128,"
                 + "\"relative_path\":\"../../src/main/resources/assets/overload_sim/textures/block/laser_pixel_atlas.png\","
                 + "\"visible\":true,\"saved\":true,\"source\":\"data:image/png;base64," + Base64.getEncoder().encodeToString(atlas) + "\"}";
         String project = "{\"meta\":{\"format_version\":\"5.0\",\"model_format\":\"free\",\"box_uv\":false},"
-                + "\"name\":\"Industrial particle constrainer\",\"resolution\":{\"width\":128,\"height\":128},"
+                + "\"name\":\"" + (emitter ? "Lightning Tech Simulation · Pixel reactor emitter" : "Industrial particle constrainer")
+                + "\",\"resolution\":{\"width\":128,\"height\":128},"
                 + "\"credit\":\"qiqi · exact Java renderer mesh; pixel atlas authored in native Blockbench. Controller/port remain ordinary interactive blocks in game.\","
                 + "\"elements\":[" + String.join(",", elements) + "],\"outliner\":[" + String.join(",", groups) + "],\"textures\":[" + texture + "]}";
-        Path output = root.resolve("art/blockbench/particle-constrainer-formed.bbmodel");
+        Path output = root.resolve("art/blockbench/"+(emitter ? "laser-emitter-reactor-formed.bbmodel" : "particle-constrainer-formed.bbmodel"));
         Files.writeString(output, project + "\n");
         System.out.println("Exported " + elements.size() + " exact renderer faces in " + groups.size() + " editable groups: " + output);
     }

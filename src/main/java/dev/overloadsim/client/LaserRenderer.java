@@ -6,6 +6,7 @@ import com.mojang.math.Axis;
 import dev.overloadsim.ModContent;
 import dev.overloadsim.core.ReceiverShellMesh;
 import dev.overloadsim.core.IndustrialMachineMesh;
+import dev.overloadsim.core.EmitterReactorMesh;
 import dev.overloadsim.core.ReceiverParticleVisuals;
 import dev.overloadsim.laser.LaserContent;
 import dev.overloadsim.laser.LaserKind;
@@ -27,8 +28,6 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.world.item.ItemDisplayContext;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -81,7 +80,6 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
         if (be.receiverSkinVisible()) machineSkin(be,center,poses,buffers,light);
         if (be.kind()==LaserKind.CORE) industrialMesh(IndustrialMachineMesh.coreAttachments(),poses.last(),
                 buffers.getBuffer(RenderType.entitySolid(InventoryMenu.BLOCK_ATLAS)),atlas(),center,light,basis(be));
-        if (be.kind() == LaserKind.EMITTER) crystal(be, center, time, poses, buffers);
         boolean active = be.activeUntil() > be.getLevel().getGameTime();
         if (be.kind() == LaserKind.CORE && active) orb(center, time, poses, buffers);
         VertexConsumer vertices = buffers.getBuffer(RenderType.lightning());
@@ -132,7 +130,9 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
         var porcelain = buffers.getBuffer(RenderType.entitySolid(InventoryMenu.BLOCK_ATLAS));
         var basis=basis(be);
         var skin=skin(be,basis);
-        industrialMesh(skin.mesh,poses.last(),porcelain,sprite,center,light,basis);
+        var emissive = be.kind()==LaserKind.EMITTER
+                ? buffers.getBuffer(RenderType.beaconBeam(InventoryMenu.BLOCK_ATLAS,false)) : porcelain;
+        industrialMesh(skin.mesh,poses.last(),porcelain,sprite,center,light,basis,emissive);
         if(be.kind()==LaserKind.RECEIVER) {
             // Keep the established fixed translucent buffer; never flush it while opaque atlas geometry is queued.
             var glass=buffers.getBuffer(RenderType.entityTranslucent(InventoryMenu.BLOCK_ATLAS));
@@ -184,8 +184,17 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
                 var local=basis.local(Vec3.atLowerCornerOf(opening).subtract(centerOffset));
                 result=new ArrayList<>(IndustrialMachineMesh.withoutCell(result,local.x,local.y,local.z));
             }
+        } else if(be.kind()==LaserKind.EMITTER) {
+            result.addAll(EmitterReactorMesh.surfaces());
+            for(var opening:openings) {
+                var local=basis.local(Vec3.atLowerCornerOf(opening).subtract(centerOffset));
+                // The central source and front optical port are enclosed by the reactor.
+                // Real rear controller and optional upstream network interfaces stay exposed.
+                if(Math.abs(local.x)<.01&&Math.abs(local.y)<.01&&local.z>=0)continue;
+                result=new ArrayList<>(IndustrialMachineMesh.withoutCell(result,local.x,local.y,local.z));
+            }
         } else {
-            // Emitter and deflector keep their deliberately voxel-shaped body under individual armoured panels.
+            // Deflectors keep their voxel body under individual armoured panels.
             for(var entry:be.structureTemplate().entrySet())if(entry.getValue()==LaserStructureGeometry.Part.FRAME&&!openings.contains(entry.getKey())) {
                 var local=basis.local(Vec3.atLowerCornerOf(entry.getKey()).subtract(centerOffset));
                 result.addAll(IndustrialMachineMesh.translated(IndustrialMachineMesh.framePanelMesh(),local.x,local.y,local.z));
@@ -197,13 +206,27 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
 
     private static void industrialMesh(List<IndustrialMachineMesh.Surface> mesh,PoseStack.Pose pose,VertexConsumer vertices,
             TextureAtlasSprite sprite,Vec3 center,int light,Basis basis) {
+        industrialMesh(mesh,pose,vertices,sprite,center,light,basis,vertices);
+    }
+
+    private static void industrialMesh(List<IndustrialMachineMesh.Surface> mesh,PoseStack.Pose pose,VertexConsumer vertices,
+            TextureAtlasSprite sprite,Vec3 center,int light,Basis basis,VertexConsumer emissive) {
         for(var surface:mesh) {
             float u=(surface.tile()%8)*16+.5f,v=(surface.tile()/8)*16+.5f;
             var q=surface.quad();int panelLight=surface.glow()?LightTexture.FULL_BRIGHT:light;
+            // Establish the cap's depth before translucent optical-port glass.
+            // The second opaque pass uses the unlit beacon shader: the entity
+            // emissive shader still applies directional normal shading.
             shellVertex(q.a(),pose,vertices,sprite,center,panelLight,basis,u,v,15,15);
             shellVertex(q.b(),pose,vertices,sprite,center,panelLight,basis,u,v,15,15);
             shellVertex(q.c(),pose,vertices,sprite,center,panelLight,basis,u,v,15,15);
             shellVertex(q.d(),pose,vertices,sprite,center,panelLight,basis,u,v,15,15);
+            if(surface.glow()&&emissive!=vertices) {
+                shellVertex(q.a(),pose,emissive,sprite,center,panelLight,basis,u,v,15,15);
+                shellVertex(q.b(),pose,emissive,sprite,center,panelLight,basis,u,v,15,15);
+                shellVertex(q.c(),pose,emissive,sprite,center,panelLight,basis,u,v,15,15);
+                shellVertex(q.d(),pose,emissive,sprite,center,panelLight,basis,u,v,15,15);
+            }
         }
     }
 
@@ -234,18 +257,6 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
 
     private static boolean finite(Vec3 v) {
         return Double.isFinite(v.x) && Double.isFinite(v.y) && Double.isFinite(v.z);
-    }
-
-    private void crystal(LaserMachineBlockEntity be, Vec3 center, double time,
-            PoseStack poses, MultiBufferSource buffers) {
-        poses.pushPose();
-        poses.translate(center.x, center.y + Math.sin(time * .04) * .06, center.z);
-        poses.mulPose(Axis.YP.rotationDegrees((float) (time * 1.2)));
-        poses.scale(1.3f, 1.3f, 1.3f);
-        Minecraft.getInstance().getItemRenderer().renderStatic(new ItemStack(ModContent.PERFECT.get()),
-                ItemDisplayContext.FIXED, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY,
-                poses, buffers, be.getLevel(), (int) be.getBlockPos().asLong());
-        poses.popPose();
     }
 
     private void orb(Vec3 center, double time, PoseStack poses, MultiBufferSource buffers) {

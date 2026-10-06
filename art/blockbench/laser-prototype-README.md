@@ -3,8 +3,8 @@
 Open `laser-prototype.bbmodel` in Blockbench. Each named group is the geometry of
 one matching `assets/overload_sim/models/block/<group>.json` export. Groups are
 spaced apart for editing; they are individual blocks, not a multiblock blueprint.
-The existing perfect crystal item and animated energy orb are rendered in-world
-by the block entity renderer. The core orb is three blocks across when active.
+The formed emitter uses the pixel reactor skin and bright pink optical core.
+The core energy orb is three blocks across when active.
 
 Run `python scripts/generate-laser-prototype.py` from the repository to reproduce
 the workshop, voxel models, blockstates, item models, loot tables, tags, guide
@@ -34,3 +34,15 @@ separately. After compiling the Java sources, reproduce this workshop with:
 
 Run the resource verifier after exporting; it checks the embedded native atlas,
 mesh bounds, face references and UVs against the runtime assets.
+
+## Pixel reactor emitter
+
+Open `laser-emitter-reactor-formed.bbmodel` for the formed high-energy emitter.
+Five groups preserve stepped ceramic armour, capacitor pods, concentric pink
+light channels, the optical cap and cooling/bolt details. All original vertices
+use the 1/16-block grid. The rear opening leaves the true controller accessible.
+Optional network interface holes are clipped to their actual in-world positions.
+Tiles40..45 were painted and exported by the native Blockbench workshop.
+Reproduce after Java compilation and native atlas export:
+
+`java --class-path build/classes/java/main scripts/ExportIndustrialWorkshop.java . emitter`
