@@ -114,7 +114,7 @@
         title:'模拟：激光像素绘制',author:'qiqi',description:'粉白激光设备的原生 Blockbench 绘制与导出',
         icon:'bolt',version:'0.2.0-alpha.6',variant:'desktop',
         onload(){action=new Action('overload_sim_laser_draw',{name:'绘制激光粉白像素图集',icon:'bolt',click(){
-            new Dialog({id:'laser_art_root',title:'激光像素图集',form:{root:{label:'模组工程目录',type:'text',value:'D:/MinecraftDev/OverloadSimulation/.worktrees/laser-particle'}},
+            new Dialog({id:'laser_art_root',title:'激光像素图集',form:{root:{label:'模组工程目录',type:'text',value:'D:/MinecraftDev/OverloadSimulation'}},
                 onConfirm(values){this.hide();draw(values.root.replace(/\\/g,'/')).catch(e=>Blockbench.showMessageBox({title:'绘制失败',message:String(e.stack||e)}));}}).show();
         }});MenuBar.addAction(action,'tools');},
         onunload(){action?.delete();}
