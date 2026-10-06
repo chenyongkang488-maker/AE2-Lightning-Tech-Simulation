@@ -1,0 +1,44 @@
+{
+  "version": "0.2.0-alpha.8",
+  "project": "Lightning Tech: Simulation",
+  "installed_at": "2026-10-07T02:13:21.1991879+08:00",
+  "implementation_commit": "040d23841c798770415af60e8e9d532a082cbfbb",
+  "restored_visual_base": "v0.2.0-alpha.7",
+  "installed_path": "D:\\mc\\.minecraft\\versions\\OverloadSim-Test-1.21.1\\mods\\lightning-tech-simulation-0.2.0-alpha.8.jar",
+  "jar_bytes": 1071084,
+  "jar_sha256": "56b3d3c72a3148220e5902efc74e922ace495d1ac7244d684e9a4f699789130d",
+  "sources_bytes": 534033,
+  "sources_sha256": "82f8bae63047a5c8cf2ea80ab3aee6f68df4828a25e80766a1b6b5198114e807",
+  "backup_path": "D:\\mc\\.minecraft\\versions\\OverloadSim-Test-1.21.1\\addon-backups\\20261007-021320\\lightning-tech-simulation-0.2.0-alpha.7.jar",
+  "backup_sha256": "570d32e8dbb64dd5c3a298f6cf92f63d29e3bbc90ad7e0398f5092bf1941c806",
+  "other_mods_unchanged": 13,
+  "configuration_files_unchanged": 53,
+  "unit_tests": 77,
+  "required_game_tests_per_runtime": 235,
+  "tested_runtimes": [
+    {
+      "ae2": "19.2.18",
+      "ae2lt": "2.1.1",
+      "thunderbolt": "2.0.2"
+    },
+    {
+      "ae2": "19.2.17",
+      "ae2lt": "2.1.0",
+      "thunderbolt": "2.0.0"
+    }
+  ],
+  "native_client": {
+    "windowed": true,
+    "resolution": "854x480",
+    "minecraft": "1.21.1",
+    "neoforge": "21.1.255",
+    "ae2": "19.2.18",
+    "ae2lt": "2.1.1",
+    "thunderbolt": "2.0.2",
+    "exit_code": 0
+  },
+  "integrated_build": "instrument-integrated-build.log",
+  "reproducible_with_worktree": true,
+  "upstream_dependencies_changed": false,
+  "github_published": false
+}
