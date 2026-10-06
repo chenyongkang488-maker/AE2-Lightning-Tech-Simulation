@@ -1,0 +1,19 @@
+{
+  "version": "0.2.0-alpha.5",
+  "date": "2026-10-06",
+  "implementation_commit": "1a466396d04f7ce0d924c9641216bee4cfdf79a1",
+  "rollback_commit": "938cdbe",
+  "installed": "D:\\mc\\.minecraft\\versions\\OverloadSim-Test-1.21.1\\mods\\lightning-tech-simulation-0.2.0-alpha.5.jar",
+  "bytes": 986647,
+  "sha256": "7BE8BB1F658E1CA754A4F7F3F0A3CC7FC59F83C35EAD726D2EB7ED8985F98B61",
+  "backup": "D:\\mc\\.minecraft\\versions\\OverloadSim-Test-1.21.1\\addon-backups\\20261006-163007\\overload_sim-0.2.0-alpha.4.jar",
+  "backup_sha256": "9E64F9951422B3158760AAA8168C97966ED265735519126A7DBE5CD57CDA6E08",
+  "other_mods_unchanged": 13,
+  "configuration_files_unchanged": 47,
+  "unit_tests": 64,
+  "game_tests_per_environment": 221,
+  "game_test_environments": 5,
+  "native_client": "NeoForge 21.1.255 / AE2 19.2.18 / AE2LT 2.1.1 / Thunderbolt 2.0.2",
+  "upstream_dependencies_changed_in_test_instance": false,
+  "release_log": "upstream-compat-base-release.log"
+}
