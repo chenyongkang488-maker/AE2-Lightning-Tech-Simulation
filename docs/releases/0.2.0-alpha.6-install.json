@@ -1,0 +1,19 @@
+{
+  "version": "0.2.0-alpha.6",
+  "date": "2026-10-06",
+  "implementation_commit": "58c9840db941590b7a07e1ea988c186481801b26",
+  "rollback_commit": "7ed4739aad8a484998b7efbeb4055d4f7b83f2b3",
+  "installed": "D:\\mc\\.minecraft\\versions\\OverloadSim-Test-1.21.1\\mods\\lightning-tech-simulation-0.2.0-alpha.6.jar",
+  "bytes": 991028,
+  "sha256": "471DF208911DE03EC5D41D2DECF0CFE373C4F5C94892B9662D1C96C724D4B492",
+  "backup": "D:\\mc\\.minecraft\\versions\\OverloadSim-Test-1.21.1\\addon-backups\\20261006-232537\\lightning-tech-simulation-0.2.0-alpha.5.jar",
+  "backup_sha256": "D3A50D2458208B3F56FBBA9E4C88774A40254B3D8DE4F043B931897D7A13E592",
+  "other_mods_unchanged": 13,
+  "configuration_files_unchanged": 57,
+  "unit_tests": 66,
+  "game_tests": 221,
+  "native_client": "Windowed 854x480 / NeoForge 21.1.255 / AE2 19.2.18 / AE2LT 2.1.1 / Thunderbolt 2.0.2",
+  "upstream_dependencies_changed_in_test_instance": false,
+  "integrated_build": "pixel-reactor-integrated-build.log",
+  "github_published": false
+}

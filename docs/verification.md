@@ -216,3 +216,12 @@ alpha.12 JAR 为 644,061 字节，SHA256 `e13a4303f41477580ff91832c9a6062141fd31
 预览见art/previews/laser-smooth-receiver.png、laser-auto-build.png、simulation-auto-build.png。Java与整合包作者入口见docs/construction-api.md、laser-particle-api.md与multiblock-api.md。独立只读审查记录见docs/reviews/2026-10-05-smooth-receiver-autobuild.md。最终集成构建、PCL安装哈希和旧版本备份在交付记录中保存。
 
 主工作区集成后的可选Mek/神秘农业/应用通量环境再次通过49项JUnit与210项GameTest、版本和构建（automatic-construction-integrated-green.log，exit0）。资源/独立JAR检查通过。最终951,821字节JAR的SHA256为`0373818ed3f4ca391b0c984116cef613de8c0e0c88216be08d829c904c3e59e2`，已安装OverloadSim-Test-1.21.1；alpha.2备份位于`D:/mc/.minecraft/versions/OverloadSim-Test-1.21.1/addon-backups/20261005-004238/overload_sim-0.2.0-alpha.2.jar`。另外13个模组和49份配置/PCL/选项文件与安装前哈希一致。安装记录见docs/releases/0.2.0-alpha.3-install.json。
+
+
+## 2026-10-06 alpha.6 像素反应堆
+
+高能激光发射器成型外观使用阶梯陶瓷外壳、八组矩形装甲、同心亮粉导光环和中央芯。Blockbench 原生绘图保留原图集上部，五分组模型与 Java 网格一致。原版 entity emissive 材质仍有方向光，窗口实测后改用无方向光的原版 opaque beacon 材质及固定缓冲；正面、侧面、背面、拆解恢复、可选 AE 接口和发射光束已实机确认。最终验收保持窗口模式，独立开发世界正常保存退出。
+
+66 项 JUnit、221 项必需 GameTest 通过，主开发分支集成后构建与 66 项 JUnit 再次通过。资源、原生工程、许可和独立 JAR 检查通过。已安装到 OverloadSim-Test-1.21.1，991028 字节，SHA256 471df208911de03ec5d41d2decf0cfe373c4f5c94892b9662d1c96c724d4b492；alpha.5 在 addon-backups/20261006-232537/，其余 13 个模组及 57 份设置文件哈希未变。
+
+预览见 art/previews/laser-emitter-reactor.png。详细记录见 docs/releases/0.2.0-alpha.6-verification.md 和 0.2.0-alpha.6-install.json。沿用 alpha.5 前置兼容范围；本轮未重新测试全部兼容矩阵，未发布 GitHub。
