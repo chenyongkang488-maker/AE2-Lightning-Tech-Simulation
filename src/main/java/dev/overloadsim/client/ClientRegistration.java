@@ -40,7 +40,7 @@ public class ClientRegistration {
         for(var state:dev.overloadsim.multiblock.MultiblockContent.CONTROLLER.get().getStateDefinition().getPossibleStates())wrap(event,state,SimulationShellModel.Kind.CONTROLLER);
         var port=net.minecraft.core.registries.BuiltInRegistries.BLOCK.get(net.minecraft.resources.ResourceLocation.parse("ae2lt:overloaded_interface"));
         for(var state:port.getStateDefinition().getPossibleStates())wrap(event,state,SimulationShellModel.Kind.PORT);
-        for(var block:java.util.List.of(dev.overloadsim.laser.LaserContent.FRAME.get(),dev.overloadsim.laser.LaserContent.GLASS.get()))
+        for(var block:java.util.List.of(dev.overloadsim.laser.LaserContent.FRAME.get(),dev.overloadsim.laser.LaserContent.GLASS.get(),dev.overloadsim.laser.LaserContent.machine(dev.overloadsim.laser.LaserKind.RECEIVER)))
             for(var state:block.getStateDefinition().getPossibleStates())
                 event.getModels().computeIfPresent(net.minecraft.client.renderer.block.BlockModelShaper.stateToModelLocation(state),(key,model)->new ReceiverShellModel(model));
     }

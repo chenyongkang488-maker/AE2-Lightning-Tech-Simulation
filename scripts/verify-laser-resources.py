@@ -63,7 +63,7 @@ def verify():
     assert glass_model['textures']['glass'] == 'overload_sim:block/laser_pixel_atlas'
     assert all(face['uv'] == [8,0,10,2] for face in glass_model['elements'][0]['faces'].values()), 'Framed glass must use native painted tile4'
     atlas_project=read(ROOT / 'art/blockbench/laser-pixel-atlas.bbmodel')
-    assert atlas_project['textures'][0]['layers'], 'Native Blockbench painted layer missing'
+    assert len(atlas_project['textures'][0]['layers']) == 4, 'Armour, lights, screens and glass need separate native layers'
     native_atlas=base64.b64decode(atlas_project['textures'][0]['source'].split(',',1)[1])
     assert native_atlas == (ASSETS / 'textures/block/laser_pixel_atlas.png').read_bytes(), 'Native painted project differs from runtime atlas'
     formed=read(ROOT / 'art/blockbench/particle-constrainer-formed.bbmodel')
@@ -107,6 +107,9 @@ def verify():
     assert read(ASSETS/'models/block/collapse_energy_orb.json')['textures']['0']=='overload_sim:block/collapse_energy_orb'
     assert (ASSETS/'sounds/collapse_transition.ogg').read_bytes().startswith(b'OggS')
     assert read(ASSETS/'sounds.json')['collapse_transition']['sounds'][0]['attenuation_distance']==24
+    deflector=read(ROOT/'art/blockbench/laser-deflector-formed.bbmodel')
+    assert deflector['meta']['model_format']=='free' and 100<len(deflector['elements'])<7000
+    assert base64.b64decode(deflector['textures'][0]['source'].split(',',1)[1])==native_atlas
     style = read(ROOT / 'src/main/resources/assets/ae2/screens/overload_sim/laser.json')
     assert style['helpTopic'] == 'overload_sim:laser-particle.md'
     for folder in ('', '_zh_cn/'):

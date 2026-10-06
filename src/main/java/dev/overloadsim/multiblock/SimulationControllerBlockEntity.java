@@ -5,11 +5,17 @@ import appeng.api.networking.*;
 import appeng.api.networking.security.*;
 import appeng.api.orientation.BlockOrientation;
 import appeng.api.util.AECableType;
+import appeng.util.SettingsFrom;
+import com.moakiee.ae2lt.api.frequency.FrequencyApi;
+import com.moakiee.ae2lt.api.frequency.FrequencyBindingAccess;
+import com.moakiee.ae2lt.api.frequency.FrequencyBindingHost;
 import dev.overloadsim.*;
 import dev.overloadsim.api.CrystalDataAccess;
 import net.minecraft.core.*;
+import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.nbt.*;
 import net.minecraft.world.item.*;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import net.neoforged.neoforge.items.IItemHandler;
@@ -18,13 +24,16 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import dev.overloadsim.api.MultiblockSimulationEvents;
 import dev.overloadsim.compat.*;
-public class SimulationControllerBlockEntity extends AENetworkedBlockEntity implements IActionHost {
+public class SimulationControllerBlockEntity extends AENetworkedBlockEntity implements IActionHost,FrequencyBindingHost {
     private UUID identity=UUID.randomUUID();
     private SimulationStructure structure;private String error="no_structure";private BlockPos problem;private boolean structureDirty;
     private BlockPos savedMin;private int savedSize;
     private BlockPos lightPosition;
     private final BulkOutputBuffer outputs=new BulkOutputBuffer();
     private final SimulationGridBridge bridge=new SimulationGridBridge(this);
+    private final FrequencyBindingAccess frequency=FrequencyApi.createBinding(this);
+    // NeoForge follows onChunkUnloaded with setRemoved; reset this transient state when registered again.
+    private boolean frequencyUnloading;
     private SimulationBatch batch;private int nextCrystal,status,lastVisualFlags;
     private long refundHv,refundEhv,feCredit,inputRevision;private double feFraction;
     private boolean loadingInventory;
@@ -106,6 +115,7 @@ public class SimulationControllerBlockEntity extends AENetworkedBlockEntity impl
         if(level.getBlockEntity(pos) instanceof SimulationLightBlockEntity light&&light.ownedBy(this)&&level.getBlockState(pos).is(MultiblockContent.LIGHT.get()))SimulationStructureIndex.converting(()->level.setBlockAndUpdate(pos,net.minecraft.world.level.block.Blocks.AIR.defaultBlockState()));saveChanges();
     }
     private void tickServer(){
+        frequency.serverTick();
         if(structureDirty||level.getGameTime()%(structure==null?20:100)==0){structureDirty=false;checkStructure();}
         bridge.refresh();charge();
         if(refundHv>0||refundEhv>0){refundHv-=bridge.insert(false,refundHv);refundEhv-=bridge.insert(true,refundEhv);saveChanges();if(refundHv>0||refundEhv>0){status=7;return;}}
@@ -210,8 +220,8 @@ public class SimulationControllerBlockEntity extends AENetworkedBlockEntity impl
         batch=tag.contains("Batch")?SimulationBatch.load(tag.getCompound("Batch"),r):null;rolls.clear();rollGeneration=tag.getString("RollGeneration");
         for(var v:tag.getList("Rolls",Tag.TAG_COMPOUND)){var t=(CompoundTag)v;int slot=t.getInt("Slot");if(slot<0||slot>=49)continue;var list=new ArrayList<ItemStack>();for(var item:t.getList("Outputs",Tag.TAG_COMPOUND))ItemStack.parse(r,item).ifPresent(list::add);rolls.put(slot,new Roll(ItemStack.parseOptional(r,t.getCompound("Input")),List.copyOf(list)));}
     }
-    @Override public void saveAdditional(CompoundTag tag,HolderLookup.Provider r){super.saveAdditional(tag,r);tag.put("SimulationMachine",saveMachine(r));if(lightPosition!=null)tag.putLong("OwnedLight",lightPosition.asLong());if(savedMin!=null){tag.putLong("StructureMin",savedMin.asLong());tag.putInt("StructureSize",savedSize);}}
-    @Override public void loadTag(CompoundTag tag,HolderLookup.Provider r){super.loadTag(tag,r);loadMachine(tag.getCompound("SimulationMachine"),r);lightPosition=tag.contains("OwnedLight")?BlockPos.of(tag.getLong("OwnedLight")):null;if(tag.contains("StructureMin")){savedMin=BlockPos.of(tag.getLong("StructureMin"));savedSize=Math.clamp(tag.getInt("StructureSize"),3,7);}}
+    @Override public void saveAdditional(CompoundTag tag,HolderLookup.Provider r){super.saveAdditional(tag,r);frequency.save(tag);tag.put("SimulationMachine",saveMachine(r));if(lightPosition!=null)tag.putLong("OwnedLight",lightPosition.asLong());if(savedMin!=null){tag.putLong("StructureMin",savedMin.asLong());tag.putInt("StructureSize",savedSize);}}
+    @Override public void loadTag(CompoundTag tag,HolderLookup.Provider r){super.loadTag(tag,r);frequency.load(tag);loadMachine(tag.getCompound("SimulationMachine"),r);lightPosition=tag.contains("OwnedLight")?BlockPos.of(tag.getLong("OwnedLight")):null;if(tag.contains("StructureMin")){savedMin=BlockPos.of(tag.getLong("StructureMin"));savedSize=Math.clamp(tag.getInt("StructureSize"),3,7);}}
     private void writeVisual(RegistryFriendlyByteBuf data){
         data.writeVarInt(visualSize());data.writeBlockPos(visualMin());data.writeByte(visualFlags());var items=visualCrystals();data.writeVarInt(items.size());for(var item:items)ItemStack.STREAM_CODEC.encode(data,item);
     }
@@ -222,9 +232,18 @@ public class SimulationControllerBlockEntity extends AENetworkedBlockEntity impl
     }
     @Override protected void saveVisualState(CompoundTag tag){super.saveVisualState(tag);tag.putInt("Size",visualSize());tag.putLong("Min",visualMin().asLong());tag.putInt("Flags",visualFlags());if(level!=null){var list=new ListTag();for(var item:visualCrystals())list.add(item.save(level.registryAccess()));tag.put("VisualCrystals",list);}}
     @Override protected void loadVisualState(CompoundTag tag){super.loadVisualState(tag);visualSize=Math.clamp(tag.getInt("Size"),0,7);visualMin=BlockPos.of(tag.getLong("Min"));visualFlags=tag.getInt("Flags")&15;if(level!=null){var list=new ArrayList<ItemStack>();for(var v:tag.getList("VisualCrystals",Tag.TAG_COMPOUND))if(list.size()<49)ItemStack.parse(level.registryAccess(),v).ifPresent(list::add);visualCrystals=List.copyOf(list);}}
-    @Override public void onLoad(){super.onLoad();SimulationShellVisuals.publish(this,visualToken);}
-    @Override public void setRemoved(){SimulationShellVisuals.remove(this,visualToken);bridge.disconnect();super.setRemoved();}
-    @Override public void onChunkUnloaded(){SimulationShellVisuals.remove(this,visualToken);bridge.disconnect();super.onChunkUnloaded();}
+    @Override public void onLoad(){frequencyUnloading=false;super.onLoad();SimulationShellVisuals.publish(this,visualToken);}
+    @Override public AENetworkedBlockEntity getFrequencyBindingBlockEntity(){return this;}
+    @Override public FrequencyBindingAccess getFrequencyBindingAccess(){return frequency;}
+    @Override public void saveFrequencyBindingChanges(){saveChanges();}
+    @Override public void markFrequencyBindingForUpdate(){markForClientUpdate();}
+    @Override public void onMainNodeStateChanged(IGridNodeListener.State reason){frequency.onMainNodeStateChanged(reason);}
+    @Override public void onReady(){super.onReady();frequency.onReady();}
+    @Override public void setRemoved(){if(!frequencyUnloading)frequency.setRemoved();SimulationShellVisuals.remove(this,visualToken);bridge.disconnect();super.setRemoved();}
+    @Override public void onChunkUnloaded(){frequencyUnloading=true;FrequencyBindingLifecycle.chunkUnloaded(frequency);SimulationShellVisuals.remove(this,visualToken);bridge.disconnect();super.onChunkUnloaded();}
+    @Override public void clearRemoved(){frequencyUnloading=false;super.clearRemoved();frequency.clearRemoved();}
+    @Override public void exportSettings(SettingsFrom mode,DataComponentMap.Builder builder,Player player){super.exportSettings(mode,builder,player);frequency.exportMemorySettings(mode,builder,tag->{});}
+    @Override public void importSettings(SettingsFrom mode,DataComponentMap settings,Player player){super.importSettings(mode,settings,player);frequency.importMemorySettings(mode,settings,tag->{});}
     @Override public IGridNode getActionableNode(){return getMainNode().getNode();}
     @Override public Set<Direction> getGridConnectableSides(BlockOrientation o){return EnumSet.allOf(Direction.class);}
     @Override public AECableType getCableConnectionType(Direction d){return AECableType.SMART;}

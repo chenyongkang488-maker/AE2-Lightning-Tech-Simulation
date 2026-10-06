@@ -9,7 +9,7 @@ public final class GateMatrixMesh {
     private GateMatrixMesh(){}
     public static List<IndustrialMachineMesh.Surface> outer(boolean focus){return focus?FOCUS:CONSTRAINT;}
     private static List<IndustrialMachineMesh.Surface> build(boolean focus){
-        var p=new ArrayList<IndustrialMachineMesh.Surface>();
+        var p=new ArrayList<PixelAssemblyMesh.Box>();
         if(focus){
             annulus(p,44,false,3.75,3.25,-.5,-.3125);
             annulus(p,44,false,3.75,3.25,.3125,.5);
@@ -20,7 +20,7 @@ public final class GateMatrixMesh {
             annulus(p,7,false,3.75,3.3125,-.375,-.3125);
             annulus(p,7,false,3.75,3.3125,.3125,.375);
         }
-        // Glyph cartridges and clamps are separated blocks rather than a smooth torus.
+        // Original pink containment and cyan focusing glyph cartridges.
         for(int i=0;i<16;i++){
             double a=i*Math.PI/8,x=snap(Math.cos(a)*3.5),y=snap(Math.sin(a)*3.5);
             for(int sign:new int[]{-1,1}){
@@ -33,10 +33,10 @@ public final class GateMatrixMesh {
                 for(int sign:new int[]{-1,1})box(p,focus?49:48,true,cx-.125,cy-.125,sign*.75-.0625,cx+.125,cy+.125,sign*.75+.0625);
             }
         }
-        return List.copyOf(p);
+        return PixelAssemblyMesh.build(p);
     }
     private static double snap(double value){return Math.rint(value*16)/16;}
-    private static void annulus(List<IndustrialMachineMesh.Surface> p,int tile,boolean glow,double outer,double inner,double z0,double z1){
+    private static void annulus(List<PixelAssemblyMesh.Box> p,int tile,boolean glow,double outer,double inner,double z0,double z1){
         int radius=(int)Math.ceil(outer*4);
         for(int y=-radius;y<radius;y++){
             int start=Integer.MIN_VALUE;
@@ -48,9 +48,7 @@ public final class GateMatrixMesh {
             }
         }
     }
-    private static void box(List<IndustrialMachineMesh.Surface> p,int tile,boolean glow,double x0,double y0,double z0,double x1,double y1,double z1){
-        var faces=new ArrayList<IndustrialMachineMesh.Surface>();
-        IndustrialMachineMesh.box(faces,tile,x0,y0,z0,x1,y1,z1);
-        for(var face:faces)p.add(new IndustrialMachineMesh.Surface(face.quad(),tile,glow));
+    private static void box(List<PixelAssemblyMesh.Box> p,int tile,boolean glow,double x0,double y0,double z0,double x1,double y1,double z1){
+        p.add(new PixelAssemblyMesh.Box(tile,glow,x0,y0,z0,x1,y1,z1));
     }
 }

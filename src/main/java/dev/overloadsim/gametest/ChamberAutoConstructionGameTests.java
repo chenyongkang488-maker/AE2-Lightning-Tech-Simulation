@@ -32,8 +32,8 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 public final class ChamberAutoConstructionGameTests {
     @GameTest(template = "empty")
     public static void everySizeAndFacingUsesValidBottomFrontController(GameTestHelper h) {
-        // Hand-counted: external size, frame items (controller excluded), glass, empty interior.
-        int[][] cases = {{3,21,4,1},{4,39,16,8},{5,61,36,27},{6,87,64,64},{7,117,100,125}};
+        // Hand-counted: external size, frames (controller excluded), glass, air including upgrade floor.
+        int[][] cases = {{3,20,4,2},{4,35,16,12},{5,52,36,36},{6,71,64,80},{7,92,100,150}};
         BlockPos min = h.absolutePos(new BlockPos(2,1,2));
         for (int[] test : cases) for (Direction facing : Direction.Plane.HORIZONTAL) {
             clear(h,min,7);
@@ -43,6 +43,9 @@ public final class ChamberAutoConstructionGameTests {
             h.assertTrue(plan.cells().values().stream().filter(s -> s.is(MultiblockContent.FRAME.get())).count() == test[1], "correct frame count for size "+test[0]);
             h.assertTrue(plan.cells().values().stream().filter(s -> s.is(glass())).count() == test[2], "correct glass count for size "+test[0]);
             h.assertTrue(plan.cells().values().stream().filter(s -> s.isAir()).count() == test[3], "correct empty interior for size "+test[0]);
+            for (int x=1;x<test[0]-1;x++) for (int z=1;z<test[0]-1;z++)
+                h.assertTrue(plan.cells().get(min.offset(x,0,z)).isAir(), "bottom interior is reserved for manual upgrades");
+            h.assertTrue(plan.cells().get(min).is(MultiblockContent.FRAME.get()), "bottom corners remain structural frames");
             h.assertTrue(plan.available().getAsBoolean(), "unowned chamber is available");
             plan.cells().forEach((pos,state) -> { if (!pos.equals(host.getBlockPos())) h.getLevel().setBlockAndUpdate(pos,state); });
             var validation = SimulationStructureValidator.validate(host,min,test[0]);
@@ -63,28 +66,102 @@ public final class ChamberAutoConstructionGameTests {
         var moduleEntity = h.getLevel().getBlockEntity(module);var portEntity = h.getLevel().getBlockEntity(port);
         var player = player(h,host);supply(player,frameItem(),64);supply(player,glass().asItem(),40);
         var result = SimulationAutoConstruction.build(player,host,5);
-        h.assertTrue(result.successful() && result.placed() == 94, "only missing 58 frames and 36 glass are placed: "+result.reason());
-        h.assertTrue(count(player,frameItem()) == 6 && count(player,glass().asItem()) == 4, "existing controller, module, interface and frame are deducted from material requirements");
+        h.assertTrue(result.successful() && result.placed() == 86, "only missing 50 frames and 36 glass are placed: "+result.reason());
+        h.assertTrue(count(player,frameItem()) == 14 && count(player,glass().asItem()) == 4, "optional floor slots consume no frames and existing shell parts reduce material requirements");
         h.assertTrue(h.getLevel().getBlockEntity(module) == moduleEntity && h.getLevel().getBlockEntity(port) == portEntity, "existing upgrades and interface retain their entities");
         h.assertTrue(host.structure() != null && host.structure().t3() == 1 && host.structure().networkInterface().equals(port), "preserved optional parts participate in the formed chamber");
         var again = SimulationAutoConstruction.build(player,host,7);
         h.assertTrue(again.successful() && again.placed() == 0 && host.structure().size() == 5, "formed chamber is a no-op even if a different size is requested");
-        h.assertTrue(count(player,frameItem()) == 6 && count(player,glass().asItem()) == 4, "repeat build consumes nothing");
+        h.assertTrue(count(player,frameItem()) == 14 && count(player,glass().asItem()) == 4, "repeat build consumes nothing");
+        player.discard();h.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void emptyUpgradeFloorFormsThenAcceptsAndRemovesManualUpgrades(GameTestHelper h) {
+        BlockPos min = h.absolutePos(new BlockPos(2,1,2));var host = controller(h,min,5,Direction.NORTH);
+        var player = player(h,host);supply(player,frameItem(),52);supply(player,glass().asItem(),36);
+        var result = SimulationAutoConstruction.build(player,host,5);
+        h.assertTrue(result.successful() && result.placed() == 88 && host.structure() != null,
+                "shell forms with exactly 52 frames and 36 glass, without filling upgrade slots: "+result.reason());
+        for (int x=1;x<4;x++) for (int z=1;z<4;z++)
+            h.assertTrue(h.getLevel().getBlockState(min.offset(x,0,z)).isAir(), "formed floor remains open for upgrades");
+        var upgrade = min.offset(2,0,2);
+        h.getLevel().setBlockAndUpdate(upgrade,MultiblockContent.T3.get().defaultBlockState());host.checkStructure();
+        h.assertTrue(host.structure() != null && host.structure().t3() == 1, "manually installed upgrade participates in the formed chamber");
+        h.getLevel().setBlockAndUpdate(upgrade,Blocks.AIR.defaultBlockState());host.checkStructure();
+        h.assertTrue(host.structure() != null && host.structure().t3() == 0, "removing an optional upgrade leaves the shell valid");
+        h.assertTrue(count(player,frameItem()) == 0 && count(player,glass().asItem()) == 0, "build spends only the structural shell materials");
+        player.discard();h.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void openFloorStillRequiresBottomBorderAndRoof(GameTestHelper h) {
+        BlockPos min = h.absolutePos(new BlockPos(2,1,2));var host = controller(h,min,3,Direction.NORTH);
+        SimulationAutoConstruction.plan(host,3).cells().forEach((pos,state) -> { if (!pos.equals(host.getBlockPos())) h.getLevel().setBlockAndUpdate(pos,state); });
+        var floor = min.offset(1,0,1);h.getLevel().setBlockAndUpdate(floor,Blocks.AIR.defaultBlockState());
+        h.assertTrue(SimulationStructureValidator.validate(host,min,3).valid(), "empty bottom interior is a legal upgrade slot");
+        h.getLevel().setBlockAndUpdate(min,Blocks.AIR.defaultBlockState());
+        h.assertTrue(SimulationStructureValidator.validate(host,min,3).error().equals("edge"), "empty floor does not waive bottom corners");
+        h.getLevel().setBlockAndUpdate(min,MultiblockContent.FRAME.get().defaultBlockState());
+        var border = min.offset(0,0,1);h.getLevel().setBlockAndUpdate(border,Blocks.AIR.defaultBlockState());
+        h.assertTrue(SimulationStructureValidator.validate(host,min,3).error().equals("edge"), "bottom border remains structural");
+        h.getLevel().setBlockAndUpdate(border,MultiblockContent.FRAME.get().defaultBlockState());
+        var roof = min.offset(1,2,1);h.getLevel().setBlockAndUpdate(roof,Blocks.AIR.defaultBlockState());
+        h.assertTrue(SimulationStructureValidator.validate(host,min,3).error().equals("roof"), "roof interior still requires frames");
+        h.getLevel().setBlockAndUpdate(roof,MultiblockContent.FRAME.get().defaultBlockState());
+        h.getLevel().setBlockAndUpdate(floor,Blocks.STONE.defaultBlockState());
+        h.assertTrue(SimulationStructureValidator.validate(host,min,3).error().equals("floor"), "air floor support does not accept unrelated solid blocks");
+        h.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void existingBottomFramesAndEveryUpgradeKindRemainIntact(GameTestHelper h) {
+        BlockPos min = h.absolutePos(new BlockPos(2,1,2));var host = controller(h,min,5,Direction.NORTH);
+        Block[] parts = {MultiblockContent.FRAME.get(),MultiblockContent.T1.get(),MultiblockContent.T2.get(),
+                MultiblockContent.T3.get(),MultiblockContent.FORTUNE.get(),MultiblockContent.OVERLOAD.get(),MultiblockContent.SMELTING.get()};
+        var positions = new java.util.ArrayList<BlockPos>();var entities = new java.util.ArrayList<net.minecraft.world.level.block.entity.BlockEntity>();
+        for (int i=0;i<parts.length;i++) {
+            var pos = min.offset(1+i%3,0,1+i/3);positions.add(pos);
+            h.getLevel().setBlockAndUpdate(pos,parts[i].defaultBlockState());entities.add(h.getLevel().getBlockEntity(pos));
+        }
+        var player = player(h,host);supply(player,frameItem(),52);supply(player,glass().asItem(),36);
+        var result = SimulationAutoConstruction.build(player,host,5);
+        h.assertTrue(result.successful() && result.placed() == 88, "existing legal floor parts require no placement: "+result.reason());
+        for (int i=0;i<parts.length;i++) {
+            h.assertTrue(h.getLevel().getBlockState(positions.get(i)).is(parts[i]) && h.getLevel().getBlockEntity(positions.get(i)) == entities.get(i),
+                    "existing floor blocks and their data survive automatic construction");
+        }
+        var structure = host.structure();
+        h.assertTrue(structure != null && structure.t1() == 1 && structure.t2() == 1 && structure.t3() == 1
+                && structure.fortune() == 1 && structure.overload() && structure.smelting(), "all preserved upgrades contribute their original effects");
+        h.assertTrue(h.getLevel().getBlockState(min.offset(2,0,3)).isAir() && h.getLevel().getBlockState(min.offset(3,0,3)).isAir(), "unused floor slots stay empty");
+        player.discard();h.succeed();
+    }
+
+    @GameTest(template = "empty")
+    public static void unrecognizedBottomInteriorBlockStillRejectsBeforeDebit(GameTestHelper h) {
+        BlockPos min = h.absolutePos(new BlockPos(2,1,2));var host = controller(h,min,3,Direction.NORTH);
+        var floor = min.offset(1,0,1);h.getLevel().setBlockAndUpdate(floor,Blocks.STONE.defaultBlockState());
+        var player = player(h,host);supply(player,frameItem(),20);supply(player,glass().asItem(),4);
+        var result = SimulationAutoConstruction.build(player,host,3);
+        h.assertTrue(!result.successful() && count(player,frameItem()) == 20 && count(player,glass().asItem()) == 4,
+                "invalid floor obstruction spends no resources");
+        h.assertTrue(h.getLevel().getBlockState(floor).is(Blocks.STONE) && h.getLevel().getBlockState(min).isAir(), "floor obstruction is preserved without a partial shell");
         player.discard();h.succeed();
     }
 
     @GameTest(template = "empty")
     public static void obstructionAndShortMaterialsKeepTheWholeInventory(GameTestHelper h) {
         BlockPos min = h.absolutePos(new BlockPos(2,1,2));var host = controller(h,min,3,Direction.NORTH);
-        var player = player(h,host);supply(player,frameItem(),21);supply(player,glass().asItem(),4);
+        var player = player(h,host);supply(player,frameItem(),20);supply(player,glass().asItem(),4);
         var obstacle = min.offset(1,1,1);h.getLevel().setBlockAndUpdate(obstacle,Blocks.STONE.defaultBlockState());
         var blocked = SimulationAutoConstruction.build(player,host,3);
-        h.assertTrue(!blocked.successful() && count(player,frameItem()) == 21 && count(player,glass().asItem()) == 4, "interior obstruction spends nothing");
+        h.assertTrue(!blocked.successful() && count(player,frameItem()) == 20 && count(player,glass().asItem()) == 4, "interior obstruction spends nothing");
         h.assertTrue(h.getLevel().getBlockState(obstacle).is(Blocks.STONE) && h.getLevel().getBlockState(min).isAir(), "obstacle and all missing cells stay unchanged");
         h.getLevel().setBlockAndUpdate(obstacle,Blocks.AIR.defaultBlockState());
-        player.getInventory().clearContent();supply(player,frameItem(),20);supply(player,glass().asItem(),4);
+        player.getInventory().clearContent();supply(player,frameItem(),19);supply(player,glass().asItem(),4);
         var missing = SimulationAutoConstruction.build(player,host,3);
-        h.assertTrue(!missing.successful() && count(player,frameItem()) == 20 && count(player,glass().asItem()) == 4, "one missing frame aborts the entire build");
+        h.assertTrue(!missing.successful() && count(player,frameItem()) == 19 && count(player,glass().asItem()) == 4, "one missing frame aborts the entire build");
         h.assertTrue(h.getLevel().getBlockState(min).isAir() && host.structure() == null, "missing materials place no partial structure");
         player.discard();h.succeed();
     }
@@ -149,7 +226,7 @@ public final class ChamberAutoConstructionGameTests {
         NeoForge.EVENT_BUS.addListener(cancel);
         try {
             var result = SimulationAutoConstruction.build(player,host,3);
-            h.assertTrue(!result.successful() && result.reason().equals("formation_cancelled") && result.placed() == 25, "completed placement reports when chamber formation is vetoed");
+            h.assertTrue(!result.successful() && result.reason().equals("formation_cancelled") && result.placed() == 24, "completed placement reports when chamber formation is vetoed");
             h.assertTrue(host.structure() == null && SimulationStructureValidator.validate(host,min,3).valid(), "valid paid blocks remain available to form later");
         } finally { NeoForge.EVENT_BUS.unregister(cancel); }
         player.discard();h.succeed();
@@ -165,9 +242,9 @@ public final class ChamberAutoConstructionGameTests {
         h.assertTrue(host.structure() == null && count(player,frameItem()) == 128, "closed menu cannot build");
         player.containerMenu = menu;menu.receiveClientAction("simulationBuild","null");
         h.assertTrue(host.structure() != null && host.structure().size() == 7, "server uses selected external size");
-        h.assertTrue(count(player,frameItem()) == 11 && count(player,glass().asItem()) == 28, "menu construction spends exact materials");
+        h.assertTrue(count(player,frameItem()) == 36 && count(player,glass().asItem()) == 28, "menu construction spends exact shell materials without filling upgrade slots");
         menu.receiveClientAction("simulationSize","3");menu.receiveClientAction("simulationBuild","null");
-        h.assertTrue(host.structure().size() == 7 && count(player,frameItem()) == 11, "formed menu clicks never resize the chamber");
+        h.assertTrue(host.structure().size() == 7 && count(player,frameItem()) == 36, "formed menu clicks never resize the chamber");
         player.discard();h.succeed();
     }
 

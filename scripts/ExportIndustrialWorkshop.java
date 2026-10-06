@@ -1,6 +1,8 @@
 import dev.overloadsim.core.IndustrialMachineMesh;
 import dev.overloadsim.core.EmitterReactorMesh;
 import dev.overloadsim.core.GateMatrixMesh;
+import dev.overloadsim.core.DeflectorShellMesh;
+import dev.overloadsim.core.ReceiverPedestalMesh;
 import dev.overloadsim.core.ReceiverShellMesh;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,19 +23,19 @@ class ExportIndustrialWorkshop {
         Path root = Path.of(args.length == 0 ? "." : args[0]).toAbsolutePath().normalize();
         boolean emitter = args.length > 1 && args[1].equals("emitter");
         boolean gate=args.length>1&&(args[1].equals("constraint")||args[1].equals("focus"));
+        boolean deflector=args.length>1&&args[1].equals("deflector");
         if(gate){
             group("01 · 既有内环与控制器开口",()->{for(var face:IndustrialMachineMesh.withoutCell(IndustrialMachineMesh.armouredRing(2,3.05),0,-3,0))mesh(face.quad(),face.tile(),false);});
             group(args[1].equals("focus")?"02 · 双层镜圈与青色瞄准符文":"02 · 分段外圈与粉色约束符文",()->{for(var face:IndustrialMachineMesh.withoutCell(GateMatrixMesh.outer(args[1].equals("focus")),0,-3,0))mesh(face.quad(),face.tile(),false);});
         }else if (emitter) {
-            for (String name : EmitterReactorMesh.pieces().stream().map(EmitterReactorMesh.Piece::group).distinct().toList()) {
-                group(name, () -> {
-                    var surfaces = new ArrayList<IndustrialMachineMesh.Surface>();
-                    for (var piece : EmitterReactorMesh.pieces()) if (piece.group().equals(name)) {
-                        IndustrialMachineMesh.box(surfaces,piece.tile(),piece.x0(),piece.y0(),piece.z0(),piece.x1(),piece.y1(),piece.z1());
-                    }
-                    for (var face : IndustrialMachineMesh.withoutCell(surfaces,0,0,-2)) mesh(face.quad(),face.tile(),false);
-                });
+            var names=List.of("01 · 合并陶瓷外壳","02 · 外部装甲","03 · 独立粉色导光环","04 · 像素发光芯","05 · 散热槽与螺栓");
+            var visible=IndustrialMachineMesh.withoutCell(EmitterReactorMesh.surfaces(),0,0,-2);
+            for(int i=0;i<names.size();i++){
+                final int groupIndex=i;
+                group(names.get(i),()->{for(var face:visible){int tile=face.tile();int index=tile==5?0:tile==7||tile==44?1:tile==41?2:tile==40||tile==42?3:4;if(index==groupIndex)mesh(face.quad(),tile,false);}});
             }
+        } else if(deflector){
+            group("01 · 合并像素陶瓷球壳 · 六个光学开口",()->{for(var face:DeflectorShellMesh.surfaces())mesh(face.quad(),face.tile(),false);});
         } else {
         group("01 · 分段装甲骨架", () -> {
             var surfaces = new ArrayList<IndustrialMachineMesh.Surface>();
@@ -44,7 +46,7 @@ class ExportIndustrialWorkshop {
             for (var face : IndustrialMachineMesh.withoutCell(surfaces,0,0,-3)) mesh(face.quad(), face.tile(), false);
         });
         group("02 · 双层机械底座", () -> {
-            for (var face : IndustrialMachineMesh.receiverPlinth()) mesh(face.quad(), face.tile(), false);
+            for (var face : ReceiverPedestalMesh.surfaces()) mesh(face.quad(), face.tile(), false);
         });
         group("03 · 淡粉透明球壳", () -> {
             var surfaces = new ArrayList<IndustrialMachineMesh.Surface>();
@@ -57,11 +59,11 @@ class ExportIndustrialWorkshop {
                 + "\"relative_path\":\"../../src/main/resources/assets/overload_sim/textures/block/laser_pixel_atlas.png\","
                 + "\"visible\":true,\"saved\":true,\"source\":\"data:image/png;base64," + Base64.getEncoder().encodeToString(atlas) + "\"}";
         String project = "{\"meta\":{\"format_version\":\"5.0\",\"model_format\":\"free\",\"box_uv\":false},"
-                + "\"name\":\"" + (gate?"Lightning Tech Simulation · "+args[1]+" gate":emitter ? "Lightning Tech Simulation · Pixel reactor emitter" : "Industrial particle constrainer")
+                + "\"name\":\"" + (gate?"Lightning Tech Simulation · "+args[1]+" gate":deflector?"Lightning Tech Simulation · Deflector sphere":emitter ? "Lightning Tech Simulation · Pixel reactor emitter" : "Industrial particle constrainer")
                 + "\",\"resolution\":{\"width\":128,\"height\":128},"
                 + "\"credit\":\"qiqi · exact Java renderer mesh; pixel atlas authored in native Blockbench. Controller/port remain ordinary interactive blocks in game.\","
                 + "\"elements\":[" + String.join(",", elements) + "],\"outliner\":[" + String.join(",", groups) + "],\"textures\":[" + texture + "]}";
-        Path output = root.resolve("art/blockbench/"+(gate?"laser-"+args[1]+"-gate-formed.bbmodel":emitter ? "laser-emitter-reactor-formed.bbmodel" : "particle-constrainer-formed.bbmodel"));
+        Path output = root.resolve("art/blockbench/"+(gate?"laser-"+args[1]+"-gate-formed.bbmodel":deflector?"laser-deflector-formed.bbmodel":emitter ? "laser-emitter-reactor-formed.bbmodel" : "particle-constrainer-formed.bbmodel"));
         Files.writeString(output, project + "\n");
         System.out.println("Exported " + elements.size() + " exact renderer faces in " + groups.size() + " editable groups: " + output);
     }

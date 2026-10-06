@@ -128,7 +128,7 @@ NeoForge.EVENT_BUS 的事件：
 
 机器实现 AE2 `IUpgradeableObject`，`getUpgrades()` 返回原生 AE2 升级库存，支持直接手持加速卡右键插入。`Upgrades` 注册四张加速卡；每次插入均检查 `accelerationCardLimit`。升级库存单独保存为 `Upgrades`；alpha.1/alpha.2 的主库存槽 2 自动拆为最多四张独立卡，并保留物品组件和其他槽位置。降低配置上限不会销毁已安装的卡，只限制生效数量与继续插入。
 
-自动弹出只移动输出，最多每次 64 件，默认每 10 tick 尝试；六面可分别开关，按接收方真实余量扣除，未加载区块不访问。频率接口实现闪电科技公开的 FrequencyBindingHost，并使用其共享界面和记忆卡处理。
+自动弹出只移动输出，最多每次 64 件，默认每 10 tick 尝试；六面可分别开关，按接收方真实余量扣除，未加载区块不访问。频率接口实现 AE2LT 公开的 `FrequencyBindingHost`，并使用其过载频率卡、共享界面和 AE 记忆卡处理。普通保存与区块卸载保留自身绑定及频率的离线设备记录，卸载仍释放真实节点和无线连接；永久移除才注销设备。频道容量、权限与安全检查由前置处理。多方块和激光的结构接口输出约定分别见 [多方块 API](multiblock-api.md) 与 [激光 API](laser-particle-api.md)。
 
 GuideME 页面位于 `assets/overload_sim/ae2guide/overload-simulation.md`，中文覆盖位于 `_zh_cn`，item_ids 绑定三种水晶与模拟室。替换资源包可以进一步扩写或翻译。
 

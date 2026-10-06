@@ -14,6 +14,7 @@ import com.moakiee.ae2lt.api.frequency.*;
 import dev.overloadsim.*;
 import dev.overloadsim.api.*;
 import dev.overloadsim.compat.LightningNetwork;
+import dev.overloadsim.compat.FrequencyBindingLifecycle;
 import dev.overloadsim.core.SimulationRules;
 import dev.overloadsim.data.*;
 import net.minecraft.core.*;
@@ -35,6 +36,8 @@ import net.neoforged.neoforge.common.NeoForge;
 public class SimulationChamberBlockEntity extends AENetworkedBlockEntity implements IActionHost,FrequencyBindingHost,IUpgradeableObject {
     public static final int OUTPUT_START=4,SLOTS=13;
     private final FrequencyBindingAccess frequency=FrequencyApi.createBinding(this);
+    // NeoForge unloads first, then calls setRemoved; neither callback should erase the offline device entry.
+    private boolean frequencyUnloading;
     private final IUpgradeInventory upgrades=new SimulationUpgrades(this::saveChanges);
     private final ItemStackHandler inventory=new ItemStackHandler(SLOTS){
         @Override public boolean isItemValid(int slot,ItemStack stack){return switch(slot){case 0->stack.is(ModContent.PERFECT.get())&&CrystalDataAccess.read(stack).isPresent();case 1->BuiltInRegistries.ITEM.getKey(stack.getItem()).equals(ResourceLocation.parse("ae2lt:lightning_collapse_matrix"));case 3->true;default->false;};}
@@ -189,10 +192,11 @@ public class SimulationChamberBlockEntity extends AENetworkedBlockEntity impleme
     @Override public void saveFrequencyBindingChanges(){saveChanges();}
     @Override public void markFrequencyBindingForUpdate(){markForClientUpdate();}
     @Override public void onMainNodeStateChanged(IGridNodeListener.State reason){frequency.onMainNodeStateChanged(reason);}
+    @Override public void onLoad(){frequencyUnloading=false;super.onLoad();}
     @Override public void onReady(){super.onReady();frequency.onReady();}
-    @Override public void setRemoved(){frequency.setRemoved();super.setRemoved();}
-    @Override public void onChunkUnloaded(){frequency.setRemoved();super.onChunkUnloaded();}
-    @Override public void clearRemoved(){super.clearRemoved();frequency.clearRemoved();}
+    @Override public void setRemoved(){if(!frequencyUnloading)frequency.setRemoved();super.setRemoved();}
+    @Override public void onChunkUnloaded(){frequencyUnloading=true;FrequencyBindingLifecycle.chunkUnloaded(frequency);super.onChunkUnloaded();}
+    @Override public void clearRemoved(){frequencyUnloading=false;super.clearRemoved();frequency.clearRemoved();}
     @Override public IGridNode getActionableNode(){return getMainNode().getNode();}
     @Override public Set<Direction> getGridConnectableSides(BlockOrientation o){return EnumSet.allOf(Direction.class);}
     @Override public AECableType getCableConnectionType(Direction d){return AECableType.SMART;}

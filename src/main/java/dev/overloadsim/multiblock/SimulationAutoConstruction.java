@@ -78,7 +78,7 @@ public final class SimulationAutoConstruction {
                     if (kind==SimulationPartBlock.Kind.OVERLOAD && ++overloads>1
                             || kind==SimulationPartBlock.Kind.SMELTING && ++smelting>1) throw new IllegalArgumentException("duplicates");
                     expected = existing;
-                } else expected = existing.is(FRAMES) ? existing : frame;
+                } else expected = existing.is(FRAMES) ? existing : Blocks.AIR.defaultBlockState();
             } else {
                 if (existing.is(MultiblockContent.GLASS.get())) {
                     if (!(level.getBlockEntity(pos) instanceof SimulationMemberBlockEntity member) || !member.ownedBy(host))

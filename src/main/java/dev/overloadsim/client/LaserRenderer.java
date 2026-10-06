@@ -7,6 +7,8 @@ import dev.overloadsim.core.ReceiverShellMesh;
 import dev.overloadsim.core.IndustrialMachineMesh;
 import dev.overloadsim.core.EmitterReactorMesh;
 import dev.overloadsim.core.GateMatrixMesh;
+import dev.overloadsim.core.DeflectorShellMesh;
+import dev.overloadsim.core.ReceiverPedestalMesh;
 import dev.overloadsim.core.ReceiverParticleVisuals;
 import dev.overloadsim.laser.LaserContent;
 import dev.overloadsim.laser.LaserKind;
@@ -134,13 +136,16 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
         var porcelain = buffers.getBuffer(RenderType.entitySolid(InventoryMenu.BLOCK_ATLAS));
         var basis=basis(be);
         var skin=skin(be,basis);
-        var emissive = be.kind()==LaserKind.EMITTER||be.kind()==LaserKind.CONSTRAINT||be.kind()==LaserKind.FOCUS
-                ? buffers.getBuffer(RenderType.beaconBeam(InventoryMenu.BLOCK_ATLAS,false)) : porcelain;
+        var emissive = buffers.getBuffer(RenderType.beaconBeam(InventoryMenu.BLOCK_ATLAS,false));
         industrialMesh(skin.mesh,poses.last(),porcelain,sprite,center,light,basis,emissive);
         if(be.kind()==LaserKind.RECEIVER) {
             // Keep the established fixed translucent buffer; never flush it while opaque atlas geometry is queued.
             var glass=buffers.getBuffer(RenderType.entityTranslucent(InventoryMenu.BLOCK_ATLAS));
             shellMesh(skin.glass,poses.last(),glass,sprite,center,light,basis,66.5f,2.5f,11,11);
+            if(be.receiverPedestalLayout()) {
+                var screen=Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(ModContent.id("block/simulation_controller_ecg"));
+                shellMesh(List.of(ReceiverPedestalMesh.screen()),poses.last(),emissive,screen,center,LightTexture.FULL_BRIGHT,basis,0,0,128,128);
+            }
         }
     }
 
@@ -174,8 +179,9 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
             }
             panes=glassMesh.stream().map(IndustrialMachineMesh.Surface::quad).toList();
             if(pedestal) {
-                var plinth=IndustrialMachineMesh.receiverPlinth();
+                var plinth=ReceiverPedestalMesh.surfaces();
                 for(var opening:openings) {
+                    if(opening.equals(BlockPos.ZERO))continue;
                     var local=basis.local(Vec3.atLowerCornerOf(opening).subtract(centerOffset));
                     if(local.y<=-3.5)plinth=IndustrialMachineMesh.withoutCell(plinth,local.x,local.y,local.z);
                 }
@@ -198,11 +204,11 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
                 if(Math.abs(local.x)<.01&&Math.abs(local.y)<.01&&local.z>=0)continue;
                 result=new ArrayList<>(IndustrialMachineMesh.withoutCell(result,local.x,local.y,local.z));
             }
-        } else {
-            // Deflectors keep their voxel body under individual armoured panels.
-            for(var entry:be.structureTemplate().entrySet())if(entry.getValue()==LaserStructureGeometry.Part.FRAME&&!openings.contains(entry.getKey())) {
-                var local=basis.local(Vec3.atLowerCornerOf(entry.getKey()).subtract(centerOffset));
-                result.addAll(IndustrialMachineMesh.translated(IndustrialMachineMesh.framePanelMesh(),local.x,local.y,local.z));
+        } else if(be.kind()==LaserKind.DEFLECTOR) {
+            result.addAll(DeflectorShellMesh.surfaces());
+            for(var opening:openings) {
+                var local=basis.local(Vec3.atLowerCornerOf(opening).subtract(centerOffset));
+                result=new ArrayList<>(IndustrialMachineMesh.withoutCell(result,local.x,local.y,local.z));
             }
         }
         var next=new Skin(facing,pedestal,tick,List.copyOf(openings),List.copyOf(result),panes);
@@ -219,19 +225,13 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
         for(var surface:mesh) {
             float u=(surface.tile()%8)*16+.5f,v=(surface.tile()/8)*16+.5f;
             var q=surface.quad();int panelLight=surface.glow()?LightTexture.FULL_BRIGHT:light;
-            // Establish the cap's depth before translucent optical-port glass.
-            // The second opaque pass uses the unlit beacon shader: the entity
-            // emissive shader still applies directional normal shading.
-            shellVertex(q.a(),pose,vertices,sprite,center,panelLight,basis,u,v,15,15);
-            shellVertex(q.b(),pose,vertices,sprite,center,panelLight,basis,u,v,15,15);
-            shellVertex(q.c(),pose,vertices,sprite,center,panelLight,basis,u,v,15,15);
-            shellVertex(q.d(),pose,vertices,sprite,center,panelLight,basis,u,v,15,15);
-            if(surface.glow()&&emissive!=vertices) {
-                shellVertex(q.a(),pose,emissive,sprite,center,panelLight,basis,u,v,15,15);
-                shellVertex(q.b(),pose,emissive,sprite,center,panelLight,basis,u,v,15,15);
-                shellVertex(q.c(),pose,emissive,sprite,center,panelLight,basis,u,v,15,15);
-                shellVertex(q.d(),pose,emissive,sprite,center,panelLight,basis,u,v,15,15);
-            }
+            // Each surface is drawn once; the opaque beacon shader keeps lights
+            // unshaded while establishing depth before translucent port glass.
+            var target=surface.glow()?emissive:vertices;
+            shellVertex(q.a(),pose,target,sprite,center,panelLight,basis,u,v,15,15);
+            shellVertex(q.b(),pose,target,sprite,center,panelLight,basis,u,v,15,15);
+            shellVertex(q.c(),pose,target,sprite,center,panelLight,basis,u,v,15,15);
+            shellVertex(q.d(),pose,target,sprite,center,panelLight,basis,u,v,15,15);
         }
     }
 

@@ -53,7 +53,7 @@ public final class SimulationStructureValidator {
                 var kind=MultiblockData.module(block);
                 if(kind!=null)switch(kind){
                     case FRAME->{}case T1->t1++;case T2->t2++;case T3->t3++;case FORTUNE->f++;case OVERLOAD->o++;case SMELTING->s++;
-                }else if(!state.is(FRAMES))return new Result(null,"floor",p);
+                }else if(!state.isAir()&&!state.is(FRAMES))return new Result(null,"floor",p);
             }else{
                 if(block==MultiblockContent.GLASS.get()){
                     if(!(level.getBlockEntity(p) instanceof SimulationMemberBlockEntity m)||!m.ownedBy(controller))return new Result(null,"owned",p);

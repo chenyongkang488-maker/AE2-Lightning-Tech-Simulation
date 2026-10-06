@@ -70,12 +70,6 @@ public final class EmitterReactorMesh {
         p.add(new Piece(group,tile,glow,x0,y0,z0,x1,y1,z1));
     }
     private static List<IndustrialMachineMesh.Surface> mesh() {
-        var result=new ArrayList<IndustrialMachineMesh.Surface>();
-        for(var p:PIECES) {
-            var box=new ArrayList<IndustrialMachineMesh.Surface>();
-            IndustrialMachineMesh.box(box,p.tile,p.x0,p.y0,p.z0,p.x1,p.y1,p.z1);
-            for(var surface:box)result.add(new IndustrialMachineMesh.Surface(surface.quad(),p.tile,p.glow));
-        }
-        return List.copyOf(result);
+        return PixelAssemblyMesh.build(PIECES.stream().map(p->new PixelAssemblyMesh.Box(p.tile,p.glow,p.x0,p.y0,p.z0,p.x1,p.y1,p.z1)).toList());
     }
 }

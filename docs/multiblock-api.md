@@ -34,6 +34,10 @@
 
 控制器界面提供外部尺寸 3..7 的选择和自动搭建。控制器放在底面前边的中间位置，结构向朝向的反方向延伸；偶数尺寸使用 `(size-1)/2` 的整数下取整位置。已有合法框架、玻璃、底面升级和单个过载接口会保留；已成型结构不能用此按钮调整尺寸。`SimulationAutoConstruction.plan(host, size)` 和 `build(player, host, size)` 使用 [通用自动搭建事务](construction-api.md)，材料优先背包，不足从宿主连接的活动 AE 网络补齐。
 
+单方块模拟室和多方块控制器均实现 AE2LT 的 `FrequencyBindingHost`，使用原生过载频率卡、共享频率界面和 AE 记忆卡。控制器自身的频率与结构接口的频率分别保存；控制器界面优先显示自身绑定，未绑定时保留显示结构接口频率的行为。绑定遵循前置的频道容量、权限与安全规则，连网不免除有效结构、模板和生产费用检查。区块卸载保留绑定及频率离线设备列表，同时释放真实节点和无线连接；永久移除控制器才注销设备。
+
+多方块的 HV/EHV 供能和自动搭建材料可来自控制器当前的活动有线或无线网络。产物自动导出仍要求结构有效、相关区块已加载，并且结构上的过载接口与控制器保有有效桥接连接；仅为控制器无线绑定频率不会启用这条结构接口的物品输出。接口断开时缓冲保留产物，可手动或通过既有物品能力提取。桥接只释放自己创建且仍存在的连接，不会再次销毁已被 AE2 移除的边或删除外部连接。
+
 继续使用 CrystalDataAccess 和 SimulationExtensions.registerOutput 注册水晶数据与产物提供器。新的事件位于 dev.overloadsim.api.MultiblockSimulationEvents，投递到 NeoForge.EVENT_BUS：
 
 - BeforeStructureForm：可取消；提供 controller 与 immutable structure。事件后重新校验结构。

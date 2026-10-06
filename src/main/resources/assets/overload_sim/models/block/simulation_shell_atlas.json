@@ -7,8 +7,8 @@
     128
   ],
   "textures": {
-    "particle": "overload_sim:block/simulation_frame_formed",
-    "0": "overload_sim:block/simulation_shell_atlas"
+    "0": "overload_sim:block/simulation_shell_atlas",
+    "particle": "overload_sim:block/simulation_frame_formed"
   },
   "elements": [
     {

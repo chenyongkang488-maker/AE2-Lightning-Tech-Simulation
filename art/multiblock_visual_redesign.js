@@ -1,6 +1,6 @@
 // Executed inside Blockbench desktop. Canvas painting, editable cubes and Java exports share one source.
-globalThis.drawMultiblockSimulation=async function(){
-    const ROOT='D:/MinecraftDev/OverloadSimulation';
+globalThis.drawMultiblockSimulation=async function({root='D:/MinecraftDev/OverloadSimulation',shellOnly=false}={}){
+    const ROOT=root;
     const write=(p,v)=>Blockbench.writeFile(ROOT+'/'+p,{savetype:'text',content:typeof v==='string'?v:JSON.stringify(v,null,2)});
     const png=(name,c)=>Blockbench.writeFile(ROOT+'/src/main/resources/assets/overload_sim/textures/block/'+name+'.png',{savetype:'image',content:c.toDataURL()});
     const pause=()=>new Promise(r=>setTimeout(r,120));
@@ -27,8 +27,6 @@ globalThis.drawMultiblockSimulation=async function(){
             g.fillStyle='#d9cfdf';g.fillRect(9,9,14,23);g.fillRect(9,9,23,14);
             g.fillStyle='#edacd3';g.fillRect(4,4,28,2);g.fillRect(4,4,2,28);g.fillRect(26,26,6,2);g.fillRect(26,26,2,6);
             g.fillStyle='#fff2fb';g.fillRect(6,6,26,1);g.fillRect(6,6,1,26);g.fillRect(25,25,7,1);g.fillRect(25,25,1,7);
-            // Joint plate, recessed pink pin and two bright pixels echo the Tianshu corner without repeating a frame.
-            g.fillStyle='#8e8199';g.fillRect(10,10,11,11);g.fillStyle='#f8f2fa';g.fillRect(11,11,9,9);g.fillStyle='#d99ebf';g.fillRect(13,13,5,5);g.fillStyle='#ffe6f5';g.fillRect(13,13,3,1);
             // Copy the exact incoming beam-edge shading; do not add borders on disconnected edges.
             const h=tile('horizontal'),v=canvas(),vg=v.getContext('2d');vg.translate(32,0);vg.rotate(Math.PI/2);vg.drawImage(h,0,0);
             g.drawImage(h,31,0,1,32,31,0,1,32);g.drawImage(v,0,31,32,1,0,31,32,1);
@@ -79,6 +77,10 @@ globalThis.drawMultiblockSimulation=async function(){
         model.textures.particle='overload_sim:block/simulation_frame_formed';
         write('src/main/resources/assets/overload_sim/models/block/'+name+'.json',model);write('art/'+name+'.bbmodel',Codecs.project.compile());Project.save_path=ROOT+'/art/'+name+'.bbmodel';Project.saved=true;return model;
     }
+    async function saveShellAtlas(){
+        project('simulation_shell_atlas',128);const atlas=await texture('simulation_shell_atlas',shell,128,128,'横梁 · 竖柱 · 连续折角 · 顶盖 · 黑屏 · 过载接口');box(new Group({name:'连接外壳十种图块'}).init(),'图集预览',[0,0,0],[16,16,16],atlas,128);await save('simulation_shell_atlas');
+    }
+    if(shellOnly){await saveShellAtlas();return;}
     const ids=['simulation_controller','simulation_frame','simulation_efficiency_t1','simulation_efficiency_t2','simulation_efficiency_t3','simulation_fortune_module','simulation_overload_module','simulation_smelting_module'];
     for(let i=0;i<ids.length;i++){
         const id=ids[i];project(id);const c=canvas(),g=c.getContext('2d');g.drawImage(body,0,0);
@@ -90,7 +92,7 @@ globalThis.drawMultiblockSimulation=async function(){
         else write('src/main/resources/assets/overload_sim/blockstates/'+id+'.json',{variants:{'formed=false':{model:'overload_sim:block/'+id},'formed=true':{model:'overload_sim:block/'+(i===1?'simulation_frame_formed':id)}}});
     }
     project('simulation_frame_formed');var formed=await texture('simulation_frame_formed',tile('plain'));box(new Group({name:'连接模型加载前的白色回退面'}).init(),'白色面',[0,0,0],[16,16,16],formed,32,32,true);await save('simulation_frame_formed');
-    project('simulation_shell_atlas',128);var atlas=await texture('simulation_shell_atlas',shell,128,128,'横梁 · 竖柱 · 转角 · 顶盖 · 黑屏 · 过载接口');box(new Group({name:'连接外壳十种图块'}).init(),'图集预览',[0,0,0],[16,16,16],atlas,128);await save('simulation_shell_atlas');
+    await saveShellAtlas();
     for(const face of ['north','south','east','west','up','down']){
         const name='simulation_glass_'+face;project(name,16);const t=await texture(name,glass(),16,16,'无描边透明粉白玻璃');const bounds={north:[[0,0,1.15],[16,16,1.2]],south:[[0,0,14.8],[16,16,14.85]],west:[[1.15,0,0],[1.2,16,16]],east:[[14.8,0,0],[14.85,16,16]],up:[[0,14.8,0],[16,14.85,16]],down:[[0,1.15,0],[16,1.2,16]]}[face];
         const cube=box(new Group({name:'无边框玻璃薄面'}).init(),'玻璃',...bounds,t,16);const sides=['north','south'].includes(face)?['north','south']:['west','east'].includes(face)?['west','east']:['up','down'];for(const [side,f]of Object.entries(cube.faces))if(!sides.includes(side))f.texture=null;await save(name,'minecraft:translucent');

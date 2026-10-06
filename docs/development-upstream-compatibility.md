@@ -14,6 +14,20 @@
   线圈只接管自己的设置区域滚动，支持全部七行，原生电磁炮仍走上游代码。
 - AE2LT / Thunderbolt 的模组 ID 和本次使用的 API 包保持一致；新版所需改动
   位于兼容桥接和客户端 Mixin。开发编译继续使用旧 API，运行时前置可以切换。
+- 仪器原生频率绑定复用 `FrequencyBindingHost` / `FrequencyBindingAccess`，
+  不新增无线协议。两版 `FrequencyApi.createBinding` 返回的实现都有公开
+  `onChunkUnloaded()`，但该方法未写入 `FrequencyBindingAccess`；兼容层按实现类
+  缓存公开无参、返回 `void` 的实例方法，不访问私有字段或依赖实现包名。
+  卸载调用该钩子并由 AE2 销毁节点，保留离线设备列表。NeoForge 的
+  `LevelChunk.clearAllBlockEntities()` 会依次调用 `onChunkUnloaded()` 和
+  `setRemoved()`；宿主用瞬态卸载标记区分第二个回调与实际拆块，前者仅完成
+  运行状态清理，后者才调用绑定的 `setRemoved()` 注销设备。`clearRemoved()`
+  与 `onLoad()` 重置标记。正常区块重载从 NBT 新建方块实体，并通过
+  `LevelChunk.addAndRegisterBlockEntity()` 登记；已经初始化并销毁的 AE2
+  `ManagedGridNode` 不支持同实例再次初始化。实际拆块仍正确注销。
+  未知实现没有可访问的公开钩子时回退到公共删除回调以清理
+  运行连接，这类前置尚不保证保留离线列表。结构桥接释放前检查双端边登记，
+  防止对 AE2 已移除的连接重复调用非幂等 `destroy()`。
 
 ## 版本声明与实测范围
 

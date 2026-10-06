@@ -7,6 +7,7 @@ import appeng.menu.SlotSemantics;
 import appeng.menu.guisync.GuiSync;
 import appeng.menu.implementations.MenuTypeBuilder;
 import appeng.menu.slot.AppEngSlot;
+import com.moakiee.ae2lt.api.frequency.FrequencyBindingMenuHost;
 import dev.overloadsim.ModContent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
@@ -16,7 +17,7 @@ import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 
 /** Server-authoritative controls and sealed, insertion-only consumable slots. */
-public final class LaserMenu extends AEBaseMenu {
+public final class LaserMenu extends AEBaseMenu implements FrequencyBindingMenuHost {
     @GuiSync(30) public boolean enabled;
     @GuiSync(31) public boolean formed;
     @GuiSync(32) public boolean network;
@@ -34,6 +35,7 @@ public final class LaserMenu extends AEBaseMenu {
     @GuiSync(44) public String status = "";
     @GuiSync(45) public long extremeLightning;
     @GuiSync(46) public String buildFeedback="";
+    @GuiSync(47) public int frequency = -1;
     private final LaserMachineBlockEntity host;
     private final java.util.UUID hostIdentity;
 
@@ -120,6 +122,7 @@ public final class LaserMenu extends AEBaseMenu {
             outputMask = host.outputMask(); inputSide = host.forward().getOpposite().get3DDataValue();
             fuelRemaining = host.fuelRemaining(); particleRemaining = host.particleRemaining();
             activeFuel = host.activeFuel(); status = host.status(); extremeLightning = host.extremeLightning();
+            frequency = host.getFrequencyId();
         }
         super.broadcastChanges();
     }

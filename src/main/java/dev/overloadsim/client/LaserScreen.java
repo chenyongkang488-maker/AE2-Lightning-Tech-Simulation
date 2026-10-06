@@ -7,6 +7,8 @@ import appeng.client.gui.Icon;
 import appeng.client.gui.widgets.IconButton;
 import appeng.client.gui.style.StyleManager;
 import appeng.menu.SlotSemantics;
+import com.moakiee.ae2lt.api.frequency.FrequencyApi;
+import com.moakiee.ae2lt.client.TextureToggleButton;
 import dev.overloadsim.laser.LaserKind;
 import dev.overloadsim.laser.LaserMenu;
 import net.minecraft.client.gui.GuiGraphics;
@@ -26,6 +28,8 @@ public final class LaserScreen extends AEBaseScreen<LaserMenu> {
 
     public LaserScreen(LaserMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title, StyleManager.loadStyleDoc("/screens/overload_sim/laser.json"));
+        var frequencyButton=new TextureToggleButton(TextureToggleButton.ButtonType.FREQUENCY_BIND,b->FrequencyApi.openBindingScreen(menu));
+        frequencyButton.setTooltipAt(0,List.of(Component.translatable("gui.overload_sim.frequency")));addToLeftToolbar(frequencyButton);
         build=addToLeftToolbar(new IconButton(b->menu.autoBuild()) {
             @Override protected Icon getIcon(){return Icon.PLACEMENT_BLOCK;}
             @Override public List<Component> getTooltipMessage(){

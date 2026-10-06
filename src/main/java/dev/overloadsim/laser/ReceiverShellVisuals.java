@@ -39,6 +39,10 @@ public final class ReceiverShellVisuals {
         var cells = new HashSet<ReceiverShellRegistry.Point>();
         var template = controller.structureTemplate();
         if (controller.formed() && shellChunksLoaded(level, owner, template)) {
+            // A pedestal controller keeps its server block and interaction,
+            // while the shared base renders a flush ceramic body and screen.
+            if(controller.kind()==LaserKind.RECEIVER&&controller.receiverPedestalLayout())
+                cells.add(new ReceiverShellRegistry.Point(owner.getX(),owner.getY(),owner.getZ()));
             for (var entry : template.entrySet()) {
                 var pos = owner.offset(entry.getKey());
                 var block = level.getBlockState(pos).getBlock();

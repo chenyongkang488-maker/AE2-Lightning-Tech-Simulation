@@ -2,6 +2,8 @@ package dev.overloadsim.client;
 import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.Icon;
 import appeng.client.gui.widgets.IconButton;
+import com.moakiee.ae2lt.api.frequency.FrequencyApi;
+import com.moakiee.ae2lt.client.TextureToggleButton;
 import appeng.client.gui.style.StyleManager;
 import appeng.menu.SlotSemantics;
 import dev.overloadsim.core.MultiblockMenuLayout;
@@ -16,6 +18,8 @@ public final class MultiblockSimulationScreen extends AEBaseScreen<MultiblockSim
     private MultiblockMenuLayout layout;private boolean recovery;private final Button recoveryButton,buildButton,sizeButton;
     public MultiblockSimulationScreen(MultiblockSimulationMenu menu,Inventory inventory,Component title){
         super(menu,inventory,title,StyleManager.loadStyleDoc("/screens/overload_sim/multiblock.json"));
+        var frequencyButton=new TextureToggleButton(TextureToggleButton.ButtonType.FREQUENCY_BIND,b->FrequencyApi.openBindingScreen(menu));
+        frequencyButton.setTooltipAt(0,java.util.List.of(Component.translatable("gui.overload_sim.frequency")));addToLeftToolbar(frequencyButton);
         // AE2 populates its persistent toolbar during init; register this control exactly once.
         recoveryButton=addToLeftToolbar(new IconButton(b->{recovery=!recovery;init(minecraft,width,height);}){
             @Override protected Icon getIcon(){return Icon.BACK;}

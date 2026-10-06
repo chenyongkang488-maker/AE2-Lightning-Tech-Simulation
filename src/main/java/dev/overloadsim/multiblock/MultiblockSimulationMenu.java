@@ -6,6 +6,7 @@ import appeng.menu.guisync.GuiSync;
 import appeng.menu.SlotSemantics;
 import appeng.menu.slot.AppEngSlot;
 import appeng.api.inventories.PlatformInventoryWrapper;
+import com.moakiee.ae2lt.api.frequency.FrequencyBindingMenuHost;
 import dev.overloadsim.ModContent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -14,7 +15,7 @@ import net.minecraft.world.inventory.*;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import net.neoforged.neoforge.network.PacketDistributor;
-public class MultiblockSimulationMenu extends AEBaseMenu {
+public class MultiblockSimulationMenu extends AEBaseMenu implements FrequencyBindingMenuHost {
     public static final int OUTPUT_START=49,VISIBLE_OUTPUTS=32,PAGES=4;
     @GuiSync(30) public int capacity;
     @GuiSync(31) public int remaining;
@@ -119,8 +120,8 @@ public class MultiblockSimulationMenu extends AEBaseMenu {
             participants=batch==null?0:batch.inputs.size();multiplier=s==null?1:MultiblockData.policy().multiplier(s);
             // Totals are no longer part of this UI; avoid simulating a full network extraction every tick.
             hv=0;ehv=0;refresh();
-            problem=host.diagnostic();var cost=batch!=null?batch.cost:s==null?new MultiblockRules.Costs(1000,1,0):MultiblockData.policy().cost(1,s);feCost=cost.fe();hvCost=cost.hv();ehvCost=cost.ehv();frequency=-1;
-            if(s!=null&&s.networkInterface()!=null&&host.getLevel().hasChunkAt(s.networkInterface())&&host.getLevel().getBlockEntity(s.networkInterface()) instanceof com.moakiee.ae2lt.blockentity.OverloadedInterfaceBlockEntity port)frequency=port.getFrequencyBinding().getFrequencyId();
+            problem=host.diagnostic();var cost=batch!=null?batch.cost:s==null?new MultiblockRules.Costs(1000,1,0):MultiblockData.policy().cost(1,s);feCost=cost.fe();hvCost=cost.hv();ehvCost=cost.ehv();frequency=host.getFrequencyId();
+            if(frequency<=0&&s!=null&&s.networkInterface()!=null&&host.getLevel().hasChunkAt(s.networkInterface())&&host.getLevel().getBlockEntity(s.networkInterface()) instanceof com.moakiee.ae2lt.blockentity.OverloadedInterfaceBlockEntity port)frequency=port.getFrequencyBinding().getFrequencyId();
         }super.broadcastChanges();
     }
     @Override public boolean stillValid(Player player){

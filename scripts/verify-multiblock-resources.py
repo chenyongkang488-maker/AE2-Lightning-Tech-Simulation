@@ -38,6 +38,10 @@ for i in range(32):
 for rail in (4,5,6,25,26,27):
     assert corner.getpixel((0,rail))!=horizontal.getpixel((0,rail)),f'rail must turn at left edge {rail}'
     assert corner.getpixel((rail,0))!=vertical.getpixel((rail,0)),f'rail must turn at top edge {rail}'
+# The recessed elbow follows the uniform beam finish instead of carrying a separate joint badge.
+for y in range(9,23):
+    for x in range(9,23):
+        assert corner.getpixel((x,y))==corner.getpixel((9,9)),f'smooth corner beam finish {x},{y}'
 for path in (ROOT/'src/main/resources').rglob('*.json'):
     json.loads(path.read_text(encoding='utf8'))
 print(f'{len(names)+1} Blockbench projects, {checked} embedded PNGs and {len(names)} runtime models verified; resource JSON parses.')

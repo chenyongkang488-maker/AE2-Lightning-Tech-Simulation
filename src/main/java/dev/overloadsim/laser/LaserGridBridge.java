@@ -9,6 +9,7 @@ import appeng.api.networking.security.IActionSource;
 import appeng.api.stacks.AEKey;
 import com.moakiee.ae2lt.me.key.LightningKey;
 import dev.overloadsim.api.LaserExtensions;
+import dev.overloadsim.compat.GridConnections;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 
@@ -53,8 +54,10 @@ public final class LaserGridBridge {
     }
 
     public void disconnect() {
-        if (connection != null && ownedConnection) connection.destroy();
+        var previous = connection;
+        boolean owned = ownedConnection;
         connection = null; port = null; ownedConnection = false;
+        GridConnections.destroyOwned(previous, owned);
     }
 
     public long extractExtreme(long amount, boolean simulate) {

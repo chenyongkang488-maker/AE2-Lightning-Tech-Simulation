@@ -4,11 +4,6 @@ import com.mojang.math.Axis;
 import dev.overloadsim.ModContent;
 import dev.overloadsim.core.SimulationOrbState;
 import dev.overloadsim.core.SimulationInteriorLayout;
-import dev.overloadsim.core.IndustrialMachineMesh;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import dev.overloadsim.multiblock.SimulationControllerBlock;
 import dev.overloadsim.multiblock.SimulationControllerBlockEntity;
 import net.minecraft.client.Minecraft;
@@ -22,7 +17,6 @@ import org.joml.Matrix4f;
 /** One bounded renderer draws the working sphere, coils and screen without world entities. */
 public final class MultiblockSimulationRenderer implements BlockEntityRenderer<SimulationControllerBlockEntity> {
     private final BlockEntityRendererProvider.Context context;
-    private final Map<Integer,List<IndustrialMachineMesh.Surface>> cornerMeshes=new HashMap<>();
     public MultiblockSimulationRenderer(BlockEntityRendererProvider.Context context){this.context=context;}
     @Override public boolean shouldRenderOffScreen(SimulationControllerBlockEntity be){return be.visualSize()>0;}
     @Override public int getViewDistance(){return 96;}
@@ -33,7 +27,6 @@ public final class MultiblockSimulationRenderer implements BlockEntityRenderer<S
         long tick=be.getLevel().getGameTime();double time=tick+partial;float center=n/2f,inner=n-2;
         var state=SimulationOrbState.of(be.visualFlags());screen(be,poses,buffers,state.processing());
         poses.pushPose();poses.translate(ox,oy,oz);
-        mechanicalCorners(n,poses,buffers,light);
         float orbY=center+(float)Math.sin(time*.055)*inner*.025f,radius=inner*.275f;
         if(state.visible()){
             var orb=Minecraft.getInstance().getModelManager().getModel(net.minecraft.client.resources.model.ModelResourceLocation.standalone(ModContent.id("block/"+(state.smelting()?"simulation_energy_orb_orange":"simulation_energy_orb"))));
@@ -58,41 +51,6 @@ public final class MultiblockSimulationRenderer implements BlockEntityRenderer<S
                 }
             }
         }poses.popPose();
-    }
-    /** Small corner caps and roof-band vents preserve the original seamless rectangular shell. */
-    private void mechanicalCorners(int size,PoseStack poses,MultiBufferSource buffers,int light){
-        var mesh=cornerMeshes.computeIfAbsent(size,n->{
-            var result=new ArrayList<IndustrialMachineMesh.Surface>();
-            for(int x=0;x<2;x++)for(int y=0;y<2;y++)for(int z=0;z<2;z++){
-                double[] low={x==0?-.01:n-.30,y==0?-.01:n-.30,z==0?-.01:n-.30};
-                double[] high={x==0?.30:n+.01,y==0?.30:n+.01,z==0?.30:n+.01};
-                IndustrialMachineMesh.box(result,32,low[0],low[1],low[2],high[0],high[1],high[2]);
-                int[] sides={x,y,z};
-                for(int axis=0;axis<3;axis++){
-                    double[] a={x==0?.10:n-.20,y==0?.10:n-.20,z==0?.10:n-.20};
-                    double[] b={x==0?.20:n-.10,y==0?.20:n-.10,z==0?.20:n-.10};
-                    a[axis]=sides[axis]==0?-.016:n+.011;b[axis]=sides[axis]==0?-.011:n+.016;
-                    IndustrialMachineMesh.box(result,34,a[0],a[1],a[2],b[0],b[1],b[2]);
-                }
-            }
-            double c=n*.5;
-            for(int side=0;side<2;side++){
-                double low=side==0?-.013:n+.007,high=side==0?-.007:n+.013;
-                IndustrialMachineMesh.box(result,33,c-.28,n-.70,low,c+.28,n-.53,high);
-                IndustrialMachineMesh.box(result,33,low,n-.70,c-.28,high,n-.53,c+.28);
-            }
-            return List.copyOf(result);
-        });
-        var sprite=Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(ModContent.id("block/laser_pixel_atlas"));
-        var vertices=buffers.getBuffer(RenderType.entitySolid(InventoryMenu.BLOCK_ATLAS));var pose=poses.last();
-        for(var surface:mesh){
-            var quad=surface.quad();float u=surface.tile()%8*16+.5f,w=surface.tile()/8*16+.5f;
-            for(var p:List.of(quad.a(),quad.b(),quad.c(),quad.d()))
-                vertices.addVertex(pose.pose(),(float)p.x(),(float)p.y(),(float)p.z()).setColor(255,255,255,255)
-                        .setUv(sprite.getU((u+(float)p.u()*15)/128),sprite.getV((w+(float)p.v()*15)/128))
-                        .setOverlay(OverlayTexture.NO_OVERLAY).setLight(light)
-                        .setNormal(pose,(float)p.nx(),(float)p.ny(),(float)p.nz());
-        }
     }
     private static void screen(SimulationControllerBlockEntity be,PoseStack poses,MultiBufferSource buffers,boolean working){
         poses.pushPose();poses.translate(.5,0,.5);

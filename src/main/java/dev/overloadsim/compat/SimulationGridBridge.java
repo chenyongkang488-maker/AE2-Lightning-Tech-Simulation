@@ -26,7 +26,7 @@ public final class SimulationGridBridge implements SimulationLightningPayment.St
             if(connection==null)connection=GridHelper.createConnection(a,b);port=expected;
         }
     }
-    public void disconnect(){if(connection!=null){if(ownedConnection)connection.destroy();connection=null;}ownedConnection=false;port=null;}
+    public void disconnect(){var previous=connection;boolean owned=ownedConnection;connection=null;ownedConnection=false;port=null;GridConnections.destroyOwned(previous,owned);}
     @Override public long extract(boolean extreme,long amount,boolean simulate){
         if(amount<=0)return 0;
         var grid=host.getMainNode().getGrid();if(grid==null||!host.getMainNode().isActive())return 0;

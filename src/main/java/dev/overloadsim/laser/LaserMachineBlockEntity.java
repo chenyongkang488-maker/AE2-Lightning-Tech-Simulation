@@ -2,11 +2,17 @@ package dev.overloadsim.laser;
 
 import appeng.api.networking.GridFlags;
 import appeng.api.networking.IGridNode;
+import appeng.api.networking.IGridNodeListener;
 import appeng.api.networking.security.IActionHost;
 import appeng.api.orientation.BlockOrientation;
 import appeng.api.util.AECableType;
 import appeng.blockentity.grid.AENetworkedBlockEntity;
+import appeng.util.SettingsFrom;
+import com.moakiee.ae2lt.api.frequency.FrequencyApi;
+import com.moakiee.ae2lt.api.frequency.FrequencyBindingAccess;
+import com.moakiee.ae2lt.api.frequency.FrequencyBindingHost;
 import dev.overloadsim.api.LaserEvents;
+import dev.overloadsim.compat.FrequencyBindingLifecycle;
 import dev.overloadsim.core.LaserMath;
 import dev.overloadsim.core.LongEnergyBuffer;
 import dev.overloadsim.core.ParticleBuffer;
@@ -20,6 +26,7 @@ import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -27,6 +34,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.energy.IEnergyStorage;
@@ -34,7 +42,7 @@ import net.neoforged.neoforge.items.ItemStackHandler;
 import net.neoforged.neoforge.items.IItemHandler;
 
 /** Authoritative controller state. Rendering consumes a bounded snapshot and never settles resources. */
-public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implements IActionHost {
+public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implements IActionHost, FrequencyBindingHost {
     public static final long RECEIVER_FE_CAPACITY = 1_024_000_000_000_000_000L;
     public static final long MACHINE_FE_CAPACITY = 1_000_000_000L;
     public static final long PARTICLE_CAPACITY = 125_000L;
@@ -50,6 +58,9 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
     private long refundExtreme;
     private final LongEnergyBuffer energy;
     private final LaserGridBridge bridge = new LaserGridBridge(this);
+    private final FrequencyBindingAccess frequency = FrequencyApi.createBinding(this);
+    // NeoForge follows onChunkUnloaded with setRemoved; that second callback is not a permanent deletion.
+    private boolean frequencyUnloading;
     double aeInputFraction, aeOutputFraction;
 
     boolean enabled = true;
@@ -243,6 +254,7 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
 
     public void tick() {
         if (level == null || level.isClientSide || isRemoved()) return;
+        frequency.serverTick();
         // Every-tick validation covers commands, automation, unloaded chunks and cancelled placement events.
         checkStructure(); bridge.refresh();
         if (refundExtreme > 0) {
@@ -342,8 +354,8 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
         segments = new ArrayList<>(); // Light paths are recomputed after loaded-world validation; saved paths cannot survive a stale owner.
     }
 
-    @Override public void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) { super.saveAdditional(tag, registries); tag.put("LaserMachine", saveMachine(registries)); }
-    @Override public void loadTag(CompoundTag tag, HolderLookup.Provider registries) { super.loadTag(tag, registries); loadMachine(tag.getCompound("LaserMachine"), registries); }
+    @Override public void saveAdditional(CompoundTag tag, HolderLookup.Provider registries) { super.saveAdditional(tag, registries); frequency.save(tag); tag.put("LaserMachine", saveMachine(registries)); }
+    @Override public void loadTag(CompoundTag tag, HolderLookup.Provider registries) { super.loadTag(tag, registries); frequency.load(tag); loadMachine(tag.getCompound("LaserMachine"), registries); }
 
     @Override protected void writeToStream(RegistryFriendlyByteBuf data) {
         super.writeToStream(data);
@@ -398,12 +410,28 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
     }
 
     @Override public void onLoad() {
+        frequencyUnloading = false;
         super.onLoad();
         publishReceiverVisuals();
         if (level != null && !level.isClientSide) { clearBeam(); LaserStructureIndex.register(this); LaserNetwork.register(this); checkStructure(); }
     }
-    @Override public void setRemoved() { ReceiverShellVisuals.remove(this, receiverVisualToken); LaserStructureIndex.unregister(this); LaserNetwork.unregister(this); bridge.disconnect(); clearBeam(); super.setRemoved(); }
-    @Override public void onChunkUnloaded() { ReceiverShellVisuals.remove(this, receiverVisualToken); LaserStructureIndex.unregister(this); LaserNetwork.unregister(this); bridge.disconnect(); clearBeam(); super.onChunkUnloaded(); }
+    @Override public AENetworkedBlockEntity getFrequencyBindingBlockEntity() { return this; }
+    @Override public FrequencyBindingAccess getFrequencyBindingAccess() { return frequency; }
+    @Override public void saveFrequencyBindingChanges() { saveChanges(); }
+    @Override public void markFrequencyBindingForUpdate() { markForClientUpdate(); }
+    @Override public void onMainNodeStateChanged(IGridNodeListener.State reason) { frequency.onMainNodeStateChanged(reason); }
+    @Override public void onReady() { super.onReady(); frequency.onReady(); }
+    @Override public void setRemoved() { if (!frequencyUnloading) frequency.setRemoved(); ReceiverShellVisuals.remove(this, receiverVisualToken); LaserStructureIndex.unregister(this); LaserNetwork.unregister(this); bridge.disconnect(); clearBeam(); super.setRemoved(); }
+    @Override public void onChunkUnloaded() { frequencyUnloading = true; FrequencyBindingLifecycle.chunkUnloaded(frequency); ReceiverShellVisuals.remove(this, receiverVisualToken); LaserStructureIndex.unregister(this); LaserNetwork.unregister(this); bridge.disconnect(); clearBeam(); super.onChunkUnloaded(); }
+    @Override public void clearRemoved() { frequencyUnloading = false; super.clearRemoved(); frequency.clearRemoved(); }
+    @Override public void exportSettings(SettingsFrom mode, DataComponentMap.Builder builder, Player player) {
+        super.exportSettings(mode, builder, player);
+        frequency.exportMemorySettings(mode, builder, tag -> {});
+    }
+    @Override public void importSettings(SettingsFrom mode, DataComponentMap settings, Player player) {
+        super.importSettings(mode, settings, player);
+        frequency.importMemorySettings(mode, settings, tag -> {});
+    }
     @Override protected void onOrientationChanged(BlockOrientation orientation) { super.onOrientationChanged(orientation); invalidateStructure(); structureDirty = true; }
     @Override public IGridNode getActionableNode() { return getMainNode().getNode(); }
     @Override public Set<Direction> getGridConnectableSides(BlockOrientation orientation) { return EnumSet.allOf(Direction.class); }
