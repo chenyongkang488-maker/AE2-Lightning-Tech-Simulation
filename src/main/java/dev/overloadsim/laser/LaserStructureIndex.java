@@ -3,8 +3,10 @@ package dev.overloadsim.laser;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.WeakHashMap;
 import net.minecraft.core.BlockPos;
@@ -13,11 +15,12 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.level.BlockEvent;
+import org.jetbrains.annotations.Nullable;
 
 /** Server-thread ownership of shell and aperture cells, without keeping worlds alive. */
 public final class LaserStructureIndex {
     private record Owner(BlockPos controller, UUID identity) {}
-    private static final Map<Level, Map<BlockPos, Owner>> OWNERS = new WeakHashMap<>();
+    private static final Map<Level, Map<BlockPos, Set<Owner>>> OWNERS = new WeakHashMap<>();
     private static final Map<Level, Map<Owner, List<BlockPos>>> MEMBERS = new WeakHashMap<>();
     private static final Map<ServerLevel, Map<BlockPos, WeakReference<LaserMachineBlockEntity>>> CONTROLLERS = new WeakHashMap<>();
     private static boolean registered;
@@ -29,22 +32,52 @@ public final class LaserStructureIndex {
 
     /** Cross-system construction checks must also respect reserved empty laser apertures. */
     public static boolean occupiedByOther(Level level,BlockPos pos,net.minecraft.world.level.block.entity.BlockEntity host) {
-        var owners = OWNERS.get(level);
-        if (owners == null) return false;
-        var owner = owners.get(pos);
-        if (owner == null || host instanceof LaserMachineBlockEntity laser && owner.controller.equals(laser.getBlockPos()) && owner.identity.equals(laser.identity())) return false;
-        if (!level.hasChunkAt(owner.controller)) return true;
-        if (level.getBlockEntity(owner.controller) instanceof LaserMachineBlockEntity current && !current.isRemoved()
-                && current.identity().equals(owner.identity) && current.structure() != null) return true;
-        owners.remove(pos);
+        var claims = claims(level,pos);
+        if (claims == null) return false;
+        for (var owner : claims) {
+            if (host instanceof LaserMachineBlockEntity laser && owner.controller.equals(laser.getBlockPos()) && owner.identity.equals(laser.identity())) continue;
+            return true;
+        }
         return false;
+    }
+
+    /** Existing formed ownership only; a click never discovers or forms an unowned shell. */
+    public static @Nullable LaserMachineBlockEntity frameOwner(Level level, BlockPos pos) {
+        if (!(level instanceof ServerLevel) || !level.hasChunkAt(pos) || !level.getBlockState(pos).is(LaserContent.FRAME.get())) return null;
+        var claims = claims(level,pos);
+        if (claims == null || claims.size() != 1) return null;
+        var owner = claims.iterator().next();
+        if (!level.hasChunkAt(owner.controller)
+                || !(level.getBlockEntity(owner.controller) instanceof LaserMachineBlockEntity host)
+                || host.getLevel() != level || host.isRemoved() || !host.identity().equals(owner.identity)
+                || !(level.getBlockState(owner.controller).getBlock() instanceof LaserMachineBlock)
+                || !level.getBlockState(owner.controller).equals(host.getBlockState())) return null;
+        host.checkStructure();
+        var currentClaims = claims(level,pos);
+        if (!host.formed() || level.getBlockEntity(owner.controller) != host || !host.identity().equals(owner.identity)
+                || host.structure() == null || !host.structure().members().contains(pos)
+                || !level.getBlockState(pos).is(LaserContent.FRAME.get())
+                || host.structureTemplate().get(pos.subtract(host.getBlockPos())) != LaserStructureGeometry.Part.FRAME
+                || currentClaims == null || currentClaims.size() != 1 || !currentClaims.contains(owner)) return null;
+        return host;
+    }
+
+    private static @Nullable Set<Owner> claims(Level level, BlockPos pos) {
+        var owners = OWNERS.get(level);
+        var claims = owners == null ? null : owners.get(pos);
+        if (claims == null) return null;
+        claims.removeIf(owner -> level.hasChunkAt(owner.controller)
+                && (!(level.getBlockEntity(owner.controller) instanceof LaserMachineBlockEntity host)
+                    || host.isRemoved() || host.getLevel() != level || !host.identity().equals(owner.identity) || host.structure() == null));
+        if (claims.isEmpty()) { owners.remove(pos); return null; }
+        return claims;
     }
 
     public static void bind(LaserMachineBlockEntity host, LaserStructure structure) {
         release(host);
         var owners = OWNERS.computeIfAbsent(host.getLevel(), ignored -> new HashMap<>());
         var owner = new Owner(host.getBlockPos().immutable(), host.identity());
-        for (var pos : structure.members()) owners.put(pos, owner);
+        for (var pos : structure.members()) owners.computeIfAbsent(pos, ignored -> new HashSet<>()).add(owner);
         MEMBERS.computeIfAbsent(host.getLevel(), ignored -> new HashMap<>()).put(owner, structure.members());
     }
 
@@ -54,7 +87,10 @@ public final class LaserStructureIndex {
         if (owners == null || bindings == null) return;
         var owner = new Owner(host.getBlockPos(), host.identity());
         var members = bindings.remove(owner);
-        if (members != null) for (var pos : members) owners.remove(pos, owner);
+        if (members != null) for (var pos : members) {
+            var claims = owners.get(pos);
+            if (claims != null) { claims.remove(owner); if (claims.isEmpty()) owners.remove(pos); }
+        }
     }
 
     public static boolean touching(Level level, BlockPos pos, LaserMachineBlockEntity host) {
@@ -63,11 +99,13 @@ public final class LaserStructureIndex {
         if (owners == null) return false;
         for (var direction : net.minecraft.core.Direction.values()) {
             var adjacent = pos.relative(direction);
-            var owner = owners.get(adjacent);
-            if (owner == null || owner.controller.equals(host.getBlockPos()) && owner.identity.equals(host.identity())) continue;
-            if (!occupied(level, adjacent, host)) continue;
-            if (level.hasChunkAt(owner.controller) && level.getBlockEntity(owner.controller) instanceof LaserMachineBlockEntity other && other.kind() == LaserKind.CORE) continue;
-            return true;
+            var claims = claims(level,adjacent);
+            if (claims == null) continue;
+            for (var owner : claims) {
+                if (owner.controller.equals(host.getBlockPos()) && owner.identity.equals(host.identity())) continue;
+                if (level.hasChunkAt(owner.controller) && level.getBlockEntity(owner.controller) instanceof LaserMachineBlockEntity other && other.kind() == LaserKind.CORE) continue;
+                return true;
+            }
         }
         return false;
     }
@@ -102,10 +140,12 @@ public final class LaserStructureIndex {
     public static void changed(LevelAccessor accessor, BlockPos pos, boolean removed) {
         if (!(accessor instanceof Level level) || level.isClientSide) return;
         var owners = OWNERS.get(level);
-        var owner = owners == null ? null : owners.get(pos);
-        if (owner != null && level.hasChunkAt(owner.controller) && level.getBlockEntity(owner.controller) instanceof LaserMachineBlockEntity host
-                && host.identity().equals(owner.identity)) {
-            if (removed) host.memberRemoved(); else host.markStructureDirty();
+        var claims = owners == null ? null : owners.get(pos);
+        if (claims != null) for (var owner : List.copyOf(claims)) {
+            if (level.hasChunkAt(owner.controller) && level.getBlockEntity(owner.controller) instanceof LaserMachineBlockEntity host
+                    && !host.isRemoved() && host.identity().equals(owner.identity)) {
+                if (removed) host.memberRemoved(); else host.markStructureDirty();
+            }
         }
     }
 

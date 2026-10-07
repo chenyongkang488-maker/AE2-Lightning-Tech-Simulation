@@ -109,7 +109,15 @@ def verify():
     assert read(ASSETS/'sounds.json')['collapse_transition']['sounds'][0]['attenuation_distance']==24
     deflector=read(ROOT/'art/blockbench/laser-deflector-formed.bbmodel')
     assert deflector['meta']['model_format']=='free' and 100<len(deflector['elements'])<7000
+    assert len(deflector['outliner'])==2 and len(deflector['outliner'][1]['children'])==18, 'Central prism must be editable as its own group'
     assert base64.b64decode(deflector['textures'][0]['source'].split(',',1)[1])==native_atlas
+    laser_png=(ASSETS/'textures/block/laser_energy_flow.png').read_bytes()
+    laser=read(ROOT/'art/blockbench/laser-energy-flow.bbmodel')
+    assert base64.b64decode(laser['textures'][0]['source'].split(',',1)[1])==laser_png
+    animation=read(ASSETS/'textures/block/laser_energy_flow.png.mcmeta')['animation']
+    assert animation=={'width':32,'height':32,'frametime':2,'interpolate':True}
+    assert int.from_bytes(laser_png[16:20],'big')==32 and int.from_bytes(laser_png[20:24],'big')==32*64
+    assert read(ASSETS/'models/block/laser_energy_flow.json')['textures']['0']=='overload_sim:block/laser_energy_flow'
     style = read(ROOT / 'src/main/resources/assets/ae2/screens/overload_sim/laser.json')
     assert style['helpTopic'] == 'overload_sim:laser-particle.md'
     for folder in ('', '_zh_cn/'):

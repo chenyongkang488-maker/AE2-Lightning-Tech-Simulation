@@ -28,7 +28,7 @@ public final class LaserMenu extends AEBaseMenu implements FrequencyBindingMenuH
     @GuiSync(37) public long particleCount;
     @GuiSync(38) public long coreRemainder;
     @GuiSync(39) public int outputMask;
-    @GuiSync(40) public int inputSide;
+    @GuiSync(40) public int inputMask;
     @GuiSync(41) public int fuelRemaining;
     @GuiSync(42) public int particleRemaining;
     @GuiSync(43) public String activeFuel = "";
@@ -38,6 +38,7 @@ public final class LaserMenu extends AEBaseMenu implements FrequencyBindingMenuH
     @GuiSync(47) public int frequency = -1;
     private final LaserMachineBlockEntity host;
     private final java.util.UUID hostIdentity;
+    private final net.minecraft.core.BlockPos frameAnchor;
 
     public static MenuType<LaserMenu> createType() {
         return MenuTypeBuilder.create(LaserMenu::new, LaserMachineBlockEntity.class)
@@ -49,7 +50,8 @@ public final class LaserMenu extends AEBaseMenu implements FrequencyBindingMenuH
         super(LaserContent.MENU.get(), id, inventory, host);
         this.host = host;
         hostIdentity=host.identity();
-        inputSide = host.forward().getOpposite().get3DDataValue();
+        frameAnchor=dev.overloadsim.multiblock.FrameMenuAccess.openingAnchor(host);
+        inputMask=host.inputMask();
         if (host.kind() == LaserKind.RECEIVER) {
             var fuel = host.fuelInput();
             var wrapped = new PlatformInventoryWrapper(fuel);
@@ -84,11 +86,10 @@ public final class LaserMenu extends AEBaseMenu implements FrequencyBindingMenuH
             host.setBoost(Math.clamp(value + step * 100_000L, 100_000L, 9_000_000L));
         });
         registerClientAction("laserSide", Integer.class, side -> {
-            if (side == null || side < 0 || side >= 6 || !validAction()
-                    || host.kind() != LaserKind.DEFLECTOR || !validStructure()) return;
-            int input = host.forward().getOpposite().get3DDataValue();
-            if (side == input) return;
-            host.setOutputMask((host.outputMask() ^ (1 << side)) & 63 & ~(1 << input));
+            if (side == null || side < 2 || side >= 6 || !validAction()
+                    || host.kind() != LaserKind.DEFLECTOR) return;
+            var direction=net.minecraft.core.Direction.from3DDataValue(side);
+            host.setSideMode(direction,(host.sideMode(direction)+1)%3);
         });
         registerClientAction("laserBuild",()->{
             if(!validAction()||!host.identity().equals(hostIdentity)||!(getPlayer() instanceof net.minecraft.server.level.ServerPlayer player))return;
@@ -108,6 +109,7 @@ public final class LaserMenu extends AEBaseMenu implements FrequencyBindingMenuH
     }
 
     public LaserKind kind() { return host.kind(); }
+    public LaserMachineBlockEntity host(){return host;}
     public void toggleEnabled() { sendClientAction("laserEnabled"); }
     public void changeBoost(int step) { sendClientAction("laserBoost", step); }
     public void toggleSide(int side) { sendClientAction("laserSide", side); }
@@ -119,7 +121,7 @@ public final class LaserMenu extends AEBaseMenu implements FrequencyBindingMenuH
             boost = host.boost(); power = host.currentPower();
             energy = host.energy().stored(); energyCapacity = host.energy().capacity();
             particleCount = host.particles().stored(); coreRemainder = host.coreRemainder();
-            outputMask = host.outputMask(); inputSide = host.forward().getOpposite().get3DDataValue();
+            outputMask = host.outputMask(); inputMask = host.inputMask();
             fuelRemaining = host.fuelRemaining(); particleRemaining = host.particleRemaining();
             activeFuel = host.activeFuel(); status = host.status(); extremeLightning = host.extremeLightning();
             frequency = host.getFrequencyId();
@@ -128,6 +130,8 @@ public final class LaserMenu extends AEBaseMenu implements FrequencyBindingMenuH
     }
 
     @Override public boolean stillValid(Player player) {
+        if(player.level().isClientSide)return !host.isRemoved()&&player.level()==host.getLevel();
+        if(frameAnchor!=null)return dev.overloadsim.multiblock.FrameMenuAccess.validAnchor(player,host,hostIdentity,frameAnchor);
         return !host.isRemoved() && player.level() == host.getLevel()
                 && host.getLevel().hasChunkAt(host.getBlockPos())
                 && host.getLevel().getBlockEntity(host.getBlockPos()) == host

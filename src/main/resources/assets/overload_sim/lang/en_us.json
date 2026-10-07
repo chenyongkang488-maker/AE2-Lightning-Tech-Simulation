@@ -153,7 +153,7 @@
   "gui.overload_sim.laser.power": "Batch power: %s FE",
   "gui.overload_sim.laser.boost": "Boost: +%s FE",
   "gui.overload_sim.laser.boost_cost": "Pays the selected boost each batch",
-  "gui.overload_sim.laser.outputs": "Output faces; input is locked",
+  "gui.overload_sim.laser.outputs": "Horizontal ports: off / input / output",
   "gui.overload_sim.laser.side": "%s: %s",
   "gui.overload_sim.laser.core_remainder": "Remainder: %s / 512G FE",
   "gui.overload_sim.laser.core_hint": "Needs ≥1G FE; 512G FE per particle",
@@ -169,7 +169,7 @@
   "gui.overload_sim.laser.sealed_fuel": "Inserted fuel cannot be removed; pauses without particles or buffer space",
   "gui.overload_sim.laser.active_fuel": "Active: %s · Particle timer: %s ticks",
   "gui.overload_sim.laser.control_hint": "Enable after formation; disabling stops beams immediately",
-  "gui.overload_sim.laser.split_hint": "Splits power equally; all closed stops input",
+  "gui.overload_sim.laser.split_hint": "Click to cycle off, input and output. Outputs share energy equally. Top and bottom are closed.",
   "gui.overload_sim.laser.status": "Status: %s",
   "gui.overload_sim.laser.exact_power": "Exact batch power: %s FE",
   "gui.overload_sim.laser.exact_energy": "Exact buffer: %s / %s FE",
@@ -233,5 +233,8 @@
   "message.overload_sim.construction.formation_cancelled": "Placed %s blocks, but formation was denied. Check structure diagnostics.",
   "gui.overload_sim.laser.current_strength": "Current laser: %s FE/pulse",
   "gui.overload_sim.laser.exact_strength": "Current laser strength: %s FE/pulse",
-  "subtitles.overload_sim.collapse_transition": "Subspace contracts and expands"
+  "subtitles.overload_sim.collapse_transition": "Subspace contracts and expands",
+  "gui.overload_sim.laser.output": "Output",
+  "gui.overload_sim.construction.projection": "Construction projection",
+  "gui.overload_sim.construction.projection_hint": "Toggle preview and return to the world. Pink/cyan: missing frame/glass; amber/violet: crystal/port; green: correct; red: obstructed."
 }

@@ -36,12 +36,13 @@ public class MultiblockSimulationMenu extends AEBaseMenu implements FrequencyBin
     @GuiSync(46) public String constructionFeedback="";
     private final SimulationControllerBlockEntity host;
     private final UUID hostIdentity;
+    private final net.minecraft.core.BlockPos frameAnchor;
     private final ItemStackHandler display=new ItemStackHandler(VISIBLE_OUTPUTS);
     private final int[] quantities=new int[VISIBLE_OUTPUTS];
     private int revision;private boolean force=true;
     public static MenuType<MultiblockSimulationMenu> createType(){return MenuTypeBuilder.create(MultiblockSimulationMenu::new,SimulationControllerBlockEntity.class).withMenuTitle(h->Component.translatable("block.overload_sim.simulation_controller")).buildUnregistered(ModContent.id("simulation_controller"));}
     public MultiblockSimulationMenu(int id,Inventory inventory,SimulationControllerBlockEntity host){
-        super(MultiblockContent.MENU.get(),id,inventory,host);this.host=host;hostIdentity=host.identity();capacity=host.structure()==null?0:host.structure().capacity();
+        super(MultiblockContent.MENU.get(),id,inventory,host);this.host=host;hostIdentity=host.identity();frameAnchor=FrameMenuAccess.openingAnchor(host);capacity=host.structure()==null?0:host.structure().capacity();buildSize=host.selectedBuildSize();
         var crystals=new PlatformInventoryWrapper(host.crystals());var output=new PlatformInventoryWrapper(display);
         for(int i=0;i<49;i++){final int slot=i;addSlot(new SimulationCrystalSlot(crystals,i){
             @Override public boolean mayPickup(Player p){return true;}
@@ -55,11 +56,12 @@ public class MultiblockSimulationMenu extends AEBaseMenu implements FrequencyBin
         registerClientAction("bulkPage",Integer.class,p->{if(p>=0&&p<PAGES&&stillValid(inventory.player)){page=p;force=true;refresh();}});
         registerClientAction("simulationSize",Integer.class,size->{
             if(size==null||size<3||size>7||!validAction()||host.structure()!=null)return;
-            buildSize=size;constructionFeedback="";broadcastChanges();
+            if(!host.setSelectedBuildSize(size))return;
+            buildSize=host.selectedBuildSize();constructionFeedback="";broadcastChanges();
         });
         registerClientAction("simulationBuild",()->{
             if(!validAction()||!(getPlayer() instanceof ServerPlayer player))return;
-            var result=SimulationAutoConstruction.build(player,host,buildSize);
+            var result=SimulationAutoConstruction.build(player,host,host.selectedBuildSize());
             constructionFeedback=Component.Serializer.toJson(result.message(),host.getLevel().registryAccess());
             broadcastChanges();
         });
@@ -115,6 +117,7 @@ public class MultiblockSimulationMenu extends AEBaseMenu implements FrequencyBin
     }
     @Override public void broadcastChanges(){
         if(isServerSide()){
+            buildSize=host.selectedBuildSize();
             var s=host.structure();capacity=s==null?0:s.capacity();fe=host.energy().getEnergyStored();status=host.status();
             var batch=host.batch();remaining=batch==null?0:batch.remaining;duration=batch==null?s==null?180:MultiblockData.policy().duration(s):batch.duration;
             participants=batch==null?0:batch.inputs.size();multiplier=s==null?1:MultiblockData.policy().multiplier(s);
@@ -125,6 +128,8 @@ public class MultiblockSimulationMenu extends AEBaseMenu implements FrequencyBin
         }super.broadcastChanges();
     }
     @Override public boolean stillValid(Player player){
+        if(player.level().isClientSide)return !host.isRemoved()&&player.level()==host.getLevel();
+        if(frameAnchor!=null)return FrameMenuAccess.validAnchor(player,host,hostIdentity,frameAnchor);
         return !host.isRemoved()&&host.identity().equals(hostIdentity)&&host.getLevel()!=null&&player.level()==host.getLevel()
                 &&host.getLevel().hasChunkAt(host.getBlockPos())&&host.getLevel().getBlockEntity(host.getBlockPos())==host
                 &&player.distanceToSqr(host.getBlockPos().getCenter())<=64;

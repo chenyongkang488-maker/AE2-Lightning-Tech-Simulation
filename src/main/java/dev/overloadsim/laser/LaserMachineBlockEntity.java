@@ -46,12 +46,17 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
     public static final long RECEIVER_FE_CAPACITY = 1_024_000_000_000_000_000L;
     public static final long MACHINE_FE_CAPACITY = 1_000_000_000L;
     public static final long PARTICLE_CAPACITY = 125_000L;
+    public static final int SIDE_OFF = 0, SIDE_INPUT = 1, SIDE_OUTPUT = 2;
+    private static final int HORIZONTAL_MASK = 60;
     private static final ResourceLocation OVERLOADED_INTERFACE = ResourceLocation.parse("ae2lt:overloaded_interface");
     private UUID identity = UUID.randomUUID();
     private LaserStructure structure;
     private boolean structureDirty = true, wasFormed, visualFormed, visualNetworkActive, explosionTriggered;
     private boolean receiverRebuildPending;
     private boolean receiverPedestalLayout = true;
+    // Pre-alpha.9 anchors and physical poles stay intact; the optical network ignores vertical poles.
+    private boolean deflectorLegacyLayout;
+    private int opticalInputMask;
     private final Object receiverVisualToken = new Object();
     private BlockPos visualCenter;
     private Direction visualFacing;
@@ -111,6 +116,7 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
     public LaserMachineBlockEntity(BlockPos pos, BlockState state) {
         super(LaserContent.MACHINE_ENTITY.get(), pos, state);
         energy = new LongEnergyBuffer(kind() == LaserKind.RECEIVER ? RECEIVER_FE_CAPACITY : MACHINE_FE_CAPACITY);
+        if (kind() == LaserKind.DEFLECTOR) outputMask = 0;
         particleDirection = forward();
         getMainNode().setFlags(GridFlags.REQUIRE_CHANNEL).setIdlePowerUsage(2).setVisualRepresentation(state.getBlock().asItem());
     }
@@ -119,12 +125,13 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
     public Direction forward() { return getBlockState().getValue(LaserMachineBlock.FACING).getOpposite(); }
     public BlockPos center() {
         if (level != null && level.isClientSide && visualCenter != null) return visualCenter;
-        return structure == null ? worldPosition.offset(LaserStructureGeometry.centerOffset(kind(), forward().getOpposite(), receiverPedestalLayout())) : structure.center();
+        return structure == null ? worldPosition.offset(LaserStructureGeometry.centerOffset(kind(), forward().getOpposite(), receiverPedestalLayout(), deflectorLegacyLayout())) : structure.center();
     }
     public boolean receiverPedestalLayout() { return kind() == LaserKind.RECEIVER && receiverPedestalLayout; }
+    public boolean deflectorLegacyLayout() { return kind() == LaserKind.DEFLECTOR && deflectorLegacyLayout; }
     public Map<BlockPos, LaserStructureGeometry.Part> structureTemplate() {
         var facing = level != null && level.isClientSide ? receiverVisualFacing() : getBlockState().getValue(LaserMachineBlock.FACING);
-        return LaserStructureGeometry.template(kind(), facing, receiverPedestalLayout());
+        return LaserStructureGeometry.template(kind(), facing, receiverPedestalLayout(), deflectorLegacyLayout());
     }
     public Direction receiverVisualFacing() { return visualFacing == null ? getBlockState().getValue(LaserMachineBlock.FACING) : visualFacing; }
     public boolean receiverSkinVisible() { return ReceiverShellVisuals.visible(this, receiverVisualToken); }
@@ -144,6 +151,13 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
     void stopCollapseVisuals(){collapse.stop();}
     public long activeUntil() { return activeUntil; }
     public int outputMask() { return outputMask; }
+    public int inputMask() { return kind() == LaserKind.DEFLECTOR ? opticalInputMask : 0; }
+    /** World-facing modes: 0=off, 1=input, 2=output. Vertical faces are always off. */
+    public int sideMode(Direction side) {
+        if (kind() != LaserKind.DEFLECTOR || side == null || side.getAxis() == Direction.Axis.Y) return SIDE_OFF;
+        int bit = 1 << side.get3DDataValue();
+        return (opticalInputMask & bit) != 0 ? SIDE_INPUT : (outputMask & bit) != 0 ? SIDE_OUTPUT : SIDE_OFF;
+    }
     public int fuelRemaining() { return fuelRemaining; }
     public int particleRemaining() { return particleRemaining; }
     public String activeFuel() { return activeFuel; }
@@ -160,7 +174,19 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
 
     public void setEnabled(boolean value) { enabled = value; LaserNetwork.unregister(this); clearBeam(); if(!value)collapse.stop(); sync(); }
     public void setBoost(long value) { if (value < 100_000 || value > 9_000_000) return; boost = value; LaserNetwork.unregister(this); clearBeam(); sync(); }
-    public void setOutputMask(int value) { if (value < 0 || value > 63) return; outputMask = value; LaserNetwork.unregister(this); clearBeam(); sync(); }
+    public void setOutputMask(int value) {
+        if (value < 0 || value > 63) return;
+        outputMask = kind() == LaserKind.DEFLECTOR ? value & HORIZONTAL_MASK & ~opticalInputMask : value;
+        LaserNetwork.unregister(this); clearBeam(); sync();
+    }
+    public void setSideMode(Direction side, int mode) {
+        if (kind() != LaserKind.DEFLECTOR || side == null || side.getAxis() == Direction.Axis.Y || mode < SIDE_OFF || mode > SIDE_OUTPUT) return;
+        int bit = 1 << side.get3DDataValue();
+        opticalInputMask &= ~bit; outputMask &= ~bit;
+        if (mode == SIDE_INPUT) opticalInputMask |= bit;
+        else if (mode == SIDE_OUTPUT) outputMask |= bit;
+        LaserNetwork.unregister(this); clearBeam(); sync();
+    }
     public void setExtremeLightning(long value) { extremeLightning = Math.max(0, value); saveChanges(); }
     public boolean markExplosionTriggered() {
         if (explosionTriggered) return false;
@@ -229,7 +255,7 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
             if (receiverRebuildPending && !status.equals(previousStatus)) sync();
             return;
         }
-        var next = new LaserStructure(worldPosition.offset(LaserStructureGeometry.centerOffset(kind(), forward().getOpposite(), receiverPedestalLayout())), members, networkInterface);
+        var next = new LaserStructure(worldPosition.offset(LaserStructureGeometry.centerOffset(kind(), forward().getOpposite(), receiverPedestalLayout(), deflectorLegacyLayout())), members, networkInterface);
         boolean changed = !next.equals(structure);
         structure = next; wasFormed = true;
         receiverRebuildPending = false; // A valid sphere rearms the normal charged-containment safety policy.
@@ -323,10 +349,15 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
             tag.putInt("ReceiverShapeVersion", 1);
             tag.putBoolean("ReceiverRebuildPending", receiverRebuildPending);
         }
+        if (kind() == LaserKind.DEFLECTOR) {
+            tag.putInt("OpticalInputMask", opticalInputMask); tag.putInt("OpticalOutputMask", outputMask);
+            tag.putInt("DeflectorShapeVersion", 1); tag.putBoolean("DeflectorLegacyLayout", deflectorLegacyLayout);
+        }
         return tag;
     }
 
     public void loadMachine(CompoundTag tag, HolderLookup.Provider registries) {
+        LaserNetwork.unregister(this);
         LaserStructureIndex.release(this); structure = null; structureDirty = true;
         if (tag.hasUUID("Identity")) identity = tag.getUUID("Identity");
         enabled = !tag.contains("Enabled") || tag.getBoolean("Enabled");
@@ -337,6 +368,18 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
         collapse.restore(tag.contains("CollapseStart")?tag.getLong("CollapseStart"):-1,tag.contains("CollapseInput")?tag.getLong("CollapseInput"):-1);
         energy.load(Math.max(0, tag.getLong("Energy"))); particles.load(Math.max(0, tag.getLong("Particles")));
         outputMask = tag.contains("OutputMask") ? tag.getInt("OutputMask") & 63 : 63;
+        if (kind() == LaserKind.DEFLECTOR) {
+            // This independent marker preserves valid old shells without replacing blocks or charging materials.
+            deflectorLegacyLayout = tag.getInt("DeflectorShapeVersion") < 1 || tag.getBoolean("DeflectorLegacyLayout");
+            if (tag.contains("OpticalInputMask") && tag.contains("OpticalOutputMask")) {
+                opticalInputMask = tag.getInt("OpticalInputMask") & HORIZONTAL_MASK;
+                outputMask = tag.getInt("OpticalOutputMask") & HORIZONTAL_MASK & ~opticalInputMask;
+            } else {
+                Direction legacyInput = forward().getOpposite();
+                opticalInputMask = legacyInput.getAxis() == Direction.Axis.Y ? 0 : 1 << legacyInput.get3DDataValue();
+                outputMask = (tag.contains("OutputMask") || opticalInputMask != 0 ? outputMask : 0) & HORIZONTAL_MASK & ~opticalInputMask;
+            }
+        }
         fuelRemaining = Math.clamp(tag.getInt("FuelRemaining"), 0, ParticleClock.MAX_DURATION);
         particleRemaining = Math.clamp(tag.getInt("ParticleRemaining"), 0, ParticleClock.MAX_DURATION);
         activeFuel = boundedText(tag.getString("ActiveFuel")); status = boundedText(tag.getString("Status"));
@@ -361,10 +404,11 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
         super.writeToStream(data);
         data.writeBoolean(formed()); data.writeBoolean(networkActive()); data.writeBoolean(enabled); data.writeBoolean(explosionTriggered);
         data.writeBoolean(receiverPedestalLayout());
+        data.writeBoolean(deflectorLegacyLayout());
         data.writeBlockPos(center()); data.writeByte(getBlockState().getValue(LaserMachineBlock.FACING).get3DDataValue());
         data.writeLong(boost); data.writeLong(extremeLightning); data.writeLong(coreRemainder); data.writeLong(activeUntil); data.writeLong(lastPower);
         data.writeLong(collapse.startTick()); data.writeLong(collapse.lastInputTick());
-        data.writeLong(energy.stored()); data.writeLong(particles.stored()); data.writeByte(outputMask);
+        data.writeLong(energy.stored()); data.writeLong(particles.stored()); data.writeByte(outputMask); data.writeByte(inputMask());
         data.writeVarInt(fuelRemaining); data.writeVarInt(particleRemaining); data.writeUtf(boundedText(activeFuel), 256); data.writeUtf(boundedText(status), 256);
         data.writeByte(particleDirection.get3DDataValue());
         int count = Math.min(128, segments.size()); data.writeVarInt(count);
@@ -375,12 +419,15 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
         super.readFromStream(data);
         visualFormed = data.readBoolean(); visualNetworkActive = data.readBoolean(); enabled = data.readBoolean(); explosionTriggered = data.readBoolean();
         receiverPedestalLayout = data.readBoolean();
+        deflectorLegacyLayout = data.readBoolean();
         visualCenter = data.readBlockPos();
         int facing = data.readUnsignedByte(); visualFacing = facing < 6 ? Direction.from3DDataValue(facing) : getBlockState().getValue(LaserMachineBlock.FACING);
         boost = Math.clamp(data.readLong(), 100_000L, 9_000_000L); extremeLightning = Math.max(0, data.readLong());
         coreRemainder = Math.clamp(data.readLong(), 0L, LaserMath.PARTICLE_COST - 1); activeUntil = Math.max(0, data.readLong()); lastPower = Math.clamp(data.readLong(), 0L, LaserMath.MAX_BEAM);
         collapse.restore(data.readLong(),data.readLong());
         energy.load(Math.max(0, data.readLong())); particles.load(Math.max(0, data.readLong())); outputMask = data.readUnsignedByte() & 63;
+        opticalInputMask = data.readUnsignedByte() & HORIZONTAL_MASK;
+        if (kind() == LaserKind.DEFLECTOR) outputMask &= HORIZONTAL_MASK & ~opticalInputMask;
         fuelRemaining = Math.clamp(data.readVarInt(), 0, ParticleClock.MAX_DURATION); particleRemaining = Math.clamp(data.readVarInt(), 0, ParticleClock.MAX_DURATION);
         activeFuel = data.readUtf(256); status = data.readUtf(256);
         int direction = data.readUnsignedByte(); particleDirection = direction < 6 ? Direction.from3DDataValue(direction) : forward();

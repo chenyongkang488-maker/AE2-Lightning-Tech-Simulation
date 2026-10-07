@@ -2,6 +2,7 @@ import dev.overloadsim.core.IndustrialMachineMesh;
 import dev.overloadsim.core.EmitterReactorMesh;
 import dev.overloadsim.core.GateMatrixMesh;
 import dev.overloadsim.core.DeflectorShellMesh;
+import dev.overloadsim.core.DeflectorCrystalMesh;
 import dev.overloadsim.core.ReceiverPedestalMesh;
 import dev.overloadsim.core.ReceiverShellMesh;
 import java.nio.file.Files;
@@ -35,7 +36,8 @@ class ExportIndustrialWorkshop {
                 group(names.get(i),()->{for(var face:visible){int tile=face.tile();int index=tile==5?0:tile==7||tile==44?1:tile==41?2:tile==40||tile==42?3:4;if(index==groupIndex)mesh(face.quad(),tile,false);}});
             }
         } else if(deflector){
-            group("01 · 合并像素陶瓷球壳 · 六个光学开口",()->{for(var face:DeflectorShellMesh.surfaces())mesh(face.quad(),face.tile(),false);});
+            group("01 · 四个三格光口与封闭顶盖",()->{for(var face:IndustrialMachineMesh.withoutCell(DeflectorShellMesh.surfaces(),0,-3,0))mesh(face.quad(),face.tile(),false);});
+            group("02 · 中央六棱粉色偏折水晶",()->{for(var face:DeflectorCrystalMesh.surfaces())mesh(face.quad(),face.tile(),false);});
         } else {
         group("01 · 分段装甲骨架", () -> {
             var surfaces = new ArrayList<IndustrialMachineMesh.Surface>();

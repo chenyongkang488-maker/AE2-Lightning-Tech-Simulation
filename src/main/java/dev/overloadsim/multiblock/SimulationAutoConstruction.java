@@ -27,6 +27,33 @@ public final class SimulationAutoConstruction {
 
     private SimulationAutoConstruction() {}
 
+    /** Canonical geometry only; usable by client previews without touching or loading the world. */
+    public static BlockPos previewMin(BlockPos controller,Direction facing,int size) {
+        if(size<3||size>7)throw new IllegalArgumentException("size");
+        int middle=(size-1)/2;
+        return switch(facing) {
+            case NORTH -> controller.offset(-middle,0,0);
+            case SOUTH -> controller.offset(-middle,0,1-size);
+            case WEST -> controller.offset(0,0,-middle);
+            case EAST -> controller.offset(1-size,0,-middle);
+            default -> throw new IllegalArgumentException("unavailable");
+        };
+    }
+
+    public static Map<BlockPos,BlockState> previewTemplate(BlockPos controller,Direction facing,int size) {
+        BlockPos min=previewMin(controller,facing,size);
+        BlockState frame=MultiblockContent.FRAME.get().defaultBlockState();
+        BlockState glass=BuiltInRegistries.BLOCK.get(VIBRANT_GLASS).defaultBlockState();
+        var cells=new LinkedHashMap<BlockPos,BlockState>();
+        for(int x=0;x<size;x++)for(int y=0;y<size;y++)for(int z=0;z<size;z++) {
+            BlockPos pos=min.offset(x,y,z);
+            int boundaries=(x==0||x==size-1?1:0)+(y==0||y==size-1?1:0)+(z==0||z==size-1?1:0);
+            cells.put(pos,pos.equals(controller)?MultiblockContent.CONTROLLER.get().defaultBlockState().setValue(SimulationControllerBlock.FACING,facing)
+                    :boundaries>=2||y==size-1?frame:boundaries==0||y==0?Blocks.AIR.defaultBlockState():glass);
+        }
+        return java.util.Collections.unmodifiableMap(cells);
+    }
+
     public static AutomaticConstruction.Plan plan(SimulationControllerBlockEntity host,int size) {
         if (size<3 || size>7) throw new IllegalArgumentException("size");
         Level level = host.getLevel();
@@ -35,14 +62,7 @@ public final class SimulationAutoConstruction {
         BlockState controllerState = level.getBlockState(host.getBlockPos());
         if (!controllerState.is(MultiblockContent.CONTROLLER.get())) throw new IllegalArgumentException("unavailable");
         Direction facing = controllerState.getValue(SimulationControllerBlock.FACING);
-        int middle = (size-1)/2;
-        BlockPos min = switch (facing) {
-            case NORTH -> host.getBlockPos().offset(-middle,0,0);
-            case SOUTH -> host.getBlockPos().offset(-middle,0,1-size);
-            case WEST -> host.getBlockPos().offset(0,0,-middle);
-            case EAST -> host.getBlockPos().offset(1-size,0,-middle);
-            default -> throw new IllegalArgumentException("unavailable");
-        };
+        BlockPos min=previewMin(host.getBlockPos(),facing,size);
         var cells = new LinkedHashMap<BlockPos,BlockState>();
         BlockState frame = MultiblockContent.FRAME.get().defaultBlockState();
         BlockState glass = BuiltInRegistries.BLOCK.get(VIBRANT_GLASS).defaultBlockState();

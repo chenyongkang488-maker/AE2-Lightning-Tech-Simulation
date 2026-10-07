@@ -31,7 +31,8 @@ public final class LaserMachineBlock extends AEBaseEntityBlock<LaserMachineBlock
     @Override public IOrientationStrategy getOrientationStrategy() { return OrientationStrategies.facing(); }
     @Override protected MapCodec<? extends LaserMachineBlock> codec() { return simpleCodec(properties -> new LaserMachineBlock(kind)); }
     @Override public BlockState getStateForPlacement(BlockPlaceContext context) {
-        return super.getStateForPlacement(context).setValue(FACING, context.getNearestLookingDirection().getOpposite());
+        Direction facing = kind == LaserKind.DEFLECTOR ? context.getHorizontalDirection().getOpposite() : context.getNearestLookingDirection().getOpposite();
+        return super.getStateForPlacement(context).setValue(FACING, facing);
     }
     @Override public BlockEntity newBlockEntity(BlockPos pos, BlockState state) { return new LaserMachineBlockEntity(pos, state); }
     @Override public BlockEntityType<LaserMachineBlockEntity> getBlockEntityType() { return LaserContent.MACHINE_ENTITY.get(); }

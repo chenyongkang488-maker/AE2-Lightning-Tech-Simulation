@@ -15,7 +15,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
 public final class MultiblockSimulationScreen extends AEBaseScreen<MultiblockSimulationMenu> {
-    private MultiblockMenuLayout layout;private boolean recovery;private final Button recoveryButton,buildButton,sizeButton;
+    private MultiblockMenuLayout layout;private boolean recovery;private final Button recoveryButton,buildButton,sizeButton,projectionButton;
     public MultiblockSimulationScreen(MultiblockSimulationMenu menu,Inventory inventory,Component title){
         super(menu,inventory,title,StyleManager.loadStyleDoc("/screens/overload_sim/multiblock.json"));
         var frequencyButton=new TextureToggleButton(TextureToggleButton.ButtonType.FREQUENCY_BIND,b->FrequencyApi.openBindingScreen(menu));
@@ -36,6 +36,14 @@ public final class MultiblockSimulationScreen extends AEBaseScreen<MultiblockSim
             }
         });
         buildButton.setMessage(Component.translatable("gui.overload_sim.multiblock.auto_build"));
+        projectionButton=addToLeftToolbar(new IconButton(b->{
+            ConstructionProjection.toggleChamber(menu.host(),menu.buildSize);
+            if(minecraft.player!=null)minecraft.player.closeContainer();
+        }){
+            @Override protected Icon getIcon(){return Icon.PATTERN_ACCESS_SHOW;}
+            @Override public java.util.List<Component> getTooltipMessage(){return java.util.List.of(Component.translatable("gui.overload_sim.construction.projection"),Component.translatable("gui.overload_sim.construction.projection_hint"));}
+        });
+        projectionButton.setMessage(Component.translatable("gui.overload_sim.construction.projection"));
         sizeButton=addToLeftToolbar(new IconButton(b->menu.changeBuildSize(menu.buildSize>=7?3:menu.buildSize+1)){
             @Override protected Icon getIcon(){return Icon.SORT_BY_AMOUNT;}
             @Override public java.util.List<Component> getTooltipMessage(){return java.util.List.of(
@@ -62,6 +70,7 @@ public final class MultiblockSimulationScreen extends AEBaseScreen<MultiblockSim
         boolean extra=false;for(int i=menu.capacity;i<49;i++)if(!menu.slots.get(i).getItem().isEmpty()){extra=true;break;}
         recoveryButton.visible=recovery||menu.capacity>0&&extra;recoveryButton.active=recoveryButton.visible;
         buildButton.active=menu.capacity==0;
+        projectionButton.active=menu.capacity==0;
         sizeButton.visible=menu.capacity==0;sizeButton.active=sizeButton.visible;
         sizeButton.setMessage(Component.translatable("gui.overload_sim.multiblock.build_size",menu.buildSize));
     }

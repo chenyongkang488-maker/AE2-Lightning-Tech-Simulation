@@ -153,7 +153,7 @@
   "gui.overload_sim.laser.power": "本批强度：%s FE",
   "gui.overload_sim.laser.boost": "强化增量：%s FE",
   "gui.overload_sim.laser.boost_cost": "每批支付与强化增量相同的 FE",
-  "gui.overload_sim.laser.outputs": "输出面（输入面已锁定）",
+  "gui.overload_sim.laser.outputs": "水平光口（关闭／输入／输出）",
   "gui.overload_sim.laser.side": "%s：%s",
   "gui.overload_sim.laser.core_remainder": "核心余量：%s / 512G FE",
   "gui.overload_sim.laser.core_hint": "需 ≥1G FE 聚焦束；每 512G 产一粒",
@@ -169,7 +169,7 @@
   "gui.overload_sim.laser.sealed_fuel": "投入后不可取出；无粒子或缓存满时暂停",
   "gui.overload_sim.laser.active_fuel": "使用中：%s · 粒子计时 %s tick",
   "gui.overload_sim.laser.control_hint": "成型后可开启；关闭立即停止光路",
-  "gui.overload_sim.laser.split_hint": "输出强度平分；全关时停止入射",
+  "gui.overload_sim.laser.split_hint": "点击切换关闭、输入、输出；多个输出均分能量。上下两面不通光。",
   "gui.overload_sim.laser.status": "状态：%s",
   "gui.overload_sim.laser.exact_power": "精确本批强度：%s FE",
   "gui.overload_sim.laser.exact_energy": "精确缓存：%s / %s FE",
@@ -233,5 +233,8 @@
   "message.overload_sim.construction.formation_cancelled": "已补放 %s 个方块，但成型被阻止；请查看结构诊断。",
   "gui.overload_sim.laser.current_strength": "当前激光强度：%s FE／次",
   "gui.overload_sim.laser.exact_strength": "当前激光强度：%s FE／次",
-  "subtitles.overload_sim.collapse_transition": "亚空间收缩并展开"
+  "subtitles.overload_sim.collapse_transition": "亚空间收缩并展开",
+  "gui.overload_sim.laser.output": "输出",
+  "gui.overload_sim.construction.projection": "虚拟搭建投影",
+  "gui.overload_sim.construction.projection_hint": "点击显示或关闭投影，并返回世界查看。粉／青色为待放框架／玻璃，黄／紫色为水晶／光口，绿色已正确，红色有阻挡。"
 }

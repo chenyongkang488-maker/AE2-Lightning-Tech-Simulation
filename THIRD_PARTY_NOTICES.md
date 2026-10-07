@@ -31,3 +31,9 @@ The matrix outer collars, pixel rune cartridges, blue-white collapse orb and
 procedurally synthesized `collapse_transition.ogg` are original qiqi/addon work
 under MIT. Reference images inform the design; no image pixels or recorded audio
 were extracted from them. The orb reuses the addon's original voxel sphere geometry.
+
+The alpha.9 six-faceted deflector crystal geometry and native-painted atlas
+tiles 52–53, and the independent 64-frame `laser_energy_flow` texture are
+original qiqi/addon work under MIT. The crystal reference is used for shape
+and palette only; no reference pixels were copied. Existing derived simulation
+crystal and coil-module artwork continues to retain its separate asset license.

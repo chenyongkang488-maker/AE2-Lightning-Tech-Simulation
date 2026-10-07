@@ -48,7 +48,8 @@ public final class ReceiverShellVisuals {
                 var block = level.getBlockState(pos).getBlock();
                 // Optional network interfaces retain their own baked model and interaction faces.
                 if ((entry.getValue() == LaserStructureGeometry.Part.FRAME && block == LaserContent.FRAME.get())
-                        || (entry.getValue() == LaserStructureGeometry.Part.GLASS && block == LaserContent.GLASS.get()))
+                        || (entry.getValue() == LaserStructureGeometry.Part.GLASS && block == LaserContent.GLASS.get())
+                        || (controller.kind()==LaserKind.DEFLECTOR&&block==LaserContent.PORT.get()))
                     cells.add(new ReceiverShellRegistry.Point(pos.getX(), pos.getY(), pos.getZ()));
             }
         }

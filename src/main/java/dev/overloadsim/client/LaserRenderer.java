@@ -8,6 +8,7 @@ import dev.overloadsim.core.IndustrialMachineMesh;
 import dev.overloadsim.core.EmitterReactorMesh;
 import dev.overloadsim.core.GateMatrixMesh;
 import dev.overloadsim.core.DeflectorShellMesh;
+import dev.overloadsim.core.DeflectorCrystalMesh;
 import dev.overloadsim.core.ReceiverPedestalMesh;
 import dev.overloadsim.core.ReceiverParticleVisuals;
 import dev.overloadsim.laser.LaserContent;
@@ -92,7 +93,7 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
         if(be.kind()==LaserKind.BURST&&be.lastPower()>0){
             var b=basis(be);LaserEnergyEffects.burst(matrix,vertices,center,b.right,b.up,b.forward,time,be.getBlockPos().asLong());
         }
-        var energySprite=Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(ModContent.id("block/simulation_energy_orb"));
+        var energySprite=Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(ModContent.id("block/laser_energy_flow"));
         var energyVertices=buffers.getBuffer(RenderType.beaconBeam(InventoryMenu.BLOCK_ATLAS,true));
         int count = 0, dotBudget = MAX_DOTS;
         for (LaserSegment segment : be.segments()) {
@@ -126,6 +127,7 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
     }
 
     private static Basis basis(LaserMachineBlockEntity be) {
+        if(be.kind()==LaserKind.DEFLECTOR)return new Basis(new Vec3(1,0,0),new Vec3(0,1,0),new Vec3(0,0,1));
         Direction forward=be.receiverVisualFacing().getOpposite();
         Vec3 f=Vec3.atLowerCornerOf(forward.getNormal()),up=Vec3.atLowerCornerOf(LaserStructureGeometry.basisUp(forward).getNormal());
         return new Basis(up.cross(f),up,f);
@@ -138,6 +140,12 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
         var skin=skin(be,basis);
         var emissive = buffers.getBuffer(RenderType.beaconBeam(InventoryMenu.BLOCK_ATLAS,false));
         industrialMesh(skin.mesh,poses.last(),porcelain,sprite,center,light,basis,emissive);
+        if(be.kind()==LaserKind.DEFLECTOR) {
+            poses.pushPose();poses.translate(center.x,center.y,center.z);
+            poses.mulPose(com.mojang.math.Axis.YP.rotationDegrees((float)((be.getLevel().getGameTime()%7200)*.05)));
+            industrialMesh(DeflectorCrystalMesh.surfaces(),poses.last(),emissive,sprite,Vec3.ZERO,LightTexture.FULL_BRIGHT,basis);
+            poses.popPose();
+        }
         if(be.kind()==LaserKind.RECEIVER) {
             // Keep the established fixed translucent buffer; never flush it while opaque atlas geometry is queued.
             var glass=buffers.getBuffer(RenderType.entityTranslucent(InventoryMenu.BLOCK_ATLAS));
@@ -155,6 +163,9 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
         if(previous!=null&&previous.tick==tick&&previous.facing==facing&&previous.pedestal==pedestal)return previous;
         var openings=new ArrayList<BlockPos>();
         for(var entry:be.structureTemplate().entrySet()) {
+            // Custom horizontal collars already contain their apertures. Legacy pole ports
+            // are inert and hidden; clipping them would reopen the closed pole caps.
+            if(be.kind()==LaserKind.DEFLECTOR&&entry.getValue()==LaserStructureGeometry.Part.PORT)continue;
             if(entry.getValue()!=LaserStructureGeometry.Part.AIR&&entry.getValue()!=LaserStructureGeometry.Part.FRAME
                     &&entry.getValue()!=LaserStructureGeometry.Part.GLASS) {openings.add(entry.getKey());continue;}
             if(entry.getValue()!=LaserStructureGeometry.Part.FRAME)continue;

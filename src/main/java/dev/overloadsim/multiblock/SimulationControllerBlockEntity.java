@@ -28,6 +28,7 @@ public class SimulationControllerBlockEntity extends AENetworkedBlockEntity impl
     private UUID identity=UUID.randomUUID();
     private SimulationStructure structure;private String error="no_structure";private BlockPos problem;private boolean structureDirty;
     private BlockPos savedMin;private int savedSize;
+    private int selectedBuildSize=3;
     private BlockPos lightPosition;
     private final BulkOutputBuffer outputs=new BulkOutputBuffer();
     private final SimulationGridBridge bridge=new SimulationGridBridge(this);
@@ -67,6 +68,12 @@ public class SimulationControllerBlockEntity extends AENetworkedBlockEntity impl
     };
     public SimulationControllerBlockEntity(BlockPos p,BlockState s){super(MultiblockContent.CONTROLLER_ENTITY.get(),p,s);getMainNode().setFlags(GridFlags.REQUIRE_CHANNEL).setIdlePowerUsage(2).setVisualRepresentation(MultiblockContent.CONTROLLER_ITEM.get());}
     public UUID identity(){return identity;}
+    public int selectedBuildSize(){return selectedBuildSize;}
+    public boolean setSelectedBuildSize(int size){
+        if(size<3||size>7||level==null||level.isClientSide)return false;
+        if(selectedBuildSize!=size){selectedBuildSize=size;saveChanges();}
+        return true;
+    }
     public SimulationStructure structure(){return structure;}
     public String error(){return error;}
     public String diagnostic(){return problem==null?error:error+" @ "+problem.getX()+", "+problem.getY()+", "+problem.getZ();}
@@ -208,10 +215,12 @@ public class SimulationControllerBlockEntity extends AENetworkedBlockEntity impl
     }
     public CompoundTag saveMachine(HolderLookup.Provider r){
         var tag=new CompoundTag();tag.putUUID("Identity",identity);tag.put("Crystals",crystals.serializeNBT(r));tag.put("Bulk",outputs.save(r));tag.put("Energy",energy.serializeNBT(r));tag.putDouble("FeFraction",feFraction);tag.putLong("RefundHv",refundHv);tag.putLong("RefundEhv",refundEhv);tag.putLong("FeCredit",feCredit);tag.putLong("InputRevision",inputRevision);tag.putInt("NextCrystal",nextCrystal);
+        tag.putInt("SelectedBuildSize",selectedBuildSize);
         if(batch!=null)tag.put("Batch",batch.save(r));
         var fixed=new ListTag();rolls.forEach((slot,roll)->{var t=new CompoundTag();t.putInt("Slot",slot);t.put("Input",roll.input.save(r));var list=new ListTag();for(var item:roll.output)list.add(item.save(r));t.put("Outputs",list);fixed.add(t);});tag.put("Rolls",fixed);tag.putString("RollGeneration",rollGeneration);return tag;
     }
     public void loadMachine(CompoundTag tag,HolderLookup.Provider r){
+        selectedBuildSize=tag.contains("SelectedBuildSize",Tag.TAG_INT)?Math.clamp(tag.getInt("SelectedBuildSize"),3,7):3;
         if(tag.hasUUID("Identity"))identity=tag.getUUID("Identity");loadingInventory=true;try{crystals.deserializeNBT(r,tag.getCompound("Crystals"));}finally{loadingInventory=false;}
         crystalSnapshots.clear();for(int slot=0;slot<49;slot++)crystalSnapshots.put(slot,crystals.getStackInSlot(slot).copy());
         outputs.load(tag.getCompound("Bulk"),r);if(tag.contains("Energy"))energy.deserializeNBT(r,tag.get("Energy"));

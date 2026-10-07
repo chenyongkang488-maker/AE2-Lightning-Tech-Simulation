@@ -103,6 +103,12 @@
         // The pedestal follows the chamber's continuous porcelain/rose rails.
         tile(50,()=>{rect(0,0,16,16,'white');rect(0,3,16,1,'silver');rect(0,4,16,1,'rose');rect(0,5,16,1,'pink');rect(0,6,16,1,'glow');rect(0,12,16,1,'shade');});
         tile(51,()=>{rect(0,0,16,16,'white');rect(0,0,16,1,'light');rect(0,15,16,1,'shade');});
+        for(let i=52;i<54;i++)tile(i,()=>{
+            rect(0,0,16,16,i===52?'#d65aaa':'#a83b82');
+            rect(2,0,3,16,'#ef85c5');rect(5,0,5,16,'#ffb4df');rect(6,0,2,16,'#ffe4f3');
+            rect(12,0,2,16,'#c34a98');
+            for(let y=2;y<16;y+=5){rect(4,y,3,1,'#fff0fa');rect(9,y+1,2,1,'#f594cb');}
+        });
         newProject(Formats.java_block); Project.name='Laser pixel atlas';
         Project.texture_width=Project.texture_height=128; Project.ambientocclusion=false;
         const t=new Texture({name:'laser_pixel_atlas.png',namespace:'overload_sim',folder:'block',
@@ -110,7 +116,7 @@
         await new Promise(r=>setTimeout(r,150));
         t.layers_enabled=true;t.layers.length=0;
         const layerSets=[['陶瓷装甲与连续底座',[0,1,2,3,5,7,16,17,18,21,23,32,33,34,37,38,39,44,45,50,51]],
-            ['独立导光与符文',[6,19,22,35,36,40,41,42,43,46,47,48,49]],['控制器屏幕图标',[8,9,10,11,12,13,14,15]],['玻璃透光层',[4,20]]];
+            ['独立导光与符文',[6,19,22,35,36,40,41,42,43,46,47,48,49,52,53]],['控制器屏幕图标',[8,9,10,11,12,13,14,15]],['玻璃透光层',[4,20]]];
         for(const [name,indices]of layerSets){const layer=document.createElement('canvas');layer.width=layer.height=128;const lg=layer.getContext('2d');lg.imageSmoothingEnabled=false;
             for(const i of indices){const x=i%8*16,y=Math.floor(i/8)*16;lg.drawImage(c,x,y,16,16,x,y,16,16);}
             t.layers.push(new TextureLayer({name,width:128,height:128,image_data:lg.getImageData(0,0,128,128),opacity:100,visible:true,blend_mode:'default'},t));}
@@ -145,7 +151,7 @@
     }
     Plugin.register('laser_art_workshop',{
         title:'模拟：激光像素绘制',author:'qiqi',description:'粉白激光设备的原生 Blockbench 绘制与导出',
-        icon:'bolt',version:'0.2.0-alpha.8',variant:'desktop',
+        icon:'bolt',version:'0.2.0-alpha.9',variant:'desktop',
         onload(){action=new Action('overload_sim_laser_draw',{name:'绘制激光粉白像素图集',icon:'bolt',click(){
             new Dialog({id:'laser_art_root',title:'激光像素图集',form:{root:{label:'模组工程目录',type:'text',value:'D:/MinecraftDev/OverloadSimulation'}},
                 onConfirm(values){this.hide();draw(values.root.replace(/\\/g,'/')).catch(e=>Blockbench.showMessageBox({title:'绘制失败',message:String(e.stack||e)}));}}).show();

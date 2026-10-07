@@ -73,7 +73,13 @@ public final class LaserNetwork {
         for(var node:candidates){
             if(!node.formed()||!node.enabled()||node==root)continue;
             if(node.kind()==LaserKind.CORE)ports.put(node.getBlockPos(),node);
-            else if(node.kind()==LaserKind.DEFLECTOR||node.kind()==LaserKind.RECEIVER)ports.put(node.center().relative(node.forward().getOpposite(),3),node);
+            else if(node.kind()==LaserKind.DEFLECTOR){
+                for(var side:Direction.Plane.HORIZONTAL){
+                    var port=node.center().relative(side,3);
+                    if(!port.equals(node.getBlockPos())&&level.getBlockState(port).is(LaserContent.PORT.get()))ports.put(port,node);
+                }
+            }
+            else if(node.kind()==LaserKind.RECEIVER)ports.put(node.center().relative(node.forward().getOpposite(),3),node);
             else if(node.kind()!=LaserKind.EMITTER)ports.put(node.center(),node);
         }
         var lines=new ArrayList<LaserSegment>();var nodes=new ArrayList<LaserMachineBlockEntity>();nodes.add(root);
@@ -90,7 +96,10 @@ public final class LaserNetwork {
                 var target=ports.get(pos);
                 if(target!=null){
                     end=pos;add(lines,beam.start(),end,beam.energy(),false,false);drawn=true;
-                    if(target.forward()!=beam.direction()||target.kind()==LaserKind.CORE||target.kind()==LaserKind.RECEIVER)break;
+                    if(target.kind()==LaserKind.DEFLECTOR){
+                        var incomingFace=beam.direction().getOpposite();
+                        if(target.sideMode(incomingFace)!=LaserMachineBlockEntity.SIDE_INPUT||!target.center().relative(incomingFace,3).equals(pos))break;
+                    }else if(target.forward()!=beam.direction()||target.kind()==LaserKind.CORE||target.kind()==LaserKind.RECEIVER)break;
                     if(beam.visited().contains(target.getBlockPos())||!claims.inputs.add(target.getBlockPos())){target.status="invalid_loop_or_input";target.sync();break;}
                     var visited=new HashSet<>(beam.visited());visited.add(target.getBlockPos());nodes.add(target);
                     long power=beam.energy(),cost=0,ehv=0;int range=beam.range()-distance;
@@ -107,16 +116,21 @@ public final class LaserNetwork {
                     NeoForge.EVENT_BUS.post(event);if(event.isCanceled()){target.status="modifier_cancelled";break;}
                     target.checkStructure();
                     if(target.isRemoved()||level.getBlockEntity(target.getBlockPos())!=target||!target.formed()||!target.enabled()||root.isRemoved()||!root.enabled())break;
+                    if(target.kind()==LaserKind.DEFLECTOR&&target.sideMode(beam.direction().getOpposite())!=LaserMachineBlockEntity.SIDE_INPUT)break;
                     power=event.outputEnergy();range=event.range();
                     if(power==0){target.status="idle";target.sync();break;}
                     if(!target.tryPay(cost,ehv,false)){target.status="no_energy";target.sync();break;}
                     target.lastPower=power;target.activeUntil=now+22;target.status="working";target.sync();
                     if(target.kind()==LaserKind.FOCUS){focus(level,target,power,now,lines,nodes,clearCells);}
                     else if(target.kind()==LaserKind.DEFLECTOR){
-                        var faces=Arrays.stream(Direction.values()).filter(d->d!=target.forward().getOpposite()&&(target.outputMask()&(1<<d.get3DDataValue()))!=0).toList();
+                        // Owned apertures are solid ports; internal axes are validated by the structure,
+                        // never added as external clear cells or rendered as a diagonal through the shell.
+                        add(lines,pos,target.center(),beam.energy(),false,false);
+                        var faces=Arrays.stream(Direction.values()).filter(d->d.getAxis()!=Direction.Axis.Y&&target.sideMode(d)==LaserMachineBlockEntity.SIDE_OUTPUT
+                                &&!target.center().relative(d,3).equals(target.getBlockPos())).toList();
                         if(!faces.isEmpty()){
                             var split=LaserMath.split(power,faces.size());
-                            for(int i=0;i<faces.size();i++)if(split[i]>0){var d=faces.get(i);var out=target.center().relative(d,3);add(lines,pos,out,split[i],false,false);queue.add(new Beam(out,d,split[i],6,new HashSet<>(visited)));}
+                            for(int i=0;i<faces.size();i++)if(split[i]>0){var d=faces.get(i);var out=target.center().relative(d,3);add(lines,target.center(),out,split[i],false,false);queue.add(new Beam(out,d,split[i],6,new HashSet<>(visited)));}
                         }else{target.status="no_outputs";target.activeUntil=0;target.sync();}
                     }else if(power>0&&range>0)queue.add(new Beam(pos,beam.direction(),power,range,visited));
                     break;

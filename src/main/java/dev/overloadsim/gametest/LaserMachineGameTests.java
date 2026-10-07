@@ -63,13 +63,14 @@ public final class LaserMachineGameTests {
     }
 
     @GameTest(template = "laser_empty")
-    public static void deflectorRequiresSixFacePorts(GameTestHelper h) {
+    public static void deflectorRequiresFourHorizontalPorts(GameTestHelper h) {
         var pos = h.absolutePos(new BlockPos(8, 2, 8));
         var deflector = build(h, pos, LaserKind.DEFLECTOR, Direction.NORTH);
         deflector.checkStructure();
         h.assertTrue(deflector.formed(), "voxel sphere forms with optical ports");
-        for (var face : Direction.values()) h.assertTrue(h.getLevel().getBlockState(pos.above(3).relative(face, 3)).is(LaserContent.PORT.get()) || pos.above(3).relative(face, 3).equals(pos), "each central face has a port or the bottom controller");
-        h.getLevel().setBlockAndUpdate(pos.above(6), LaserContent.FRAME.get().defaultBlockState());
+        for (var face : Direction.Plane.HORIZONTAL) h.assertTrue(h.getLevel().getBlockState(pos.above(3).relative(face, 3)).is(LaserContent.PORT.get()), "each horizontal central face has an optical port");
+        h.assertTrue(h.getLevel().getBlockState(pos.above(6)).is(LaserContent.FRAME.get()), "top is ordinary housing");
+        h.getLevel().setBlockAndUpdate(pos.above(3).north(3), LaserContent.FRAME.get().defaultBlockState());
         deflector.tick();
         h.assertTrue(!deflector.formed(), "replacing an optical port with ordinary frame invalidates sphere");
         h.succeed();
