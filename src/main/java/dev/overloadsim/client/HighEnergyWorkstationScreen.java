@@ -1,6 +1,8 @@
 package dev.overloadsim.client;
 
 import appeng.api.config.ActionItems;
+import appeng.api.stacks.AEFluidKey;
+import appeng.api.stacks.GenericStack;
 import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.Icon;
 import appeng.client.gui.style.StyleManager;
@@ -14,6 +16,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.inventory.InventoryMenu;
+import net.neoforged.neoforge.client.extensions.common.IClientFluidTypeExtensions;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
@@ -84,10 +89,22 @@ public final class HighEnergyWorkstationScreen extends AEBaseScreen<HighEnergyWo
             SimulationScreen.icon(g, Icon.SLOT_BACKGROUND, x + slot.x - 1, y + slot.y - 1);
         SimulationScreen.icon(g, Icon.ARROW_RIGHT, x + 91, y + 92);
         bar(g, x + 82, y + 115, 36, Math.clamp(menu.progress, 0, 2), 2, 0xFFED99C5);
-        g.fill(x + 12, y + 146, x + 188, y + 147, 0xFFB5A9BC);
-        // Distinct small fluid markers use the existing AE fluid icon; quantities stay exact in tooltips.
-        Icon.TYPE_FILTER_FLUIDS.getBlitter().dest(x + 13, y + 133, 12, 12).blit(g);
-        Icon.TYPE_FILTER_FLUIDS.getBlitter().dest(x + 108, y + 133, 12, 12).blit(g);
+        g.fill(x + 12, y + 148, x + 188, y + 149, 0xFFB5A9BC);
+        fluidSlot(g,x+16,y+128,menu.inputFluidDisplay);
+        fluidSlot(g,x+128,y+128,menu.outputFluidDisplay);
+    }
+
+    private static void fluidSlot(GuiGraphics g,int x,int y,GenericStack display){
+        g.fill(x,y,x+18,y+18,0xFF77768C);g.fill(x+1,y+1,x+17,y+17,0xFFBDB5C9);
+        if(display==null||!(display.what() instanceof AEFluidKey key)||display.amount()<=0){
+            Icon.TYPE_FILTER_FLUIDS.getBlitter().dest(x+3,y+3,12,12).blit(g);return;
+        }
+        var fluid=key.toStack(1);var properties=IClientFluidTypeExtensions.of(fluid.getFluid());
+        var texture=properties.getStillTexture(fluid);if(texture==null)return;
+        var sprite=Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(texture);
+        int color=properties.getTintColor(fluid);
+        int fill=Math.clamp((int)Math.ceil(display.amount()*16.0/dev.overloadsim.workstation.HighEnergyWorkstationBlockEntity.TANK_CAPACITY),1,16);
+        g.blit(x+1,y+17-fill,0,16,fill,sprite,(color>>16&255)/255f,(color>>8&255)/255f,(color&255)/255f,(color>>>24)/255f);
     }
 
     static void panel(GuiGraphics g, int x, int y, int width, int height) {
@@ -107,11 +124,11 @@ public final class HighEnergyWorkstationScreen extends AEBaseScreen<HighEnergyWo
         text(g, Component.translatable("gui.overload_sim.workstation." + (menu.formed ? "formed" : "unformed")), 12, 25, 176);
         text(g, Component.translatable("gui.overload_sim.workstation.strength", LaserScreen.compact(menu.power)), 12, 38, 176);
         text(g, Component.translatable("gui.overload_sim.workstation.parallel", menu.parallel), 12, 51, 176);
-        text(g, Component.translatable("gui.overload_sim.workstation.inputs"), 16, 67, 66);
-        text(g, Component.translatable("gui.overload_sim.workstation.outputs"), 128, 67, 60);
-        text(g, Component.literal(menu.progress + "/2"), 91, 123, 30);
-        text(g, Component.translatable("gui.overload_sim.workstation.fluid_input_compact", LaserScreen.compact(menu.inputFluidAmount)), 27, 136, 76);
-        text(g, Component.translatable("gui.overload_sim.workstation.fluid_output_compact", LaserScreen.compact(menu.outputFluidAmount)), 122, 136, 66);
+        text(g, Component.translatable("gui.overload_sim.workstation.inputs"), 16, 62, 66);
+        text(g, Component.translatable("gui.overload_sim.workstation.outputs"), 128, 62, 60);
+        text(g, Component.literal(menu.progress + "/2"), 91, 121, 30);
+        text(g, Component.literal(LaserScreen.compact(menu.inputFluidAmount)+" mB"), 37, 132, 66);
+        text(g, Component.literal(LaserScreen.compact(menu.outputFluidAmount)+" mB"), 149, 132, 40);
         text(g, Component.translatable("container.inventory"), 20, 150, 162);
     }
 
@@ -137,12 +154,18 @@ public final class HighEnergyWorkstationScreen extends AEBaseScreen<HighEnergyWo
     }
 
     @Override public boolean mouseClicked(double x, double y, int button) {
+        int fluid=fluidUnderMouse(x,y);
+        if(fluid>=0){if(button==0||button==1)menu.requestFluid(fluid);return true;}
         var slot = getSlotUnderMouse();
         if (slot != null && slot.index >= 0 && slot.index < HighEnergyWorkstationMenu.DISPLAYS) {
             if (button == 0 || button == 1) menu.requestItem(slot.index, hasShiftDown() ? 2 : button);
             return true;
         }
         return super.mouseClicked(x, y, button);
+    }
+    private int fluidUnderMouse(double x,double y){
+        if(y<topPos+128||y>=topPos+146)return -1;
+        return x>=leftPos+16&&x<leftPos+34?0:x>=leftPos+128&&x<leftPos+146?1:-1;
     }
 
     @Override protected void slotClicked(Slot slot, int index, int button, ClickType type) {
@@ -167,12 +190,12 @@ public final class HighEnergyWorkstationScreen extends AEBaseScreen<HighEnergyWo
                     Component.translatable("gui.overload_sim.workstation.last_recipe", menu.recipe.isEmpty()
                             ? Component.translatable("gui.overload_sim.workstation.no_recipe") : Component.literal(menu.recipe)),
                     Component.translatable("gui.overload_sim.multiblock.frequency", menu.frequency)), Optional.empty(), mx, my);
-        } else if (mx >= leftPos + 10 && mx < leftPos + 190 && my >= topPos + 133 && my < topPos + 146) {
+        } else if (mx >= leftPos + 10 && mx < leftPos + 190 && my >= topPos + 128 && my < topPos + 146) {
             boolean input = mx < leftPos + 106;
             String name = input ? menu.inputFluid : menu.outputFluid;
             long amount = input ? menu.inputFluidAmount : menu.outputFluidAmount;
             g.renderTooltip(font, List.of(name.isEmpty() ? Component.translatable("gui.overload_sim.workstation.empty_fluid") : Component.literal(name),
-                    Component.translatable("gui.overload_sim.workstation.exact_fluid", amount),
+                    Component.translatable("gui.overload_sim.workstation.fluid_capacity", amount,dev.overloadsim.workstation.HighEnergyWorkstationBlockEntity.TANK_CAPACITY),
                     Component.translatable("gui.overload_sim.workstation.fluid_hint")), Optional.empty(), mx, my);
         }
     }

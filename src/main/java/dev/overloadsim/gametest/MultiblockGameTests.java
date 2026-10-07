@@ -201,14 +201,14 @@ public class MultiblockGameTests {
         var storage=appeng.api.storage.StorageCells.getCellInventory(cell,drive::saveChanges);
         storage.insert(com.moakiee.ae2lt.me.key.LightningKey.HIGH_VOLTAGE,1000,appeng.api.config.Actionable.MODULATE,appeng.api.networking.security.IActionSource.empty());
         storage.insert(com.moakiee.ae2lt.me.key.LightningKey.EXTREME_HIGH_VOLTAGE,1000,appeng.api.config.Actionable.MODULATE,appeng.api.networking.security.IActionSource.empty());storage.persist();drive.getInternalInventory().setItemDirect(0,cell);
-        c.checkStructure();return c;
+        c.checkStructure();c.energy().receiveEnergy(2_000_000,false);return c;
     }
     static net.minecraft.world.item.ItemStack ironCrystal(){return dev.overloadsim.api.CrystalDataAccess.perfect(new dev.overloadsim.api.CrystalData(dev.overloadsim.ModContent.id("iron"),java.util.Optional.empty(),0,1));}
     @GameTest(template="empty",timeoutTicks=110)
     public static void baseCyclePersistsFeesAndPausesWithoutStructure(GameTestHelper h){
         var c=powered(h,3);
         h.runAtTickTime(80,()->{
-            h.assertTrue(c.getMainNode().isActive()&&c.energy().getEnergyStored()>0,"idle AE continuously charges FE");
+            h.assertTrue(c.getMainNode().isActive()&&c.energy().getEnergyStored()>0,"online network and independently precharged FE buffer support the production fixture");
             c.crystals().setStackInSlot(0,ironCrystal());c.crystals().setStackInSlot(1,ironCrystal());c.tick();
             h.assertTrue(c.busy()&&c.batch().cost.fe()==2000&&c.batch().cost.hv()==2&&c.batch().duration==180,"per crystal default cost and duration");
             h.assertTrue(c.bridge().extract(false,Long.MAX_VALUE,true)==1000,"incomplete job has no HV debit");

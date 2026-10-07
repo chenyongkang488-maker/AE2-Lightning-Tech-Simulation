@@ -61,6 +61,7 @@ public final class LaserContent {
         // AE stores one representative item per entity type; every machine still has its own normal block item.
         AEBaseBlockEntity.registerBlockEntityItem(MACHINE_ENTITY.get(), machine(LaserKind.EMITTER).asItem());
         LaserStructureIndex.register();
+        ConstraintFields.register();
     }
     public static void capabilities(RegisterCapabilitiesEvent event) {
         event.registerBlockEntity(appeng.api.AECapabilities.IN_WORLD_GRID_NODE_HOST, MACHINE_ENTITY.get(), (host, context) -> host.kind() == LaserKind.CORE ? null : host);

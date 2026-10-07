@@ -91,6 +91,11 @@ public final class LaserMenu extends AEBaseMenu implements FrequencyBindingMenuH
             var direction=net.minecraft.core.Direction.from3DDataValue(side);
             host.setSideMode(direction,(host.sideMode(direction)+1)%3);
         });
+        registerClientAction("laserSetBoost", Long.class, value -> {
+            if (value == null || value < 100_000 || value > 9_000_000 || value % 100_000 != 0
+                    || !validAction() || host.kind() != LaserKind.ENHANCEMENT || !validStructure()) return;
+            host.setBoost(value);
+        });
         registerClientAction("laserBuild",()->{
             if(!validAction()||!host.identity().equals(hostIdentity)||!(getPlayer() instanceof net.minecraft.server.level.ServerPlayer player))return;
             var result=LaserAutoConstruction.build(player,host);
@@ -100,7 +105,8 @@ public final class LaserMenu extends AEBaseMenu implements FrequencyBindingMenuH
     }
 
     private boolean validAction() {
-        return host.kind() != LaserKind.CORE && isServerSide() && getPlayer().containerMenu == this && stillValid(getPlayer());
+        return host.kind() != LaserKind.CORE && isServerSide() && getPlayer().isAlive() && !getPlayer().isSpectator()
+                && host.identity().equals(hostIdentity) && getPlayer().containerMenu == this && stillValid(getPlayer());
     }
 
     private boolean validStructure() {
@@ -112,6 +118,7 @@ public final class LaserMenu extends AEBaseMenu implements FrequencyBindingMenuH
     public LaserMachineBlockEntity host(){return host;}
     public void toggleEnabled() { sendClientAction("laserEnabled"); }
     public void changeBoost(int step) { sendClientAction("laserBoost", step); }
+    public void requestBoost(long value) { sendClientAction("laserSetBoost", value); }
     public void toggleSide(int side) { sendClientAction("laserSide", side); }
     public void autoBuild() { sendClientAction("laserBuild"); }
 

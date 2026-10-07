@@ -1,6 +1,7 @@
 package dev.overloadsim.workstation;
 
 import dev.overloadsim.core.WorkstationGeometry;
+import dev.overloadsim.laser.LaserContent;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -17,11 +18,18 @@ public final class WorkstationStructure {
         for(int x=0;x<7;x++)for(int y=0;y<7;y++)for(int z=0;z<7;z++){
             var state=switch(WorkstationGeometry.part(x,y,z)){
                 case CONTROLLER->WorkstationContent.CONTROLLER.get().defaultBlockState().setValue(HighEnergyWorkstationBlock.FACING,facing);
-                case FRAME->WorkstationContent.FRAME.get().defaultBlockState();
-                case GLASS->WorkstationContent.GLASS.get().defaultBlockState();
-                case RECEIVER->WorkstationContent.RECEIVER.get().defaultBlockState();
+                case FRAME->LaserContent.FRAME.get().defaultBlockState();
+                case GLASS->LaserContent.GLASS.get().defaultBlockState();
+                case RECEIVER->LaserContent.PORT.get().defaultBlockState();
                 case AIR->Blocks.AIR.defaultBlockState();};
             cells.put(position(controller,facing,x,y,z),state);
         }return Collections.unmodifiableMap(cells);
+    }
+    /** Old registry identities remain loadable until a complete shell can migrate safely. */
+    public static boolean matches(BlockState expected, BlockState actual) {
+        return actual.is(expected.getBlock())
+                || expected.is(LaserContent.FRAME.get()) && actual.is(WorkstationContent.FRAME.get())
+                || expected.is(LaserContent.GLASS.get()) && actual.is(WorkstationContent.GLASS.get())
+                || expected.is(LaserContent.PORT.get()) && actual.is(WorkstationContent.RECEIVER.get());
     }
 }

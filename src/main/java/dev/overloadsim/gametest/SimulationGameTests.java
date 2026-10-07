@@ -77,18 +77,22 @@ public class SimulationGameTests {
     @GameTest(template="empty",timeoutTicks=280)
     public static void idleMachineContinuouslyRefillsAndStopsAtCapacity(GameTestHelper h){
         var machine=capacityMachine(h);machine.inventory().setStackInSlot(0,ItemStack.EMPTY);machine.energy().deserializeNBT(h.getLevel().registryAccess(),net.minecraft.nbt.IntTag.valueOf(0));
-        h.runAtTickTime(80,()->{h.assertTrue(machine.getMainNode().isActive(),"online idle machine");int before=machine.energy().getEnergyStored();h.assertTrue(before>0,"idle machine charges without a template");
-            h.runAfterDelay(3,()->{h.assertTrue(machine.energy().getEnergyStored()-before==3*10000,"charge continuously at 10000 FE per tick");});});
-        h.runAtTickTime(240,()->{h.assertTrue(machine.energy().getEnergyStored()==2_000_000,"stop at FE capacity");
+        boolean flux=AppliedFluxEnergyGameTests.hasFlux();
+        if(flux)AppliedFluxEnergyGameTests.installSeededCell(h,(appeng.blockentity.storage.DriveBlockEntity)h.getLevel().getBlockEntity(machine.getBlockPos().east()),1,10_000_000);
+        h.runAtTickTime(80,()->{h.assertTrue(machine.getMainNode().isActive(),"online idle machine");int before=machine.energy().getEnergyStored();h.assertTrue(flux?before>0:before==0,"idle charging requires a real FE cell rather than AE network power");
+            h.runAfterDelay(3,()->{h.assertTrue(machine.energy().getEnergyStored()-before==(flux?3*10000:0),"available FE storage supplies the configured rate; absent Flux supplies zero FE");});});
+        h.runAtTickTime(240,()->{h.assertTrue(machine.energy().getEnergyStored()==(flux?2_000_000:0),"real FE charging stops at capacity and missing FE storage remains empty");
             h.getLevel().setBlockAndUpdate(machine.getBlockPos().west(),Blocks.AIR.defaultBlockState());machine.energy().deserializeNBT(h.getLevel().registryAccess(),net.minecraft.nbt.IntTag.valueOf(0));
             h.runAfterDelay(20,()->{h.assertTrue(machine.energy().getEnergyStored()==0&&!machine.getMainNode().isActive(),"unpowered grid cannot create FE");h.succeed();});});
     }
     @GameTest(template="empty",timeoutTicks=120)
     public static void runningBatchChargesAndKeepsItsSpeedSnapshot(GameTestHelper h){
         var machine=capacityMachine(h);machine.getUpgrades().clear();
+        boolean flux=AppliedFluxEnergyGameTests.hasFlux();
+        if(flux)AppliedFluxEnergyGameTests.installSeededCell(h,(appeng.blockentity.storage.DriveBlockEntity)h.getLevel().getBlockEntity(machine.getBlockPos().east()),1,10_000_000);
         h.runAtTickTime(80,()->{h.assertTrue(machine.busy()&&machine.totalTicks()==200,"batch snapshots zero speed cards");assertPaidBatch(h,machine,4000,4);
             int before=machine.energy().getEnergyStored();machine.getUpgrades().addItems(appeng.core.definitions.AEItems.SPEED_CARD.stack(4));
-            h.runAfterDelay(3,()->{h.assertTrue(machine.energy().getEnergyStored()-before==30000,"running batch also charges every tick");h.assertTrue(machine.totalTicks()==200,"newly inserted cards apply to the next batch");h.succeed();});});
+            h.runAfterDelay(3,()->{h.assertTrue(machine.energy().getEnergyStored()-before==(flux?30000:0),"running batch draws only the available real FE supply");h.assertTrue(machine.totalTicks()==200,"newly inserted cards apply to the next batch");h.succeed();});});
     }
     @GameTest(template="empty")
     public static void menuShiftClickUsesFourUpgradeSlotsInsteadOfAuxiliarySlot(GameTestHelper h){
@@ -205,12 +209,15 @@ public class SimulationGameTests {
         h.succeedWhen(()->{h.assertTrue(machine.inventory().getStackInSlot(4).getCount()==5,"four outputs merge into existing partial slots; status="+machine.status()+" node="+machine.getMainNode().isActive()+" fe="+machine.energy().getEnergyStored());assertPaidBatch(h,machine,4000,4);h.assertTrue(machine.inventory().getStackInSlot(0).is(ModContent.PERFECT.get()),"template retained");});
     }
     @GameTest(template="empty",timeoutTicks=180)
-    public static void aeNetworkSuppliesFeWithoutCableOrLocalCharge(GameTestHelper h){
+    public static void appliedFluxNetworkSuppliesFeWithoutCableOrLocalCharge(GameTestHelper h){
+        if(!AppliedFluxEnergyGameTests.hasFlux()){h.succeed();return;}
         var machine=capacityMachine(h);machine.energy().deserializeNBT(h.getLevel().registryAccess(),net.minecraft.nbt.IntTag.valueOf(0));
+        var drive=(appeng.blockentity.storage.DriveBlockEntity)h.getLevel().getBlockEntity(machine.getBlockPos().east());
+        AppliedFluxEnergyGameTests.installSeededCell(h,drive,1,100000);
         // Only one output can fit, and only one batch can start.
         for(int slot=4;slot<13;slot++)machine.inventory().setStackInSlot(slot,new ItemStack(net.minecraft.world.item.Items.DIAMOND,64));
         machine.inventory().setStackInSlot(4,new ItemStack(net.minecraft.world.item.Items.RAW_IRON,63));
-        h.succeedWhen(()->{h.assertTrue(machine.inventory().getStackInSlot(4).getCount()==64,"ME grid alone supplies simulation FE");h.assertTrue(machine.energy().getEnergyStored()>0,"keep refilling unused buffer");assertPaidBatch(h,machine,1000,1);});
+        h.succeedWhen(()->{h.assertTrue(machine.inventory().getStackInSlot(4).getCount()==64,"ME FE storage supplies simulation energy");h.assertTrue(machine.energy().getEnergyStored()>0,"remaining finite FE is retained in the buffer");assertPaidBatch(h,machine,1000,1);});
     }
     @GameTest(template="empty")
     public static void boundTooltipReportsPercentageAndStage(GameTestHelper h){
@@ -237,13 +244,13 @@ public class SimulationGameTests {
         h.runAtTickTime(80,()->{h.assertTrue(machine.getMainNode().isActive(),"network online");h.assertTrue(!machine.busy()&&dev.overloadsim.compat.LightningNetwork.extract(machine,Long.MAX_VALUE,true)==0,"EHV cannot start or pay an HV batch");h.succeed();});
     }
     @GameTest(template="empty",timeoutTicks=160)
-    public static void finiteAeNetworkDebitsStandardFeConversionOnce(GameTestHelper h){
+    public static void finiteAeNetworkCannotSupplyFeWithoutFeStorage(GameTestHelper h){
         var machine=capacityMachine(h);var level=h.getLevel();machine.inventory().setStackInSlot(0,ItemStack.EMPTY);machine.energy().deserializeNBT(level.registryAccess(),net.minecraft.nbt.IntTag.valueOf(2_000_000));
         level.setBlockAndUpdate(machine.getBlockPos().west(),net.minecraft.core.registries.BuiltInRegistries.BLOCK.get(net.minecraft.resources.ResourceLocation.parse("ae2:energy_cell")).defaultBlockState());
         var cell=(appeng.blockentity.networking.EnergyCellBlockEntity)level.getBlockEntity(machine.getBlockPos().west());cell.injectAEPower(50000,appeng.api.config.Actionable.MODULATE);
         h.runAtTickTime(80,()->{h.assertTrue(machine.getMainNode().isActive(),"finite powered network online");machine.energy().deserializeNBT(level.registryAccess(),net.minecraft.nbt.IntTag.valueOf(0));var grid=machine.getMainNode().getGrid();double before=grid.getEnergyService().getStoredPower();
             try{var charge=machine.getClass().getDeclaredMethod("chargeFromNetwork",int.class);charge.setAccessible(true);charge.invoke(machine,1000);charge.invoke(machine,1000);}catch(ReflectiveOperationException error){throw new RuntimeException(error);}
-            h.assertTrue(machine.energy().getEnergyStored()==1000,"1000 FE retained in local buffer");h.assertTrue(Math.abs(before-grid.getEnergyService().getStoredPower()-500)<.0001,"1000 FE costs 500 AE once, under default AE2 2:1 conversion");h.succeed();});
+            h.assertTrue(machine.energy().getEnergyStored()==0,"AE power cannot fund the local FE buffer");h.assertTrue(Math.abs(before-grid.getEnergyService().getStoredPower())<.0001,"same-tick FE request leaves finite AE power unchanged");h.succeed();});
     }
     @GameTest(template="empty")
     public static void oversizedRecipeOutputSavesAsLegalStacks(GameTestHelper h){

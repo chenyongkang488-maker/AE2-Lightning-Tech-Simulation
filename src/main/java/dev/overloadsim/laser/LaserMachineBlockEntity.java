@@ -13,6 +13,7 @@ import com.moakiee.ae2lt.api.frequency.FrequencyBindingAccess;
 import com.moakiee.ae2lt.api.frequency.FrequencyBindingHost;
 import dev.overloadsim.api.LaserEvents;
 import dev.overloadsim.compat.FrequencyBindingLifecycle;
+import dev.overloadsim.compat.AppliedFluxRefunds;
 import dev.overloadsim.core.LaserMath;
 import dev.overloadsim.core.LongEnergyBuffer;
 import dev.overloadsim.core.ParticleBuffer;
@@ -61,6 +62,8 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
     private BlockPos visualCenter;
     private Direction visualFacing;
     private long refundExtreme;
+    private long networkFeCredit;
+    private UUID networkFeRefundIdentity = UUID.randomUUID();
     private final LongEnergyBuffer energy;
     private final LaserGridBridge bridge = new LaserGridBridge(this);
     private final FrequencyBindingAccess frequency = FrequencyApi.createBinding(this);
@@ -149,7 +152,21 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
     public boolean deflectorLegacyLayout() { return kind() == LaserKind.DEFLECTOR && deflectorLegacyLayout; }
     public Map<BlockPos, LaserStructureGeometry.Part> structureTemplate() {
         var facing = level != null && level.isClientSide ? receiverVisualFacing() : getBlockState().getValue(LaserMachineBlock.FACING);
-        return LaserStructureGeometry.template(kind(), facing, receiverPedestalLayout(), deflectorLegacyLayout());
+        var canonical = LaserStructureGeometry.template(kind(), facing, receiverPedestalLayout(), deflectorLegacyLayout());
+        return kind() == LaserKind.RECEIVER ? ReceiverOpticalPorts.resolve(this, canonical) : canonical;
+    }
+    public boolean acceptsParticleInput(BlockPos port, Direction incoming) { return ReceiverOpticalPorts.accepts(this, port, incoming); }
+    public long networkFeCredit() { return networkFeCredit; }
+    public void setNetworkFeCredit(long value) { networkFeCredit = Math.max(0, value); saveChanges(); }
+    void claimNetworkFeRefund() {
+        if (isRemoved()) return;
+        long restored = AppliedFluxRefunds.claim(level, networkFeRefundIdentity);
+        if (restored > 0) setNetworkFeCredit(Math.addExact(networkFeCredit, restored));
+    }
+    void retainNetworkFeRefund(long amount) {
+        if (amount <= 0) return;
+        if (isRemoved()) AppliedFluxRefunds.deposit(level, networkFeRefundIdentity, amount);
+        else setNetworkFeCredit(Math.addExact(networkFeCredit, amount));
     }
     public Direction receiverVisualFacing() { return visualFacing == null ? getBlockState().getValue(LaserMachineBlock.FACING) : visualFacing; }
     public boolean receiverSkinVisible() { return ReceiverShellVisuals.visible(this, receiverVisualToken); }
@@ -357,6 +374,8 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
         var tag = new CompoundTag();
         tag.putUUID("Identity", identity); tag.putBoolean("Enabled", enabled); tag.putLong("Boost", boost);
         tag.putLong("ExtremeLightning", extremeLightning); tag.putLong("RefundExtreme", refundExtreme);
+        tag.putLong("NetworkFeCredit", networkFeCredit);
+        tag.putUUID("NetworkFeRefundIdentity", networkFeRefundIdentity);
         tag.putLong("CoreRemainder", coreRemainder); tag.putLong("ActiveUntil", activeUntil); tag.putLong("LastPower", lastPower);
         tag.putLong("CollapseStart",collapse.startTick()); tag.putLong("CollapseInput",collapse.lastInputTick());
         tag.putLong("Energy", energy.stored()); tag.putLong("Particles", particles.stored()); tag.putInt("OutputMask", outputMask);
@@ -384,6 +403,8 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
         enabled = kind() == LaserKind.CORE || !tag.contains("Enabled") || tag.getBoolean("Enabled");
         boost = tag.contains("Boost") ? Math.clamp(tag.getLong("Boost"), 100_000L, 9_000_000L) : 100_000L;
         extremeLightning = Math.max(0, tag.getLong("ExtremeLightning")); refundExtreme = Math.max(0, tag.getLong("RefundExtreme"));
+        networkFeCredit = Math.max(0, tag.getLong("NetworkFeCredit"));
+        if (tag.hasUUID("NetworkFeRefundIdentity")) networkFeRefundIdentity = tag.getUUID("NetworkFeRefundIdentity");
         coreRemainder = Math.clamp(tag.getLong("CoreRemainder"), 0L, LaserMath.PARTICLE_COST - 1);
         activeUntil = Math.max(0, tag.getLong("ActiveUntil")); lastPower = Math.clamp(tag.getLong("LastPower"), 0L, LaserMath.MAX_BEAM);
         collapse.restore(tag.contains("CollapseStart")?tag.getLong("CollapseStart"):-1,tag.contains("CollapseInput")?tag.getLong("CollapseInput"):-1);
@@ -495,10 +516,21 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
     @Override public void exportSettings(SettingsFrom mode, DataComponentMap.Builder builder, Player player) {
         super.exportSettings(mode, builder, player);
         if (kind() != LaserKind.CORE) frequency.exportMemorySettings(mode, builder, tag -> {});
+        if (mode == SettingsFrom.DISMANTLE_ITEM) {
+            claimNetworkFeRefund();
+            if (networkFeCredit > 0 || bridge.feTransferInProgress()) AppliedFluxRefunds.writeItem(builder, networkFeRefundIdentity, networkFeCredit);
+        }
     }
     @Override public void importSettings(SettingsFrom mode, DataComponentMap settings, Player player) {
         super.importSettings(mode, settings, player);
         if (kind() != LaserKind.CORE) frequency.importMemorySettings(mode, settings, tag -> {});
+        if (mode == SettingsFrom.DISMANTLE_ITEM) {
+            var refund = AppliedFluxRefunds.readItem(settings);
+            if (refund != null) {
+                networkFeRefundIdentity = refund.identity(); networkFeCredit = refund.credit();
+                claimNetworkFeRefund(); saveChanges();
+            }
+        }
     }
     @Override protected void onOrientationChanged(BlockOrientation orientation) { super.onOrientationChanged(orientation); invalidateStructure(); structureDirty = true; }
     @Override public IGridNode getActionableNode() { return kind() == LaserKind.CORE ? null : getMainNode().getNode(); }

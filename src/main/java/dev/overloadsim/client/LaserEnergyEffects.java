@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import dev.overloadsim.ModContent;
 import dev.overloadsim.core.CoreCollapseCycle;
+import dev.overloadsim.core.CoreMembraneMesh;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -46,27 +47,29 @@ final class LaserEnergyEffects {
         }
     }
     static void core(BlockEntityRendererProvider.Context context,Vec3 center,double time,long start,PoseStack poses,MultiBufferSource buffers){
-        double age=start<0?CoreCollapseCycle.DURATION:Math.max(0,time-start),radius=CoreCollapseCycle.radius(age);
+        double age=start<0?CoreCollapseCycle.DURATION:Math.max(0,time-start);
         var model=Minecraft.getInstance().getModelManager().getModel(ModelResourceLocation.standalone(ModContent.id("block/collapse_energy_orb")));
         poses.pushPose();poses.translate(center.x,center.y,center.z);
         poses.mulPose(Axis.YP.rotationDegrees((float)(time*1.8)));
-        float scale=(float)(radius/.375);poses.scale(scale,scale,scale);poses.translate(-.5,-.5,-.5);
+        float scale=(float)CoreCollapseCycle.modelScale(age);poses.scale(scale,scale,scale);poses.translate(-.5,-.5,-.5);
         context.getBlockRenderDispatcher().getModelRenderer().renderModel(poses.last(),buffers.getBuffer(RenderType.beaconBeam(InventoryMenu.BLOCK_ATLAS,false)),null,model,1,1,1,LightTexture.FULL_BRIGHT,OverlayTexture.NO_OVERLAY);
         poses.popPose();
         double halo=CoreCollapseCycle.halo(age);if(halo<=0)return;
-        // Ordinary alpha blending preserves purple/orange on a bright daytime sky.
-        // Additive lightning washes these deliberately coloured orbits to white.
-        var v=buffers.getBuffer(RenderType.debugQuads());var m=poses.last().pose();
-        for(int ring=0;ring<2;ring++)for(int i=0;i<24;i++){
-            double a=i*Math.PI/12+time*.012*(ring==0?1:-1),b=(i+1)*Math.PI/12+time*.012*(ring==0?1:-1);
-            double r=(ring==0?1.48:1.19)*halo;
-            Vec3 p=haloPoint(center,a,r,ring),q=haloPoint(center,b,r,ring);
-            arc(m,v,p,q,time,ring*100+i,ring==0?1:.65f,ring==0?.36f:.2f,ring==0?.08f:1,.03*halo);
+        // Ordinary alpha preserves the pale-orange membrane colour on a bright sky.
+        var v=buffers.getBuffer(RenderType.debugQuads());
+        for(int ring=0;ring<2;ring++){
+            poses.pushPose();poses.translate(center.x,center.y,center.z);
+            poses.mulPose(Axis.XP.rotationDegrees(ring==0?35:-35));
+            poses.mulPose(Axis.ZP.rotationDegrees((float)(time*.7*(ring==0?1:-1))));
+            poses.scale((float)halo,(float)halo,(float)halo);poses.translate(0,0,-1/32d);
+            var m=poses.last().pose();
+            for(var surface:CoreMembraneMesh.ring(ring)){
+                var q=surface.quad();
+                for(var p:new dev.overloadsim.core.ReceiverShellMesh.Vertex[]{q.a(),q.b(),q.c(),q.d()})
+                    v.addVertex(m,(float)p.x(),(float)p.y(),(float)p.z()).setColor(1,.74f,.48f,.42f);
+            }
+            poses.popPose();
         }
-    }
-    private static Vec3 haloPoint(Vec3 center,double a,double r,int ring){
-        // Two tilted electric orbits, rather than an opaque flat ring around the sphere.
-        return center.add(Math.cos(a)*r,Math.sin(a)*r*.78,Math.sin(a)*r*(ring==0?.55:-.55));
     }
     private static void arc(Matrix4f m,VertexConsumer v,Vec3 start,Vec3 end,double time,long seed,float red,float green,float blue,double width){
         Vec3 direction=end.subtract(start).normalize();

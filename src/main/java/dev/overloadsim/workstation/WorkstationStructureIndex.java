@@ -31,5 +31,6 @@ public final class WorkstationStructureIndex {
     }
     public static void release(HighEnergyWorkstationBlockEntity host){var claims=CLAIMS.get(host.getLevel());if(claims!=null)claims.values().removeIf(claim->claim.controller().equals(host.getBlockPos())&&claim.identity().equals(host.identity()));}
     public static void changed(Level level,BlockPos pos){var claim=claim(level,pos);if(claim!=null&&level.getBlockEntity(claim.controller()) instanceof HighEnergyWorkstationBlockEntity host)host.markStructureDirty();}
+    public static void removed(Level level,BlockPos pos){var claim=claim(level,pos);if(claim!=null&&level.getBlockEntity(claim.controller()) instanceof HighEnergyWorkstationBlockEntity host)host.invalidateStructure();}
     public static void register(){if(registered)return;registered=true;NeoForge.EVENT_BUS.addListener((BlockEvent.BreakEvent event)->changed((Level)event.getLevel(),event.getPos()));NeoForge.EVENT_BUS.addListener((BlockEvent.EntityPlaceEvent event)->{if(event.getLevel() instanceof Level level)changed(level,event.getPos());});}
 }

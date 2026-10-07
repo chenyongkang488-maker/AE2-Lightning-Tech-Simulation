@@ -69,7 +69,7 @@ public final class ModContent {
                     var tool=be.getInstalledDevice();
                     if(!tool.is(COIL.get())||!CoilModules.hasCore(tool)||!be.getMainNode().isActive())return;
                     var grid=be.getMainNode().getGrid();if(grid==null)return;
-                    long before=CoilEnergy.read(tool);CoilEnergy.charge(tool,grid);
+                    long before=CoilEnergy.read(tool);CoilEnergy.charge(tool,grid,appeng.api.networking.security.IActionSource.ofMachine(be));
                     if(CoilEnergy.read(tool)!=before)be.saveChanges();
                 });
     });}

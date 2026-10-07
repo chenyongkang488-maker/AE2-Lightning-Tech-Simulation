@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "overload_sim:high_energy_workstation_glass"
+    }
+  ],
+  "result": {
+    "id": "overload_sim:laser_glass",
+    "count": 1
+  }
+}

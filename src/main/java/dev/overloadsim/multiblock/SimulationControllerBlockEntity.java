@@ -170,13 +170,13 @@ public class SimulationControllerBlockEntity extends AENetworkedBlockEntity impl
     }
     private boolean inputsMatch(SimulationBatch job){return structure!=null&&job.inputs.entrySet().stream().allMatch(e->e.getKey()>=0&&e.getKey()<structure.capacity()&&ItemStack.matches(e.getValue(),crystals.getStackInSlot(e.getKey())));}
     private void charge(){
+        if(!isRemoved()){long restored=AppliedFluxRefunds.claim(level,identity);if(restored>0){feCredit=Math.addExact(feCredit,restored);saveChanges();}}
         if(feCredit>0){int credited=energy.receiveEnergy((int)Math.min(Integer.MAX_VALUE,feCredit),false);feCredit-=credited;if(credited>0)saveChanges();}
         var grid=getMainNode().getGrid();int needed=Math.min(10000,energy.getMaxEnergyStored()-energy.getEnergyStored());
-        if(needed<=0||grid==null||!getMainNode().isActive())return;
-        double ae=appeng.api.config.PowerUnit.FE.convertTo(appeng.api.config.PowerUnit.AE,Math.max(0,needed-feFraction));
-        double drawn=grid.getEnergyService().extractAEPower(ae,appeng.api.config.Actionable.MODULATE,appeng.api.config.PowerMultiplier.ONE);
-        double available=feFraction+appeng.api.config.PowerUnit.AE.convertTo(appeng.api.config.PowerUnit.FE,drawn);
-        int received=energy.receiveEnergy(Math.min(needed,(int)Math.floor(available)),false);feFraction=Math.max(0,available-received);if(drawn>0)saveChanges();
+        if(needed<=0||isRemoved()||grid==null||!getMainNode().isActive())return;
+        var transfer=AppliedFluxEnergy.extractInto(grid,IActionSource.ofMachine(this),needed,amount->isRemoved()?0:energy.receiveEnergy((int)amount,false));
+        if(transfer.credit()>0){if(isRemoved())AppliedFluxRefunds.deposit(level,identity,transfer.credit());else feCredit=Math.addExact(feCredit,transfer.credit());}
+        if(transfer.accepted()>0||transfer.credit()>0)saveChanges();
     }
     public boolean loaded(){
         if(structure==null)return false;var min=structure.min();int maxX=(min.getX()+structure.size()-1)>>4,maxZ=(min.getZ()+structure.size()-1)>>4;

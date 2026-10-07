@@ -2,6 +2,8 @@ package dev.overloadsim.laser;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -30,6 +32,20 @@ public final class LaserStructureGeometry {
         if (kind == LaserKind.RECEIVER && receiverPedestalLayout)
             return BlockPos.ZERO.relative(forward, 3).relative(basisUp(forward), 4);
         return kind == LaserKind.EMITTER ? BlockPos.ZERO.relative(forward, 2) : BlockPos.ZERO.relative(basisUp(forward), 3);
+    }
+
+    /** World-horizontal sphere face centres plus the canonical aperture of existing vertical layouts. */
+    public static List<BlockPos> receiverOpticalOffsets(Direction facing, boolean receiverPedestalLayout) {
+        var center = centerOffset(LaserKind.RECEIVER, facing, receiverPedestalLayout);
+        var result = new LinkedHashSet<BlockPos>();
+        for (var side : Direction.Plane.HORIZONTAL) {
+            var offset = center.relative(side, 3);
+            if (!offset.equals(BlockPos.ZERO)) result.add(offset.immutable());
+        }
+        // Older vertical structures have an axial port. Their existing port and control block stay valid.
+        var canonical = center.relative(facing, 3);
+        if (!canonical.equals(BlockPos.ZERO)) result.add(canonical.immutable());
+        return List.copyOf(result);
     }
 
     /** Historical templates; existing receiver spheres retain their original controller anchor. */

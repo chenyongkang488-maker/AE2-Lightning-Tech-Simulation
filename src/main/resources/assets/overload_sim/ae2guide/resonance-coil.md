@@ -16,7 +16,7 @@ item_ids:
 
 # Overload Lightning Coil
 
-Insert the coil into a networked Overload Device Workbench, install an Overload Core, and remove it. The workbench binds the coil to its grid. Keep the workbench online and loaded. Holding the tool or leaving it inside the online workbench continuously recharges its FE using AE2's standard conversion.
+Insert the coil into a networked Overload Device Workbench, install an Overload Core, and remove it. The workbench binds the coil to its grid. Keep the workbench online and loaded. Holding the tool or leaving it inside the online workbench recharges from Applied Flux FE storage cells. An empty FE cell or absent Applied Flux leaves network FE charging stopped; AE energy cells continue powering the ME network. External FE charging remains available.
 
 Tap and release right-click to strike the nearest unobstructed entity or block within 32 blocks. Hold for at least 1.5 seconds and release to strike yourself. Each strike costs exactly 10 HV and has a 0.5-second cooldown. The Extreme Voltage Module unlocks natural mode in the G configuration screen, costing exactly 10 EHV. Natural mode uses the upstream natural-weather classification for collectors and rituals. Lightning retains normal damage and fire.
 

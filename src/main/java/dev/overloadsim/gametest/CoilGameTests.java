@@ -60,19 +60,22 @@ public class CoilGameTests {
         });
     }
     @GameTest(template="empty",timeoutTicks=130)
-    public static void linkedToolChargesFeFromAeAndEmptyBufferCannotBreak(GameTestHelper h){
+    public static void linkedToolUsesFeCellsAndEmptyBufferCannotBreak(GameTestHelper h){
         var bench=network(h);var coil=equipped(h,bench);var player=player(h);player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND,coil);coil.set(dev.overloadsim.ModContent.COIL_FE.get(),0L);
+        if(AppliedFluxEnergyGameTests.hasFlux())AppliedFluxEnergyGameTests.installSeededCell(h,(appeng.blockentity.storage.DriveBlockEntity)h.getLevel().getBlockEntity(bench.getBlockPos().east()),1,10_000_000);
         var pos=bench.getBlockPos().south(2);h.getLevel().setBlockAndUpdate(pos,net.minecraft.world.level.block.Blocks.DIAMOND_ORE.defaultBlockState());
         h.assertTrue(!player.gameMode.destroyBlock(pos)&&!h.getLevel().isEmptyBlock(pos),"empty FE buffer cancels normal mining");
         h.runAtTickTime(80,()->{bench.getDeviceInventory().setItemDirect(0,ItemStack.EMPTY);coil.set(dev.overloadsim.ModContent.COIL_FE.get(),0L);
-            dev.overloadsim.tool.CoilEnergy.INSTANCE.refill(coil,player);h.assertTrue(CoilEnergyValue(coil)==10000,"linked tool charges at configured rate");
-            h.assertTrue(dev.overloadsim.tool.CoilEnergy.INSTANCE.asEnergyStorage(coil).receiveEnergy(1000,false)==1000&&CoilEnergyValue(coil)==11000,"external item FE charging supported");h.succeed();});
+            long expected=AppliedFluxEnergyGameTests.hasFlux()?10000:0;
+            dev.overloadsim.tool.CoilEnergy.INSTANCE.refill(coil,player);h.assertTrue(CoilEnergyValue(coil)==expected,"linked tool uses available FE storage and never substitutes AE power");
+            h.assertTrue(dev.overloadsim.tool.CoilEnergy.INSTANCE.asEnergyStorage(coil).receiveEnergy(1000,false)==1000&&CoilEnergyValue(coil)==expected+1000,"external item FE charging remains supported with or without Flux");h.succeed();});
     }
     @GameTest(template="empty",timeoutTicks=130)
     public static void closedWorkbenchContinuouslyChargesOnlyCoil(GameTestHelper h){
         var bench=network(h);var coil=equipped(h,bench);coil.set(dev.overloadsim.ModContent.COIL_FE.get(),0L);
-        h.runAtTickTime(80,()->{h.assertTrue(CoilEnergyValue(coil)>0,"online workbench charges without an open menu");long before=CoilEnergyValue(coil);
-            h.runAfterDelay(2,()->{h.assertTrue(CoilEnergyValue(coil)-before==20000,"workbench keeps charging each tick");h.succeed();});});
+        if(AppliedFluxEnergyGameTests.hasFlux())AppliedFluxEnergyGameTests.installSeededCell(h,(appeng.blockentity.storage.DriveBlockEntity)h.getLevel().getBlockEntity(bench.getBlockPos().east()),1,10_000_000);
+        h.runAtTickTime(80,()->{h.assertTrue(AppliedFluxEnergyGameTests.hasFlux()?CoilEnergyValue(coil)>0:CoilEnergyValue(coil)==0,"closed workbench charging requires real FE storage");long before=CoilEnergyValue(coil);
+            h.runAfterDelay(2,()->{h.assertTrue(CoilEnergyValue(coil)-before==(AppliedFluxEnergyGameTests.hasFlux()?20000:0),"workbench charges each tick only while real FE is available");h.succeed();});});
     }
     @GameTest(template="empty")
     public static void terrainCancellationRestoresBlockAndEnergy(GameTestHelper h){

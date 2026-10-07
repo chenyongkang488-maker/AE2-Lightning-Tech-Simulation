@@ -44,6 +44,7 @@ public final class HighEnergyWorkstationBlockEntity extends AENetworkedBlockEnti
     private final WorkstationLaserLease laserLease=new WorkstationLaserLease();
     private boolean claimed,visualFormed,dirty=true,loading,frequencyUnloading,eject,networkExport;
     private boolean exporting,deferredRemoval,replacementDropEmitted;
+    private boolean migratingParts;
     private long power,revision,selectionRevision=-1,dropPreparedTick=Long.MIN_VALUE;
     private List<WorkstationRecipes.Entry> selectionCatalog;
     private WorkstationRecipes.Batch cachedSelection,pending;
@@ -81,16 +82,24 @@ public final class HighEnergyWorkstationBlockEntity extends AENetworkedBlockEnti
     }
     private boolean occupied(BlockPos position){return WorkstationStructureIndex.occupiedByOther(level,position,this)||dev.overloadsim.laser.LaserStructureIndex.occupiedByOther(level,position,this)||dev.overloadsim.multiblock.SimulationStructureIndex.occupiedByOther(level,position,this);}
     public void checkStructure(){
-        if(level==null||level.isClientSide||isRemoved())return;dirty=false;
-        for(var entry:template().entrySet()){
+        if(level==null||level.isClientSide||isRemoved()||migratingParts)return;dirty=false;
+        var cells=template();
+        for(var entry:cells.entrySet()){
             var pos=entry.getKey();var expected=entry.getValue();
             if(!level.hasChunkAt(pos)||occupied(pos)){invalidateStructure();return;}
             var current=level.getBlockState(pos);
-            if(expected.isAir()?!LaserLightManager.isBeamAir(current):!current.is(expected.getBlock())||pos.equals(worldPosition)&&current.getValue(HighEnergyWorkstationBlock.FACING)!=facing()){invalidateStructure();return;}
+            if(expected.isAir()?!LaserLightManager.isBeamAir(current):!WorkstationStructure.matches(expected,current)||pos.equals(worldPosition)&&current.getValue(HighEnergyWorkstationBlock.FACING)!=facing()){invalidateStructure();return;}
         }
+        // Validate the complete shell first. Migration consumes no materials and keeps controller buffers intact.
+        migratingParts=true;
+        try { for(var entry:cells.entrySet()) {
+            var expected=entry.getValue();var current=level.getBlockState(entry.getKey());
+            if(!expected.isAir()&&!current.is(expected.getBlock()))level.setBlock(entry.getKey(),expected,3);
+        }} finally { migratingParts=false; }
         if(!claimed){claimed=true;if(!WorkstationStructureIndex.bind(this,template().keySet())){claimed=false;return;}setFormedStates(true);sync();}
     }
     public void invalidateStructure(){
+        if(migratingParts)return;
         boolean previous=claimed;claimed=false;WorkstationStructureIndex.release(this);pending=null;cachedSelection=null;selectionRevision=-1;progress=0;power=0;laserLease.clear();
         if(previous){setFormedStates(false);sync();}
     }
@@ -162,6 +171,19 @@ public final class HighEnergyWorkstationBlockEntity extends AENetworkedBlockEnti
         @Override public FluidStack drain(FluidStack fluid,FluidAction action){return !formed()||(sideMode(side)&2)==0?FluidStack.EMPTY:outputTank.drain(fluid,action);}
         @Override public FluidStack drain(int amount,FluidAction action){return !formed()||(sideMode(side)&2)==0?FluidStack.EMPTY:outputTank.drain(amount,action);}
     };}
+    /** Menu access bypasses automation sides; the product tank remains extraction-only. */
+    public IFluidHandler manualFluidHandler(boolean output){return new IFluidHandler(){
+        private FluidTank tank(){return output?outputTank:inputTank;}
+        private boolean available(){return level!=null&&!level.isClientSide&&!isRemoved()&&level.hasChunkAt(worldPosition)&&level.getBlockEntity(worldPosition)==HighEnergyWorkstationBlockEntity.this;}
+        private void check(int index){if(index!=0)throw new IllegalArgumentException("manual fluid slot");}
+        @Override public int getTanks(){return 1;}
+        @Override public FluidStack getFluidInTank(int index){check(index);return tank().getFluid().copy();}
+        @Override public int getTankCapacity(int index){check(index);return TANK_CAPACITY;}
+        @Override public boolean isFluidValid(int index,FluidStack fluid){check(index);return !output;}
+        @Override public int fill(FluidStack fluid,FluidAction action){return output||!available()?0:tank().fill(fluid,action);}
+        @Override public FluidStack drain(FluidStack fluid,FluidAction action){return available()?tank().drain(fluid,action):FluidStack.EMPTY;}
+        @Override public FluidStack drain(int amount,FluidAction action){return available()?tank().drain(amount,action):FluidStack.EMPTY;}
+    };}
     private void exportOutputs(){
         if(exporting||!formed())return;var exportIdentity=identity;int budget=256,fluidBudget=16_000;
         if(networkExport&&getMainNode().isActive()&&getMainNode().getGrid()!=null){var storage=getMainNode().getGrid().getStorageService().getInventory();var source=IActionSource.ofMachine(this);
@@ -223,22 +245,23 @@ public final class HighEnergyWorkstationBlockEntity extends AENetworkedBlockEnti
     @Override public void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){super.saveAdditional(tag,registries);frequency.save(tag);tag.put("Workstation",saveMachine(registries));}
     @Override public void loadTag(CompoundTag tag,HolderLookup.Provider registries){super.loadTag(tag,registries);frequency.load(tag);loadMachine(tag.getCompound("Workstation"),registries);}
     @Override protected void writeToStream(RegistryFriendlyByteBuf data){super.writeToStream(data);data.writeBoolean(formed());data.writeVarLong(currentPower());data.writeVarInt(progress);data.writeVarInt(lastParallel);data.writeUtf(lastRecipe);for(int slot=0;slot<9;slot++){ItemStack.OPTIONAL_STREAM_CODEC.encode(data,inputs.prototype(slot));data.writeVarInt(inputs.count(slot));}}
-    @Override protected boolean readFromStream(RegistryFriendlyByteBuf data){super.readFromStream(data);visualFormed=data.readBoolean();power=Math.max(0,data.readVarLong());progress=Math.clamp(data.readVarInt(),0,2);lastParallel=Math.clamp(data.readVarInt(),0,1024);lastRecipe=data.readUtf();var next=new WorkstationBuffer();for(int slot=0;slot<9;slot++){var stack=ItemStack.OPTIONAL_STREAM_CODEC.decode(data);int count=Math.clamp(data.readVarInt(),0,WorkstationBuffer.LIMIT);next.insert(slot,stack,count,false);}loading=true;try{inputs.replace(next);}finally{loading=false;}return true;}
+    @Override protected boolean readFromStream(RegistryFriendlyByteBuf data){super.readFromStream(data);visualFormed=data.readBoolean();power=Math.max(0,data.readVarLong());progress=Math.clamp(data.readVarInt(),0,2);lastParallel=Math.clamp(data.readVarInt(),0,1024);lastRecipe=data.readUtf();var next=new WorkstationBuffer();for(int slot=0;slot<9;slot++){var stack=ItemStack.OPTIONAL_STREAM_CODEC.decode(data);int count=Math.clamp(data.readVarInt(),0,WorkstationBuffer.LIMIT);next.insert(slot,stack,count,false);}loading=true;try{inputs.replace(next);}finally{loading=false;}publishMenuAnchors();return true;}
     @Override protected void saveVisualState(CompoundTag tag){super.saveVisualState(tag);tag.putBoolean("Formed",formed());tag.putLong("Power",currentPower());tag.putInt("Progress",progress);if(level!=null)tag.put("Inputs",inputs.save(level.registryAccess()));}
-    @Override protected void loadVisualState(CompoundTag tag){super.loadVisualState(tag);visualFormed=tag.getBoolean("Formed");power=Math.max(0,tag.getLong("Power"));progress=Math.clamp(tag.getInt("Progress"),0,2);if(level!=null)inputs.load(tag.getCompound("Inputs"),level.registryAccess());}
+    @Override protected void loadVisualState(CompoundTag tag){super.loadVisualState(tag);visualFormed=tag.getBoolean("Formed");power=Math.max(0,tag.getLong("Power"));progress=Math.clamp(tag.getInt("Progress"),0,2);if(level!=null)inputs.load(tag.getCompound("Inputs"),level.registryAccess());publishMenuAnchors();}
+    private void publishMenuAnchors(){if(level!=null&&level.isClientSide)WorkstationMenuAnchors.publish(this);}
     public boolean suppressControllerDrop(){if(replacementDropEmitted)return true;if(exporting){deferredRemoval=true;return true;}return false;}
     public void markDropPrepared(){if(exporting){deferredRemoval=true;return;}dropPreparedTick=level==null?Long.MIN_VALUE:level.getGameTime();}
     public void preserveOnReplacement(){if(level==null||level.isClientSide)return;if(exporting){deferredRemoval=true;return;}if(replacementDropEmitted||dropPreparedTick==level.getGameTime()||inputs.empty()&&outputs.empty()&&inputTank.isEmpty()&&outputTank.isEmpty())return;emitReplacementDrop();}
     private void emitReplacementDrop(){if(level==null||level.isClientSide||replacementDropEmitted)return;replacementDropEmitted=true;var stack=new ItemStack(WorkstationContent.CONTROLLER_ITEM.get());var tag=new CompoundTag();tag.put("Workstation",saveMachine(level.registryAccess()));stack.set(DataComponents.CUSTOM_DATA,CustomData.of(tag));Block.popResource(level,worldPosition,stack);}
-    @Override public void onLoad(){frequencyUnloading=false;super.onLoad();if(level!=null&&!level.isClientSide)checkStructure();}
+    @Override public void onLoad(){frequencyUnloading=false;super.onLoad();if(level!=null&&!level.isClientSide)checkStructure();publishMenuAnchors();}
     @Override public AENetworkedBlockEntity getFrequencyBindingBlockEntity(){return this;}
     @Override public FrequencyBindingAccess getFrequencyBindingAccess(){return frequency;}
     @Override public void saveFrequencyBindingChanges(){saveChanges();}
     @Override public void markFrequencyBindingForUpdate(){markForClientUpdate();}
     @Override public void onMainNodeStateChanged(IGridNodeListener.State reason){frequency.onMainNodeStateChanged(reason);}
     @Override public void onReady(){super.onReady();frequency.onReady();}
-    @Override public void setRemoved(){if(exporting&&!frequencyUnloading)deferredRemoval=true;if(!frequencyUnloading)frequency.setRemoved();WorkstationStructureIndex.release(this);claimed=false;power=0;laserLease.clear();pending=null;super.setRemoved();}
-    @Override public void onChunkUnloaded(){frequencyUnloading=true;FrequencyBindingLifecycle.chunkUnloaded(frequency);WorkstationStructureIndex.release(this);claimed=false;power=0;laserLease.clear();pending=null;super.onChunkUnloaded();}
+    @Override public void setRemoved(){WorkstationMenuAnchors.remove(this);if(exporting&&!frequencyUnloading)deferredRemoval=true;if(!frequencyUnloading)frequency.setRemoved();WorkstationStructureIndex.release(this);claimed=false;power=0;laserLease.clear();pending=null;super.setRemoved();}
+    @Override public void onChunkUnloaded(){WorkstationMenuAnchors.remove(this);frequencyUnloading=true;FrequencyBindingLifecycle.chunkUnloaded(frequency);WorkstationStructureIndex.release(this);claimed=false;power=0;laserLease.clear();pending=null;super.onChunkUnloaded();}
     @Override public void clearRemoved(){frequencyUnloading=false;replacementDropEmitted=false;deferredRemoval=false;super.clearRemoved();frequency.clearRemoved();dirty=true;}
     @Override public void exportSettings(SettingsFrom mode,DataComponentMap.Builder builder,Player player){super.exportSettings(mode,builder,player);frequency.exportMemorySettings(mode,builder,tag->{});}
     @Override public void importSettings(SettingsFrom mode,DataComponentMap settings,Player player){super.importSettings(mode,settings,player);frequency.importMemorySettings(mode,settings,tag->{});}

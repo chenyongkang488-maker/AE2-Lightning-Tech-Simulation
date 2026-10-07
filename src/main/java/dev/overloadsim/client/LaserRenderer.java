@@ -11,6 +11,7 @@ import dev.overloadsim.core.DeflectorShellMesh;
 import dev.overloadsim.core.DeflectorCrystalMesh;
 import dev.overloadsim.core.ReceiverPedestalMesh;
 import dev.overloadsim.core.ReceiverParticleVisuals;
+import dev.overloadsim.core.ParticleFlightVisuals;
 import dev.overloadsim.laser.LaserContent;
 import dev.overloadsim.laser.LaserKind;
 import dev.overloadsim.laser.LaserMachineBlockEntity;
@@ -37,9 +38,10 @@ import org.joml.Matrix4f;
 
 /** Bounded cosmetic geometry only: neither beams nor particles create world entities. */
 public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBlockEntity> {
-    private static final int SIDES = 12, MAX_SEGMENTS = 128, MAX_DOTS = 128;
+    private static final int SIDES = 12, MAX_SEGMENTS = 128;
     private final BlockEntityRendererProvider.Context context;
     private final Map<LaserMachineBlockEntity,Skin> skins = new WeakHashMap<>();
+    private final Map<LaserMachineBlockEntity,ParticleFlightVisuals.Clock> flights = new WeakHashMap<>();
     private record Basis(Vec3 right,Vec3 up,Vec3 forward) {
         Vec3 apply(double x,double y,double z) { return right.scale(x).add(up.scale(y)).add(forward.scale(z)); }
         Vec3 local(Vec3 world) { return new Vec3(world.dot(right),world.dot(up),world.dot(forward)); }
@@ -55,7 +57,7 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
         AABB box = new AABB(be.getBlockPos());
         if (be.formed()) {
             Vec3 center=Vec3.atCenterOf(be.center());
-            double radius=be.kind()==LaserKind.CORE?1.7:be.kind()==LaserKind.EMITTER?2.85:
+            double radius=be.kind()==LaserKind.CORE?1.85:be.kind()==LaserKind.EMITTER?2.85:
                     be.kind()==LaserKind.CONSTRAINT||be.kind()==LaserKind.FOCUS?4.2:3.65;
             box=box.minmax(new AABB(center,center).inflate(radius));
             if(be.kind()==LaserKind.RECEIVER&&be.receiverPedestalLayout()) {
@@ -89,24 +91,34 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
         Matrix4f matrix = poses.last().pose();
         if (be.kind() == LaserKind.RECEIVER)
             containment(matrix, vertices, center, time, be.particles().stored(), be.particles().capacity());
+        ParticleFlightVisuals.Clock flightClock=null;
+        if(be.kind()==LaserKind.EMITTER){
+            flightClock=flights.computeIfAbsent(be,host->new ParticleFlightVisuals.Clock());
+            flightClock.beginFrame(time,be.segments().stream().limit(MAX_SEGMENTS).filter(s->s.particle()&&s.particleCount()>0)
+                    .mapToLong(LaserSegment::launchTick).toArray());
+        }
         if (!active) return;
         if(be.kind()==LaserKind.BURST&&be.lastPower()>0){
             var b=basis(be);LaserEnergyEffects.burst(matrix,vertices,center,b.right,b.up,b.forward,time,be.getBlockPos().asLong());
         }
         var energySprite=Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(ModContent.id("block/laser_energy_flow"));
         var energyVertices=buffers.getBuffer(RenderType.beaconBeam(InventoryMenu.BLOCK_ATLAS,true));
-        int count = 0, dotBudget = MAX_DOTS;
+        int count = 0;
         for (LaserSegment segment : be.segments()) {
             if (++count > MAX_SEGMENTS) break;
             if (!valid(segment)) continue;
             Vec3 start = segment.start().subtract(origin), end = segment.end().subtract(origin);
             if (segment.particle()) {
-                int dots = Math.min(12, dotBudget); dotBudget -= dots;
+                int dots = flightClock==null?ParticleFlightVisuals.visibleCount(segment.particleCount(),segment.launchTick(),time)
+                        :flightClock.visibleCount(segment.particleCount(),segment.launchTick(),time);
+                double t = ParticleFlightVisuals.progress(segment.launchTick(),time);
+                Vec3 direction=end.subtract(start).normalize();
+                Vec3 normal=direction.cross(Math.abs(direction.y)<.9?new Vec3(0,1,0):new Vec3(1,0,0)).normalize();
+                Vec3 tangent=direction.cross(normal).normalize();
                 for (int dot = 0; dot < dots; dot++) {
-                    double t = (time * .065 + dot / (double) Math.max(1, dots)) % 1;
-                    Vec3 point = start.lerp(end, t);
-                    tube(matrix, vertices, point.add(0, -.028, 0), point.add(0, .028, 0),
-                            .035, .035, 1, .65f, .85f, .85f);
+                    double spread=dots==1?0:.14*Math.sqrt((dot+.5)/dots)*Math.sin(t*Math.PI),angle=dot*2.399963229728653;
+                    Vec3 point = start.lerp(end, t).add(normal.scale(spread*Math.cos(angle))).add(tangent.scale(spread*Math.sin(angle)));
+                    spark(matrix,vertices,point,.035,1,.85f,.96f,.92f);
                 }
             } else {
                 double startRadius = segment.startRadius(), endRadius = segment.endRadius();

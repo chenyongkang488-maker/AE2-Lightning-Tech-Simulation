@@ -20,12 +20,21 @@ public final class LaserPartBlock extends Block {
     @Override protected boolean skipRendering(BlockState state, BlockState adjacent, Direction side) {
         return glass && adjacent.is(this) || super.skipRendering(state, adjacent, side);
     }
+    @Override protected int getLightBlock(BlockState state, net.minecraft.world.level.BlockGetter level, BlockPos pos) {
+        return glass ? 0 : 15;
+    }
+    @Override protected boolean propagatesSkylightDown(BlockState state, net.minecraft.world.level.BlockGetter level, BlockPos pos) {
+        return glass;
+    }
     @Override protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
-        return state.is(LaserContent.FRAME.get()) ? dev.overloadsim.multiblock.FrameMenuAccess.use(level,pos,player)
+        return state.is(LaserContent.FRAME.get()) || state.is(LaserContent.PORT.get()) ? dev.overloadsim.multiblock.FrameMenuAccess.use(level,pos,player)
                 : super.useWithoutItem(state,level,pos,player,hit);
     }
     @Override protected void onRemove(BlockState state, Level level, BlockPos pos, BlockState next, boolean moving) {
-        if (!state.is(next.getBlock())) LaserStructureIndex.changed(level, pos, true);
+        if (!state.is(next.getBlock())) {
+            LaserStructureIndex.changed(level, pos, true);
+            dev.overloadsim.workstation.WorkstationStructureIndex.removed(level,pos);
+        }
         super.onRemove(state, level, pos, next, moving);
     }
 }

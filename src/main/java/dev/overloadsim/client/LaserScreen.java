@@ -13,6 +13,7 @@ import dev.overloadsim.laser.LaserKind;
 import dev.overloadsim.laser.LaserMenu;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.AbstractSliderButton;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.core.Direction;
@@ -22,7 +23,8 @@ import net.minecraft.world.entity.player.Inventory;
 /** Compact AE-style prototype; all controls send validated menu actions. */
 public final class LaserScreen extends AEBaseScreen<LaserMenu> {
     private static final int TEXT = 0x413F54;
-    private Button enable, less, more;
+    private Button enable;
+    private BoostSlider boostSlider;
     private final Button[] sides = new Button[6];
     private final Button build,projection;
 
@@ -66,10 +68,7 @@ public final class LaserScreen extends AEBaseScreen<LaserMenu> {
         enable = addRenderableWidget(Button.builder(Component.empty(), b -> menu.toggleEnabled())
                 .bounds(leftPos + 148, topPos + 25, 66, 18).build());
         if (menu.kind() == LaserKind.ENHANCEMENT) {
-            less = addRenderableWidget(Button.builder(Component.literal("−100k"), b -> menu.changeBoost(-1))
-                    .bounds(leftPos + 10, topPos + 99, 96, 18).build());
-            more = addRenderableWidget(Button.builder(Component.literal("+100k"), b -> menu.changeBoost(1))
-                    .bounds(leftPos + 118, topPos + 99, 96, 18).build());
+            boostSlider = addRenderableWidget(new BoostSlider(leftPos + 10, topPos + 99));
         }
         if (menu.kind() == LaserKind.DEFLECTOR) for (Direction direction : Direction.Plane.HORIZONTAL) {
             int side = direction.get3DDataValue();
@@ -81,6 +80,23 @@ public final class LaserScreen extends AEBaseScreen<LaserMenu> {
 
     @Override protected void updateBeforeRender() { super.updateBeforeRender(); updateControls(); }
 
+    // Container screens consume item drags before dispatching them to child widgets.
+    @Override public boolean mouseDragged(double x, double y, int button, double dx, double dy) {
+        if (button == 0 && boostSlider != null && boostSlider.dragging) {
+            return boostSlider.mouseDragged(x, y, button, dx, dy);
+        }
+        return super.mouseDragged(x, y, button, dx, dy);
+    }
+
+    @Override public boolean mouseReleased(double x, double y, int button) {
+        if (button == 0 && boostSlider != null && boostSlider.dragging) {
+            boostSlider.onRelease(x, y);
+            setDragging(false);
+            return true;
+        }
+        return super.mouseReleased(x, y, button);
+    }
+
     private void updateControls() {
         if (enable == null) return;
         enable.setMessage(Component.translatable("gui.overload_sim.laser." + (menu.enabled ? "on" : "off")));
@@ -88,7 +104,7 @@ public final class LaserScreen extends AEBaseScreen<LaserMenu> {
         enable.setTooltip(Tooltip.create(Component.translatable("gui.overload_sim.laser.control_hint")));
         build.active=!menu.formed;
         projection.active=!menu.formed&&menu.kind()!=LaserKind.CORE;
-        if (less != null) { less.active = menu.formed && menu.boost > 100_000; more.active = menu.formed && menu.boost < 9_000_000; }
+        if (boostSlider != null) { boostSlider.active = menu.formed; boostSlider.synchronize(); }
         for (int side = 0; side < 6; side++) if (sides[side] != null) {
             boolean input = (menu.inputMask&(1<<side))!=0;
             var face = Component.translatable("gui.overload_sim.laser.face." + Direction.from3DDataValue(side).getName());
@@ -96,6 +112,31 @@ public final class LaserScreen extends AEBaseScreen<LaserMenu> {
                     Component.translatable("gui.overload_sim.laser." + (input ? "input" : (menu.outputMask & (1 << side)) != 0 ? "output" : "off"))));
             sides[side].active = true;
             sides[side].setTooltip(Tooltip.create(Component.translatable("gui.overload_sim.laser.split_hint")));
+        }
+    }
+    private final class BoostSlider extends AbstractSliderButton {
+        private boolean dragging;
+        private long requested;
+        BoostSlider(int x,int y) {
+            super(x,y,204,18,Component.empty(),normalized(menu.boost));
+            requested=menu.boost;updateMessage();
+            setTooltip(Tooltip.create(Component.translatable("gui.overload_sim.laser.boost_slider_hint")));
+        }
+        private static double normalized(long amount){return (Math.clamp(amount,100_000L,9_000_000L)/100_000.0-1)/89;}
+        private long selected(){return (1+Math.round(value*89))*100_000;}
+        void synchronize(){if(!dragging){value=normalized(menu.boost);requested=menu.boost;updateMessage();}}
+        @Override protected void updateMessage(){setMessage(Component.literal(compact(selected())+" FE"));}
+        @Override protected void applyValue(){long amount=selected();if(amount!=requested){requested=amount;menu.requestBoost(amount);}}
+        @Override public void onClick(double x,double y){dragging=true;super.onClick(x,y);}
+        @Override public void onRelease(double x,double y){super.onRelease(x,y);dragging=false;}
+        @Override public void renderWidget(GuiGraphics g,int mouseX,int mouseY,float partial){
+            super.renderWidget(g,mouseX,mouseY,partial);
+            int filled=(int)Math.round(value*(width-4));
+            g.fill(getX()+2,getY()+height-3,getX()+2+filled,getY()+height-2,active?0xFFEE98C4:0xFF88879B);
+        }
+        @Override public boolean keyPressed(int key,int scan,int modifiers){
+            if(key==262||key==263){value=normalized(selected()+(key==262?100_000:-100_000));updateMessage();applyValue();return true;}
+            return super.keyPressed(key,scan,modifiers);
         }
     }
 
@@ -187,7 +228,7 @@ public final class LaserScreen extends AEBaseScreen<LaserMenu> {
             g.renderTooltip(font, List.of(Component.translatable("gui.overload_sim.laser.sealed_fuel"),
                     Component.translatable("gui.overload_sim.laser.active_fuel", menu.activeFuel, menu.particleRemaining)), Optional.empty(), mx, my);
         else if (mx >= leftPos + 8 && mx <= leftPos + 215 && my >= topPos + 45
-                && my <= topPos + (menu.kind()==LaserKind.DEFLECTOR?95:116))
+                && my <= topPos + (menu.kind()==LaserKind.DEFLECTOR||menu.kind()==LaserKind.ENHANCEMENT?95:116))
             g.renderTooltip(font, List.of(Component.translatable("gui.overload_sim.laser.status", diagnostic()),
                     Component.translatable(matrixStrength()?"gui.overload_sim.laser.exact_strength":"gui.overload_sim.laser.exact_power", menu.power),
                     Component.translatable("gui.overload_sim.laser.exact_energy", menu.energy, menu.energyCapacity),

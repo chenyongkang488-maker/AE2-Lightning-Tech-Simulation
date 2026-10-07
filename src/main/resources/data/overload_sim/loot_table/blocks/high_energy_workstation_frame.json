@@ -6,7 +6,7 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "overload_sim:high_energy_workstation_frame"
+          "name": "overload_sim:laser_frame"
         }
       ],
       "conditions": [

@@ -122,7 +122,11 @@ NeoForge.EVENT_BUS 的事件：
 
 ## 自动化接口与指南
 
-在线且取得频道时，每个服务器 tick 从 ME 网络的 IEnergyService 取 AE 电力，通过 PowerUnit.FE/AE 的运行时标准比例换算并补充本地 FE 缓冲；待机、加工和输出堵塞时均持续充电。COMMON 配置 `networkFeChargePerTick` 默认 10000，范围 0..2000000，0 关闭网络充电。缓冲容量 2000000 FE；满电、离线或网络无法供电时停止抽取。小数 FE 余量随区块保存，外部 FE 能力继续可用。生产批次的 FE 支付与缓存充电分开计算，不增加配方成本。新批次和退款使用 HV；旧 alpha.1 已付费任务保留快照，旧退款记录按 EHV 返还。
+在线且取得频道时，每个服务器 tick 从 ME 库存中的 Applied Flux FE 存储单元取出整数 FE，补充本地缓冲；待机、加工和输出堵塞时均可充电。单方块、多方块、线圈和激光仪器共用这条供能规则。未安装 Applied Flux 或 FE 单元为空时不抽取 FE；AE 能源单元只承担正常网络运行开销，不换算为仪器 FE。COMMON 配置 `networkFeChargePerTick` 默认 10000，范围 0..2000000，0 关闭单方块模拟室的新网络 FE 抽取。缓冲容量 2000000 FE；满电或离线时停止抽取，外部 FE 能力保持可用。
+
+库存取出后若本地缓存无法全额接受，剩余 FE 退回原网络库存；原库存拒收的部分保存在机器的持久化 FE 余量中，后续优先补入本地缓存，满缓存和离线均不会丢失。多方块沿用 `FeCredit` 账本；单方块和激光设备使用 `NetworkFeCredit`，线圈在原有 `custom_data` 中保存 `overload_sim:network_fe_credit` 并保留其它数据。旧 AE 换算的小数标签仍保存，但新交易不产生小数。生产批次的 FE 支付与缓存充电分开计算，不增加配方成本。新批次和退款使用 HV；旧 alpha.1 已付费任务保留快照，旧退款记录按 EHV 返还。
+
+如果库存回调在取电期间拆掉机器、先生成掉落物，随后原库存又拒收退款，这笔迟到的退款保存在服务器主世界的 `overload_sim_network_fe_refunds` SavedData 中。多方块控制器沿用打包 `Identity`；单方块和激光设备保存独立的 `NetworkFeRefundIdentity`，仅在有退款或取电尚未完成时，将退款身份和现有退款余额写入掉落物的 `overload_sim:network_fe_refund` 自定义数据。恢复后按身份领取一次；记忆卡不能复制或领取退款。单方块和激光设备的普通 FE 缓存仍按原有拆除规则处理。
 
 机器注册 NeoForge `Capabilities.ItemHandler.BLOCK` 和 `Capabilities.EnergyStorage.BLOCK`。物品接口共 17 槽：0 完美水晶，1 矩阵，2 为旧卡槽迁移保留（拒绝插入），3 辅助材料，4..12 输出，13..16 四个加速卡槽（每格一张）。外部只可提取输出，批次进行中拒绝修改水晶、矩阵和辅助材料；可以插入新卡，下一批生效。GUI 允许空闲时取回输入和加速卡。Shift 点击加速卡直接进入升级栏。
 

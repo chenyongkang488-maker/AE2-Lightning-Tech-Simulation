@@ -163,8 +163,7 @@ public final class ConstructionProjection {
         var cells=new ArrayList<Cell>();
         host.template().forEach((pos,state)->{
             if(!pos.equals(host.getBlockPos())&&!state.isAir()) {
-                var color=state.is(dev.overloadsim.workstation.WorkstationContent.GLASS.get())?CYAN
-                        :state.is(dev.overloadsim.workstation.WorkstationContent.RECEIVER.get())?VIOLET:PINK;
+                var color=state.is(LaserContent.GLASS.get())?CYAN :state.is(LaserContent.PORT.get())?VIOLET:PINK;
                 cells.add(new Cell(pos.immutable(),state,color));
             }
         });
@@ -238,9 +237,16 @@ public final class ConstructionProjection {
         var memberEntity = preview.level.getBlockEntity(cell.position());
         if (memberEntity instanceof SimulationMemberBlockEntity member && member.owner() != null
                 && !member.owner().equals(preview.host.getBlockPos())) return false;
+        LaserStructureGeometry.Part receiverPart=null;
+        if (preview.host instanceof LaserMachineBlockEntity laser
+                && dev.overloadsim.laser.ReceiverOpticalPorts.compatible(laser,cell.position()))
+            receiverPart=laser.structureTemplate().get(cell.position().subtract(laser.getBlockPos()));
+        if(preview.host instanceof dev.overloadsim.workstation.HighEnergyWorkstationBlockEntity)
+            return dev.overloadsim.workstation.WorkstationStructure.matches(cell.expected(),current);
         if (BuiltInRegistries.BLOCK.getKey(current.getBlock()).equals(INTERFACE)) {
             if (interfaces != 1) return false;
-            if (preview.host instanceof LaserMachineBlockEntity laser && cell.expected().is(LaserContent.FRAME.get())) {
+            if (preview.host instanceof LaserMachineBlockEntity laser && (receiverPart==LaserStructureGeometry.Part.FRAME
+                    || receiverPart==null&&cell.expected().is(LaserContent.FRAME.get()))) {
                 var center = laser.getBlockPos().offset(LaserStructureGeometry.centerOffset(
                         laser.kind(), preview.laserFacing, preview.receiverPedestal, preview.deflectorLegacy));
                 var relative = cell.position().subtract(center);
@@ -257,6 +263,8 @@ public final class ConstructionProjection {
             }
             return false;
         }
+        if(receiverPart!=null)return receiverPart==LaserStructureGeometry.Part.PORT?current.is(LaserContent.PORT.get())
+                :receiverPart==LaserStructureGeometry.Part.FRAME&&current.is(LaserContent.FRAME.get());
         if (preview.host instanceof SimulationControllerBlockEntity chamber) {
             if (cell.expected().is(MultiblockContent.FRAME.get()))
                 return current.is(MultiblockContent.FRAME.get()) || current.is(FRAMES);

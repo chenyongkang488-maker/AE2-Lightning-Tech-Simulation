@@ -1,6 +1,7 @@
 package dev.overloadsim.workstation;
 
 import appeng.api.inventories.PlatformInventoryWrapper;
+import appeng.api.stacks.GenericStack;
 import appeng.helpers.InventoryAction;
 import appeng.menu.AEBaseMenu;
 import appeng.menu.SlotSemantics;
@@ -22,6 +23,9 @@ import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.items.ItemStackHandler;
+import net.neoforged.neoforge.fluids.FluidUtil;
+import net.neoforged.neoforge.items.wrapper.InvWrapper;
+import net.neoforged.neoforge.items.wrapper.RangedWrapper;
 
 /** Bulk slots are count-one displays. Only server transactions touch the real buffers. */
 public final class HighEnergyWorkstationMenu extends AEBaseMenu implements FrequencyBindingMenuHost {
@@ -43,6 +47,8 @@ public final class HighEnergyWorkstationMenu extends AEBaseMenu implements Frequ
     @GuiSync(42) public String outputFluid = "";
     @GuiSync(43) public long outputFluidAmount;
     @GuiSync(44) public String buildFeedback = "";
+    @GuiSync(45) public GenericStack inputFluidDisplay;
+    @GuiSync(46) public GenericStack outputFluidDisplay;
     private final HighEnergyWorkstationBlockEntity host;
     private final UUID hostIdentity;
     private final BlockPos frameAnchor;
@@ -81,6 +87,10 @@ public final class HighEnergyWorkstationMenu extends AEBaseMenu implements Frequ
             host.setSideMode(direction, (host.sideMode(direction) + 1) % 4);
             broadcastChanges();
         });
+        registerClientAction("workstationFluid", Integer.class, index -> {
+            if(index==null||index<0||index>1||!validAction())return;
+            transferFluid(index);
+        });
         registerClientAction("workstationEject", () -> {
             if (!validAction()) return;
             host.setEject(!host.eject());
@@ -105,6 +115,7 @@ public final class HighEnergyWorkstationMenu extends AEBaseMenu implements Frequ
         if (slot >= 0 && slot < DISPLAYS && mode >= 0 && mode < 3) sendClientAction("workstationItem", slot * 3 + mode);
     }
     public void cycleSide(int side) { sendClientAction("workstationSide", side); }
+    public void requestFluid(int index) { sendClientAction("workstationFluid", index); }
     public void toggleEject() { sendClientAction("workstationEject"); }
     public void toggleNetworkExport() { sendClientAction("workstationNetwork"); }
     public void autoBuild() { sendClientAction("workstationBuild"); }
@@ -153,6 +164,20 @@ public final class HighEnergyWorkstationMenu extends AEBaseMenu implements Frequ
     private static boolean bulkSlot(int slot) { return slot >= 0 && slot < DISPLAYS; }
     private WorkstationBuffer buffer(int slot) { return slot < INPUTS ? host.inputs() : host.outputs(); }
     private static int localSlot(int slot) { return slot % INPUTS; }
+
+    private void transferFluid(int index) {
+        var carried=getCarried();
+        if(carried.isEmpty()||carried.getCount()>carried.getMaxStackSize())return;
+        var tank=host.manualFluidHandler(index==1);
+        // Passing no player makes standard container-and-stow reject a full inventory without dropping overflow.
+        // Creative keeps the usual reusable-container semantics; that path does not stow a second item.
+        var transferPlayer=getPlayer().getAbilities().instabuild?getPlayer():null;
+        var inventory=new RangedWrapper(new InvWrapper(getPlayerInventory()),0,36);
+        var result=index==0?FluidUtil.tryEmptyContainerAndStow(carried,tank,inventory,Integer.MAX_VALUE,transferPlayer,true)
+                :net.neoforged.neoforge.fluids.FluidActionResult.FAILURE;
+        if(!result.isSuccess())result=FluidUtil.tryFillContainerAndStow(carried,tank,inventory,Integer.MAX_VALUE,transferPlayer,true);
+        if(result.isSuccess()){setCarried(result.getResult());host.saveChanges();broadcastChanges();}
+    }
 
     /** mode 0 fills a legal cursor stack, mode 1 moves one item, mode 2 moves into ordinary inventory. */
     private void transferBulk(int slot, int mode) {
@@ -269,6 +294,8 @@ public final class HighEnergyWorkstationMenu extends AEBaseMenu implements Frequ
             outputFluid = output.isEmpty() ? "" : bounded(output.getHoverName().getString());
             inputFluidAmount = input.getAmount();
             outputFluidAmount = output.getAmount();
+            inputFluidDisplay = GenericStack.fromFluidStack(input);
+            outputFluidDisplay = GenericStack.fromFluidStack(output);
         }
         super.broadcastChanges();
     }

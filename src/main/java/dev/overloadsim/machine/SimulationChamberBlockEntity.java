@@ -14,6 +14,8 @@ import com.moakiee.ae2lt.api.frequency.*;
 import dev.overloadsim.*;
 import dev.overloadsim.api.*;
 import dev.overloadsim.compat.LightningNetwork;
+import dev.overloadsim.compat.AppliedFluxEnergy;
+import dev.overloadsim.compat.AppliedFluxRefunds;
 import dev.overloadsim.compat.FrequencyBindingLifecycle;
 import dev.overloadsim.core.SimulationRules;
 import dev.overloadsim.data.*;
@@ -59,7 +61,9 @@ public class SimulationChamberBlockEntity extends AENetworkedBlockEntity impleme
     private CrystalData taskCrystal;
     private ResourceLocation taskRecipe;
     private int remaining,totalTicks,actualParallel,cardsSnapshot;
-    private long paidFe,paidLightning,lightningRefund;
+    private long paidFe,paidLightning,lightningRefund,networkFeCredit;
+    private UUID networkFeRefundIdentity=UUID.randomUUID();
+    private int networkFeTransfersInProgress;
     private double networkFeFraction;
     private boolean legacyEhvRefund;
     private int outputMask=63,status=0;
@@ -127,15 +131,18 @@ public class SimulationChamberBlockEntity extends AENetworkedBlockEntity impleme
         pending.clear();pending.addAll(fixed);taskCrystal=data.get();taskRecipe=chosen.get().id();actualParallel=p;cardsSnapshot=getInstalledUpgrades(AEItems.SPEED_CARD);totalTicks=SimulationRules.duration(production.ticks(),cardsSnapshot);remaining=totalTicks;paidFe=feCost;paidLightning=lightningCost;taskActive=true;status=1;saveChanges();
     }
     private void chargeFromNetwork(int requestedFe){
+        claimNetworkFeRefund();
+        if(networkFeCredit>0){int credited=energy.receiveEnergy((int)Math.min(Integer.MAX_VALUE,networkFeCredit),false);networkFeCredit-=credited;if(credited>0)saveChanges();}
         int needed=Math.min(energy.getMaxEnergyStored(),requestedFe)-energy.getEnergyStored();
-        var grid=getMainNode().getGrid();if(needed<=0||grid==null||!getMainNode().isActive())return;
-        double wanted=appeng.api.config.PowerUnit.FE.convertTo(appeng.api.config.PowerUnit.AE,Math.max(0,needed-networkFeFraction));
-        double drawn=grid.getEnergyService().extractAEPower(wanted,appeng.api.config.Actionable.MODULATE,appeng.api.config.PowerMultiplier.ONE);
-        if(drawn<=0&&networkFeFraction==0)return;
-        double available=networkFeFraction+appeng.api.config.PowerUnit.AE.convertTo(appeng.api.config.PowerUnit.FE,drawn);
-        int received=energy.receiveEnergy(Math.min(needed,(int)Math.floor(available)),false);
-        networkFeFraction=Math.max(0,available-received);saveChanges();
+        var grid=getMainNode().getGrid();if(needed<=0||isRemoved()||grid==null||!getMainNode().isActive())return;
+        networkFeTransfersInProgress++;
+        try{
+            var transfer=AppliedFluxEnergy.extractInto(grid,IActionSource.ofMachine(this),needed,amount->isRemoved()?0:energy.receiveEnergy((int)amount,false));
+            if(transfer.credit()>0){if(isRemoved())AppliedFluxRefunds.deposit(level,networkFeRefundIdentity,transfer.credit());else networkFeCredit=Math.addExact(networkFeCredit,transfer.credit());}
+            if(transfer.accepted()>0||transfer.credit()>0)saveChanges();
+        }finally{networkFeTransfersInProgress--;}
     }
+    private void claimNetworkFeRefund(){if(!isRemoved()){long restored=AppliedFluxRefunds.claim(level,networkFeRefundIdentity);if(restored>0){networkFeCredit=Math.addExact(networkFeCredit,restored);saveChanges();}}}
     private int outputParallel(SimulationRecipe.Production production,int maximum){return outputParallel(production,maximum,false);}
     private int outputParallel(SimulationRecipe.Production production,int maximum,boolean dynamic){
         // Unknown loot/provider output is rolled once after EHV reservation and journaled.
@@ -176,7 +183,7 @@ public class SimulationChamberBlockEntity extends AENetworkedBlockEntity impleme
             if(budget==0)break;
         }
     }
-    @Override public void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){super.saveAdditional(tag,registries);tag.put("Inventory",inventory.serializeNBT(registries));upgrades.writeToNBT(tag,"Upgrades",registries);tag.put("Energy",energy.serializeNBT(registries));tag.putDouble("NetworkFeFraction",networkFeFraction);frequency.save(tag);tag.putBoolean("Eject",eject);tag.putInt("OutputMask",outputMask);tag.putLong("LightningRefund",lightningRefund);tag.putString("LightningRefundTier",legacyEhvRefund?"ehv":"hv");
+    @Override public void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){super.saveAdditional(tag,registries);tag.put("Inventory",inventory.serializeNBT(registries));upgrades.writeToNBT(tag,"Upgrades",registries);tag.put("Energy",energy.serializeNBT(registries));tag.putDouble("NetworkFeFraction",networkFeFraction);tag.putLong("NetworkFeCredit",networkFeCredit);tag.putUUID("NetworkFeRefundIdentity",networkFeRefundIdentity);frequency.save(tag);tag.putBoolean("Eject",eject);tag.putInt("OutputMask",outputMask);tag.putLong("LightningRefund",lightningRefund);tag.putString("LightningRefundTier",legacyEhvRefund?"ehv":"hv");
         if(taskActive){var job=new CompoundTag();job.putInt("Remaining",remaining);job.putInt("Duration",totalTicks);job.putInt("Parallel",actualParallel);job.putInt("Cards",cardsSnapshot);job.putString("Recipe",taskRecipe.toString());job.putLong("PaidFe",paidFe);job.putLong("PaidLightning",paidLightning);job.put("Crystal",CrystalData.CODEC.encodeStart(net.minecraft.nbt.NbtOps.INSTANCE,taskCrystal).getOrThrow());var outputs=new ListTag();for(var stack:pending)outputs.add(stack.save(registries));job.put("Outputs",outputs);tag.put("Job",job);}
     }
     @Override public void loadTag(CompoundTag tag,HolderLookup.Provider registries){super.loadTag(tag,registries);inventory.deserializeNBT(registries,tag.getCompound("Inventory"));if(tag.contains("Energy"))energy.deserializeNBT(registries,tag.get("Energy"));frequency.load(tag);eject=!tag.contains("Eject")||tag.getBoolean("Eject");outputMask=tag.contains("OutputMask")?tag.getInt("OutputMask")&63:63;lightningRefund=Math.max(0,tag.getLong("LightningRefund"));pending.clear();taskActive=false;
@@ -184,6 +191,8 @@ public class SimulationChamberBlockEntity extends AENetworkedBlockEntity impleme
         // Alpha.1/.2 stored all cards in main slot 2; preserve the other slot indices.
         if(!tag.contains("Upgrades")){var legacy=inventory.getStackInSlot(2).copy();if(legacy.is(AEItems.SPEED_CARD.asItem())){for(int slot=0;slot<upgrades.size()&&!legacy.isEmpty();slot++){upgrades.setItemDirect(slot,legacy.copyWithCount(1));legacy.shrink(1);}inventory.setStackInSlot(2,legacy);}}
         networkFeFraction=tag.getDouble("NetworkFeFraction");if(!Double.isFinite(networkFeFraction)||networkFeFraction<0||networkFeFraction>=1)networkFeFraction=0;
+        networkFeCredit=Math.max(0,tag.getLong("NetworkFeCredit"));
+        if(tag.hasUUID("NetworkFeRefundIdentity"))networkFeRefundIdentity=tag.getUUID("NetworkFeRefundIdentity");
         legacyEhvRefund=lightningRefund>0&&(!tag.contains("LightningRefundTier")||tag.getString("LightningRefundTier").equals("ehv"));
         if(tag.contains("Job")){var job=tag.getCompound("Job");taskCrystal=CrystalData.CODEC.parse(NbtOps.INSTANCE,job.get("Crystal")).getOrThrow();taskRecipe=ResourceLocation.parse(job.getString("Recipe"));remaining=Math.max(0,job.getInt("Remaining"));totalTicks=Math.max(1,job.getInt("Duration"));actualParallel=Math.clamp(job.getInt("Parallel"),1,128);cardsSnapshot=Math.clamp(job.getInt("Cards"),0,4);paidFe=job.getLong("PaidFe");paidLightning=job.getLong("PaidLightning");for(var entry:job.getList("Outputs",Tag.TAG_COMPOUND))ItemStack.parse(registries,entry).ifPresent(pending::add);taskActive=true;}
     }
@@ -203,6 +212,12 @@ public class SimulationChamberBlockEntity extends AENetworkedBlockEntity impleme
     @Override protected Item getItemFromBlockEntity(){return ModContent.CHAMBER_ITEM.get();}
     @Override public void addAdditionalDrops(Level level,BlockPos pos,List<ItemStack> drops){for(int i=0;i<SLOTS;i++)if(!inventory.getStackInSlot(i).isEmpty())drops.add(inventory.getStackInSlot(i).copy());for(var card:upgrades)if(!card.isEmpty())drops.add(card.copy());if(taskActive&&remaining==0)for(var s:pending)drops.add(s.copy());}
     @Override public void clearContent(){for(int i=0;i<SLOTS;i++)inventory.setStackInSlot(i,ItemStack.EMPTY);upgrades.clear();pending.clear();taskActive=false;}
-    @Override public void exportSettings(SettingsFrom mode,DataComponentMap.Builder builder,Player p){super.exportSettings(mode,builder,p);frequency.exportMemorySettings(mode,builder,t->{t.putBoolean("Eject",eject);t.putInt("OutputMask",outputMask);});}
-    @Override public void importSettings(SettingsFrom mode,DataComponentMap map,Player p){super.importSettings(mode,map,p);frequency.importMemorySettings(mode,map,t->{eject=t.getBoolean("Eject");outputMask=t.getInt("OutputMask")&63;saveChanges();});}
+    @Override public void exportSettings(SettingsFrom mode,DataComponentMap.Builder builder,Player p){
+        super.exportSettings(mode,builder,p);frequency.exportMemorySettings(mode,builder,t->{t.putBoolean("Eject",eject);t.putInt("OutputMask",outputMask);});
+        if(mode==SettingsFrom.DISMANTLE_ITEM){claimNetworkFeRefund();if(networkFeCredit>0||networkFeTransfersInProgress>0)AppliedFluxRefunds.writeItem(builder,networkFeRefundIdentity,networkFeCredit);}
+    }
+    @Override public void importSettings(SettingsFrom mode,DataComponentMap map,Player p){
+        super.importSettings(mode,map,p);frequency.importMemorySettings(mode,map,t->{eject=t.getBoolean("Eject");outputMask=t.getInt("OutputMask")&63;saveChanges();});
+        if(mode==SettingsFrom.DISMANTLE_ITEM){var refund=AppliedFluxRefunds.readItem(map);if(refund!=null){networkFeRefundIdentity=refund.identity();networkFeCredit=refund.credit();claimNetworkFeRefund();saveChanges();}}
+    }
 }

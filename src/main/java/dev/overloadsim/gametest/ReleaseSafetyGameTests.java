@@ -41,6 +41,8 @@ public class ReleaseSafetyGameTests {
         var c=MultiblockGameTests.powered(h,3);var single=SimulationGameTests.capacityMachine(h);var profile=ModContent.id("auto/mineral/example/coldium");var item=CrystalDataAccess.perfect(new CrystalData(profile,Optional.empty(),0,1));
         h.runAtTickTime(80,()->{
             c.crystals().setStackInSlot(0,item.copy());coldCache();c.tick();h.assertTrue(c.batch()!=null&&c.batch().inputs.size()==1,"cold untagged auto JSON mineral starts multiblock");
+            // Profile resolution is tested with independent FE, after earlier iron jobs may have spent the fixture's initial supply.
+            single.energy().receiveEnergy(10000,false);
             var saved=single.saveWithoutMetadata(h.getLevel().registryAccess());saved.remove("Job");single.loadTag(saved,h.getLevel().registryAccess());single.inventory().setStackInSlot(0,item.copy());coldCache();
             try{var start=single.getClass().getDeclaredMethod("start",net.minecraft.server.level.ServerLevel.class);start.setAccessible(true);start.invoke(single,h.getLevel());}catch(ReflectiveOperationException e){throw new RuntimeException(e);}
             h.assertTrue(single.busy(),"cold untagged auto JSON mineral starts ordinary chamber");saved=single.saveWithoutMetadata(h.getLevel().registryAccess());int remaining=single.remaining();single.loadTag(saved,h.getLevel().registryAccess());coldCache();single.tick();

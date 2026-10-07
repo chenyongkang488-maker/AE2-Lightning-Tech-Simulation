@@ -23,8 +23,10 @@ public final class CoreCollapseCycle {
         if(!Double.isFinite(age)||age<=0)return 1.5;
         if(age<18)return 1.5+(0.18-1.5)*smooth(age/18);
         if(age<22)return .18;
-        return .18+(.85-.18)*smooth(Math.min(1,(age-22)/18));
+        return .18+(1.125-.18)*smooth(Math.min(1,(age-22)/18));
     }
+    /** Inset voxel steps need a small envelope margin around the outer corner clamps. */
+    public static double modelScale(double age){return radius(age)/.35;}
     public static double halo(double age){
         return Double.isFinite(age)?smooth(Math.clamp((age-22)/18,0,1)):0;
     }

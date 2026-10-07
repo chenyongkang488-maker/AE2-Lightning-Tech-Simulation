@@ -12,6 +12,33 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(OverloadSimulation.ID)
 @PrefixGameTestTemplate(false)
 public final class LaserSegmentGameTests {
+    @GameTest(template="laser_empty")
+    public static void particleMetadataCodecPreservesProductionAndRejectsMalformedCounts(GameTestHelper h) {
+        var buffer=new net.minecraft.network.RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.buffer(),h.getLevel().registryAccess());
+        try {
+            var segment=new LaserSegment(Vec3.ZERO,new Vec3(3,0,0),1_000_000_000_000_000L,false,true,1_954,100);
+            segment.write(buffer);
+            h.assertTrue(segment.equals(LaserSegment.read(buffer)),"the bounded segment codec preserves exact count and launch time");
+            var legacy=new LaserSegment(Vec3.ZERO,new Vec3(3,0,0),100_000,false,true);
+            buffer.clear();legacy.write(buffer);
+            var restored=LaserSegment.read(buffer);
+            h.assertTrue(restored.particleCount()==0&&restored.launchTick()==-1,"the public five-argument topology constructor invents no particle production");
+            buffer.clear();
+            buffer.writeDouble(0);buffer.writeDouble(0);buffer.writeDouble(0);
+            buffer.writeDouble(3);buffer.writeDouble(0);buffer.writeDouble(0);
+            buffer.writeVarLong(100_000);buffer.writeBoolean(false);buffer.writeBoolean(true);
+            buffer.writeVarLong(1_955);buffer.writeLong(100);
+            boolean rejected=false;
+            try{LaserSegment.read(buffer);}catch(IllegalArgumentException expected){rejected=true;}
+            h.assertTrue(rejected,"malformed packets cannot exceed the maximum legal core batch");
+        }finally{buffer.release();}
+        for(long launch:new long[]{-2,Long.MAX_VALUE}) {
+            boolean rejected=false;
+            try{new LaserSegment(Vec3.ZERO,new Vec3(3,0,0),100_000,false,true,1,launch);}catch(IllegalArgumentException expected){rejected=true;}
+            h.assertTrue(rejected,"invalid launch times cannot escape the fixed flight lifetime");
+        }
+        h.succeed();
+    }
     private static LaserSegment beam(Vec3 direction, boolean focus) {
         return new LaserSegment(Vec3.ZERO, direction.scale(focus ? 7 : 6), 100_000, focus, false);
     }

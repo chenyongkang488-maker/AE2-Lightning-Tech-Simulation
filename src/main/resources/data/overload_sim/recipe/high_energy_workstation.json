@@ -5,10 +5,10 @@
       "item": "ae2lt:overload_processing_factory"
     },
     {
-      "item": "overload_sim:high_energy_workstation_receiver"
+      "item": "overload_sim:laser_optical_port"
     },
     {
-      "item": "overload_sim:high_energy_workstation_frame"
+      "item": "overload_sim:laser_frame"
     }
   ],
   "result": {

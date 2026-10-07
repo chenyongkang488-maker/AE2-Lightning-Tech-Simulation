@@ -27,7 +27,7 @@ public final class WorkstationContent {
     public static final DeferredHolder<RecipeType<?>,RecipeType<HighEnergyWorkstationRecipe>> RECIPE_TYPE=TYPES.register("high_energy_workstation",()->new RecipeType<>(){public String toString(){return ModContent.id("high_energy_workstation").toString();}});
     public static final DeferredHolder<RecipeSerializer<?>,RecipeSerializer<HighEnergyWorkstationRecipe>> RECIPE_SERIALIZER=SERIALIZERS.register("high_energy_workstation",HighEnergyWorkstationRecipe.Serializer::new);
     private WorkstationContent() {}
-    public static List<Block> playerBlocks(){return List.of(CONTROLLER.get(),FRAME.get(),GLASS.get(),RECEIVER.get());}
+    public static List<Block> playerBlocks(){return List.of(CONTROLLER.get());}
     public static void register(IEventBus bus){ENTITIES.register(bus);MENUS.register(bus);TYPES.register(bus);SERIALIZERS.register(bus);}
     public static void setup(){
         CONTROLLER.get().setBlockEntity(HighEnergyWorkstationBlockEntity.class,CONTROLLER_ENTITY.get(),null,(level,pos,state,host)->host.tick());

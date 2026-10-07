@@ -31,11 +31,27 @@ public final class FrameMenuAccess {
     }
 
     public static InteractionResult use(Level level, BlockPos pos, Player player) {
-        if (level.isClientSide || !(player instanceof ServerPlayer) || player.level() != level
+        if (player.level() != level
                 || !player.isAlive() || player.isSpectator() || player.isSecondaryUseActive()
                 || configurationTool(player.getMainHandItem()) || configurationTool(player.getOffhandItem())
                 || !level.hasChunkAt(pos) || !player.canInteractWithBlock(pos,0) || !level.mayInteract(player,pos)) {
             return InteractionResult.PASS;
+        }
+        if (level.isClientSide) {
+            var state = level.getBlockState(pos);
+            boolean known = state.is(LaserContent.FRAME.get())
+                    && dev.overloadsim.laser.ReceiverShellVisuals.hidden(level,pos)
+                    || state.is(MultiblockContent.FRAME.get()) && state.getValue(SimulationPartBlock.FORMED)
+                    && SimulationShellVisuals.lookup(level,pos) != null
+                    || dev.overloadsim.workstation.WorkstationMenuAnchors.owner(level,pos) != null;
+            // A PASS would also send the held item's use packet, e.g. placing bucket contents.
+            return known ? InteractionResult.SUCCESS : InteractionResult.PASS;
+        }
+        if (!(player instanceof ServerPlayer)) return InteractionResult.PASS;
+        var workstation = dev.overloadsim.workstation.WorkstationStructureIndex.owner(level,pos);
+        if (workstation != null) {
+            dev.overloadsim.workstation.WorkstationMenuAccess.open(workstation,pos,player);
+            return InteractionResult.CONSUME;
         }
         BlockEntity host = owner(level,pos);
         if (host == null) return InteractionResult.PASS;
