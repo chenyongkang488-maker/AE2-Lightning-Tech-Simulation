@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -23,10 +24,20 @@ public final class LaserExtensions {
                 throw new IllegalArgumentException("invalid laser modifier result");
         }
     }
-    public record TargetContext(ServerLevel level, BlockPos position, Direction incoming, long energy, long batchTick) {}
+    public record TargetContext(ServerLevel level, BlockPos position, Direction incoming, long energy, long batchTick,
+            BlockPos source, UUID sourceIdentity) {
+        /** Compatibility constructor for direct, unmanaged target calls. */
+        public TargetContext(ServerLevel level, BlockPos position, Direction incoming, long energy, long batchTick) {
+            this(level, position, incoming, energy, batchTick, null, null);
+        }
+    }
     @FunctionalInterface public interface LaserModifier { ModifierResult modify(BeamContext context); }
     /** Return true when this target has handled and terminated the beam. */
-    @FunctionalInterface public interface LaserTarget { boolean accept(TargetContext context); }
+    @FunctionalInterface public interface LaserTarget {
+        boolean accept(TargetContext context);
+        /** Called when this source stops reaching the target; continuous batch renewal does not stop it. */
+        default void deactivate(TargetContext context) {}
+    }
     /** Providers must resolve stable recipe IDs after paid windows are restored from disk. */
     public interface ParticleConversionProvider {
         Optional<ParticleFuelData.Recipe> match(ItemStack stack);

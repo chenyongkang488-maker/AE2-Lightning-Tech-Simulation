@@ -27,7 +27,9 @@ public final class LaserScreen extends AEBaseScreen<LaserMenu> {
     private final Button build,projection;
 
     public LaserScreen(LaserMenu menu, Inventory inventory, Component title) {
-        super(menu, inventory, title, StyleManager.loadStyleDoc("/screens/overload_sim/laser.json"));
+        super(menu, inventory, title, StyleManager.loadStyleDoc(menu.kind() == LaserKind.CORE
+                ? "/screens/overload_sim/laser_core.json" : "/screens/overload_sim/laser.json"));
+        if (menu.kind() == LaserKind.CORE) { build = null; projection = null; return; }
         var frequencyButton=new TextureToggleButton(TextureToggleButton.ButtonType.FREQUENCY_BIND,b->FrequencyApi.openBindingScreen(menu));
         frequencyButton.setTooltipAt(0,List.of(Component.translatable("gui.overload_sim.frequency")));addToLeftToolbar(frequencyButton);
         build=addToLeftToolbar(new IconButton(b->menu.autoBuild()) {
@@ -54,9 +56,13 @@ public final class LaserScreen extends AEBaseScreen<LaserMenu> {
         projection.setMessage(Component.translatable("gui.overload_sim.construction.projection"));
     }
 
+    @Override protected boolean shouldAddToolbar() { return menu.kind() != LaserKind.CORE; }
+    @Override protected guideme.PageAnchor getHelpTopic() { return menu.kind() == LaserKind.CORE ? null : super.getHelpTopic(); }
+
     @Override protected void init() {
         super.init();
         setTextHidden(TEXT_ID_DIALOG_TITLE, true);
+        if (menu.kind() == LaserKind.CORE) return;
         enable = addRenderableWidget(Button.builder(Component.empty(), b -> menu.toggleEnabled())
                 .bounds(leftPos + 148, topPos + 25, 66, 18).build());
         if (menu.kind() == LaserKind.ENHANCEMENT) {
@@ -115,6 +121,12 @@ public final class LaserScreen extends AEBaseScreen<LaserMenu> {
 
     @Override public void drawFG(GuiGraphics g, int x, int y, int mx, int my) {
         g.drawString(font, font.plainSubstrByWidth(title.getString(), 208), 8, 7, TEXT, false);
+        if (menu.kind() == LaserKind.CORE) {
+            line(g, "gui.overload_sim.laser.current_strength", 10, 30, compact(menu.power));
+            line(g, "gui.overload_sim.laser.core_remainder", 10, 49, compact(menu.coreRemainder));
+            line(g, "gui.overload_sim.laser.core_threshold", 10, 68, compact(dev.overloadsim.core.LaserMath.CORE_THRESHOLD));
+            return;
+        }
         line(g, "gui.overload_sim.laser." + (menu.formed ? "formed" : "unformed"), 10, 28);
         line(g, "gui.overload_sim.laser.network", 10, 45,
                 Component.translatable("gui.overload_sim.laser." + (menu.network ? "online" : "offline")));
@@ -125,11 +137,7 @@ public final class LaserScreen extends AEBaseScreen<LaserMenu> {
                 line(g, "gui.overload_sim.laser.boost_cost", 10, 123);
             }
             case DEFLECTOR -> line(g, "gui.overload_sim.laser.outputs", 10, 81);
-            case CORE -> {
-                line(g, "gui.overload_sim.laser.core_remainder", 10, 79, compact(menu.coreRemainder));
-                line(g, "gui.overload_sim.laser.core_hint", 10, 96);
-                line(g, "gui.overload_sim.laser.forward_hint", 10, 113);
-            }
+            case CORE -> {}
             case RECEIVER -> {
                 line(g, "gui.overload_sim.laser.particles", 10, 76, menu.particleCount);
                 line(g, "gui.overload_sim.laser.energy", 10, 89, compact(menu.energy));
@@ -166,6 +174,14 @@ public final class LaserScreen extends AEBaseScreen<LaserMenu> {
 
     @Override public void render(GuiGraphics g, int mx, int my, float partial) {
         super.render(g, mx, my, partial);
+        if (menu.kind() == LaserKind.CORE) {
+            if (mx >= leftPos + 8 && mx <= leftPos + 215 && my >= topPos + 25 && my <= topPos + 85)
+                g.renderTooltip(font, List.of(Component.translatable("gui.overload_sim.laser.exact_strength", menu.power),
+                        Component.translatable("gui.overload_sim.laser.core_remainder", Long.toString(menu.coreRemainder)),
+                        Component.translatable("gui.overload_sim.laser.core_threshold", Long.toString(dev.overloadsim.core.LaserMath.CORE_THRESHOLD))),
+                        Optional.empty(), mx, my);
+            return;
+        }
         var slot = getSlotUnderMouse();
         if (slot != null && menu.getSlotSemantic(slot) == SlotSemantics.MACHINE_INPUT)
             g.renderTooltip(font, List.of(Component.translatable("gui.overload_sim.laser.sealed_fuel"),

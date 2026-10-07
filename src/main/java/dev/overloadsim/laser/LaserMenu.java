@@ -73,7 +73,7 @@ public final class LaserMenu extends AEBaseMenu implements FrequencyBindingMenuH
                 }, SlotSemantics.MACHINE_INPUT);
             }
         }
-        createPlayerInventorySlots(inventory);
+        if (host.kind() != LaserKind.CORE) createPlayerInventorySlots(inventory);
         registerClientAction("laserEnabled", () -> {
             if (!validAction()) return;
             if (!host.enabled() && !validStructure()) return;
@@ -100,7 +100,7 @@ public final class LaserMenu extends AEBaseMenu implements FrequencyBindingMenuH
     }
 
     private boolean validAction() {
-        return isServerSide() && getPlayer().containerMenu == this && stillValid(getPlayer());
+        return host.kind() != LaserKind.CORE && isServerSide() && getPlayer().containerMenu == this && stillValid(getPlayer());
     }
 
     private boolean validStructure() {

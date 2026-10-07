@@ -1,0 +1,20 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "overload_sim:block/high_energy_workstation",
+      "y": 0
+    },
+    "facing=east": {
+      "model": "overload_sim:block/high_energy_workstation",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "overload_sim:block/high_energy_workstation",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "overload_sim:block/high_energy_workstation",
+      "y": 270
+    }
+  }
+}

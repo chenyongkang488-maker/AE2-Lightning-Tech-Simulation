@@ -25,7 +25,9 @@ public final class LaserNetwork {
     private static final int MAX_HOPS=128,MAX_STEPS=512;
     private static final GameProfile OPERATOR=new GameProfile(UUID.fromString("eeaab42b-c9b2-4b91-bb26-7d8682c8c804"),"[Simulation Laser]");
     private static final ResourceKey<DamageType> DAMAGE=ResourceKey.create(Registries.DAMAGE_TYPE,ModContent.id("high_energy_laser"));
-    private record Path(List<LaserMachineBlockEntity> nodes,List<BlockPos> clearCells,Map<BlockPos,BlockState> watched){}
+    private record ExternalTarget(LaserExtensions.LaserTarget hook,LaserExtensions.TargetContext context) {}
+    private record Path(List<LaserMachineBlockEntity> nodes,List<BlockPos> clearCells,Map<BlockPos,BlockState> watched,
+            List<ExternalTarget> targets){}
     private static final Map<LaserMachineBlockEntity,Path> PATHS=new WeakHashMap<>();
     private static final Map<ServerLevel,Claims> CLAIMS=new WeakHashMap<>();
     private static final class Claims {long tick=-1;final Set<BlockPos> inputs=new HashSet<>();}
@@ -59,13 +61,15 @@ public final class LaserNetwork {
     }
     private static void clear(LaserMachineBlockEntity root,boolean stopped){
         var old=PATHS.remove(root);
+        if(stopped)stopLostTargets(old,List.of());
         if(old!=null)for(var node:old.nodes()){node.activeUntil=0;node.lastPower=0;if(stopped)node.stopCollapseVisuals();node.sync();}
         if(!root.segments.isEmpty()||root.lastPower!=0){root.segments=List.of();root.lastPower=0;root.activeUntil=0;root.sync();}
+        if(stopped)root.refreshLaserLights();
     }
     public static void processEmitter(LaserMachineBlockEntity root){
         if(!(root.getLevel() instanceof ServerLevel level))return;
         var previous=PATHS.get(root);clear(root,false);root.checkStructure();
-        if(!root.enabled()||!root.formed()||!root.tryPay(LaserSettings.emitterFe(),0,false)){stopLostCores(previous,List.of());root.status="no_energy";root.sync();return;}
+        if(!root.enabled()||!root.formed()||!root.tryPay(LaserSettings.emitterFe(),0,false)){stopLostCores(previous,List.of());stopLostTargets(previous,List.of());root.refreshLaserLights();root.status="no_energy";root.sync();return;}
         long now=level.getGameTime();
         var candidates=LaserStructureIndex.controllers(level).stream().limit(256).toList();
         for(var node:candidates)node.checkStructure();
@@ -84,6 +88,7 @@ public final class LaserNetwork {
         }
         var lines=new ArrayList<LaserSegment>();var nodes=new ArrayList<LaserMachineBlockEntity>();nodes.add(root);
         var clearCells=new ArrayList<BlockPos>();var watched=new HashMap<BlockPos,BlockState>();var queue=new ArrayDeque<Beam>();
+        var acceptedTargets=new ArrayList<ExternalTarget>();
         var start=root.center().relative(root.forward(),2);
         queue.add(new Beam(start,root.forward(),LaserSettings.emitterFe(),6,new HashSet<>(Set.of(root.getBlockPos()))));
         var claims=CLAIMS.computeIfAbsent(level,l->new Claims());if(claims.tick!=now){claims.tick=now;claims.inputs.clear();}
@@ -138,7 +143,10 @@ public final class LaserNetwork {
                 var state=level.getBlockState(pos);var id=BuiltInRegistries.BLOCK.getKey(state.getBlock());
                 var customTarget=LaserExtensions.target(id);
                 if(customTarget!=null)watched.put(pos.immutable(),state);
-                if(customTarget!=null&&customTarget.accept(new LaserExtensions.TargetContext(level,pos,beam.direction(),beam.energy(),now))){end=pos;break;}
+                if(customTarget!=null){
+                    var context=new LaserExtensions.TargetContext(level,pos.immutable(),beam.direction(),beam.energy(),now,root.getBlockPos().immutable(),root.identity());
+                    if(customTarget.accept(context)){acceptedTargets.add(new ExternalTarget(customTarget,context));end=pos;break;}
+                }
                 var custom=LaserExtensions.modifier(id);
                 if(custom!=null){
                     watched.put(pos.immutable(),state);
@@ -157,10 +165,20 @@ public final class LaserNetwork {
             }
             if(!drawn)add(lines,beam.start(),end,beam.energy(),false,false);
         }
-        if(root.isRemoved()||level.getBlockEntity(root.getBlockPos())!=root||!root.formed()||!root.enabled())return;
+        if(root.isRemoved()||level.getBlockEntity(root.getBlockPos())!=root||!root.formed()||!root.enabled()){
+            stopLostCores(previous,List.of());stopLostTargets(previous,acceptedTargets);deactivateTargets(acceptedTargets);return;
+        }
         root.segments=List.copyOf(lines);root.lastPower=LaserSettings.emitterFe();root.activeUntil=now+22;root.status="working";
-        var path=new Path(List.copyOf(nodes),List.copyOf(clearCells),Map.copyOf(watched));
-        PATHS.put(root,path);stopLostCores(previous,nodes);if(!valid(level,path)){clear(root);return;}root.sync();root.saveChanges();
+        var path=new Path(List.copyOf(nodes),List.copyOf(clearCells),Map.copyOf(watched),List.copyOf(acceptedTargets));
+        PATHS.put(root,path);stopLostCores(previous,nodes);stopLostTargets(previous,acceptedTargets);if(!valid(level,path)){clear(root);return;}root.refreshLaserLights();root.sync();root.saveChanges();
+    }
+    private static void stopLostTargets(Path previous,List<ExternalTarget> next){
+        if(previous==null)return;
+        for(var old:previous.targets())if(next.stream().noneMatch(target->target.hook()==old.hook()
+                &&target.context().position().equals(old.context().position())))old.hook().deactivate(old.context());
+    }
+    private static void deactivateTargets(List<ExternalTarget> targets){
+        for(var target:targets)target.hook().deactivate(target.context());
     }
     private static void stopLostCores(Path previous,List<LaserMachineBlockEntity> next){
         if(previous!=null)for(var node:previous.nodes())if(node.kind()==LaserKind.CORE&&!next.contains(node)){node.stopCollapseVisuals();node.sync();}
@@ -178,7 +196,7 @@ public final class LaserNetwork {
                 }break;
             }
             var state=level.getBlockState(pos);
-            if(!state.isAir()&&!breakCell(level,pos))break;
+            if(!LaserLightManager.isBeamAir(state)&&!breakCell(level,pos))break;
             clearCells.add(pos);
         }
         add(lines,start,end,energy,true,false);
@@ -203,7 +221,7 @@ public final class LaserNetwork {
     }
     static boolean breakCell(ServerLevel level,BlockPos pos){
         if(!level.hasChunkAt(pos)||!level.getWorldBorder().isWithinBounds(pos))return false;
-        var state=level.getBlockState(pos);if(state.isAir())return true;
+        var state=level.getBlockState(pos);if(LaserLightManager.isBeamAir(state))return true;
         if(state.getDestroySpeed(level,pos)<0)return false;
         var operator=FakePlayerFactory.get(level,OPERATOR);
         if(!level.mayInteract(operator,pos))return false;

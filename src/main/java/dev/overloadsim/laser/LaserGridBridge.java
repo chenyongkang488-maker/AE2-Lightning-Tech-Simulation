@@ -38,6 +38,7 @@ public final class LaserGridBridge {
     public static boolean hasAppliedFlux() { return FLUX_FE != null; }
 
     public void refresh() {
+        if (host.kind() == LaserKind.CORE) { disconnect(); return; }
         var structure = host.structure();
         var expected = structure == null ? null : structure.networkInterface();
         if (expected == null || !host.loaded()) { disconnect(); return; }
@@ -61,7 +62,7 @@ public final class LaserGridBridge {
     }
 
     public long extractExtreme(long amount, boolean simulate) {
-        if (amount <= 0) return 0;
+        if (amount <= 0 || host.kind() == LaserKind.CORE) return 0;
         var grid = host.getMainNode().getGrid();
         if (grid == null || !host.getMainNode().isActive()) return 0;
         long extracted = grid.getStorageService().getInventory().extract(LightningKey.EXTREME_HIGH_VOLTAGE, amount,
@@ -70,7 +71,7 @@ public final class LaserGridBridge {
     }
 
     public long insertExtreme(long amount) {
-        if (amount <= 0) return 0;
+        if (amount <= 0 || host.kind() == LaserKind.CORE) return 0;
         var grid = host.getMainNode().getGrid();
         if (grid == null) return 0;
         return Math.clamp(grid.getStorageService().getInventory().insert(LightningKey.EXTREME_HIGH_VOLTAGE, amount,
@@ -78,7 +79,7 @@ public final class LaserGridBridge {
     }
 
     public void charge() {
-        if (host.kind() == LaserKind.RECEIVER || !host.formed()) return;
+        if (host.kind() == LaserKind.CORE || host.kind() == LaserKind.RECEIVER || !host.formed()) return;
         var grid = host.getMainNode().getGrid();
         if (grid == null || !host.getMainNode().isActive()) return;
         long space = host.energy().capacity() - host.energy().stored();

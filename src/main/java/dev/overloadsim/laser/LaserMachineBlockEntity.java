@@ -64,6 +64,23 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
     private final LongEnergyBuffer energy;
     private final LaserGridBridge bridge = new LaserGridBridge(this);
     private final FrequencyBindingAccess frequency = FrequencyApi.createBinding(this);
+    private final LaserLightManager lights = new LaserLightManager(this);
+    // Old binding data is saved by frequency, but every externally accessible core operation is inert.
+    private final FrequencyBindingAccess coreBinding = new FrequencyBindingAccess() {
+        @Override public int getFrequencyId() { return -1; }
+        @Override public void setFrequency(int id) {}
+        @Override public void clearFrequency() {}
+        @Override public boolean isConnected() { return false; }
+        @Override public void serverTick() {}
+        @Override public void onReady() {}
+        @Override public void setRemoved() {}
+        @Override public void clearRemoved() {}
+        @Override public void onMainNodeStateChanged(IGridNodeListener.State state) {}
+        @Override public void save(CompoundTag tag) { frequency.save(tag); }
+        @Override public void load(CompoundTag tag) { frequency.load(tag); }
+        @Override public int getGridUsedChannels() { return 0; }
+        @Override public int getGridMaxChannels() { return 0; }
+    };
     // NeoForge follows onChunkUnloaded with setRemoved; that second callback is not a permanent deletion.
     private boolean frequencyUnloading;
     double aeInputFraction, aeOutputFraction;
@@ -109,7 +126,7 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
         @Override public int getEnergyStored() { return (int) Math.min(Integer.MAX_VALUE, energy.stored()); }
         @Override public int getMaxEnergyStored() { return (int) Math.min(Integer.MAX_VALUE, energy.capacity()); }
         @Override public boolean canExtract() { return kind() == LaserKind.RECEIVER && formed() && !explosionTriggered; }
-        @Override public boolean canReceive() { return kind() != LaserKind.RECEIVER && !explosionTriggered && !isRemoved() && level instanceof ServerLevel
+        @Override public boolean canReceive() { return kind() != LaserKind.RECEIVER && kind() != LaserKind.CORE && !explosionTriggered && !isRemoved() && level instanceof ServerLevel
                 && level.hasChunkAt(worldPosition) && level.getBlockEntity(worldPosition) == LaserMachineBlockEntity.this; }
     };
 
@@ -118,7 +135,8 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
         energy = new LongEnergyBuffer(kind() == LaserKind.RECEIVER ? RECEIVER_FE_CAPACITY : MACHINE_FE_CAPACITY);
         if (kind() == LaserKind.DEFLECTOR) outputMask = 0;
         particleDirection = forward();
-        getMainNode().setFlags(GridFlags.REQUIRE_CHANNEL).setIdlePowerUsage(2).setVisualRepresentation(state.getBlock().asItem());
+        getMainNode().setFlags(GridFlags.REQUIRE_CHANNEL).setIdlePowerUsage(kind() == LaserKind.CORE ? 0 : 2).setVisualRepresentation(state.getBlock().asItem());
+        if (kind() == LaserKind.CORE) getMainNode().setExposedOnSides(Set.of());
     }
 
     public LaserKind kind() { return ((LaserMachineBlock) getBlockState().getBlock()).kind(); }
@@ -140,7 +158,7 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
     public LaserStructure structure() { return structure; }
     public boolean formed() { return level != null && level.isClientSide ? visualFormed && !isRemoved()
             : structure != null && loaded() && !explosionTriggered && !isRemoved() && level.getBlockEntity(worldPosition) == this; }
-    public boolean networkActive() { return level != null && level.isClientSide ? visualNetworkActive : getMainNode().isActive(); }
+    public boolean networkActive() { return kind() != LaserKind.CORE && (level != null && level.isClientSide ? visualNetworkActive : getMainNode().isActive()); }
     public boolean enabled() { return enabled; }
     public long boost() { return boost; }
     public long extremeLightning() { return extremeLightning; }
@@ -194,7 +212,8 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
         return true;
     }
     public void markStructureDirty() { structureDirty = true; }
-    private void clearBeam() { segments = new ArrayList<>(); activeUntil = 0; lastPower = 0; collapse.stop(); }
+    private void clearBeam() { lights.clear(); segments = new ArrayList<>(); activeUntil = 0; lastPower = 0; collapse.stop(); }
+    public void refreshLaserLights() { lights.refresh(); }
     public void sync() { saveChanges(); markForClientUpdate(); }
 
     public boolean loaded() {
@@ -220,13 +239,13 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
         for (var entry : template.entrySet()) {
             BlockPos pos = worldPosition.offset(entry.getKey());
             if (!level.hasChunkAt(pos)) { error = "unloaded"; break; }
-            if (LaserStructureIndex.occupied(level, pos, this)) { error = "owned"; break; }
+            if (LaserStructureIndex.occupied(level, pos, this)||dev.overloadsim.workstation.WorkstationStructureIndex.occupiedByOther(level,pos,this)) { error = "owned"; break; }
             if (LaserStructureIndex.touching(level, pos, this)) { error = "spacing"; break; }
             var state = level.getBlockState(pos);
             boolean match;
             switch (entry.getValue()) {
                 case CONTROLLER -> match = pos.equals(worldPosition) && state.is(LaserContent.machine(kind())) && level.getBlockEntity(pos) == this;
-                case AIR -> match = state.isAir();
+                case AIR -> match = LaserLightManager.isBeamAir(state);
                 case GLASS -> match = state.is(LaserContent.GLASS.get());
                 case SOURCE -> match = state.is(LaserContent.SOURCE.get());
                 case PORT -> match = state.is(LaserContent.PORT.get());
@@ -280,18 +299,19 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
 
     public void tick() {
         if (level == null || level.isClientSide || isRemoved()) return;
-        frequency.serverTick();
+        if (kind() != LaserKind.CORE) frequency.serverTick();
         // Every-tick validation covers commands, automation, unloaded chunks and cancelled placement events.
         checkStructure(); bridge.refresh();
         if (refundExtreme > 0) {
             long returned = bridge.insertExtreme(refundExtreme);
             if (returned > 0) { refundExtreme -= returned; saveChanges(); }
         }
-        if (!formed()) { if (!segments.isEmpty() || activeUntil != 0) { clearBeam(); sync(); } return; }
+        if (!formed()) { lights.clear(); if (!segments.isEmpty() || activeUntil != 0) { clearBeam(); sync(); } return; }
         bridge.charge();
         if (kind() == LaserKind.RECEIVER) { ParticleConversion.tick(this); bridge.export(); }
         LaserNetwork.tick(this);
         if (activeUntil > 0 && level.getGameTime() >= activeUntil && (!segments.isEmpty() || lastPower > 0)) { clearBeam(); sync(); }
+        lights.refresh();
         if (level.getGameTime() % 20 == 0) sync();
     }
 
@@ -357,10 +377,11 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
     }
 
     public void loadMachine(CompoundTag tag, HolderLookup.Provider registries) {
+        lights.clear();
         LaserNetwork.unregister(this);
         LaserStructureIndex.release(this); structure = null; structureDirty = true;
         if (tag.hasUUID("Identity")) identity = tag.getUUID("Identity");
-        enabled = !tag.contains("Enabled") || tag.getBoolean("Enabled");
+        enabled = kind() == LaserKind.CORE || !tag.contains("Enabled") || tag.getBoolean("Enabled");
         boost = tag.contains("Boost") ? Math.clamp(tag.getLong("Boost"), 100_000L, 9_000_000L) : 100_000L;
         extremeLightning = Math.max(0, tag.getLong("ExtremeLightning")); refundExtreme = Math.max(0, tag.getLong("RefundExtreme"));
         coreRemainder = Math.clamp(tag.getLong("CoreRemainder"), 0L, LaserMath.PARTICLE_COST - 1);
@@ -463,26 +484,26 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
         if (level != null && !level.isClientSide) { clearBeam(); LaserStructureIndex.register(this); LaserNetwork.register(this); checkStructure(); }
     }
     @Override public AENetworkedBlockEntity getFrequencyBindingBlockEntity() { return this; }
-    @Override public FrequencyBindingAccess getFrequencyBindingAccess() { return frequency; }
+    @Override public FrequencyBindingAccess getFrequencyBindingAccess() { return kind() == LaserKind.CORE ? coreBinding : frequency; }
     @Override public void saveFrequencyBindingChanges() { saveChanges(); }
     @Override public void markFrequencyBindingForUpdate() { markForClientUpdate(); }
-    @Override public void onMainNodeStateChanged(IGridNodeListener.State reason) { frequency.onMainNodeStateChanged(reason); }
-    @Override public void onReady() { super.onReady(); frequency.onReady(); }
+    @Override public void onMainNodeStateChanged(IGridNodeListener.State reason) { if (kind() != LaserKind.CORE) frequency.onMainNodeStateChanged(reason); }
+    @Override public void onReady() { super.onReady(); if (kind() != LaserKind.CORE) frequency.onReady(); }
     @Override public void setRemoved() { if (!frequencyUnloading) frequency.setRemoved(); ReceiverShellVisuals.remove(this, receiverVisualToken); LaserStructureIndex.unregister(this); LaserNetwork.unregister(this); bridge.disconnect(); clearBeam(); super.setRemoved(); }
     @Override public void onChunkUnloaded() { frequencyUnloading = true; FrequencyBindingLifecycle.chunkUnloaded(frequency); ReceiverShellVisuals.remove(this, receiverVisualToken); LaserStructureIndex.unregister(this); LaserNetwork.unregister(this); bridge.disconnect(); clearBeam(); super.onChunkUnloaded(); }
-    @Override public void clearRemoved() { frequencyUnloading = false; super.clearRemoved(); frequency.clearRemoved(); }
+    @Override public void clearRemoved() { frequencyUnloading = false; super.clearRemoved(); if (kind() != LaserKind.CORE) frequency.clearRemoved(); }
     @Override public void exportSettings(SettingsFrom mode, DataComponentMap.Builder builder, Player player) {
         super.exportSettings(mode, builder, player);
-        frequency.exportMemorySettings(mode, builder, tag -> {});
+        if (kind() != LaserKind.CORE) frequency.exportMemorySettings(mode, builder, tag -> {});
     }
     @Override public void importSettings(SettingsFrom mode, DataComponentMap settings, Player player) {
         super.importSettings(mode, settings, player);
-        frequency.importMemorySettings(mode, settings, tag -> {});
+        if (kind() != LaserKind.CORE) frequency.importMemorySettings(mode, settings, tag -> {});
     }
     @Override protected void onOrientationChanged(BlockOrientation orientation) { super.onOrientationChanged(orientation); invalidateStructure(); structureDirty = true; }
-    @Override public IGridNode getActionableNode() { return getMainNode().getNode(); }
-    @Override public Set<Direction> getGridConnectableSides(BlockOrientation orientation) { return EnumSet.allOf(Direction.class); }
-    @Override public AECableType getCableConnectionType(Direction side) { return AECableType.SMART; }
+    @Override public IGridNode getActionableNode() { return kind() == LaserKind.CORE ? null : getMainNode().getNode(); }
+    @Override public Set<Direction> getGridConnectableSides(BlockOrientation orientation) { return kind() == LaserKind.CORE ? Set.of() : EnumSet.allOf(Direction.class); }
+    @Override public AECableType getCableConnectionType(Direction side) { return kind() == LaserKind.CORE ? AECableType.NONE : AECableType.SMART; }
     @Override protected Item getItemFromBlockEntity() { return getBlockState().getBlock().asItem(); }
 
     private static String boundedText(String text) { return text.length() > 256 ? text.substring(0, 256) : text; }

@@ -1,0 +1,4 @@
+{
+  "includes": ["../common/common.json"],
+  "generatedBackground": {"width": 224, "height": 104}
+}

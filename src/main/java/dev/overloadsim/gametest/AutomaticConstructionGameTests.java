@@ -33,6 +33,11 @@ public final class AutomaticConstructionGameTests {
     private static LaserMachineBlockEntity host(GameTestHelper h) {
         return LaserMachineGameTests.build(h,h.absolutePos(new BlockPos(8,4,8)),LaserKind.CORE,net.minecraft.core.Direction.NORTH);
     }
+    private static LaserMachineBlockEntity networkHost(GameTestHelper h) {
+        var pos=h.absolutePos(new BlockPos(8,4,8));
+        h.getLevel().setBlockAndUpdate(pos,LaserContent.machine(LaserKind.EMITTER).defaultBlockState());
+        return (LaserMachineBlockEntity)h.getLevel().getBlockEntity(pos);
+    }
     private static ServerPlayer player(GameTestHelper h,LaserMachineBlockEntity host) {
         var p=FakePlayerFactory.get(h.getLevel(),new com.mojang.authlib.GameProfile(UUID.randomUUID(),"construction-test"));
         p.setGameMode(GameType.SURVIVAL);p.getInventory().clearContent();p.setPos(host.getBlockPos().getCenter());return p;
@@ -104,7 +109,7 @@ public final class AutomaticConstructionGameTests {
         public long insert(AEKey what,long amount,Actionable action,IActionSource source){if(!key.equals(what)||rejectRefund)return 0;if(action==Actionable.MODULATE)count+=amount;return amount;}
     }
     @GameTest(template="laser_empty",timeoutTicks=120) public static void activeAeSuppliesOnlyBackpackShortfall(GameTestHelper h) {
-        var host=host(h);var p=player(h,host);connect(h,host);p.getInventory().setItem(0,new ItemStack(LaserContent.FRAME.get(),1));
+        var host=networkHost(h);var p=player(h,host);connect(h,host);p.getInventory().setItem(0,new ItemStack(LaserContent.FRAME.get(),1));
         h.runAtTickTime(80,()->{
             var grid=host.getMainNode().getGrid();h.assertTrue(grid!=null&&host.getMainNode().isActive(),"fixture AE network active");var storage=new Storage(9);grid.getStorageService().addGlobalStorageProvider(mounts->mounts.mount(storage,0));
             var result=AutomaticConstruction.build(p,host,plan(host,3),grid);
@@ -112,7 +117,7 @@ public final class AutomaticConstructionGameTests {
         });
     }
     @GameTest(template="laser_empty",timeoutTicks=120) public static void aeShortExtractionRefundsAndDoesNotPlace(GameTestHelper h) {
-        var host=host(h);var p=player(h,host);connect(h,host);
+        var host=networkHost(h);var p=player(h,host);connect(h,host);
         h.runAtTickTime(80,()->{
             var grid=host.getMainNode().getGrid();var storage=new Storage(3);storage.shortDraw=true;grid.getStorageService().addGlobalStorageProvider(mounts->mounts.mount(storage,0));
             var result=AutomaticConstruction.build(p,host,plan(host,3),grid);
@@ -120,7 +125,7 @@ public final class AutomaticConstructionGameTests {
         });
     }
     @GameTest(template="laser_empty",timeoutTicks=120) public static void rejectedAeRefundWithFullInventoryDropsExactRemainder(GameTestHelper h) {
-        var host=host(h);var p=player(h,host);connect(h,host);for(int i=0;i<36;i++)p.getInventory().setItem(i,new ItemStack(Items.DIRT,64));
+        var host=networkHost(h);var p=player(h,host);connect(h,host);for(int i=0;i<36;i++)p.getInventory().setItem(i,new ItemStack(Items.DIRT,64));
         h.runAtTickTime(80,()->{
             var grid=host.getMainNode().getGrid();var storage=new Storage(3);storage.shortDraw=true;storage.rejectRefund=true;grid.getStorageService().addGlobalStorageProvider(mounts->mounts.mount(storage,0));
             var result=AutomaticConstruction.build(p,host,plan(host,3),grid);

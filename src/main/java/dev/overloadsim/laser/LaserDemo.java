@@ -22,6 +22,8 @@ public final class LaserDemo {
         event.getDispatcher().register(Commands.literal("overload_sim").then(Commands.literal("laser").requires(s->s.hasPermission(2))
             .then(Commands.literal("demo").executes(c->demo(c.getSource())))
             .then(Commands.literal("build").then(Commands.argument("kind",StringArgumentType.word()).suggests((c,b)->{for(var k:LaserKind.values())b.suggest(k.name().toLowerCase(Locale.ROOT));return b.buildFuture();}).executes(c->single(c.getSource(),StringArgumentType.getString(c,"kind")))))));
+        event.getDispatcher().register(Commands.literal("overload_sim").then(Commands.literal("workstation").requires(s->s.hasPermission(2))
+                .then(Commands.literal("demo").executes(c->workstation(c.getSource())))));
     }
     private static ServerPlayer player(CommandSourceStack source){
         var player=source.getPlayer();if(player==null||!player.isCreative()){source.sendFailure(Component.literal("此演示指令需要创造模式玩家。"));return null;}return player;
@@ -51,6 +53,25 @@ public final class LaserDemo {
         return place(source,machines,true);
     }
     private static int place(CommandSourceStack source,List<Machine> machines,boolean demo){
+        return place(source,machines,demo,null,null);
+    }
+    private static int workstation(CommandSourceStack source){
+        var player=player(source);if(player==null)return 0;
+        var forward=player.getDirection();var facing=forward.getOpposite();
+        var origin=player.blockPosition().above(4).relative(forward,8);
+        var machines=new ArrayList<Machine>();machines.add(new Machine(origin,LaserKind.EMITTER,facing));
+        int along=6,remaining=4;
+        machines.add(new Machine(origin.relative(forward,along).below(3),LaserKind.ENHANCEMENT,facing));
+        for(int i=0;i<7;i++){
+            if(remaining<=2){along+=2;machines.add(new Machine(origin.relative(forward,along).below(3),LaserKind.CONSTRAINT,facing));remaining=6;}
+            along+=2;remaining-=2;machines.add(new Machine(origin.relative(forward,along).below(3),LaserKind.BURST,facing));
+        }
+        along+=2;machines.add(new Machine(origin.relative(forward,along).below(3),LaserKind.CONSTRAINT,facing));
+        // Receiver is four blocks past the final ring. Its front controller is another six forward.
+        var controller=origin.relative(forward,along+10).below(3);
+        return place(source,machines,false,controller,forward);
+    }
+    private static int place(CommandSourceStack source,List<Machine> machines,boolean demo,BlockPos workstation,Direction workstationFacing){
         var level=source.getLevel();var plan=new LinkedHashMap<BlockPos,BlockState>();
         for(var m:machines)for(var entry:LaserStructureGeometry.template(m.kind(),m.facing(),m.kind()==LaserKind.RECEIVER).entrySet()){
             var block=switch(entry.getValue()){
@@ -59,6 +80,10 @@ public final class LaserDemo {
             var state=block.defaultBlockState();if(entry.getValue()==LaserStructureGeometry.Part.CONTROLLER)state=state.setValue(LaserMachineBlock.FACING,m.facing());
             var pos=m.pos().offset(entry.getKey());var previous=plan.putIfAbsent(pos,state);
             if(previous!=null&&!previous.equals(state)){source.sendFailure(Component.literal("演示模板内部重叠，已取消生成。"));return 0;}
+        }
+        if(workstation!=null)for(var entry:dev.overloadsim.workstation.WorkstationStructure.template(workstation,workstationFacing).entrySet()){
+            var previous=plan.putIfAbsent(entry.getKey(),entry.getValue());
+            if(previous!=null&&!previous.equals(entry.getValue())){source.sendFailure(Component.literal("演示模板内部重叠，已取消生成。"));return 0;}
         }
         for(var pos:plan.keySet())if(!level.hasChunkAt(pos)||level.isOutsideBuildHeight(pos)||!level.getWorldBorder().isWithinBounds(pos)||!level.getBlockState(pos).isAir()){
             source.sendFailure(Component.literal("需要一片已加载的空地（完整演示长约 80 格）；当前位置受阻："+pos.toShortString()+"。请在超平坦世界高处面向空地重试。"));return 0;
@@ -72,7 +97,19 @@ public final class LaserDemo {
             if(host.kind()==LaserKind.RECEIVER)host.fuelInput().setStackInSlot(0,new ItemStack(Items.NETHERITE_BLOCK,64));
             host.sync();host.saveChanges();
         }
-        source.sendSuccess(()->Component.literal((demo?"完整激光粒子演示链":"多方块设备")+"已生成于 "+machines.getFirst().pos().toShortString()+"。已预充有限 FE / 极高压；右键控制器查看，耗尽后接入过载网络补充。"),false);
+        if(workstation!=null&&level.getBlockEntity(workstation) instanceof dev.overloadsim.workstation.HighEnergyWorkstationBlockEntity host){
+            host.checkStructure();
+            // Choose a real runtime recipe and supply a finite set of ordinary material prototypes.
+            for(var entry:dev.overloadsim.workstation.WorkstationRecipes.recipes(level.getRecipeManager())){
+                var recipe=entry.recipe();
+                if(recipe.itemInputs().isEmpty()||recipe.itemInputs().size()>9||!recipe.fluidInput().isEmpty())continue;
+                boolean usable=true;for(var input:recipe.itemInputs())if(input.ingredient().getItems().length==0){usable=false;break;}
+                if(!usable)continue;
+                int slot=0;for(var input:recipe.itemInputs())host.inputs().insert(slot++,input.ingredient().getItems()[0],Math.min(1_000_000L,(long)input.count()*8192),false);
+                host.sync();break;
+            }
+        }
+        source.sendSuccess(()->Component.literal((workstation!=null?"强能工作站演示链":demo?"完整激光粒子演示链":"多方块设备")+"已生成于 "+machines.getFirst().pos().toShortString()+"。已预充有限 FE / 极高压；右键控制器查看，耗尽后接入过载网络补充。"+(workstation==null?"":" 工作站："+workstation.toShortString())),false);
         return 1;
     }
 }

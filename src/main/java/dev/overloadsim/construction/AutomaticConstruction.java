@@ -165,12 +165,13 @@ public final class AutomaticConstruction {
                 &&player.serverLevel().hasChunkAt(host.getBlockPos())&&player.level().getBlockEntity(host.getBlockPos())==host;
     }
     private static boolean matches(BlockState actual,BlockState required) {
-        return required.isAir()?actual.isAir():actual.is(required.getBlock());
+        return required.isAir()?dev.overloadsim.laser.LaserLightManager.isBeamAir(actual):actual.is(required.getBlock());
     }
     private static boolean available(BlockEntity host,Plan plan) {
         if(!plan.available().getAsBoolean())return false;
         for(var pos:plan.cells().keySet())if(dev.overloadsim.laser.LaserStructureIndex.occupiedByOther(host.getLevel(),pos,host)
-                ||dev.overloadsim.multiblock.SimulationStructureIndex.occupiedByOther(host.getLevel(),pos,host))return false;
+                ||dev.overloadsim.multiblock.SimulationStructureIndex.occupiedByOther(host.getLevel(),pos,host)
+                ||dev.overloadsim.workstation.WorkstationStructureIndex.occupiedByOther(host.getLevel(),pos,host))return false;
         return true;
     }
     private static boolean replaceable(BlockEntity host,BlockPos pos) {

@@ -10,6 +10,10 @@
     "overload_sim:simulation_fortune_module",
     "overload_sim:simulation_overload_module",
     "overload_sim:simulation_smelting_module",
-    "#overload_sim:laser_mineable"
+    "#overload_sim:laser_mineable",
+    "overload_sim:high_energy_workstation",
+    "overload_sim:high_energy_workstation_frame",
+    "overload_sim:high_energy_workstation_glass",
+    "overload_sim:high_energy_workstation_receiver"
   ]
 }

@@ -48,7 +48,7 @@ NBT 保存 `OpticalInputMask`、`OpticalOutputMask`、`DeflectorShapeVersion=1` 
 
 `config/overload_sim-laser.toml` 提供发射器/约束 FE 费用、爆发极高压费用、伤害倍率、爆炸高度及每 tick 破坏预算。默认爆炸为中心的 3×3 个区块、上下各 12 格，仅处理已加载区块，保留不可破坏方块，遵循 NeoForge 破坏事件。大量破坏分 tick 执行；当前原型的剩余爆炸任务不会在服务器重启后继续。
 
-八种控制器均实现 AE2LT 的 `FrequencyBindingHost`。可使用原生过载频率卡绑定或清除控制器自身的频率，并通过共享频率界面管理；AE 记忆卡导出/导入同一绑定。绑定保存在控制器方块实体的外层 NBT，普通保存、重载和区块卸载保留频率。区块卸载释放实际节点和无线连接，设备仍列在频率的离线设备列表中；永久移除控制器才注销设备。无线连接遵循前置的频道容量、权限与安全规则；未成型控制器也可先连网用于自动搭建，生产仍要求结构有效。
+七种可联网激光控制器实现 AE2LT 的 `FrequencyBindingHost`；坍缩核心为被动光学器件，拒绝网络绑定、线缆、FE capability，界面仅显示激光强度、累积余量与阈值。其它设备可使用原生过载频率卡绑定或清除频率，并通过共享频率界面管理；AE 记忆卡导出/导入同一绑定。绑定保存在控制器方块实体的外层 NBT，普通保存、重载和区块卸载保留频率。区块卸载释放实际节点和无线连接，设备仍列在频率的离线设备列表中；永久移除控制器才注销设备。无线连接遵循前置的频道容量、权限与安全规则；未成型控制器也可先连网用于自动搭建，生产仍要求结构有效。
 
 AE 连线或结构上游半面的一处闪电科技过载接口仍可连接网络。结构桥接只销毁自己建立且仍由两端节点登记的连接；接口已经拆除或卸载时不会再次销毁 AE2 已释放的旧连接，也不清理现存的外部连线。安装应用通量 2.1.6 时使用其真实 FE 键进行 long 存储交易；未安装时按每 tick 最多 10,000 FE 桥接普通 AE 能量，保存分数余量。粒子约束器向当前活动 AE 网络输出 FE，无线绑定不要求另装结构过载接口。只有对端实际接收的能量才扣缓存。AE 网络没有足够储能空间时保留产能，不能因超高容量缓冲而令网络凭空获得无限容量。
 
@@ -77,7 +77,7 @@ AE 连线或结构上游半面的一处闪电科技过载接口仍可连接网�
 `dev.overloadsim.api.LaserExtensions` 在 common setup 注册，不允许同名静默覆盖：
 
 - `registerModifier(blockId, LaserModifier)`：普通光路遇该方块时传入世界、位置、传播方向、本批能量、剩余射程与 tick；返回 `ModifierResult`。自定义付费由实现负责，仍受 1P FE / 64 格 / 光路步数预算约束。
-- `registerTarget(blockId, LaserTarget)`：返回 true 表示已处理并终止这束激光；负责自己工作方块的实际资源事务。
+- `registerTarget(blockId, LaserTarget)`：返回 true 表示已处理并终止这束激光；负责自己工作方块的实际资源事务。`TargetContext` 新增 `source()` 坐标与 `sourceIdentity()` UUID，正常路径携带发射源身份。默认 `deactivate(context)` 在源关闭、拆除、卸载或路径失效时调用；连续脉冲续期不调用。五参数构造器与函数式 `accept` 接口保持兼容，直接调用无源上下文的过期策略由接收器处理。
 - `registerFuelProvider(providerId, ParticleConversionProvider)`：实现 `match(ItemStack)` 和 `resolve(recipeId)`，以稳定 ID 支持已支付窗口重载；优先采用 JSON 规则。
 - `registerEnergySink(sinkId, EnergySink)`：精确 long 输出，先于内置 AE 桥；返回 `[0, amount]` 中实际接收的 FE，模拟调用不能修改任何库存。每次最多访问 32 个按 ID 排序的后端。
 
@@ -88,3 +88,5 @@ AE 连线或结构上游半面的一处闪电科技过载接口仍可连接网�
 alpha.7 视觉接口：`LaserMachineBlockEntity.currentPower()` 返回已成型、启用且脉冲未过期的当前激光 FE／次，停机返回 0；不同于控制器本地 FE 缓冲。`collapseStartTick()` 为服务器同步的动画起始世界 tick，未启动为 -1。`CoreCollapseCycle` 独立于每次脉冲重建的光路，间隔超过 20 ticks 或明确停机会开启下一次 40-tick 动画。上游停机和光路失效也会重置下游核心。`BeforeCoreEmission` 取消或宿主校验失败时不会启动动画或音效。
 
 约束和聚焦外环几何分别在 `GateMatrixMesh.outer(false/true)`；UV 使用原生图集 46～49 区域。核心流纹由 `collapse_energy_orb.png` 的 16 个 32×32 帧组成；资源包可替换纹理与 `overload_sim:collapse_transition` 音效。`art/blockbench/laser-constraint-gate-formed.bbmodel`、`laser-focus-gate-formed.bbmodel` 和 `collapse-energy-orb.bbmodel` 可编辑；新外环、球体流纹及音效属于原创 MIT 素材。视觉不改变 `LaserSegment` 的宽度、碰撞或服务器费用。
+
+alpha.10 真实光照由 `LaserLightManager` 在空气中布置不可见、无碰撞的 15 级代理光源。每个宿主最多 128 个格，沿光路间隔八格取样并包含端点；成型发射面的光源保持点亮。共享格按来源坐标与 UUID 维护租期，只有最后一个来源失效才恢复空气。代理不替换植物、流体或其它光源，加载后检查来源并回收过期占据；卸载清理不强制加载区块。

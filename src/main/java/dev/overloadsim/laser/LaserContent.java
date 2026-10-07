@@ -35,11 +35,14 @@ public final class LaserContent {
     public static final DeferredBlock<LaserPartBlock> GLASS = part("laser_glass", true);
     public static final DeferredBlock<LaserPartBlock> SOURCE = part("laser_source_crystal", false);
     public static final DeferredBlock<LaserPartBlock> PORT = part("laser_optical_port", false);
+    // Internal source only: no block item, creative entry, recipe or loot.
+    public static final DeferredBlock<LaserLightBlock> LIGHT = ModContent.BLOCKS.register("laser_light", LaserLightBlock::new);
     private static final DeferredRegister<BlockEntityType<?>> ENTITIES = DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE, OverloadSimulation.ID);
     private static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(Registries.MENU, OverloadSimulation.ID);
     private static final DeferredRegister<net.minecraft.sounds.SoundEvent> SOUNDS = DeferredRegister.create(Registries.SOUND_EVENT, OverloadSimulation.ID);
     public static final DeferredHolder<net.minecraft.sounds.SoundEvent,net.minecraft.sounds.SoundEvent> COLLAPSE_TRANSITION = SOUNDS.register("collapse_transition", () -> net.minecraft.sounds.SoundEvent.createVariableRangeEvent(ModContent.id("collapse_transition")));
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<LaserMachineBlockEntity>> MACHINE_ENTITY = ENTITIES.register("laser_machine", () -> BlockEntityType.Builder.of(LaserMachineBlockEntity::new, BLOCK_MAP.values().stream().map(DeferredBlock::get).toArray(Block[]::new)).build(null));
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<LaserLightBlockEntity>> LIGHT_ENTITY = ENTITIES.register("laser_light", () -> BlockEntityType.Builder.of(LaserLightBlockEntity::new, LIGHT.get()).build(null));
     public static final DeferredHolder<MenuType<?>, MenuType<LaserMenu>> MENU = MENUS.register("laser_machine", LaserMenu::createType);
     private LaserContent() {}
     public static Map<LaserKind, DeferredBlock<LaserMachineBlock>> blocks() { return Map.copyOf(BLOCK_MAP); }
@@ -60,8 +63,8 @@ public final class LaserContent {
         LaserStructureIndex.register();
     }
     public static void capabilities(RegisterCapabilitiesEvent event) {
-        event.registerBlockEntity(appeng.api.AECapabilities.IN_WORLD_GRID_NODE_HOST, MACHINE_ENTITY.get(), (host, context) -> host);
-        event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, MACHINE_ENTITY.get(), (host, side) -> host.automation());
-        event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK, MACHINE_ENTITY.get(), (host, side) -> host.feCapability());
+        event.registerBlockEntity(appeng.api.AECapabilities.IN_WORLD_GRID_NODE_HOST, MACHINE_ENTITY.get(), (host, context) -> host.kind() == LaserKind.CORE ? null : host);
+        event.registerBlockEntity(Capabilities.ItemHandler.BLOCK, MACHINE_ENTITY.get(), (host, side) -> host.kind() == LaserKind.CORE ? null : host.automation());
+        event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK, MACHINE_ENTITY.get(), (host, side) -> host.kind() == LaserKind.CORE ? null : host.feCapability());
     }
 }

@@ -1,0 +1,10 @@
+{
+  "includes": ["../common/common.json"],
+  "generatedBackground": {"width": 200, "height": 238},
+  "slots": {
+    "MACHINE_INPUT": {"left": 16, "top": 79, "grid": "BREAK_AFTER_3COLS"},
+    "MACHINE_OUTPUT": {"left": 128, "top": 79, "grid": "BREAK_AFTER_3COLS"},
+    "PLAYER_INVENTORY": {"left": 20, "top": 160, "grid": "BREAK_AFTER_9COLS"},
+    "PLAYER_HOTBAR": {"left": 20, "top": 218, "grid": "BREAK_AFTER_9COLS"}
+  }
+}

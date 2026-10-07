@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "ae2lt:overload_processing_factory"
+    },
+    {
+      "item": "overload_sim:high_energy_workstation_receiver"
+    },
+    {
+      "item": "overload_sim:high_energy_workstation_frame"
+    }
+  ],
+  "result": {
+    "id": "overload_sim:high_energy_workstation",
+    "count": 1
+  }
+}

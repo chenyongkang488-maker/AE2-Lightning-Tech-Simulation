@@ -155,6 +155,22 @@ public final class ConstructionProjection {
         return active != null && host != null && active.host == host && active.size == size;
     }
 
+    public static boolean toggleWorkstation(dev.overloadsim.workstation.HighEnergyWorkstationBlockEntity host) {
+        validateActive();
+        if(active!=null&&active.host==host){active=null;return false;}
+        var mc=Minecraft.getInstance();
+        if(!canStart(mc,host)||host.formed())return false;
+        var cells=new ArrayList<Cell>();
+        host.template().forEach((pos,state)->{
+            if(!pos.equals(host.getBlockPos())&&!state.isAir()) {
+                var color=state.is(dev.overloadsim.workstation.WorkstationContent.GLASS.get())?CYAN
+                        :state.is(dev.overloadsim.workstation.WorkstationContent.RECEIVER.get())?VIOLET:PINK;
+                cells.add(new Cell(pos.immutable(),state,color));
+            }
+        });
+        return start(new Preview(mc.level,host,-1,cells));
+    }
+
     private static boolean canStart(Minecraft mc, BlockEntity host) {
         return host != null && mc.level != null && mc.player != null && mc.player.isAlive()
                 && host.getLevel() == mc.level && !host.isRemoved()
@@ -183,6 +199,7 @@ public final class ConstructionProjection {
                 || laser.receiverPedestalLayout() != preview.receiverPedestal
                 || laser.deflectorLegacyLayout() != preview.deflectorLegacy)) return false;
         if (preview.host instanceof SimulationControllerBlockEntity chamber && chamber.visualSize() > 0) return false;
+        if (preview.host instanceof dev.overloadsim.workstation.HighEnergyWorkstationBlockEntity station && station.formed()) return false;
         for (var pos : preview.chunkAnchors) if (!loaded(preview.level, pos)) return false;
         return true;
     }

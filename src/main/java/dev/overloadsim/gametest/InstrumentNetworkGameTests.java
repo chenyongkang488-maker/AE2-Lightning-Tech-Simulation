@@ -56,12 +56,18 @@ public final class InstrumentNetworkGameTests {
         var source = source(h, h.absolutePos(new BlockPos(3, 2, 3)));
         var machines = new ArrayList<LaserMachineBlockEntity>();
         for (var kind : LaserKind.values()) {
+            if (kind == LaserKind.CORE) continue;
             int index = machines.size();
             var pos = h.absolutePos(new BlockPos(8 + index % 4 * 3, 2, 9 + index / 4 * 3));
             h.getLevel().setBlockAndUpdate(pos, LaserContent.machine(kind).defaultBlockState());
             machines.add((LaserMachineBlockEntity) h.getLevel().getBlockEntity(pos));
         }
+        var corePos = h.absolutePos(new BlockPos(22, 2, 9));
+        h.getLevel().setBlockAndUpdate(corePos, LaserContent.machine(LaserKind.CORE).defaultBlockState());
+        var core = (LaserMachineBlockEntity) h.getLevel().getBlockEntity(corePos);
         h.runAtTickTime(30, () -> {
+            useCard(h, source, core);
+            h.assertTrue(FrequencyApi.getBoundFrequencyId(core).isEmpty(), "collapse cores reject the real native frequency-card binding action");
             for (var machine : machines) {
                 useCard(h, source, machine);
                 h.assertTrue(FrequencyApi.getBoundFrequencyId(machine).orElse(-1) == source.frequency(),
@@ -71,6 +77,9 @@ public final class InstrumentNetworkGameTests {
             }
         });
         h.runAtTickTime(85, () -> {
+            h.assertTrue(core.getMainNode().getGrid() != source.controller().getMainNode().getGrid()
+                            && core.bridge().extractExtreme(1, false) == 0,
+                    "the core stays outside the overloaded grid and cannot transact its EHV");
             for (var machine : machines) {
                 assertWirelessChannel(h, source, machine);
                 h.assertTrue(machine.bridge().extractExtreme(1, false) == 1,
@@ -169,6 +178,7 @@ public final class InstrumentNetworkGameTests {
         var machines = new ArrayList<AENetworkedBlockEntity>();
         var restoredMachines = new ArrayList<AENetworkedBlockEntity>();
         for (var kind : LaserKind.values()) {
+            if (kind == LaserKind.CORE) continue;
             int index = machines.size();
             var pos = h.absolutePos(new BlockPos(8 + index % 4 * 3, 2, 9 + index / 4 * 3));
             h.getLevel().setBlockAndUpdate(pos, LaserContent.machine(kind).defaultBlockState());
@@ -244,7 +254,7 @@ public final class InstrumentNetworkGameTests {
     public static void pendingInstrumentLoadResetsItsUnloadRemovalReason(GameTestHelper h) {
         var source = source(h, h.absolutePos(new BlockPos(3, 2, 3)));
         var states = new ArrayList<BlockState>();
-        for (var kind : LaserKind.values()) states.add(LaserContent.machine(kind).defaultBlockState());
+        for (var kind : LaserKind.values()) if (kind != LaserKind.CORE) states.add(LaserContent.machine(kind).defaultBlockState());
         states.add(ModContent.CHAMBER.get().defaultBlockState());
         states.add(MultiblockContent.CONTROLLER.get().defaultBlockState());
         for (int index = 0; index < states.size(); index++) {
