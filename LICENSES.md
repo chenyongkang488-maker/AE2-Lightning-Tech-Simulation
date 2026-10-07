@@ -10,6 +10,7 @@ replace the license of artwork derived from AE2 Lightning Tech.
 | Original chamber/coil geometry, metal textures and separately drawn lightning | MIT | qiqi and Lightning Tech: Simulation contributors |
 | Original laser pixel atlas, equipment geometry and spherical receiver workshop | MIT | qiqi and Lightning Tech: Simulation contributors |
 | Simulation crystal sprites, crystal logo and embedded copies | CC BY-NC-SA 3.0 | Adapted from AE2 Lightning Tech Reborn contributors |
+| Transcendent Crystal sprite, preview, item model and animation metadata | CC BY-NC-SA 3.0 | Adapted from AE2 Lightning Tech Reborn contributors |
 | Seven coil module icons, upstream module base and derived previews | CC BY-NC-SA 3.0 | Adapted from AE2 Lightning Tech Reborn contributors |
 
 See [LICENSE](LICENSE) for the full MIT text and

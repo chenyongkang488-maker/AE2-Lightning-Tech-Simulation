@@ -1,0 +1,21 @@
+{
+  "type": "overload_sim:high_energy_workstation",
+  "priority": 10,
+  "inputs": [
+    {
+      "ingredient": {
+        "item": "ae2lt:overload_crystal"
+      },
+      "count": 256
+    }
+  ],
+  "results": [
+    {
+      "id": "overload_sim:transcendent_crystal",
+      "count": 4
+    }
+  ],
+  "totalEnergy": 5,
+  "lightningCost": 1,
+  "lightningTier": "high_voltage"
+}

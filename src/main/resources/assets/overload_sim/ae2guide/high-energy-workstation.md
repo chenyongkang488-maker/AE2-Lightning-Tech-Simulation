@@ -14,6 +14,8 @@ item_ids:
 
 The workstation processes the current **overload processing factory** recipes. Pack changes and recipe removals take effect at runtime. Laser power replaces their FE and lightning costs; the machine consumes only recipe materials, including fluids.
 
+Its built-in dedicated recipe converts **256 Overload Crystals into 4 Transcendent Crystals**. These pale-blue crystals produce EHV in a Tesla Coil with a Lightning Collapse Matrix, or serve as constrainer fuel. See [Transcendent Crystal](transcendent-crystal.md).
+
 Build a **7×7×7** enclosure using one workstation controller, one laser optical port, 141 laser frames and 75 laser glass blocks. Place the controller at the front bottom centre, facing outward. The optical port sits at the centre of the opposite wall, three blocks above the controller. The roof, floor and back wall are solid; the three other walls have 5×5 glass windows. Keep the 5³ interior empty. Formation merges the shell into light-grey pixel panels, narrow dark rims, horizontal ventilation grilles and continuous glass windows. A small yellow wrench marks the controller; four overload crystal clusters sit against the inner receiving wall and emit four translucent pink beams toward the centre of the lower work surface while powered. The cavity prevents natural spawning for every mob category, including bats.
 
 The optical port must face a beam with **individual strength strictly above 1,000,000,000 FE**. Separate beams do not add together. With materials and output space, a batch completes in two valid ticks, at up to 1024 parallel operations. Losing the beam or breaking the structure cancels unfinished progress without consuming materials.

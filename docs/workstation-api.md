@@ -18,6 +18,8 @@ AE2LT 2.1.0 使用 `OVERLOAD_PROCESSING_TYPE` 的最终 `RecipeManager` 条目�
 
 ## 专用配方类型
 
+内置专属条目 `overload_sim:transcendent_crystal` 消耗 256 个 `ae2lt:overload_crystal`，产出 4 个 `overload_sim:transcendent_crystal`；不加入上游工厂类型。与其它专属条目一样可由数据包覆盖或移除。
+
 Minecraft 1.21.1 的数据包路径为 `data/<namespace>/recipe/<path>.json`。专用配方类型为 `overload_sim:high_energy_workstation`，采用上游过载处理工厂的序列化格式。例如：
 
 ```json

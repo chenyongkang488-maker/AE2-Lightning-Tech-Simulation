@@ -57,6 +57,7 @@ The constrainer holds 125000 particles and 1024P FE. Inserted consumables cannot
 |Singularity|10 ticks|256G FE|
 |Overloaded Singularity|2 ticks|1024G FE|
 |Plutonium / Polonium pellet (optional Mekanism)|1 tick|2048G FE|
+|Transcendent Crystal|1 tick|2048G FE|
 |Antimatter pellet (optional Mekanism)|1 tick|4096G FE|
 
 Laser instruments draw FE only from Applied Flux FE storage cells in the connected ME network. The receiver exports to those FE cells and debits only their accepted energy. Empty or full FE cells and absent Applied Flux stop the corresponding FE transaction; AE energy cells continue supplying normal network power. External FE connections and registered energy sinks remain available. Particle overflow, or dismantling a constrainer structure containing particles, triggers destruction in the loaded 3×3 chunk area centered on the machine. Stop upstream beams and drain particles before dismantling. Empty constrainers can be adjusted normally.

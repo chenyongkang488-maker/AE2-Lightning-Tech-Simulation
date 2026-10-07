@@ -15,6 +15,14 @@ See `art/licenses/AE2LT-LICENSE_ASSETS.md` and
 https://creativecommons.org/licenses/by-nc-sa/3.0/ . The upstream source-code
 LGPL license is separate from its asset license.
 
+The Transcendent Crystal (`overload_sim:transcendent_crystal`) is adapted from
+AE2 Lightning Tech Reborn 2.1.0's `assets/ae2lt/textures/item/overload_crystal.png`,
+its item model and animation metadata, by the same upstream contributors.
+Changes: a pale-blue palette, retaining the original pixel silhouette, alpha,
+frame order and timing. These derived assets retain **CC BY-NC-SA 3.0** under
+the attribution and asset-license links above. The reproducible recolouring
+script is addon code under MIT; the reference JAR is not bundled.
+
 The chamber frame geometry, metal atlas and separately drawn lightning overlay
 are original addon work under this project's MIT license. The addon Java code
 remains MIT. Reference mod binaries are neither committed nor bundled.

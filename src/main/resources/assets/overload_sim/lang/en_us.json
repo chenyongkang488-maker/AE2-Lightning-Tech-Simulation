@@ -275,5 +275,6 @@
   "block.overload_sim.high_energy_workstation_receiver": "High Energy Workstation Collector",
   "gui.overload_sim.laser.core_threshold": "Collapse threshold: %s FE",
   "gui.overload_sim.workstation.fluid_input_compact": "In %s mB",
-  "gui.overload_sim.workstation.fluid_output_compact": "Out %s mB"
+  "gui.overload_sim.workstation.fluid_output_compact": "Out %s mB",
+  "item.overload_sim.transcendent_crystal": "Transcendent Crystal"
 }
