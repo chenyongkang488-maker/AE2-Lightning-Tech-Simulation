@@ -8,13 +8,13 @@
   },
   "slots": {
     "MACHINE_INPUT": {
-      "left": 16,
-      "top": 73,
+      "left": 33,
+      "top": 75,
       "grid": "BREAK_AFTER_3COLS"
     },
     "MACHINE_OUTPUT": {
-      "left": 128,
-      "top": 73,
+      "left": 115,
+      "top": 75,
       "grid": "BREAK_AFTER_3COLS"
     },
     "PLAYER_INVENTORY": {

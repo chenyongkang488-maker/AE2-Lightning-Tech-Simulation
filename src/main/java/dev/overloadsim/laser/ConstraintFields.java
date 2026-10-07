@@ -1,5 +1,6 @@
 package dev.overloadsim.laser;
 
+import dev.overloadsim.spawn.StructureSpawnProtection;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.MobSpawnType;
@@ -28,15 +29,6 @@ public final class ConstraintFields {
         return Math.max(0, Math.max(min - point, point - max));
     }
 
-    private static boolean preventsSpawn(ServerLevel level, AABB box) {
-        for (var host : LaserStructureIndex.controllers(level)) {
-            if (host.kind() != LaserKind.CONSTRAINT || !intersects(host.center(), box)) continue;
-            host.checkStructure();
-            if (host.formed() && intersects(host.center(), box)) return true;
-        }
-        return false;
-    }
-
     public static void register() {
         if (registered) return;
         registered = true;
@@ -44,11 +36,12 @@ public final class ConstraintFields {
             if (event.getSpawnType() != MobSpawnType.NATURAL || !(event.getLevel() instanceof ServerLevel level)) return;
             var pos = event.getPos();
             var box = event.getEntityType().getDimensions().makeBoundingBox(pos.getX() + .5, pos.getY(), pos.getZ() + .5);
-            if (preventsSpawn(level, box)) event.setResult(MobSpawnEvent.SpawnPlacementCheck.Result.FAIL);
+            if (StructureSpawnProtection.preventsSpawn(level, pos, box)) event.setResult(MobSpawnEvent.SpawnPlacementCheck.Result.FAIL);
         });
         NeoForge.EVENT_BUS.addListener((MobSpawnEvent.PositionCheck event) -> {
             if (event.getSpawnType() != MobSpawnType.NATURAL || !(event.getLevel() instanceof ServerLevel level)) return;
-            if (preventsSpawn(level, event.getEntity().getBoundingBox())) event.setResult(MobSpawnEvent.PositionCheck.Result.FAIL);
+            if (StructureSpawnProtection.preventsSpawn(level, event.getEntity().blockPosition(), event.getEntity().getBoundingBox()))
+                event.setResult(MobSpawnEvent.PositionCheck.Result.FAIL);
         });
     }
 }

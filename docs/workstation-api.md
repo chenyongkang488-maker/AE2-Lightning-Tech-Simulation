@@ -48,7 +48,7 @@ Minecraft 1.21.1 的数据包路径为 `data/<namespace>/recipe/<path>.json`。�
 - `HighEnergyWorkstationRecipe` 包装上游 recipe，使用独立 type 与 serializer；不能继承 final 的上游类。
 - `WorkstationBuffer` 提供 `prototype(slot)`、`count(slot)`、`insert(slot, item, amount, simulate)`、`extract(slot, amount, simulate)`、`debit(slot, amount)`、`save/load/copy`。原型是防御性复制。
 - `HighEnergyWorkstationBlockEntity` 提供 `formed()`、`facing()`、`center()`、`receiver()`、`template()`、`currentPower()`、`progress()`、`lastParallel()`、`lastRecipe()`，以及 `inputs()` / `outputs()`、防御性流体快照。
-- `sideMode(Direction)` / `setSideMode(Direction,int)` 的 0/1/2/3 分别为关闭/输入/输出/双向。默认全部关闭。物品自动化只向输入格插入、只从输出格提取；流体自动化只注入输入槽、只抽取输出槽。
+- 控制器的任意面都支持管道：物品自动化只向输入格插入、只从输出格提取；流体自动化只注入输入槽、只抽取输出槽。旧的 `SideModes` 存档字段不再限制交互。为旧脚本保留 `sideMode(Direction)`（恒为 3）与 `setSideMode(Direction,int)`（不再修改状态），两个方法均已弃用。
 - `eject/setEject` 控制相邻输出，`networkExport/setNetworkExport` 控制已连接的 AE 网络输出；两个开关默认关闭，只有产物可以导出，每 tick 有数量预算。
 - `build(ServerPlayer)` 使用统一 `AutomaticConstruction` 事务从背包和在线 AE 网络搭建完整模板；不破坏内部占据，不强制加载区块。
 

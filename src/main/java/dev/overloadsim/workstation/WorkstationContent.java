@@ -33,7 +33,7 @@ public final class WorkstationContent {
         CONTROLLER.get().setBlockEntity(HighEnergyWorkstationBlockEntity.class,CONTROLLER_ENTITY.get(),null,(level,pos,state,host)->host.tick());
         AEBaseBlockEntity.registerBlockEntityItem(CONTROLLER_ENTITY.get(),CONTROLLER_ITEM.get());WorkstationStructureIndex.register();
         net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.TagsUpdatedEvent event)->WorkstationRecipes.invalidate());
-        LaserExtensions.registerTarget(ModContent.id("high_energy_workstation_receiver"),new LaserExtensions.LaserTarget(){
+        var receiverTarget=new LaserExtensions.LaserTarget(){
             @Override public boolean accept(LaserExtensions.TargetContext context){
                 var host=WorkstationStructureIndex.owner(context.level(),context.position());
                 if(host==null||!context.position().equals(host.receiver()))return false;
@@ -41,7 +41,11 @@ public final class WorkstationContent {
                         :host.receiveLaserFromSource(context.incoming(),context.energy(),context.batchTick(),context.source(),context.sourceIdentity());
             }
             @Override public void deactivate(LaserExtensions.TargetContext context){var host=WorkstationStructureIndex.owner(context.level(),context.position());if(host!=null&&context.source()!=null&&context.sourceIdentity()!=null)host.releaseLaserSource(context.source(),context.sourceIdentity());}
-        });
+        };
+        // Complete alpha.11 shells use the shared optical port; the old ID remains loadable.
+        // The hook accepts only the validated workstation's exact receiver, so other ports fall through.
+        LaserExtensions.registerTarget(ModContent.id("high_energy_workstation_receiver"),receiverTarget);
+        LaserExtensions.registerTarget(ModContent.id("laser_optical_port"),receiverTarget);
     }
     public static void capabilities(RegisterCapabilitiesEvent event){
         event.registerBlockEntity(appeng.api.AECapabilities.IN_WORLD_GRID_NODE_HOST,CONTROLLER_ENTITY.get(),(host,context)->host);

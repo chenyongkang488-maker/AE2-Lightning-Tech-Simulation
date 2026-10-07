@@ -39,6 +39,25 @@ public final class SimulationStructureIndex {
         return false;
     }
 
+    /** Indexed shell or interior owner; revalidation never discovers a controller or loads a chunk. */
+    public static @Nullable SimulationControllerBlockEntity owner(Level level, BlockPos pos) {
+        if (!(level instanceof ServerLevel) || !level.hasChunkAt(pos)) return null;
+        var claims = claims(level, pos);
+        if (claims == null || claims.size() != 1) return null;
+        var owner = claims.iterator().next();
+        if (!level.hasChunkAt(owner.controller)
+                || !(level.getBlockEntity(owner.controller) instanceof SimulationControllerBlockEntity host)
+                || host.getLevel() != level || host.isRemoved() || !host.identity().equals(owner.identity)
+                || !level.getBlockState(owner.controller).is(MultiblockContent.CONTROLLER.get())
+                || !level.getBlockState(owner.controller).equals(host.getBlockState())) return null;
+        host.checkStructure();
+        var currentClaims = claims(level, pos);
+        if (host.isRemoved() || level.getBlockEntity(owner.controller) != host || !host.identity().equals(owner.identity)
+                || host.structure() == null || !host.loaded()
+                || currentClaims == null || currentClaims.size() != 1 || !currentClaims.contains(owner)) return null;
+        return host;
+    }
+
     /** Never scans for a controller or forces a chunk load when a frame is used. */
     public static @Nullable SimulationControllerBlockEntity frameOwner(Level level, BlockPos pos) {
         if (!(level instanceof ServerLevel) || !level.hasChunkAt(pos) || !level.getBlockState(pos).is(MultiblockContent.FRAME.get())) return null;

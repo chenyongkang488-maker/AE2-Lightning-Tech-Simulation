@@ -20,7 +20,8 @@ public final class ReceiverShellModel extends BakedModelWrapper<BakedModel> {
     public ReceiverShellModel(BakedModel original) { super(original); }
     @Override public ModelData getModelData(BlockAndTintGetter level, BlockPos pos, BlockState state, ModelData existing) {
         return originalModel.getModelData(level, pos, state, existing).derive()
-                .with(HIDDEN, ReceiverShellVisuals.hidden(level, pos)).build();
+                .with(HIDDEN, ReceiverShellVisuals.hidden(level, pos)
+                        || dev.overloadsim.workstation.WorkstationShellVisuals.hidden(level, pos)).build();
     }
     @Override public List<BakedQuad> getQuads(BlockState state, Direction face, RandomSource random, ModelData data, RenderType type) {
         return Boolean.TRUE.equals(data.get(HIDDEN)) ? List.of() : originalModel.getQuads(state, face, random, data, type);

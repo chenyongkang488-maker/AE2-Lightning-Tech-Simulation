@@ -1,6 +1,7 @@
 """Export workstation compatibility assets using the existing laser models and registered IDs."""
 import json
 from pathlib import Path
+from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / 'src/main/resources/assets/overload_sim'
@@ -22,8 +23,44 @@ def model_alias(name):
     return {'parent': f'overload_sim:block/{name}'}
 
 
+def controller_model():
+    source = json.loads((ASSETS/'models/block/high_energy_laser_emitter.json').read_text(encoding='utf-8'))
+    elements = source['elements']
+    for element in elements:
+        if element.get('name') == 'equipment function glyph':
+            element['name'] = 'yellow workstation wrench'
+            for face in element['faces'].values():
+                face['texture'] = '#workstation_wrench'
+                face['uv'] = [0, 0, 16, 16]
+    return {'parent': 'overload_sim:block/high_energy_laser_emitter',
+            'textures': {'workstation_wrench': 'overload_sim:block/workstation_controller_wrench'},
+            'elements': elements}
+
+
+def wrench_texture():
+    # Native sixteen-pixel equipment glyph, separate from the shared laser atlas.
+    mask = [
+        '................', '.........###....', '........##......', '.......##....#..',
+        '.......##...##..', '........#####...', '........####....', '.......###......',
+        '......###.......', '.....###........', '....###.........', '...###..........',
+        '..####..........', '..#..#..........', '...##...........', '................',
+    ]
+    image = Image.new('RGBA', (16, 16), (0, 0, 0, 0))
+    points = {(x, y) for y, row in enumerate(mask) for x, pixel in enumerate(row) if pixel == '#'}
+    for x, y in points:
+        for dx, dy in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+            if 0 <= x+dx < 16 and 0 <= y+dy < 16 and (x+dx, y+dy) not in points:
+                image.putpixel((x+dx, y+dy), (113, 82, 31, 255))
+    for x, y in points:
+        image.putpixel((x, y), (255, 215, 85, 255))
+    path = ASSETS/'textures/block/workstation_controller_wrench.png'
+    path.parent.mkdir(parents=True, exist_ok=True)
+    image.save(path)
+
+
 def main():
-    models = {CONTROLLER: model_alias('high_energy_laser_emitter')}
+    wrench_texture()
+    models = {CONTROLLER: controller_model()}
     for legacy, shared in LEGACY_PARTS.items():
         models[legacy] = models[f'{legacy}_formed'] = model_alias(shared)
     for name, model in models.items():
@@ -55,12 +92,12 @@ def main():
     write(ROOT/'src/main/resources/assets/ae2/screens/overload_sim/workstation.json', {
         'includes': ['../common/common.json'], 'generatedBackground': {'width': 200, 'height': 238},
         'slots': {
-            'MACHINE_INPUT': {'left': 16, 'top': 73, 'grid': 'BREAK_AFTER_3COLS'},
-            'MACHINE_OUTPUT': {'left': 128, 'top': 73, 'grid': 'BREAK_AFTER_3COLS'},
+            'MACHINE_INPUT': {'left': 33, 'top': 75, 'grid': 'BREAK_AFTER_3COLS'},
+            'MACHINE_OUTPUT': {'left': 115, 'top': 75, 'grid': 'BREAK_AFTER_3COLS'},
             'PLAYER_INVENTORY': {'left': 20, 'top': 160, 'grid': 'BREAK_AFTER_9COLS'},
             'PLAYER_HOTBAR': {'left': 20, 'top': 218, 'grid': 'BREAK_AFTER_9COLS'},
         }})
-    print('Exported workstation controller and legacy model aliases, canonical drops and three 1:1 conversion recipes.')
+    print('Exported yellow-wrench workstation controller, legacy model aliases, canonical drops, conversions and tall-fluid layout.')
 
 
 if __name__ == '__main__':

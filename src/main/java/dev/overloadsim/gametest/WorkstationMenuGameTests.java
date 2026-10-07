@@ -146,9 +146,10 @@ public final class WorkstationMenuGameTests {
         s.player.containerMenu = s.menu;
         s.player.setPos(s.host.getBlockPos().getCenter().add(30, 0, 0));
         click(s, 9, 0);
-        s.menu.receiveClientAction("workstationSide", "2");
-        h.assertTrue(s.host.outputs().count(0) == 100 && s.host.sideMode(net.minecraft.core.Direction.NORTH) == 0,
-                "a player outside menu reach cannot change item storage or side configuration");
+        s.menu.receiveClientAction("workstationEject", "null");
+        s.menu.receiveClientAction("workstationNetwork", "null");
+        h.assertTrue(s.host.outputs().count(0) == 100 && !s.host.eject() && !s.host.networkExport(),
+                "a player outside menu reach cannot change item storage or either automatic output switch");
         s.player.setPos(s.host.getBlockPos().getCenter());
         h.getLevel().setBlockAndUpdate(s.host.getBlockPos(), Blocks.AIR.defaultBlockState());
         h.getLevel().setBlockAndUpdate(s.host.getBlockPos(), WorkstationContent.CONTROLLER.get().defaultBlockState());
@@ -159,22 +160,19 @@ public final class WorkstationMenuGameTests {
     }
 
     @GameTest(template = "laser_empty")
-    public static void outputConfigurationUsesTheSameValidatedMenu(GameTestHelper h) {
+    public static void independentOutputSwitchesUseTheSameValidatedMenu(GameTestHelper h) {
         var s = session(h);
-        for (var direction : net.minecraft.core.Direction.values()) {
-            int side = direction.get3DDataValue();
-            for (int expected = 1; expected <= 4; expected++) {
-                s.menu.receiveClientAction("workstationSide", Integer.toString(side));
-                h.assertTrue(s.host.sideMode(direction) == expected % 4, "each face cycles off/input/output/both/off");
-            }
-        }
         s.menu.receiveClientAction("workstationEject", "null");
+        s.menu.broadcastChanges();
+        h.assertTrue(s.host.eject() && s.menu.eject && !s.host.networkExport() && !s.menu.networkExport,
+                "adjacent switch does not enable network export");
         s.menu.receiveClientAction("workstationNetwork", "null");
         s.menu.broadcastChanges();
         h.assertTrue(s.host.eject() && s.host.networkExport() && s.menu.eject && s.menu.networkExport,
                 "ejection and ME export toggles synchronize without changing the active menu");
         s.menu.receiveClientAction("workstationSide", "6");
-        h.assertTrue(s.menu.sideModes == 0, "an invalid seventh face leaves every face off");
+        s.menu.receiveClientAction("workstationSide", "2");
+        h.assertTrue(s.host.eject() && s.host.networkExport(), "retired face packets cannot change either automatic output setting");
         h.succeed();
     }
 }

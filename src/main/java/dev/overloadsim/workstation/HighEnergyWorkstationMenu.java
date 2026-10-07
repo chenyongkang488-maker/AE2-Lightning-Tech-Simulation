@@ -13,7 +13,6 @@ import dev.overloadsim.ModContent;
 import java.util.List;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
@@ -39,7 +38,6 @@ public final class HighEnergyWorkstationMenu extends AEBaseMenu implements Frequ
     @GuiSync(34) public String recipe = "";
     @GuiSync(35) public String quantities = "";
     @GuiSync(36) public int frequency = -1;
-    @GuiSync(37) public int sideModes;
     @GuiSync(38) public boolean eject;
     @GuiSync(39) public boolean networkExport;
     @GuiSync(40) public String inputFluid = "";
@@ -81,12 +79,8 @@ public final class HighEnergyWorkstationMenu extends AEBaseMenu implements Frequ
             if (action == null || action < 0 || action >= DISPLAYS * 3 || !validAction()) return;
             transferBulk(action / 3, action % 3);
         });
-        registerClientAction("workstationSide", Integer.class, side -> {
-            if (side == null || side < 0 || side >= 6 || !validAction()) return;
-            var direction = Direction.from3DDataValue(side);
-            host.setSideMode(direction, (host.sideMode(direction) + 1) % 4);
-            broadcastChanges();
-        });
+        // Old clients may still send the retired face action; it no longer changes automation.
+        registerClientAction("workstationSide", Integer.class, side -> {});
         registerClientAction("workstationFluid", Integer.class, index -> {
             if(index==null||index<0||index>1||!validAction())return;
             transferFluid(index);
@@ -114,12 +108,10 @@ public final class HighEnergyWorkstationMenu extends AEBaseMenu implements Frequ
     public void requestItem(int slot, int mode) {
         if (slot >= 0 && slot < DISPLAYS && mode >= 0 && mode < 3) sendClientAction("workstationItem", slot * 3 + mode);
     }
-    public void cycleSide(int side) { sendClientAction("workstationSide", side); }
     public void requestFluid(int index) { sendClientAction("workstationFluid", index); }
     public void toggleEject() { sendClientAction("workstationEject"); }
     public void toggleNetworkExport() { sendClientAction("workstationNetwork"); }
     public void autoBuild() { sendClientAction("workstationBuild"); }
-    public int sideMode(int side) { return side >= 0 && side < 6 ? sideModes >> (side * 2) & 3 : 0; }
 
     /** Exact counts never enter ItemStack's normal network codec. The CSV is at most 143 characters. */
     public long quantity(int slot) {
@@ -279,8 +271,6 @@ public final class HighEnergyWorkstationMenu extends AEBaseMenu implements Frequ
             frequency = host.getFrequencyId();
             eject = host.eject();
             networkExport = host.networkExport();
-            sideModes = 0;
-            for (var direction : Direction.values()) sideModes |= (host.sideMode(direction) & 3) << (direction.get3DDataValue() * 2);
             var csv = new StringBuilder(DISPLAYS * 8);
             for (int i = 0; i < DISPLAYS; i++) {
                 if (i > 0) csv.append(',');

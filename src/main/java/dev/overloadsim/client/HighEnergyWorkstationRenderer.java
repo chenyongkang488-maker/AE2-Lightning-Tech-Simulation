@@ -4,12 +4,13 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import dev.overloadsim.ModContent;
-import dev.overloadsim.core.DeflectorCrystalMesh;
 import dev.overloadsim.core.IndustrialMachineMesh;
 import dev.overloadsim.core.ReceiverShellMesh;
 import dev.overloadsim.core.WorkstationVisualMesh;
 import dev.overloadsim.workstation.HighEnergyWorkstationBlockEntity;
 import java.util.List;
+import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -18,15 +19,23 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
-/** One renderer for the receiving face, four prisms and a nine-place processing table. */
+/** Merged receiving chamber, four native overload-crystal clusters and a nine-place processing table. */
 public final class HighEnergyWorkstationRenderer implements BlockEntityRenderer<HighEnergyWorkstationBlockEntity> {
     private final BlockEntityRendererProvider.Context context;
-    public HighEnergyWorkstationRenderer(BlockEntityRendererProvider.Context context) { this.context=context; }
+    private final BlockState crystal;
+    public HighEnergyWorkstationRenderer(BlockEntityRendererProvider.Context context) {
+        this.context=context;
+        crystal=BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2lt:overload_crystal_cluster"))
+                .defaultBlockState().setValue(BlockStateProperties.FACING,Direction.NORTH);
+    }
     @Override public boolean shouldRenderOffScreen(HighEnergyWorkstationBlockEntity host) { return host.formed(); }
     @Override public int getViewDistance() { return 96; }
     @Override public AABB getRenderBoundingBox(HighEnergyWorkstationBlockEntity host) {
@@ -43,22 +52,25 @@ public final class HighEnergyWorkstationRenderer implements BlockEntityRenderer<
         float rotation=switch(host.facing()){case NORTH->0;case EAST->-90;case SOUTH->180;case WEST->90;default->0;};
         poses.mulPose(Axis.YP.rotationDegrees(rotation));
         var atlas=Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(ModContent.id("block/laser_pixel_atlas"));
+        if(host.workstationVisualsVisible()) {
+            mesh(WorkstationVisualMesh.shellSurfaces(),poses.last(),buffers,atlas,light);
+            glass(WorkstationVisualMesh.glass(),poses.last(),buffers,atlas,light);
+        }
         mesh(WorkstationVisualMesh.surfaces(),poses.last(),buffers,atlas,light);
-        double time=host.getLevel().getGameTime()+partial;
         var flow=Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(ModContent.id("block/laser_energy_flow"));
         for(int sx:new int[]{-1,1})for(int sy:new int[]{-1,1}) {
-            var prism=new Vec3(sx*1.125,sy*1.125,2.125);
-            poses.pushPose();poses.translate(prism.x,prism.y,prism.z);
-            poses.mulPose(Axis.YP.rotationDegrees((float)(time*.4+sx*sy*30)));
-            poses.scale(.45f,.45f,.45f);
-            mesh(DeflectorCrystalMesh.surfaces(),poses.last(),buffers,atlas,LightTexture.FULL_BRIGHT);
+            // NORTH's native model rests on z=1. Its scaled bottom is exactly the rear wall's inner z=2.5.
+            poses.pushPose();poses.translate(sx*1.125-.375,sy*1.125-.375,1.75);
+            poses.scale(.75f,.75f,.75f);
+            context.getBlockRenderDispatcher().renderSingleBlock(crystal,poses,buffers,LightTexture.FULL_BRIGHT,
+                    OverlayTexture.NO_OVERLAY);
             poses.popPose();
         }
-        if(host.currentPower()>1_000_000_000L){
+        if(host.currentPower()>HighEnergyWorkstationBlockEntity.LASER_THRESHOLD){
             var beam=buffers.getBuffer(RenderType.entityTranslucent(InventoryMenu.BLOCK_ATLAS));
             for(int sx:new int[]{-1,1})for(int sy:new int[]{-1,1})
-                LaserEnergyEffects.beam(poses.last(),beam,flow,new Vec3(sx*1.125,sy*1.125,2.125),
-                        new Vec3(sx*.375,-1.9,sy*.375),.09,.06,.8f);
+                LaserEnergyEffects.beam(poses.last(),beam,flow,new Vec3(sx*1.125,sy*1.125,1.84375),
+                        new Vec3(sx*.8125,-1.9,sy*.8125),.06,.035,.8f);
         }
         for(int slot=0;slot<9;slot++) {
             var item=host.inputs().prototype(slot);if(item.isEmpty())continue;
@@ -89,8 +101,18 @@ public final class HighEnergyWorkstationRenderer implements BlockEntityRenderer<
     }
     private static void vertex(ReceiverShellMesh.Vertex point,PoseStack.Pose pose,VertexConsumer consumer,
             TextureAtlasSprite atlas,float u,float v,int light) {
+        vertex(point,pose,consumer,atlas,u,v,15,15,light);
+    }
+    private static void glass(List<ReceiverShellMesh.Quad> panes,PoseStack.Pose pose,MultiBufferSource buffers,
+            TextureAtlasSprite atlas,int light) {
+        var consumer=buffers.getBuffer(RenderType.entityTranslucent(InventoryMenu.BLOCK_ATLAS));
+        for(var pane:panes)for(var point:List.of(pane.a(),pane.b(),pane.c(),pane.d()))
+            vertex(point,pose,consumer,atlas,66.5f,2.5f,11,11,light);
+    }
+    private static void vertex(ReceiverShellMesh.Vertex point,PoseStack.Pose pose,VertexConsumer consumer,
+            TextureAtlasSprite atlas,float u,float v,float width,float height,int light) {
         consumer.addVertex(pose.pose(),(float)point.x(),(float)point.y(),(float)point.z())
-                .setColor(255,255,255,255).setUv(atlas.getU((float)(u+point.u()*15)/128),atlas.getV((float)(v+point.v()*15)/128))
+                .setColor(255,255,255,255).setUv(atlas.getU((float)(u+point.u()*width)/128),atlas.getV((float)(v+point.v()*height)/128))
                 .setOverlay(OverlayTexture.NO_OVERLAY).setLight(light)
                 .setNormal(pose,(float)point.nx(),(float)point.ny(),(float)point.nz());
     }
