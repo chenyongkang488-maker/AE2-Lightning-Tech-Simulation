@@ -38,15 +38,14 @@ def controller_model():
 
 
 def wrench_texture():
-    # Native sixteen-pixel equipment glyph, separate from the shared laser atlas.
+    # Keep the emitter's 8x8 geometry. Only ten texture pixels carry the mark,
+    # matching the visual footprint of the nearby matrix and deflector glyphs.
     mask = [
-        '................', '.........###....', '........##......', '.......##....#..',
-        '.......##...##..', '........#####...', '........####....', '.......###......',
-        '......###.......', '.....###........', '....###.........', '...###..........',
-        '..####..........', '..#..#..........', '...##...........', '................',
+        '.....##.', '....#...', '....#..#', '.....###',
+        '....###.', '...##...', '.###....', '##......',
     ]
     image = Image.new('RGBA', (16, 16), (0, 0, 0, 0))
-    points = {(x, y) for y, row in enumerate(mask) for x, pixel in enumerate(row) if pixel == '#'}
+    points = {(x+4, y+4) for y, row in enumerate(mask) for x, pixel in enumerate(row) if pixel == '#'}
     for x, y in points:
         for dx, dy in ((-1, 0), (1, 0), (0, -1), (0, 1)):
             if 0 <= x+dx < 16 and 0 <= y+dy < 16 and (x+dx, y+dy) not in points:
@@ -58,8 +57,39 @@ def wrench_texture():
     image.save(path)
 
 
+def shell_atlas():
+    # An independent 8x8 grid of native 16px tiles, with the laser atlas's
+    # numbering contract. Formed workstation meshes alone use this sprite.
+    palette = {5: (31, 35, 48), 7: (108, 113, 121), 32: (164, 168, 172),
+               38: (182, 185, 188), 44: (74, 81, 93)}
+    image = Image.new('RGBA', (128, 128))
+    for tile in range(64):
+        base = palette.get(tile, palette[32])
+        for y in range(16):
+            for x in range(16):
+                # Low-contrast pixel grain, deliberately without tile outlines
+                # so the long merged panels read as one continuous housing.
+                grain = ((x*13 + y*7 + x*y*3 + tile*11) % 7)-3
+                weave = 1 if (x//2 + y//2) % 2 else -1
+                image.putpixel(((tile % 8)*16+x, (tile // 8)*16+y),
+                               (*[channel+grain+weave for channel in base], 255))
+    with Image.open(ASSETS/'textures/block/laser_pixel_atlas.png') as laser:
+        # The merged glazing samples native translucent tile 4 from this atlas too.
+        image.paste(laser.crop((64, 0, 80, 16)), (64, 0))
+        # The receiver intake and internal manifold retain the shared pink light.
+        image.paste(laser.crop((16, 80, 32, 96)), (16, 80))
+    # Static white tile 42 gives the beacon shader an unmodified RGBA sample;
+    # its vertex colour alone sets the optical tube's pink tint and translucency.
+    image.paste(Image.new('RGBA', (16, 16), (255, 255, 255, 255)), (32, 80))
+    image.save(ASSETS/'textures/block/workstation_shell_atlas.png')
+    write(ASSETS/'models/block/workstation_shell_atlas.json', {
+        'parent': 'minecraft:block/cube_all', 'ambientocclusion': False,
+        'textures': {'all': 'overload_sim:block/workstation_shell_atlas'}})
+
+
 def main():
     wrench_texture()
+    shell_atlas()
     models = {CONTROLLER: controller_model()}
     for legacy, shared in LEGACY_PARTS.items():
         models[legacy] = models[f'{legacy}_formed'] = model_alias(shared)
@@ -97,7 +127,7 @@ def main():
             'PLAYER_INVENTORY': {'left': 20, 'top': 160, 'grid': 'BREAK_AFTER_9COLS'},
             'PLAYER_HOTBAR': {'left': 20, 'top': 218, 'grid': 'BREAK_AFTER_9COLS'},
         }})
-    print('Exported yellow-wrench workstation controller, legacy model aliases, canonical drops, conversions and tall-fluid layout.')
+    print('Exported compact yellow wrench, independent grey workstation shell atlas, legacy recovery assets and tall-fluid layout.')
 
 
 if __name__ == '__main__':

@@ -55,6 +55,30 @@ def verify():
     with Image.open(ASSETS / 'textures/block/workstation_controller_wrench.png') as glyph:
         assert glyph.size == (16, 16) and glyph.mode == 'RGBA', 'workstation wrench must be a native transparent 16px glyph'
         assert glyph.getextrema()[3] == (0, 255), 'workstation glyph must retain clear and opaque pixels'
+        bounds = glyph.getchannel('A').getbbox()
+        assert bounds and max(bounds[2]-bounds[0], bounds[3]-bounds[1]) <= 10, 'wrench footprint must match the adjacent equipment glyphs'
+        assert bounds[0] + bounds[2] == bounds[1] + bounds[3] == 16, 'small wrench must stay centred in its existing glyph geometry'
+    with Image.open(ASSETS / 'textures/block/workstation_shell_atlas.png') as atlas:
+        assert atlas.size == (128, 128) and atlas.mode == 'RGBA', 'workstation shell needs its own native 8x8 tile atlas'
+        # Renderer samples the tile-4 interior at (66.5, 2.5) through (77.5, 13.5).
+        # Check actual interior alpha, since tile dimensions alone cannot protect windows.
+        glass = atlas.crop((66, 2, 78, 14))
+        assert glass.getextrema()[3][1] < 255, 'workstation glazing interior must stay translucent'
+        assert glass.getextrema()[3][1] > 0, 'workstation glazing must retain its visible native tint'
+        with Image.open(ASSETS / 'textures/block/laser_pixel_atlas.png') as laser:
+            assert atlas.crop((64, 0, 80, 16)).tobytes() == laser.crop((64, 0, 80, 16)).tobytes(), 'tile 4 must preserve the native laser glass pixels'
+        beam_white = atlas.crop((32, 80, 48, 96))
+        assert beam_white.getextrema() == ((255, 255),)*4, 'tile 42 must be uniformly opaque white for stable beam tint and alpha'
+        assert atlas.getpixel((40, 88)) == (255, 255, 255, 255), 'beam centre sample must have no texture tint or transparency'
+        for tile in (5, 7, 32, 38, 44):
+            region = atlas.crop(((tile % 8)*16, (tile // 8)*16, (tile % 8+1)*16, (tile // 8+1)*16))
+            assert region.getextrema()[3] == (255, 255), 'shell panels must stay opaque'
+            assert all(abs(r-g) <= 22 and abs(g-b) <= 22
+                       for r, g, b, a in (region.getpixel((x, y)) for y in range(16) for x in range(16))), 'framework must use grey/navy panels without pink decoration'
+    shell_model = resolved_model('overload_sim:block/workstation_shell_atlas')
+    assert shell_model['textures']['all'] == 'overload_sim:block/workstation_shell_atlas'
+    registration = (ROOT / 'src/main/java/dev/overloadsim/client/ClientRegistration.java').read_text(encoding='utf-8')
+    assert '"workstation_shell_atlas"' in registration, 'standalone shell model must be registered for texture stitching'
     for legacy, shared in LEGACY_PARTS.items():
         for suffix in ('', '_formed'):
             assert read(ASSETS / f'models/block/{legacy}{suffix}.json')['parent'] == f'overload_sim:block/{shared}'
@@ -107,7 +131,7 @@ def verify():
     for key in translations['en_us']:
         if key.startswith('gui.overload_sim.workstation.'):
             assert key in translations['zh_cn'], key
-    print('Workstation resources verified: yellow wrench, shared-part models, legacy recovery, public guides and nonoverlapping tall-fluid layout.')
+    print('Workstation resources verified: compact yellow wrench, independent grey shell atlas with native translucent glass, shared-part models, legacy recovery and nonoverlapping tall-fluid layout.')
 
 
 if __name__ == '__main__':

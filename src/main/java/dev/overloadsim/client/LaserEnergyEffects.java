@@ -21,6 +21,26 @@ import org.joml.Matrix4f;
 /** Strictly bounded cosmetic surfaces; no world particles, damage or resource mutations. */
 final class LaserEnergyEffects {
     private LaserEnergyEffects(){}
+    /** A clear, steady pink optical tube, with no scrolling energy pattern or opaque core. */
+    static void pinkBeam(PoseStack.Pose pose,VertexConsumer vertices,TextureAtlasSprite atlas,Vec3 start,Vec3 end) {
+        Vec3 direction=end.subtract(start).normalize();
+        Vec3 normal=direction.cross(Math.abs(direction.y)<.9?new Vec3(0,1,0):new Vec3(1,0,0)).normalize();
+        Vec3 tangent=direction.cross(normal).normalize();
+        for(int side=0;side<12;side++) {
+            double a=side*Math.PI/6,b=(side+1)*Math.PI/6;
+            Vec3 u=normal.scale(Math.cos(a)).add(tangent.scale(Math.sin(a)));
+            Vec3 w=normal.scale(Math.cos(b)).add(tangent.scale(Math.sin(b)));
+            var points=new Vec3[]{start.add(u.scale(.055)),end.add(u.scale(.035)),
+                    end.add(w.scale(.035)),start.add(w.scale(.055))};
+            for(int reverse=0;reverse<2;reverse++)for(int corner=0;corner<4;corner++) {
+                var point=points[reverse==0?corner:3-corner];
+                vertices.addVertex(pose.pose(),(float)point.x,(float)point.y,(float)point.z)
+                        .setColor(1f,.43f,.72f,.38f)
+                        .setUv(atlas.getU(40/128f),atlas.getV(88/128f))
+                        .setLight(LightTexture.FULL_BRIGHT).setNormal(pose,(float)u.x,(float)u.y,(float)u.z);
+            }
+        }
+    }
     static void beam(PoseStack.Pose pose,VertexConsumer v,TextureAtlasSprite sprite,Vec3 start,Vec3 end,double r0,double r1,float alpha){
         Vec3 direction=end.subtract(start).normalize();
         Vec3 normal=direction.cross(Math.abs(direction.y)<.9?new Vec3(0,1,0):new Vec3(1,0,0)).normalize();

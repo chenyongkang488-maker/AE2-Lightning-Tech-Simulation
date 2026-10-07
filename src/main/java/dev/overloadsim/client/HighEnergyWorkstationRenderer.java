@@ -7,12 +7,18 @@ import dev.overloadsim.ModContent;
 import dev.overloadsim.core.IndustrialMachineMesh;
 import dev.overloadsim.core.ReceiverShellMesh;
 import dev.overloadsim.core.WorkstationVisualMesh;
+import dev.overloadsim.core.WorkstationRenderLighting;
+import dev.overloadsim.core.WorkstationOptics;
 import dev.overloadsim.workstation.HighEnergyWorkstationBlockEntity;
 import java.util.List;
+import java.util.HashMap;
+import java.util.function.ToIntFunction;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
@@ -51,13 +57,22 @@ public final class HighEnergyWorkstationRenderer implements BlockEntityRenderer<
         // Local +Z is inward from the controller, matching the authoritative construction template.
         float rotation=switch(host.facing()){case NORTH->0;case EAST->-90;case SOUTH->180;case WEST->90;default->0;};
         poses.mulPose(Axis.YP.rotationDegrees(rotation));
-        var atlas=Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(ModContent.id("block/laser_pixel_atlas"));
+        int turns=switch(host.facing()){case EAST->1;case SOUTH->2;case WEST->3;default->0;};
+        var origin=host.center().getCenter();
+        var lightCache=new HashMap<BlockPos,Integer>();
+        ToIntFunction<WorkstationRenderLighting.Point> lightAt=p -> {
+            var position=BlockPos.containing(p.x(),p.y(),p.z());
+            return lightCache.computeIfAbsent(position,pos -> host.getLevel().hasChunkAt(pos)
+                    ?LevelRenderer.getLightColor(host.getLevel(),pos):light);
+        };
+        ToIntFunction<ReceiverShellMesh.Quad> faceLight=q -> WorkstationRenderLighting.sample(q,
+                origin.x,origin.y,origin.z,turns,lightAt);
+        var atlas=Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(ModContent.id("block/workstation_shell_atlas"));
         if(host.workstationVisualsVisible()) {
-            mesh(WorkstationVisualMesh.shellSurfaces(),poses.last(),buffers,atlas,light);
-            glass(WorkstationVisualMesh.glass(),poses.last(),buffers,atlas,light);
+            mesh(WorkstationVisualMesh.shellSurfaces(),poses.last(),buffers,atlas,faceLight);
+            glass(WorkstationVisualMesh.glass(),poses.last(),buffers,atlas,faceLight);
         }
-        mesh(WorkstationVisualMesh.surfaces(),poses.last(),buffers,atlas,light);
-        var flow=Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(ModContent.id("block/laser_energy_flow"));
+        mesh(WorkstationVisualMesh.surfaces(),poses.last(),buffers,atlas,faceLight);
         for(int sx:new int[]{-1,1})for(int sy:new int[]{-1,1}) {
             // NORTH's native model rests on z=1. Its scaled bottom is exactly the rear wall's inner z=2.5.
             poses.pushPose();poses.translate(sx*1.125-.375,sy*1.125-.375,1.75);
@@ -67,16 +82,21 @@ public final class HighEnergyWorkstationRenderer implements BlockEntityRenderer<
             poses.popPose();
         }
         if(host.currentPower()>HighEnergyWorkstationBlockEntity.LASER_THRESHOLD){
-            var beam=buffers.getBuffer(RenderType.entityTranslucent(InventoryMenu.BLOCK_ATLAS));
-            for(int sx:new int[]{-1,1})for(int sy:new int[]{-1,1})
-                LaserEnergyEffects.beam(poses.last(),beam,flow,new Vec3(sx*1.125,sy*1.125,1.84375),
-                        new Vec3(sx*.8125,-1.9,sy*.8125),.06,.035,.8f);
+            // The existing fixed translucent beacon pass follows opaque geometry and writes colour only.
+            var beam=buffers.getBuffer(RenderType.beaconBeam(InventoryMenu.BLOCK_ATLAS,true));
+            for(var ray:WorkstationOptics.rays()) {
+                var a=ray.start();var b=ray.end();
+                LaserEnergyEffects.pinkBeam(poses.last(),beam,atlas,new Vec3(a.x(),a.y(),a.z()),
+                        new Vec3(b.x(),b.y(),b.z()));
+            }
         }
         for(int slot=0;slot<9;slot++) {
             var item=host.inputs().prototype(slot);if(item.isEmpty())continue;
             poses.pushPose();poses.translate((slot%3-1)*.8125,-1.87,(slot/3-1)*.8125);
             poses.scale(.36f,.36f,.36f);
-            context.getItemRenderer().renderStatic(item,ItemDisplayContext.GROUND,light,OverlayTexture.NO_OVERLAY,
+            int itemLight=lightAt.applyAsInt(WorkstationRenderLighting.world((slot%3-1)*.8125,-1.8,
+                    (slot/3-1)*.8125,origin.x,origin.y,origin.z,turns));
+            context.getItemRenderer().renderStatic(item,ItemDisplayContext.GROUND,itemLight,OverlayTexture.NO_OVERLAY,
                     poses,buffers,host.getLevel(),slot);
             poses.popPose();
         }
@@ -84,13 +104,13 @@ public final class HighEnergyWorkstationRenderer implements BlockEntityRenderer<
     }
 
     private static void mesh(List<IndustrialMachineMesh.Surface> surfaces,PoseStack.Pose pose,
-            MultiBufferSource buffers,TextureAtlasSprite atlas,int light) {
+            MultiBufferSource buffers,TextureAtlasSprite atlas,ToIntFunction<ReceiverShellMesh.Quad> faceLight) {
         var solid=buffers.getBuffer(RenderType.entitySolid(InventoryMenu.BLOCK_ATLAS));
         // Fixed entity buffers establish interior depth before vanilla translucent glass.
         // A transient beacon pass can otherwise hide every prism when viewed from outside.
         for(var surface:surfaces) {
             float u=(surface.tile()%8)*16+.5f,v=(surface.tile()/8)*16+.5f;
-            int illumination=surface.glow()?LightTexture.FULL_BRIGHT:light;
+            int illumination=surface.glow()?LightTexture.FULL_BRIGHT:faceLight.applyAsInt(surface.quad());
             var consumer=solid;
             var q=surface.quad();
             vertex(q.a(),pose,consumer,atlas,u,v,illumination);
@@ -104,10 +124,13 @@ public final class HighEnergyWorkstationRenderer implements BlockEntityRenderer<
         vertex(point,pose,consumer,atlas,u,v,15,15,light);
     }
     private static void glass(List<ReceiverShellMesh.Quad> panes,PoseStack.Pose pose,MultiBufferSource buffers,
-            TextureAtlasSprite atlas,int light) {
+            TextureAtlasSprite atlas,ToIntFunction<ReceiverShellMesh.Quad> faceLight) {
         var consumer=buffers.getBuffer(RenderType.entityTranslucent(InventoryMenu.BLOCK_ATLAS));
-        for(var pane:panes)for(var point:List.of(pane.a(),pane.b(),pane.c(),pane.d()))
-            vertex(point,pose,consumer,atlas,66.5f,2.5f,11,11,light);
+        for(var pane:panes) {
+            int light=faceLight.applyAsInt(pane);
+            for(var point:List.of(pane.a(),pane.b(),pane.c(),pane.d()))
+                vertex(point,pose,consumer,atlas,66.5f,2.5f,11,11,light);
+        }
     }
     private static void vertex(ReceiverShellMesh.Vertex point,PoseStack.Pose pose,VertexConsumer consumer,
             TextureAtlasSprite atlas,float u,float v,float width,float height,int light) {

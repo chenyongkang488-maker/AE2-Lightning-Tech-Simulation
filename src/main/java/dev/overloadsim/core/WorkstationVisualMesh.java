@@ -37,9 +37,9 @@ public final class WorkstationVisualMesh {
         IndustrialMachineMesh.box(result,7,-1.3125,-2.125,-1.3125,1.3125,-2,1.3125);
         for (int sign : new int[]{-1,1}) {
             double x0 = sign < 0 ? -1.5 : 1.4375;
-            IndustrialMachineMesh.box(result,41,x0,-2.1875,-1.4375,x0+.0625,-2.125,1.4375);
+            IndustrialMachineMesh.box(result,32,x0,-2.1875,-1.4375,x0+.0625,-2.125,1.4375);
             double z0 = sign < 0 ? -1.5 : 1.4375;
-            IndustrialMachineMesh.box(result,41,-1.4375,-2.1875,z0,1.4375,-2.125,z0+.0625);
+            IndustrialMachineMesh.box(result,32,-1.4375,-2.1875,z0,1.4375,-2.125,z0+.0625);
         }
         // Nine visible holders align with the menu's actual 3x3 material slots.
         for (int x=-1;x<=1;x++) for (int z=-1;z<=1;z++)
@@ -60,14 +60,13 @@ public final class WorkstationVisualMesh {
         for(int sx:new int[]{-1,1})for(int sz:new int[]{-1,1}) {
             double x=sx<0?-3.5:2.5,z=sz<0?-3.5:2.5;
             IndustrialMachineMesh.box(result,32,x,-2.5,z,x+1,2.5,z+1);
-            // One broad front plate per corner, with an inset vertical conductor and end fittings.
-            double front=sz<0?-3.53125:3.5;
-            IndustrialMachineMesh.box(result,38,x+.125,-2.25,front,x+.875,2.25,front+.03125);
-            double channel=sx<0?x+.875:x+.0625;
-            glowBox(result,41,channel,-2.125,front-.03125,channel+.0625,2.125,front);
+            // Continuous light-grey corner panels inside a narrow stepped navy rim.
+            frontPanel(result,x+.03125,-2.46875,x+.96875,2.46875,sz);
+            sidePanel(result,z+.03125,-2.46875,z+.96875,2.46875,sx);
             for(int end:new int[]{-1,1}) {
-                double y=end<0?-2.3125:2.125;
-                IndustrialMachineMesh.box(result,44,x+.25,y,front-.03125,x+.75,y+.1875,front);
+                double y=end<0?-2.3125:2.21875;
+                double z0=sz<0?-3.5625:3.546875;
+                IndustrialMachineMesh.box(result,44,x+.1875,y,z0,x+.28125,y+.09375,z0+.015625);
             }
         }
         // Opaque rear wall surrounds its one real optical aperture, including both outward and inward faces.
@@ -85,22 +84,53 @@ public final class WorkstationVisualMesh {
             IndustrialMachineMesh.box(result,44,x-.125,y-.125,3.5,x+.125,y+.125,3.546875);
             glowBox(result,41,x-.0625,y-.0625,3.546875,x+.0625,y+.0625,3.5625);
         }
-        // Broad caps and paired channels make a receiving workstation distinct from the simulation sphere.
-        for(int sx:new int[]{-1,1}) {
-            double low=sx<0?-2.75:.75,high=sx<0?-.75:2.75;
-            IndustrialMachineMesh.box(result,38,low,-3.25,-3.53125,high,-2.75,-3.5);
-            glowBox(result,41,low,-2.8125,-3.5625,high,-2.75,-3.53125);
-            IndustrialMachineMesh.box(result,38,low,2.75,-3.53125,high,3.25,-3.5);
-            glowBox(result,41,low,2.75,-3.5625,high,2.8125,-3.53125);
-        }
-        for(int sx:new int[]{-1,1}) {
-            double edge=sx<0?-3.53125:3.5;
-            for(int end:new int[]{-1,1}) {
-                double y=end<0?-3.0625:3;
-                glowBox(result,41,edge,y,-2.25,edge+.03125,y+.0625,2.25);
+        // Dark narrow horizontal trims run continuously along all four faces.
+        // The lower front remains split around the physical controller bay.
+        for(int end:new int[]{-1,1}) {
+            double low=end<0?-3.5:2.5,high=end<0?-2.5:3.5;
+            for(int direction:new int[]{-1,1}) {
+                if(end<0&&direction<0) {
+                    frontPanel(result,-3.46875,low+.03125,-.53125,high-.03125,direction);
+                    frontPanel(result,.53125,low+.03125,3.46875,high-.03125,direction);
+                } else frontPanel(result,-3.46875,low+.03125,3.46875,high-.03125,direction);
+                sidePanel(result,-2.46875,low+.03125,2.46875,high-.03125,direction);
+            }
+            // Paired recessed ventilation grilles: small grey slats over navy backing.
+            for(int side:new int[]{-1,1}) {
+                double x0=side<0?-2.25:.75;
+                frontVent(result,x0,low+.25,x0+1.5,low+.75);
             }
         }
         return List.copyOf(result);
+    }
+
+    private static void frontPanel(List<IndustrialMachineMesh.Surface> result,
+            double x0,double y0,double x1,double y1,int direction) {
+        double z=direction<0?-3.53125:3.5;
+        IndustrialMachineMesh.box(result,5,x0,y0,z,x1,y1,z+.03125);
+        z=direction<0?-3.546875:3.53125;
+        IndustrialMachineMesh.box(result,7,x0+.0625,y0+.0625,z,x1-.0625,y1-.0625,z+.015625);
+        z=direction<0?-3.5546875:3.546875;
+        IndustrialMachineMesh.box(result,38,x0+.09375,y0+.09375,z,x1-.09375,y1-.09375,z+.0078125);
+    }
+
+    private static void sidePanel(List<IndustrialMachineMesh.Surface> result,
+            double z0,double y0,double z1,double y1,int direction) {
+        double x=direction<0?-3.53125:3.5;
+        IndustrialMachineMesh.box(result,5,x,y0,z0,x+.03125,y1,z1);
+        x=direction<0?-3.546875:3.53125;
+        IndustrialMachineMesh.box(result,7,x,y0+.0625,z0+.0625,x+.015625,y1-.0625,z1-.0625);
+        x=direction<0?-3.5546875:3.546875;
+        IndustrialMachineMesh.box(result,38,x,y0+.09375,z0+.09375,x+.0078125,y1-.09375,z1-.09375);
+    }
+
+    private static void frontVent(List<IndustrialMachineMesh.Surface> result,
+            double x0,double y0,double x1,double y1) {
+        IndustrialMachineMesh.box(result,5,x0,y0,-3.55859375,x1,y1,-3.546875);
+        for(int slat=0;slat<4;slat++) {
+            double y=y0+.0625+slat*.109375;
+            IndustrialMachineMesh.box(result,7,x0+.0625,y,-3.5625,x1-.0625,y+.03125,-3.55859375);
+        }
     }
 
     private static List<Quad> buildGlass() {

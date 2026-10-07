@@ -53,6 +53,19 @@ class WorkstationVisualMeshTest {
                 }
     }
 
+    @Test void pinkLightingBelongsOnlyToTheIntakeAndInternalManifold() throws Exception {
+        for (var surface : surfaces("shellSurfaces")) {
+            if ((Boolean) surface.getClass().getMethod("glow").invoke(surface))
+                assertTrue(points(surface).stream().allMatch(point -> value(point, "z") >= 3.5),
+                        "Exterior pink glow must stay on the receiving intake, away from the framework");
+        }
+        for (var method : new String[]{"surfaces", "shellSurfaces"})
+            for (var surface : surfaces(method))
+                if ((Integer) surface.getClass().getMethod("tile").invoke(surface) == 41)
+                    assertEquals(true, surface.getClass().getMethod("glow").invoke(surface),
+                            "Opaque housing details must not use the pink light tile");
+    }
+
     private static List<?> surfaces(String method) throws Exception {
         return (List<?>) Class.forName("dev.overloadsim.core.WorkstationVisualMesh").getMethod(method).invoke(null);
     }
