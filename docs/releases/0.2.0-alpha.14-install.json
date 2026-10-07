@@ -1,0 +1,60 @@
+{
+  "version": "0.2.0-alpha.14",
+  "project": "Lightning Tech: Simulation",
+  "installed_at": "2026-10-07T23:53:22.6066927+08:00",
+  "implementation_commit": "37ecba9c9babb872846a1326a23a20b358a4b19d",
+  "installed_path": "D:\\mc\\.minecraft\\versions\\OverloadSim-Test-1.21.1\\mods\\lightning-tech-simulation-0.2.0-alpha.14.jar",
+  "jar_bytes": 1485844,
+  "jar_sha256": "e8ce67cabf552a729be2d215d159562bd97ea306b8068dd358102e5328ea865d",
+  "sources_bytes": 733943,
+  "sources_sha256": "d9afc1207c97c85e38c4249e86d5a40d7497740c7d0266a048ba3a2c6e817646",
+  "backup_path": "D:\\mc\\.minecraft\\versions\\OverloadSim-Test-1.21.1\\addon-backups\\20261007-235254\\lightning-tech-simulation-0.2.0-alpha.13.jar",
+  "backup_sha256": "32a0bb8f227b3afe1996232fa4a419225e1198be28e2f87c8f80c074783ce53c",
+  "other_mods_unchanged": 13,
+  "configuration_files_unchanged": 51,
+  "launcher_root_files_unchanged": 5,
+  "unit_tests": 104,
+  "required_game_tests": 409,
+  "new_game_tests": 27,
+  "tested_runtimes": [
+    {
+      "minecraft": "1.21.1",
+      "neoforge": "21.1.255",
+      "ae2": "19.2.18",
+      "ae2lt": "2.1.1",
+      "thunderbolt": "2.0.2",
+      "applied_flux": "2.1.6",
+      "glodium": "2.2",
+      "mekanism": "10.7.19.85",
+      "mystical_agriculture": "8.0.28",
+      "cucumber": "8.0.16"
+    },
+    {
+      "minecraft": "1.21.1",
+      "neoforge": "21.1.252",
+      "ae2": "19.2.17",
+      "ae2lt": "2.1.0",
+      "thunderbolt": "2.0.0",
+      "applied_flux": "2.1.6",
+      "glodium": "2.2",
+      "mekanism": "10.7.19.85",
+      "mystical_agriculture": "8.0.28",
+      "cucumber": "8.0.16"
+    },
+    {
+      "minecraft": "1.21.1",
+      "neoforge": "21.1.255",
+      "ae2": "19.2.18",
+      "ae2lt": "2.1.1",
+      "thunderbolt": "2.0.2",
+      "optional_mods": []
+    }
+  ],
+  "windowed_client_verified": true,
+  "windowed_dimensions": "854x480",
+  "screenshot": "art/previews/transcendent-crystal-alpha14-guide.png",
+  "primary_worktree_artifact_hashes_match": false,
+  "primary_worktree_compiled_and_binary_entries_match": true,
+  "primary_worktree_only_resource_line_endings_differ": true,
+  "remote_published": false
+}
