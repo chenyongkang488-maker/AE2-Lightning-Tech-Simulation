@@ -16,11 +16,13 @@ The workstation processes the currently loaded Overload Processing Factory recip
 
 Its dedicated recipe converts 256 Overload Crystals into 4 [Transcendent Crystals](transcendent-crystal.md). This recipe is available only in the workstation.
 
+Manufacture the controller in a Lightning Assembly Chamber using 64 Overload Processing Factories, 16 Lightning Collapse Matrices and 64 Overload Processors, costing 256 EHV and 2,000,000 FE.
+
 ## Construction and laser input
 
 Build a 7×7×7 enclosure with one controller, one laser optical port, 141 laser frames and 75 laser glass blocks. Using local coordinates x=right, y=up and z=inward, each from 0 to 6, place the controller at (3,0,0), facing outward, and the optical port at (3,3,6). Fill the roof, floor and back wall with frames, apart from those two positions. Each of the other three walls has a 5×5 glass area inside its frame border. Keep the 5×5×5 interior empty.
 
-Aim a laser into the back-wall port from outside. The individual beam must be strictly stronger than 1,000,000,000 FE; separate weak beams do not add together. A focus matrix is optional. With materials and output space available, two consecutive valid ticks complete a batch of up to 1024 recipe operations. Losing the beam or invalidating the structure resets unfinished progress without consuming that batch's materials.
+Aim a laser into the back-wall port from outside. The individual beam must be strictly stronger than 1,000,000,000 FE. Separate weak beams aimed directly at the port do not add together; merge them through a deflector first to supply a combined beam. A focus matrix is optional. With materials and output space available, two consecutive valid ticks complete a batch of up to 1024 recipe operations. Losing the beam or invalidating the structure resets unfinished progress without consuming that batch's materials.
 
 Right-click the controller or an owned frame after formation to open the menu. Automatic build uses the player's inventory first, then the controller's connected AE network; creative players need no materials. The projection button previews the construction plan. Obstructions and unloaded positions prevent construction. Creative administrators can use `/overload_sim workstation demo` in empty loaded space to place a workstation and a laser chain supplied with finite resources.
 

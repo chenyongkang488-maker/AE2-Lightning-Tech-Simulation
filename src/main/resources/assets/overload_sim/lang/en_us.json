@@ -270,11 +270,9 @@
   "gui.overload_sim.workstation.mode.2": "Output",
   "gui.overload_sim.workstation.mode.3": "Input + output",
   "block.overload_sim.high_energy_workstation": "High Energy Workstation",
-  "block.overload_sim.high_energy_workstation_frame": "High Energy Workstation Frame",
-  "block.overload_sim.high_energy_workstation_glass": "High Energy Workstation Glass",
-  "block.overload_sim.high_energy_workstation_receiver": "High Energy Workstation Collector",
   "gui.overload_sim.laser.core_threshold": "Collapse threshold: %s FE",
   "gui.overload_sim.workstation.fluid_input_compact": "In %s mB",
   "gui.overload_sim.workstation.fluid_output_compact": "Out %s mB",
-  "item.overload_sim.transcendent_crystal": "Transcendent Crystal"
+  "item.overload_sim.transcendent_crystal": "Transcendent Crystal",
+  "gui.overload_sim.mod_name": "Mod name: %s"
 }

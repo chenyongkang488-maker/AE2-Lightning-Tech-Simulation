@@ -1,4 +1,4 @@
-"""Validate shared workstation parts, legacy recovery assets, model links and compact AE layout."""
+"""Validate the workstation controller, shared laser parts and compact AE layout."""
 from pathlib import Path
 import json
 import re
@@ -13,7 +13,7 @@ LEGACY_PARTS = {
     'high_energy_workstation_glass': 'laser_glass',
     'high_energy_workstation_receiver': 'laser_optical_port',
 }
-NAMES = (CONTROLLER, *LEGACY_PARTS)
+NAMES = (CONTROLLER,)
 
 
 def read(path):
@@ -81,13 +81,14 @@ def verify():
     assert '"workstation_shell_atlas"' in registration, 'standalone shell model must be registered for texture stitching'
     for legacy, shared in LEGACY_PARTS.items():
         for suffix in ('', '_formed'):
-            assert read(ASSETS / f'models/block/{legacy}{suffix}.json')['parent'] == f'overload_sim:block/{shared}'
+            assert not (ASSETS / f'models/block/{legacy}{suffix}.json').exists(), f'removed block model: {legacy}'
+        assert not (ASSETS / f'models/item/{legacy}.json').exists(), f'removed item model: {legacy}'
+        assert not (ASSETS / f'blockstates/{legacy}.json').exists(), f'removed blockstate: {legacy}'
+        assert not (DATA / f'loot_table/blocks/{legacy}.json').exists(), f'removed loot: {legacy}'
+        assert all(f'block.overload_sim.{legacy}' not in language for language in translations.values())
+        assert f'overload_sim:{legacy}' not in mining
         assert not (DATA / f'recipe/{legacy}.json').exists(), f'retired acquisition recipe: {legacy}'
-        conversion = read(DATA / f'recipe/{legacy}_to_{shared}.json')
-        assert conversion['type'] == 'minecraft:crafting_shapeless'
-        assert conversion['ingredients'] == [{'item': f'overload_sim:{legacy}'}], legacy
-        assert conversion['result'] == {'id': f'overload_sim:{shared}', 'count': 1}, legacy
-    assert resolved_model('overload_sim:block/high_energy_workstation_glass_formed')['render_type'] == 'minecraft:translucent'
+        assert not (DATA / f'recipe/{legacy}_to_{shared}.json').exists(), f'removed recovery recipe: {legacy}'
     legacy_ids = {f'overload_sim:{name}' for name in LEGACY_PARTS}
     for path in (DATA / 'recipe').rglob('*.json'):
         result = read(path).get('result', {})
@@ -95,14 +96,18 @@ def verify():
             assert result.get('id', result.get('item')) not in legacy_ids, f'recipe produces a retired part: {path.name}'
     controller_recipe = read(DATA / f'recipe/{CONTROLLER}.json')
     assert controller_recipe['result'] == {'id': f'overload_sim:{CONTROLLER}', 'count': 1}
-    assert controller_recipe['ingredients'] == [
-        {'item': 'ae2lt:overload_processing_factory'}, {'item': 'overload_sim:laser_optical_port'}, {'item': 'overload_sim:laser_frame'}]
+    assert controller_recipe['type'] == 'ae2lt:lightning_assembly'
+    assert controller_recipe['inputs'] == [
+        {'ingredient': {'item': 'ae2lt:overload_processing_factory'}, 'count': 64},
+        {'ingredient': {'item': 'ae2lt:lightning_collapse_matrix'}, 'count': 16},
+        {'ingredient': {'item': 'ae2lt:overload_processor'}, 'count': 64}]
+    assert (controller_recipe['totalEnergy'], controller_recipe['lightningCost'], controller_recipe['lightningTier']) == (2_000_000, 256, 'extreme_high_voltage')
 
-    # Creative visibility is declared through this public export list; IDs stay registered for old saves.
+    # The workstation exposes only its controller; its shell uses the shared laser parts.
     source = (ROOT / 'src/main/java/dev/overloadsim/workstation/WorkstationContent.java').read_text(encoding='utf-8')
     exported = re.search(r'playerBlocks\s*\(\s*\)\s*\{\s*return\s+List\.of\((.*?)\)\s*;', source, re.S)
     assert exported, 'workstation creative export declaration missing'
-    assert re.findall(r'\b(\w+)\.get\(\)', exported.group(1)) == ['CONTROLLER'], 'legacy workstation parts must remain hidden from the creative tab'
+    assert re.findall(r'\b(\w+)\.get\(\)', exported.group(1)) == ['CONTROLLER'], 'only the workstation controller has a dedicated item'
     for language in ('', '_zh_cn/'):
         guide = (ASSETS / f'ae2guide/{language}high-energy-workstation.md').read_text(encoding='utf-8')
         assert not any(legacy in guide for legacy in legacy_ids), 'public guide exposes retired part IDs'
@@ -131,7 +136,7 @@ def verify():
     for key in translations['en_us']:
         if key.startswith('gui.overload_sim.workstation.'):
             assert key in translations['zh_cn'], key
-    print('Workstation resources verified: compact yellow wrench, independent grey shell atlas with native translucent glass, shared-part models, legacy recovery and nonoverlapping tall-fluid layout.')
+    print('Workstation resources verified: compact yellow wrench, independent grey shell atlas, shared parts, removed old parts and tall-fluid layout.')
 
 
 if __name__ == '__main__':

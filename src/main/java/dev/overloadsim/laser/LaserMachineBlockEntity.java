@@ -355,16 +355,26 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
     }
 
     public long acceptCore(long fe, Direction incoming, long tick) {
+        return acceptCore(fe,incoming,tick,()->fe);
+    }
+    /** Revalidate the still-connected paid contribution after extension callbacks, before committing core resources. */
+    public long acceptCore(long fe, Direction incoming, long tick, java.util.function.LongSupplier validEnergy) {
         if (!(level instanceof ServerLevel server) || kind() != LaserKind.CORE || !formed() || !enabled || incoming == null || fe < LaserMath.CORE_THRESHOLD || fe > LaserMath.MAX_BEAM || tick < 0) return 0;
         long previousRemainder = coreRemainder;
         var accumulation = LaserMath.accumulate(previousRemainder, fe);
         var event = new LaserEvents.BeforeCoreEmission(server, worldPosition, fe, accumulation.particles(), accumulation.remainder());
         if (NeoForge.EVENT_BUS.post(event).isCanceled() || isRemoved() || !formed() || !enabled || explosionTriggered || coreRemainder != previousRemainder
                 || !level.hasChunkAt(worldPosition) || level.getBlockEntity(worldPosition) != this) return 0;
-        coreRemainder = event.remainder(); lastPower = fe; particleDirection = incoming;
+        long remainingFe = Math.clamp(validEnergy.getAsLong(),0L,fe);
+        if(remainingFe<LaserMath.CORE_THRESHOLD||coreRemainder!=previousRemainder||isRemoved()||!formed()||!enabled||explosionTriggered
+                ||!level.hasChunkAt(worldPosition)||level.getBlockEntity(worldPosition)!=this)return 0;
+        var remaining = LaserMath.accumulate(previousRemainder,remainingFe);
+        long produced = event.particles()==accumulation.particles()?remaining.particles():Math.min(event.particles(),remaining.particles());
+        long remainder = event.remainder()==accumulation.remainder()?remaining.remainder():Math.min(event.remainder(),remaining.remainder());
+        coreRemainder = remainder; lastPower = remainingFe; particleDirection = incoming;
         activeUntil = saturatingAdd(tick, 21);
         if(collapse.accept(tick))server.playSound(null,worldPosition,LaserContent.COLLAPSE_TRANSITION.get(),net.minecraft.sounds.SoundSource.BLOCKS,.65f,1);
-        sync(); return event.particles();
+        sync(); return produced;
     }
 
     public boolean acceptParticles(long count) {

@@ -25,11 +25,7 @@ public final class WorkstationStructure {
             cells.put(position(controller,facing,x,y,z),state);
         }return Collections.unmodifiableMap(cells);
     }
-    /** Old registry identities remain loadable until a complete shell can migrate safely. */
     public static boolean matches(BlockState expected, BlockState actual) {
-        return actual.is(expected.getBlock())
-                || expected.is(LaserContent.FRAME.get()) && actual.is(WorkstationContent.FRAME.get())
-                || expected.is(LaserContent.GLASS.get()) && actual.is(WorkstationContent.GLASS.get())
-                || expected.is(LaserContent.PORT.get()) && actual.is(WorkstationContent.RECEIVER.get());
+        return actual.is(expected.getBlock());
     }
 }

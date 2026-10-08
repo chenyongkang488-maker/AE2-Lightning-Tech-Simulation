@@ -1,0 +1,43 @@
+{
+  "type": "ae2lt:lightning_assembly",
+  "priority": 0,
+  "inputs": [
+    {
+      "ingredient": {
+        "item": "overload_sim:laser_frame"
+      },
+      "count": 4
+    },
+    {
+      "ingredient": {
+        "item": "ae2lt:overload_processor"
+      },
+      "count": 64
+    },
+    {
+      "ingredient": {
+        "item": "ae2lt:overload_alloy_plate"
+      },
+      "count": 64
+    },
+    {
+      "ingredient": {
+        "item": "ae2lt:firmament_superconducting_wire"
+      },
+      "count": 32
+    },
+    {
+      "ingredient": {
+        "item": "ae2lt:lightning_collapse_matrix"
+      },
+      "count": 1
+    }
+  ],
+  "result": {
+    "id": "overload_sim:high_energy_laser_emitter",
+    "count": 1
+  },
+  "totalEnergy": 1000000,
+  "lightningCost": 128,
+  "lightningTier": "extreme_high_voltage"
+}

@@ -1,0 +1,43 @@
+{
+  "type": "ae2lt:lightning_assembly",
+  "priority": 0,
+  "inputs": [
+    {
+      "ingredient": {
+        "item": "overload_sim:laser_frame"
+      },
+      "count": 8
+    },
+    {
+      "ingredient": {
+        "item": "minecraft:heavy_core"
+      },
+      "count": 1
+    },
+    {
+      "ingredient": {
+        "item": "ae2lt:overload_processor"
+      },
+      "count": 64
+    },
+    {
+      "ingredient": {
+        "item": "ae2:dense_energy_cell"
+      },
+      "count": 64
+    },
+    {
+      "ingredient": {
+        "item": "ae2lt:firmament_alloy_ingot"
+      },
+      "count": 64
+    }
+  ],
+  "result": {
+    "id": "overload_sim:particle_constrainer",
+    "count": 1
+  },
+  "totalEnergy": 2000000,
+  "lightningCost": 256,
+  "lightningTier": "extreme_high_voltage"
+}

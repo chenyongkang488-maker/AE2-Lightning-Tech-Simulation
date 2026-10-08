@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "GGG",
+    "GFG",
+    "GGG"
+  ],
+  "key": {
+    "G": {
+      "item": "ae2:quartz_glass"
+    },
+    "F": {
+      "item": "overload_sim:laser_frame"
+    }
+  },
+  "result": {
+    "id": "overload_sim:laser_glass",
+    "count": 1
+  }
+}

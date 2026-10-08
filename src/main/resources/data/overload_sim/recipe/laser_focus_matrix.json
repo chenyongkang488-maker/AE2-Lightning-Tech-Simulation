@@ -1,0 +1,31 @@
+{
+  "type": "ae2lt:lightning_assembly",
+  "priority": 0,
+  "inputs": [
+    {
+      "ingredient": {
+        "item": "overload_sim:laser_frame"
+      },
+      "count": 8
+    },
+    {
+      "ingredient": {
+        "item": "overload_sim:laser_glass"
+      },
+      "count": 8
+    },
+    {
+      "ingredient": {
+        "item": "ae2lt:overload_processor"
+      },
+      "count": 32
+    }
+  ],
+  "result": {
+    "id": "overload_sim:laser_focus_matrix",
+    "count": 1
+  },
+  "totalEnergy": 800000,
+  "lightningCost": 64,
+  "lightningTier": "extreme_high_voltage"
+}

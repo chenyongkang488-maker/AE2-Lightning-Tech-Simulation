@@ -1,0 +1,31 @@
+{
+  "type": "ae2lt:lightning_assembly",
+  "priority": 0,
+  "inputs": [
+    {
+      "ingredient": {
+        "item": "overload_sim:laser_glass"
+      },
+      "count": 8
+    },
+    {
+      "ingredient": {
+        "item": "ae2lt:firmament_alloy_ingot"
+      },
+      "count": 8
+    },
+    {
+      "ingredient": {
+        "item": "ae2lt:ultimate_overload_core"
+      },
+      "count": 1
+    }
+  ],
+  "result": {
+    "id": "overload_sim:laser_optical_port",
+    "count": 1
+  },
+  "totalEnergy": 400000,
+  "lightningCost": 128,
+  "lightningTier": "high_voltage"
+}

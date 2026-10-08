@@ -1,0 +1,31 @@
+{
+  "type": "ae2lt:lightning_assembly",
+  "priority": 0,
+  "inputs": [
+    {
+      "ingredient": {
+        "item": "overload_sim:laser_frame"
+      },
+      "count": 4
+    },
+    {
+      "ingredient": {
+        "item": "ae2lt:lightning_collapse_matrix"
+      },
+      "count": 4
+    },
+    {
+      "ingredient": {
+        "item": "ae2lt:firmament_superconducting_wire"
+      },
+      "count": 16
+    }
+  ],
+  "result": {
+    "id": "overload_sim:laser_burst_matrix",
+    "count": 1
+  },
+  "totalEnergy": 2000000,
+  "lightningCost": 128,
+  "lightningTier": "extreme_high_voltage"
+}

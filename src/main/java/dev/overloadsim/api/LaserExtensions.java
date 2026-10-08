@@ -37,6 +37,8 @@ public final class LaserExtensions {
         boolean accept(TargetContext context);
         /** Called when this source stops reaching the target; continuous batch renewal does not stop it. */
         default void deactivate(TargetContext context) {}
+        /** Updates the remaining strength of an already accepted shared beam without settling another batch. */
+        default void refreshLease(TargetContext context) {}
     }
     /** Providers must resolve stable recipe IDs after paid windows are restored from disk. */
     public interface ParticleConversionProvider {

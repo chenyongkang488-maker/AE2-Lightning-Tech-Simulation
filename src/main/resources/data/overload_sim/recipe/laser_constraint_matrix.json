@@ -1,0 +1,31 @@
+{
+  "type": "ae2lt:lightning_assembly",
+  "priority": 0,
+  "inputs": [
+    {
+      "ingredient": {
+        "item": "overload_sim:laser_frame"
+      },
+      "count": 4
+    },
+    {
+      "ingredient": {
+        "item": "ae2lt:firmament_alloy_ingot"
+      },
+      "count": 4
+    },
+    {
+      "ingredient": {
+        "item": "ae2lt:firmament_superconducting_wire"
+      },
+      "count": 4
+    }
+  ],
+  "result": {
+    "id": "overload_sim:laser_constraint_matrix",
+    "count": 1
+  },
+  "totalEnergy": 400000,
+  "lightningCost": 32,
+  "lightningTier": "extreme_high_voltage"
+}

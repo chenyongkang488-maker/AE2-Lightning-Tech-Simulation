@@ -45,7 +45,6 @@ public final class HighEnergyWorkstationBlockEntity extends AENetworkedBlockEnti
     private final WorkstationLaserLease laserLease=new WorkstationLaserLease();
     private boolean claimed,visualFormed,dirty=true,loading,frequencyUnloading,eject,networkExport;
     private boolean exporting,deferredRemoval,replacementDropEmitted;
-    private boolean migratingParts;
     private long power,revision,selectionRevision=-1,dropPreparedTick=Long.MIN_VALUE;
     private List<WorkstationRecipes.Entry> selectionCatalog;
     private WorkstationRecipes.Batch cachedSelection,pending;
@@ -84,7 +83,7 @@ public final class HighEnergyWorkstationBlockEntity extends AENetworkedBlockEnti
     }
     private boolean occupied(BlockPos position){return WorkstationStructureIndex.occupiedByOther(level,position,this)||dev.overloadsim.laser.LaserStructureIndex.occupiedByOther(level,position,this)||dev.overloadsim.multiblock.SimulationStructureIndex.occupiedByOther(level,position,this);}
     public void checkStructure(){
-        if(level==null||level.isClientSide||isRemoved()||migratingParts)return;dirty=false;
+        if(level==null||level.isClientSide||isRemoved())return;dirty=false;
         var cells=template();
         for(var entry:cells.entrySet()){
             var pos=entry.getKey();var expected=entry.getValue();
@@ -92,21 +91,14 @@ public final class HighEnergyWorkstationBlockEntity extends AENetworkedBlockEnti
             var current=level.getBlockState(pos);
             if(expected.isAir()?!LaserLightManager.isBeamAir(current):!WorkstationStructure.matches(expected,current)||pos.equals(worldPosition)&&current.getValue(HighEnergyWorkstationBlock.FACING)!=facing()){invalidateStructure();return;}
         }
-        // Validate the complete shell first. Migration consumes no materials and keeps controller buffers intact.
-        migratingParts=true;
-        try { for(var entry:cells.entrySet()) {
-            var expected=entry.getValue();var current=level.getBlockState(entry.getKey());
-            if(!expected.isAir()&&!current.is(expected.getBlock()))level.setBlock(entry.getKey(),expected,3);
-        }} finally { migratingParts=false; }
         if(!claimed){claimed=true;if(!WorkstationStructureIndex.bind(this,template().keySet())){claimed=false;return;}setFormedStates(true);sync();}
     }
     public void invalidateStructure(){
-        if(migratingParts)return;
         boolean previous=claimed;claimed=false;WorkstationStructureIndex.release(this);pending=null;cachedSelection=null;selectionRevision=-1;progress=0;power=0;laserLease.clear();
         if(previous){setFormedStates(false);sync();}
     }
     private void setFormedStates(boolean value){
-        if(level==null||level.isClientSide)return;for(var pos:template().keySet())if(level.hasChunkAt(pos)){var state=level.getBlockState(pos);if((state.is(WorkstationContent.CONTROLLER.get())||state.is(WorkstationContent.FRAME.get())||state.is(WorkstationContent.GLASS.get())||state.is(WorkstationContent.RECEIVER.get()))&&state.hasProperty(WorkstationPartBlock.FORMED)&&state.getValue(WorkstationPartBlock.FORMED)!=value)level.setBlock(pos,state.setValue(WorkstationPartBlock.FORMED,value),3);}
+        if(level==null||level.isClientSide||!level.hasChunkAt(worldPosition))return;var state=level.getBlockState(worldPosition);if(state.is(WorkstationContent.CONTROLLER.get())&&state.getValue(HighEnergyWorkstationBlock.FORMED)!=value)level.setBlock(worldPosition,state.setValue(HighEnergyWorkstationBlock.FORMED,value),3);
     }
     /** incoming is beam TRAVEL direction. Exterior back-wall entry travels toward controller facing. */
     public boolean receiveLaser(Direction incoming,long strength,long receiptTick){

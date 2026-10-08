@@ -1,0 +1,31 @@
+{
+  "type": "ae2lt:lightning_assembly",
+  "priority": 0,
+  "inputs": [
+    {
+      "ingredient": {
+        "item": "overload_sim:laser_frame"
+      },
+      "count": 8
+    },
+    {
+      "ingredient": {
+        "item": "overload_sim:laser_glass"
+      },
+      "count": 32
+    },
+    {
+      "ingredient": {
+        "item": "ae2lt:overload_crystal_block"
+      },
+      "count": 32
+    }
+  ],
+  "result": {
+    "id": "overload_sim:laser_deflector_matrix",
+    "count": 1
+  },
+  "totalEnergy": 400000,
+  "lightningCost": 32,
+  "lightningTier": "extreme_high_voltage"
+}

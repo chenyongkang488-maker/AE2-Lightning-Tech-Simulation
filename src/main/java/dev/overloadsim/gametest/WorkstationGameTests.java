@@ -34,8 +34,8 @@ public final class WorkstationGameTests {
         for(int x=0;x<7;x++)for(int y=0;y<7;y++)for(int z=0;z<7;z++){
             var pos=origin.relative(facing.getClockWise(),x-3).relative(facing.getOpposite(),z).above(y);
             int walls=(x==0||x==6?1:0)+(z==0||z==6?1:0);
-            var block=y==0||y==6||z==6||walls==2?WorkstationContent.FRAME.get():walls==1?WorkstationContent.GLASS.get():Blocks.AIR;
-            if(x==3&&y==3&&z==6)block=WorkstationContent.RECEIVER.get();
+            var block=y==0||y==6||z==6||walls==2?dev.overloadsim.laser.LaserContent.FRAME.get():walls==1?dev.overloadsim.laser.LaserContent.GLASS.get():Blocks.AIR;
+            if(x==3&&y==3&&z==6)block=dev.overloadsim.laser.LaserContent.PORT.get();
             if(x==3&&y==0&&z==0)block=WorkstationContent.CONTROLLER.get();
             var state=block.defaultBlockState();
             if(block==WorkstationContent.CONTROLLER.get())state=state.setValue(HighEnergyWorkstationBlock.FACING,facing);

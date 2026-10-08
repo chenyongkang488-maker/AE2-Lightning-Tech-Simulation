@@ -63,6 +63,8 @@ Enhancement and burst preserve the remaining range. Maximum individual beam stre
 
 Each deflector direction button cycles off, input and output. New deflectors start with all four directions off. Multiple input and output directions are allowed. Closing all outputs stops downstream light; active upstream devices still follow their own charging rules. Top and bottom cannot be selected.
 
+Valid inputs in the same batch merge into one total, divided equally among enabled outputs. Downstream devices receive the combined beam. Repeated updates do not charge the same batch again. Removing one source leaves the remaining contributions active. A total above 1P FE stops that deflector's outputs.
+
 The focus path clears breakable blocks on its axis before the core. Unbreakable blocks stop it. The core activates at at least 1G FE and creates one particle for each accumulated 512G FE, preserving the remainder. Laser paths and active constraint fields damage entities. Constraint fields have a 2.5-block radius, prevent natural spawning while formed and deal damage only while working. Damage checks run every two ticks; a hit uses the highest overlapping damage, calculated as beam FE / 10,000 × the configured multiplier, capped at 1,000,000 damage points. The default multiplier is 1.
 
 ## Particles and sealed consumables
@@ -85,7 +87,7 @@ Divide the two capacity columns by 20 for average FE/tick. Each conversion consu
 
 Laser devices draw network FE from Applied Flux FE storage cells. The constrainer exports to those cells and debits only accepted FE. Empty source cells, full destination cells or absent Applied Flux stop the respective transaction. AE energy cells power the network. External FE connections and registered energy sinks also work.
 
-Particle overflow or dismantling a constrainer structure while it contains particles triggers destruction in the loaded 3×3 chunks centered on the machine, by default within 12 blocks above and below. Stop the upstream beam and consume stored particles before dismantling. Empty structures can be adjusted normally.
+When explosions are enabled, particle overflow or dismantling a constrainer containing particles triggers a spherical explosion with a 12-block radius around its optical center, including explosion sound and particles. Stop the upstream beam and consume stored particles before dismantling. Empty structures can be adjusted normally.
 
 ## Automatic construction
 
@@ -97,7 +99,7 @@ Creative administrators can use `/overload_sim laser build <kind>` in loaded emp
 
 ## Configuration and API
 
-`config/overload_sim-laser.toml` contains `emitterFePerBatch`, `constraintFePerBatch`, `burstExtremeLightningPerBatch`, `laserDamageMultiplier`, `explosionVerticalRadius` and `explosionBlockBudgetPerTick`. Defaults are 100,000 FE, 100,000 FE, 64 EHV, 1, 12 blocks and 1024 broken blocks/tick. Explosion work respects unbreakable blocks and protection events, visits loaded chunks only and does not resume after a server restart.
+`config/overload_sim-laser.toml` contains `emitterFePerBatch`, `constraintFePerBatch`, `burstExtremeLightningPerBatch`, `laserDamageMultiplier`, `explosionEnabled` and `explosionBlockBudgetPerTick`. Defaults are 100,000 FE, 100,000 FE, 64 EHV, 1, true and 1024 scanned cells/tick. Setting `explosionEnabled` to false disables explosion sound, particles, damage and destruction and discards pending work. The legacy `explosionVerticalRadius` no longer changes the spherical range. Explosion work respects unbreakable blocks and protection events, visits loaded chunks only and does not resume after a server restart.
 
 Fuel rules are `data/<namespace>/particle_conversion/<id>.json`, reloaded with `/reload`. For example, override `data/overload_sim/particle_conversion/nether_star.json`:
 

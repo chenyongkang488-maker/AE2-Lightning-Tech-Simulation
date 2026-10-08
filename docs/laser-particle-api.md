@@ -1,4 +1,4 @@
-# 激光与粒子 API · 0.2.0-alpha.15
+# 激光与粒子 API · 0.2.0-alpha.16
 
 目标为 Minecraft 1.21.1 / NeoForge 21.1.252 及以上已验证范围。已有模拟室、水晶、线圈及配方 ID 保持原样。激光/粒子设备仍在开发验收阶段；强能工作站控制器已有制造配方。
 
@@ -18,7 +18,7 @@
 
 新偏折矩阵保持世界竖直的 7³ 球壳，控制器在底部，顶部使用框架，只有东、南、西、北四个光口。成型显示的光口直径约三格，中央为带双尖端的六棱粉色水晶。入射光段从输入口到球心，输出段从球心到对应输出口，再向外延伸六格。
 
-`LaserMachineBlockEntity.sideMode(Direction)` 与 `setSideMode(Direction, int)` 使用 `SIDE_OFF=0`、`SIDE_INPUT=1`、`SIDE_OUTPUT=2`。新设备四面默认关闭；界面依次切换关闭、输入、输出，可设置多个输入与输出，无固定输入面。输入、输出掩码采用 `Direction.get3DDataValue()` 对应位，两掩码不重叠；上下方向始终关闭。每批只认领一次入射并守恒分流，全部输出关闭时没有下游输出；已运行的上游发射器与矩阵仍按其原费用规则收费。
+`LaserMachineBlockEntity.sideMode(Direction)` 与 `setSideMode(Direction, int)` 使用 `SIDE_OFF=0`、`SIDE_INPUT=1`、`SIDE_OUTPUT=2`。新设备四面默认关闭；界面依次切换关闭、输入、输出，可设置多个输入与输出，无固定输入面。输入、输出掩码采用 `Direction.get3DDataValue()` 对应位，两掩码不重叠；上下方向始终关闭。同批次有效输入先汇总、再守恒分流，全部输出关闭时没有下游输出；已运行的上游发射器与矩阵仍按其原费用规则收费。
 
 NBT 保存 `OpticalInputMask`、`OpticalOutputMask`、`DeflectorShapeVersion=1` 及 `DeflectorLegacyLayout`。旧存档保留原结构、中心锚点和资源，将原水平固定输入及选中的水平输出迁移为明确配置；原上下路由停用。旧竖直结构的侧面控制器占位仍不能通光，可用水平物理端口为三个；需要四个光口时可按新投影重建。原顶部、底部端口不删除，成型时显示为封闭壳体。
 
@@ -52,7 +52,11 @@ NBT 保存 `OpticalInputMask`、`OpticalOutputMask`、`DeflectorShapeVersion=1` 
 
 `ConstraintFields` 定义半径 2.5 的球形内部，与实体 AABB 做精确球形相交判定。成型结构阻止 `NATURAL` 生成，工作时合并光束和场伤害；一次扫描对同一实体只按最高伤害结算。闲置不伤害，指令和刷怪蛋不受生成限制。坍缩球的稳定逻辑半径改为 1.125，体素比例另经四角旋转包围验证；`CoreMembraneMesh` 提供两道 1/16 网格的淡橙色薄膜。
 
-`config/overload_sim-laser.toml` 提供发射器/约束 FE 费用、爆发极高压费用、伤害倍率、爆炸高度及每 tick 破坏预算。默认爆炸为中心的 3×3 个区块、上下各 12 格，仅处理已加载区块，保留不可破坏方块，遵循 NeoForge 破坏事件。大量破坏分 tick 执行；当前原型的剩余爆炸任务不会在服务器重启后继续。
+`config/overload_sim-laser.toml` 提供发射器/约束 FE 费用、爆发极高压费用、伤害倍率和每 tick 爆炸扫描预算。`explosionEnabled = true` 默认允许约束器炸毁；设为 `false` 后不进行爆炸破坏、伤害、音效或粒子动画，并丢弃尚未完成的爆炸队列。开启时，以约束器光学中心为圆心，方块中心和实体位置在半径 12 格球体内才参与爆炸；爆炸声与原生 `EXPLOSION_EMITTER` 动画使用同一中心。仅处理已加载区块，保留不可破坏方块并遵循 NeoForge 破坏事件。旧 `explosionVerticalRadius` 为兼容旧配置文件保留，但不再改变球体范围。扫描分 tick 执行，剩余任务不会在服务器重启后继续。
+
+alpha.16 的偏折矩阵先汇总一个连通光路组件在同批次的有效输入，再按启用的输出口均分（整数余数也分配，保持总输入等于总输出）。组件内发射器和矩阵费用只支付一次，重复调用不会重复投递；光路循环不放大能量。单个偏折器总输入超过 1PFE 时停止该偏折器输出，不截断超额能量。共享光束的接收上下文使用实际偏折器位置与 UUID 作为光源标识。`LaserTarget.refreshLease(TargetContext)` 为默认无操作方法，仅供来源变化时更新已接受光束的剩余强度，不得重复结算一批材料或 FE；最后一个来源退出才调用 `deactivate`。
+
+`BeforeExplosion` 新增只读 `center`（光学中心方块）、五参数构造器和 `radiusBlocks()` / `setRadiusBlocks(0..12)`；事件可取消或缩小球半径。原 `position` 仍表示控制器，旧四参数构造器及 `radiusChunks` 方法保留并弃用，旧值 1 映射为 12 格、0 映射为中心。
 
 七种可联网激光控制器实现 AE2LT 的 `FrequencyBindingHost`；坍缩核心为被动光学器件，拒绝网络绑定、线缆、FE capability，界面仅显示激光强度、累积余量与阈值。其它设备可使用原生过载频率卡绑定或清除频率，并通过共享频率界面管理；AE 记忆卡导出/导入同一绑定。绑定保存在控制器方块实体的外层 NBT，普通保存、重载和区块卸载保留频率。区块卸载释放实际节点和无线连接，设备仍列在频率的离线设备列表中；永久移除控制器才注销设备。无线连接遵循前置的频道容量、权限与安全规则；未成型控制器也可先连网用于自动搭建，生产仍要求结构有效。
 

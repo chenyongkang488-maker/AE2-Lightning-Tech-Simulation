@@ -22,7 +22,7 @@ import net.minecraft.world.phys.BlockHitResult;
 
 public final class HighEnergyWorkstationBlock extends AEBaseEntityBlock<HighEnergyWorkstationBlockEntity> {
     public static final DirectionProperty FACING=BlockStateProperties.HORIZONTAL_FACING;
-    public static final BooleanProperty FORMED=WorkstationPartBlock.FORMED;
+    public static final BooleanProperty FORMED=BooleanProperty.create("formed");
     public HighEnergyWorkstationBlock(){super(Properties.of().strength(4).sound(SoundType.METAL));registerDefaultState(defaultBlockState().setValue(FACING,Direction.NORTH).setValue(FORMED,false));}
     @Override protected MapCodec<? extends HighEnergyWorkstationBlock> codec(){return simpleCodec(properties->new HighEnergyWorkstationBlock());}
     @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block,BlockState> builder){super.createBlockStateDefinition(builder);builder.add(FACING,FORMED);}

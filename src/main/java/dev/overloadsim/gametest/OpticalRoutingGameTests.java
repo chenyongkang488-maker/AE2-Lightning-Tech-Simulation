@@ -103,9 +103,18 @@ public final class OpticalRoutingGameTests {
         configure(h, deflector, bit(Direction.WEST) | bit(Direction.SOUTH), bit(Direction.NORTH));
         source.energy().load(100_000); other.energy().load(100_000);
         LaserNetwork.processEmitter(source); LaserNetwork.processEmitter(other);
-        h.assertTrue(segment(source,deflector.center(),deflector.center().north(3),100_000), "first input owns the batch");
-        h.assertTrue(other.segments().stream().noneMatch(s -> s.start().equals(deflector.center().getCenter())), "second enabled input cannot multiply the first batch's output");
-        source.setEnabled(false); other.setEnabled(false); h.succeed();
+        var physicalOutputs=java.util.stream.Stream.concat(source.segments().stream(),other.segments().stream())
+                .filter(s->s.start().equals(deflector.center().getCenter())&&s.end().equals(deflector.center().north(3).getCenter())).toList();
+        h.assertTrue(physicalOutputs.size()==1&&physicalOutputs.getFirst().energy()==200_000
+                && deflector.currentPower()==200_000, "two paid 100k inputs form one conserved physical 200k output published once");
+        h.assertTrue(source.energy().stored()==0 && other.energy().stored()==0, "each connected source pays exactly one input batch");
+        source.energy().load(100_000); other.energy().load(100_000);
+        LaserNetwork.processEmitter(source); LaserNetwork.processEmitter(other);
+        h.assertTrue(source.energy().stored()==100_000 && other.energy().stored()==100_000
+                && segment(source,deflector.center(),deflector.center().north(3),200_000), "repeated source calls in the same tick neither pay again nor amplify the merged output");
+        source.setEnabled(false);
+        h.assertTrue(deflector.currentPower()==100_000 && segment(other,deflector.center(),deflector.center().north(3),100_000), "the remaining input retains only its own valid output contribution");
+        other.setEnabled(false); h.assertTrue(deflector.currentPower()==0, "the last input stop clears the shared output"); h.succeed();
     }
 
     @GameTest(template="laser_empty")

@@ -1,18 +1,31 @@
 {
-  "type": "minecraft:crafting_shapeless",
-  "ingredients": [
+  "type": "ae2lt:lightning_assembly",
+  "priority": 0,
+  "inputs": [
     {
-      "item": "ae2lt:overload_processing_factory"
+      "ingredient": {
+        "item": "ae2lt:overload_processing_factory"
+      },
+      "count": 64
     },
     {
-      "item": "overload_sim:laser_optical_port"
+      "ingredient": {
+        "item": "ae2lt:lightning_collapse_matrix"
+      },
+      "count": 16
     },
     {
-      "item": "overload_sim:laser_frame"
+      "ingredient": {
+        "item": "ae2lt:overload_processor"
+      },
+      "count": 64
     }
   ],
   "result": {
     "id": "overload_sim:high_energy_workstation",
     "count": 1
-  }
+  },
+  "totalEnergy": 2000000,
+  "lightningCost": 256,
+  "lightningTier": "extreme_high_voltage"
 }

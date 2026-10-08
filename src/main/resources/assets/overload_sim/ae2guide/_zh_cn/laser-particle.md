@@ -63,6 +63,8 @@ F.....F
 
 偏折方向按钮依次切换关闭、输入、输出，新设备四面默认关闭，可以设置多个输入和输出。关闭全部输出后不再产生下游光；仍在运行的上游设备按自己的规则收费。上下方向不能设置通光。
 
+同一批次有效输入的光强相加，再均分给开启的输出口；下游收到合并后的光束。重复更新不会再次扣除同批费用。停止一个来源后，其余输入仍有效。总输入超过 1P FE 时，该偏折矩阵停止输出。
+
 聚焦途中清除光轴上核心前的可破坏方块，不可破坏方块阻断光路。核心在达到 1G FE 时激活，累计每 512G FE 产生一粒子并保留余量。激光路径与工作中的约束场会伤害生物。约束场半径为 2.5 格，成型时阻止自然生成，只在工作时造成伤害。每两 tick 检查伤害，重叠路径或场只使用最大值；单次伤害为光强 FE ÷ 10,000 × 配置倍率，上限 1,000,000 伤害点，默认倍率为 1。
 
 ## 粒子与密封耗材
@@ -85,7 +87,7 @@ F.....F
 
 激光设备从应用通量 FE 存储单元补电；约束器向这些单元输出，只按实际接收量扣缓存。来源为空、接收单元已满或未安装应用通量时，对应交易停止。AE 能源单元供给网络运行能量，也支持外部 FE 连接和已注册能量接收后端。
 
-粒子溢出，或拆除仍有粒子的约束器结构，会触发以设备为中心的已加载 3×3 区块破坏，默认高度为上下各十二格。先停止上游光路并消耗库存粒子再拆解；空结构可正常调整。
+开启爆炸配置时，粒子溢出或拆除仍有粒子的约束器会触发以光学中心为圆心、半径十二格的球形爆炸，并播放爆炸音效与粒子动画。先停止上游光路并消耗库存粒子再拆解；空结构可正常调整。
 
 ## 自动搭建
 
@@ -97,7 +99,7 @@ F.....F
 
 ## 配置与 API
 
-`config/overload_sim-laser.toml` 提供 `emitterFePerBatch`、`constraintFePerBatch`、`burstExtremeLightningPerBatch`、`laserDamageMultiplier`、`explosionVerticalRadius`、`explosionBlockBudgetPerTick`，默认依次为 100,000 FE、100,000 FE、64 个极高压、1、十二格、每 tick 破坏 1024 块。爆炸保留不可破坏方块，遵循保护事件，只处理已加载区块；剩余任务不会在重启后继续。
+`config/overload_sim-laser.toml` 提供 `emitterFePerBatch`、`constraintFePerBatch`、`burstExtremeLightningPerBatch`、`laserDamageMultiplier`、`explosionEnabled`、`explosionBlockBudgetPerTick`，默认依次为 100,000 FE、100,000 FE、64 个极高压、1、true、每 tick 扫描 1024 格。将 `explosionEnabled` 改为 false 可关闭爆炸及其音效、动画、伤害和破坏，并丢弃尚未完成的爆炸任务。旧 `explosionVerticalRadius` 不再改变球形范围。爆炸保留不可破坏方块，遵循保护事件，只处理已加载区块；剩余任务不会在重启后继续。
 
 耗材规则位于 `data/<namespace>/particle_conversion/<id>.json`，修改后 `/reload`。例如覆盖 `data/overload_sim/particle_conversion/nether_star.json`：
 

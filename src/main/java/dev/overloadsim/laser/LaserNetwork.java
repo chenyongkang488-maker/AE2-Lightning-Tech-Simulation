@@ -25,10 +25,10 @@ public final class LaserNetwork {
     private static final int MAX_HOPS=128,MAX_STEPS=512;
     private static final GameProfile OPERATOR=new GameProfile(UUID.fromString("eeaab42b-c9b2-4b91-bb26-7d8682c8c804"),"[Simulation Laser]");
     private static final ResourceKey<DamageType> DAMAGE=ResourceKey.create(Registries.DAMAGE_TYPE,ModContent.id("high_energy_laser"));
-    private record ExternalTarget(LaserExtensions.LaserTarget hook,LaserExtensions.TargetContext context) {}
-    private record Path(List<LaserMachineBlockEntity> nodes,List<BlockPos> clearCells,Map<BlockPos,BlockState> watched,
+    record ExternalTarget(LaserExtensions.LaserTarget hook,LaserExtensions.TargetContext context) {}
+    record Path(List<LaserMachineBlockEntity> nodes,List<BlockPos> clearCells,Map<BlockPos,BlockState> watched,
             List<ExternalTarget> targets){}
-    private static final Map<LaserMachineBlockEntity,Path> PATHS=new WeakHashMap<>();
+    static final Map<LaserMachineBlockEntity,Path> PATHS=new WeakHashMap<>();
     private static final Map<ServerLevel,Claims> CLAIMS=new WeakHashMap<>();
     private static final class Claims {long tick=-1;final Set<BlockPos> inputs=new HashSet<>();}
     private record Beam(BlockPos start,Direction direction,long energy,int range,Set<BlockPos> visited){}
@@ -47,10 +47,10 @@ public final class LaserNetwork {
         if(now%20==0)processEmitter(host);
         if(now%2==0&&host.activeUntil>now&&!host.segments.isEmpty()){
             var current=PATHS.get(host);
-            damage(level,host.segments,current==null?List.of():current.nodes());
+            damage(level,host.segments,current==null?List.of():current.nodes().stream().filter(node->DeflectorBatchRouter.ownsNode(host,node)).toList());
         }
     }
-    private static boolean valid(ServerLevel level,Path path){
+    static boolean valid(ServerLevel level,Path path){
         for(var node:path.nodes()){
             if(node.isRemoved()||!level.hasChunkAt(node.getBlockPos())||!node.enabled())return false;
             node.checkStructure();if(!node.formed())return false;
@@ -62,15 +62,17 @@ public final class LaserNetwork {
     private static void clear(LaserMachineBlockEntity root){
         clear(root,true);
     }
-    private static void clear(LaserMachineBlockEntity root,boolean stopped){
+    static void clear(LaserMachineBlockEntity root,boolean stopped){
         var old=PATHS.remove(root);
+        DeflectorBatchRouter.remove(root,stopped);
         if(stopped)stopLostTargets(old,List.of());
-        if(old!=null)for(var node:old.nodes()){node.activeUntil=0;node.lastPower=0;if(stopped)node.stopCollapseVisuals();node.sync();}
+        if(old!=null)for(var node:old.nodes()){if(DeflectorBatchRouter.retained(node))continue;node.activeUntil=0;node.lastPower=0;if(stopped)node.stopCollapseVisuals();node.sync();}
         if(!root.segments.isEmpty()||root.lastPower!=0){root.segments=List.of();root.lastPower=0;root.activeUntil=0;root.sync();}
         if(stopped)root.refreshLaserLights();
     }
     public static void processEmitter(LaserMachineBlockEntity root){
         if(!(root.getLevel() instanceof ServerLevel level))return;
+        if(DeflectorBatchRouter.process(root))return;
         var previous=PATHS.get(root);clear(root,false);root.checkStructure();
         if(!root.enabled()||!root.formed()||!root.tryPay(LaserSettings.emitterFe(),0,false)){stopLostCores(previous,List.of());stopLostTargets(previous,List.of());root.refreshLaserLights();root.status="no_energy";root.sync();return;}
         long now=level.getGameTime();
@@ -123,13 +125,16 @@ public final class LaserNetwork {
                     var event=new LaserEvents.BeforeModifier(level,target.getBlockPos(),BuiltInRegistries.BLOCK.getKey(target.getBlockState().getBlock()),beam.energy(),power,range);
                     NeoForge.EVENT_BUS.post(event);if(event.isCanceled()){target.status="modifier_cancelled";break;}
                     target.checkStructure();
-                    if(target.isRemoved()||level.getBlockEntity(target.getBlockPos())!=target||!target.formed()||!target.enabled()||root.isRemoved()||!root.enabled())break;
+                    root.checkStructure();
+                    if(target.isRemoved()||!level.hasChunkAt(target.getBlockPos())||level.getBlockEntity(target.getBlockPos())!=target||!target.formed()||!target.enabled()||root.isRemoved()||!root.enabled())break;
+                    if(!valid(level,new Path(List.copyOf(nodes),List.copyOf(clearCells),Map.copyOf(watched),List.of())))break;
                     if(target.kind()==LaserKind.DEFLECTOR&&target.sideMode(beam.direction().getOpposite())!=LaserMachineBlockEntity.SIDE_INPUT)break;
                     power=event.outputEnergy();range=event.range();
                     if(power==0){target.status="idle";target.sync();break;}
                     if(!target.tryPay(cost,ehv,false)){target.status="no_energy";target.sync();break;}
                     target.lastPower=power;target.activeUntil=now+22;target.status="working";target.sync();
-                    if(target.kind()==LaserKind.FOCUS){focus(level,target,power,now,lines,nodes,clearCells,watched);}
+                    if(target.kind()==LaserKind.FOCUS){long focusPower=power;focus(level,target,power,now,lines,nodes,clearCells,watched,
+                            ()->valid(level,new Path(List.copyOf(nodes),List.copyOf(clearCells),Map.copyOf(watched),List.of()))?focusPower:0);}
                     else if(target.kind()==LaserKind.DEFLECTOR){
                         // Owned apertures are solid ports; internal axes are validated by the structure,
                         // never added as external clear cells or rendered as a diagonal through the shell.
@@ -156,9 +161,10 @@ public final class LaserNetwork {
                     end=pos;add(lines,beam.start(),end,beam.energy(),false,false);drawn=true;
                     if(beam.visited().contains(pos))break;
                     var result=custom.modify(new LaserExtensions.BeamContext(level,pos,beam.direction(),beam.energy(),beam.range()-distance,now));
-                    if(result!=null){
+                    if(result!=null&&level.hasChunkAt(pos)){
                         var event=new LaserEvents.BeforeModifier(level,pos,id,beam.energy(),result.energy(),result.range());NeoForge.EVENT_BUS.post(event);
-                        if(!event.isCanceled()&&level.getBlockState(pos).equals(state)&&!root.isRemoved()&&root.enabled()&&event.outputEnergy()>0&&event.range()>0){var visited=new HashSet<>(beam.visited());visited.add(pos);queue.add(new Beam(pos,beam.direction(),event.outputEnergy(),event.range(),visited));}
+                        if(!event.isCanceled()&&level.hasChunkAt(pos)&&level.getBlockState(pos).equals(state)&&!root.isRemoved()&&root.enabled()
+                                &&valid(level,new Path(List.copyOf(nodes),List.copyOf(clearCells),Map.copyOf(watched),List.of()))&&event.outputEnergy()>0&&event.range()>0){var visited=new HashSet<>(beam.visited());visited.add(pos);queue.add(new Beam(pos,beam.direction(),event.outputEnergy(),event.range(),visited));}
                     }
                     break;
                 }
@@ -168,7 +174,7 @@ public final class LaserNetwork {
             }
             if(!drawn)add(lines,beam.start(),end,beam.energy(),false,false);
         }
-        if(root.isRemoved()||level.getBlockEntity(root.getBlockPos())!=root||!root.formed()||!root.enabled()){
+        if(root.isRemoved()||!level.hasChunkAt(root.getBlockPos())||level.getBlockEntity(root.getBlockPos())!=root||!root.formed()||!root.enabled()){
             stopLostCores(previous,List.of());stopLostTargets(previous,acceptedTargets);deactivateTargets(acceptedTargets);return;
         }
         root.segments=List.copyOf(lines);root.lastPower=LaserSettings.emitterFe();root.activeUntil=now+22;root.status="working";
@@ -186,20 +192,31 @@ public final class LaserNetwork {
     private static void stopLostCores(Path previous,List<LaserMachineBlockEntity> next){
         if(previous!=null)for(var node:previous.nodes())if(node.kind()==LaserKind.CORE&&!next.contains(node)){node.stopCollapseVisuals();node.sync();}
     }
-    private static void add(List<LaserSegment> lines,BlockPos from,BlockPos to,long power,boolean focus,boolean particle){if(lines.size()<128&&!from.equals(to))lines.add(new LaserSegment(from.getCenter(),to.getCenter(),power,focus,particle));}
-    private static void focus(ServerLevel level,LaserMachineBlockEntity matrix,long energy,long now,List<LaserSegment> lines,List<LaserMachineBlockEntity> nodes,List<BlockPos> clearCells,Map<BlockPos,BlockState> watched){
+    static void add(List<LaserSegment> lines,BlockPos from,BlockPos to,long power,boolean focus,boolean particle){if(lines.size()<128&&!from.equals(to))lines.add(new LaserSegment(from.getCenter(),to.getCenter(),power,focus,particle));}
+    static void focus(ServerLevel level,LaserMachineBlockEntity matrix,long energy,long now,List<LaserSegment> lines,List<LaserMachineBlockEntity> nodes,List<BlockPos> clearCells,Map<BlockPos,BlockState> watched){
+        focus(level,matrix,energy,now,lines,nodes,clearCells,watched,()->energy);
+    }
+    static void focus(ServerLevel level,LaserMachineBlockEntity matrix,long energy,long now,List<LaserSegment> lines,List<LaserMachineBlockEntity> nodes,List<BlockPos> clearCells,Map<BlockPos,BlockState> watched,java.util.function.LongSupplier validEnergy){
+        java.util.function.LongSupplier available=()->{
+            long power=Math.clamp(validEnergy.getAsLong(),0L,energy);
+            if(power<=0)return 0;
+            for(var cell:clearCells)if(!level.hasChunkAt(cell)||!level.getBlockState(cell).getCollisionShape(level,cell).isEmpty())return 0;
+            for(var entry:watched.entrySet())if(!level.hasChunkAt(entry.getKey())||!level.getBlockState(entry.getKey()).equals(entry.getValue()))return 0;
+            return power;
+        };
         var start=matrix.center();var end=start;
         for(int i=1;i<=7;i++){
+            if(available.getAsLong()<=0)break;
             var pos=start.relative(matrix.forward(),i);if(!level.hasChunkAt(pos))break;end=pos;
             if(i==7){
                 if(level.getBlockEntity(pos) instanceof LaserMachineBlockEntity core&&core.kind()==LaserKind.CORE&&core.enabled()){
-                    nodes.add(core);long produced=core.acceptCore(energy,matrix.forward(),now);
+                    nodes.add(core);long produced=core.acceptCore(available.getAsLong(),matrix.forward(),now,available);
                     var receiver=produced>0?sendParticles(core,produced,matrix.forward(),now):null;
                     if(receiver!=null){
                         nodes.add(receiver);
                         var port=receiver.center().relative(matrix.forward().getOpposite(),3);
                         watched.put(port.immutable(),level.getBlockState(port));
-                        if(lines.size()<128)lines.add(new LaserSegment(pos.getCenter(),port.getCenter(),energy,false,true,produced,now));
+                        if(lines.size()<128)lines.add(new LaserSegment(pos.getCenter(),port.getCenter(),core.lastPower,false,true,produced,now));
                     }
                 }break;
             }
@@ -207,7 +224,7 @@ public final class LaserNetwork {
             if(!LaserLightManager.isBeamAir(state)&&!breakCell(level,pos))break;
             clearCells.add(pos);
         }
-        add(lines,start,end,energy,true,false);
+        long remaining=available.getAsLong();if(remaining>0)add(lines,start,end,remaining,true,false);
     }
     /** Settlement is immediate; a zero production batch has no delivery or visual lease. */
     public static LaserMachineBlockEntity sendParticles(LaserMachineBlockEntity core,long count,Direction direction,long tick){
@@ -234,7 +251,7 @@ public final class LaserNetwork {
         var operator=FakePlayerFactory.get(level,OPERATOR);
         if(!level.mayInteract(operator,pos))return false;
         var event=new BlockEvent.BreakEvent(level,pos,state,operator);NeoForge.EVENT_BUS.post(event);
-        return !event.isCanceled()&&level.getBlockState(pos).equals(state)&&level.destroyBlock(pos,false,operator);
+        return !event.isCanceled()&&level.hasChunkAt(pos)&&level.getBlockState(pos).equals(state)&&level.destroyBlock(pos,false,operator);
     }
     private static void damage(ServerLevel level,List<LaserSegment> lines,List<LaserMachineBlockEntity> nodes){
         var hits=new HashMap<LivingEntity,Float>();

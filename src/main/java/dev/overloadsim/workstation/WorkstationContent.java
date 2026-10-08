@@ -15,8 +15,6 @@ import net.neoforged.neoforge.registries.*;
 
 public final class WorkstationContent {
     public static final DeferredBlock<HighEnergyWorkstationBlock> CONTROLLER=ModContent.BLOCKS.register("high_energy_workstation",HighEnergyWorkstationBlock::new);
-    private static DeferredBlock<WorkstationPartBlock> part(String id,boolean glass){var block=ModContent.BLOCKS.register(id,()->new WorkstationPartBlock(glass));ModContent.ITEMS.registerSimpleBlockItem(block);return block;}
-    public static final DeferredBlock<WorkstationPartBlock> FRAME=part("high_energy_workstation_frame",false),GLASS=part("high_energy_workstation_glass",true),RECEIVER=part("high_energy_workstation_receiver",false);
     public static final DeferredItem<net.minecraft.world.item.BlockItem> CONTROLLER_ITEM=ModContent.ITEMS.registerSimpleBlockItem(CONTROLLER);
     private static final DeferredRegister<BlockEntityType<?>> ENTITIES=DeferredRegister.create(Registries.BLOCK_ENTITY_TYPE,OverloadSimulation.ID);
     private static final DeferredRegister<MenuType<?>> MENUS=DeferredRegister.create(Registries.MENU,OverloadSimulation.ID);
@@ -41,10 +39,9 @@ public final class WorkstationContent {
                         :host.receiveLaserFromSource(context.incoming(),context.energy(),context.batchTick(),context.source(),context.sourceIdentity());
             }
             @Override public void deactivate(LaserExtensions.TargetContext context){var host=WorkstationStructureIndex.owner(context.level(),context.position());if(host!=null&&context.source()!=null&&context.sourceIdentity()!=null)host.releaseLaserSource(context.source(),context.sourceIdentity());}
+            @Override public void refreshLease(LaserExtensions.TargetContext context){var host=WorkstationStructureIndex.owner(context.level(),context.position());if(host!=null&&context.source()!=null&&context.sourceIdentity()!=null){host.releaseLaserSource(context.source(),context.sourceIdentity());host.receiveLaserFromSource(context.incoming(),context.energy(),context.batchTick(),context.source(),context.sourceIdentity());}}
         };
-        // Complete alpha.11 shells use the shared optical port; the old ID remains loadable.
-        // The hook accepts only the validated workstation's exact receiver, so other ports fall through.
-        LaserExtensions.registerTarget(ModContent.id("high_energy_workstation_receiver"),receiverTarget);
+        // Only the validated workstation's exact shared optical port accepts this target.
         LaserExtensions.registerTarget(ModContent.id("laser_optical_port"),receiverTarget);
     }
     public static void capabilities(RegisterCapabilitiesEvent event){

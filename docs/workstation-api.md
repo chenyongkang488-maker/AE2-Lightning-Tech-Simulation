@@ -58,7 +58,7 @@ Minecraft 1.21.1 的数据包路径为 `data/<namespace>/recipe/<path>.json`。�
 
 局部坐标 x 向右、y 向上、z 朝内，各轴 0..6；控制器位于 `(3,0,0)`，面向外。激光光口位于 `(3,3,6)`。顶底两层完整封闭、不透光；四面墙的边框封闭，背面 5×5 内壁为激光框架（中心换光口），其它三面 5×5 内壁为激光通光玻璃。总计控制器 1、光口 1、框架 141、玻璃 75、内部空气 125，所有 343 单元参与归属。
 
-旧 `high_energy_workstation_frame`、`high_energy_workstation_glass`、`high_energy_workstation_receiver` 注册 ID 保留兼容加载，隐藏于创造分类，并撤下获取它们的旧配方。完整有效的旧外壳在服务端形成时迁移到对应激光方块；单独旧方块的掉落和旧物品的一比一合成转换也使用对应激光物品。迁移不重置控制器 UUID、物品、流体或已配置模式。方块模型直接继承现有激光模型，控制器继承 `high_energy_laser_emitter`。
+alpha.16 按用户要求删除 `high_energy_workstation_frame`、`high_energy_workstation_glass`、`high_energy_workstation_receiver` 的方块和物品注册、资源及回收转换配方。结构只使用上述共享激光部件；控制器继承 `high_energy_laser_emitter`。控制器、物品与流体缓冲的存档格式不变。控制器制造使用闪电装配室：64 过载处理工厂、16 闪电坍缩矩阵、64 过载处理器，消耗 256 极高压闪电和 2,000,000 FE。
 
 `LaserExtensions.TargetContext.incoming` 是激光**行进方向**。从背墙外部照入时，它等于控制器 `facing()`。透明的自有激光光照代理可占据内部空气；其它方块会使结构失效。`WorkstationStructureIndex` 提供跨结构占据检查与已成型成员的控制器查询。成员菜单以实际点击的框架/光口为距离锚点，并复核控制器 UUID 和归属。
 

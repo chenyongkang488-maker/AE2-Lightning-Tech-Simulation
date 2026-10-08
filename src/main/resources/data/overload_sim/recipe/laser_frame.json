@@ -1,0 +1,37 @@
+{
+  "type": "ae2lt:overload_processing",
+  "priority": 0,
+  "inputs": [
+    {
+      "ingredient": {
+        "item": "ae2lt:overload_alloy_plate"
+      },
+      "count": 8
+    },
+    {
+      "ingredient": {
+        "item": "minecraft:netherite_ingot"
+      },
+      "count": 2
+    },
+    {
+      "ingredient": {
+        "item": "minecraft:iron_block"
+      },
+      "count": 2
+    }
+  ],
+  "inputFluid": {
+    "id": "minecraft:lava",
+    "amount": 4000
+  },
+  "results": [
+    {
+      "id": "overload_sim:laser_frame",
+      "count": 1
+    }
+  ],
+  "totalEnergy": 100000,
+  "lightningCost": 32,
+  "lightningTier": "high_voltage"
+}

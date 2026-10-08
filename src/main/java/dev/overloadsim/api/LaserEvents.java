@@ -93,14 +93,32 @@ public final class LaserEvents {
     }
     public static final class BeforeExplosion extends AtMachine {
         public final String cause;
-        private int radiusChunks;
+        /** Optical center block; position continues to identify the controller. */
+        public final BlockPos center;
+        private int radiusBlocks;
+        /** @deprecated Use the block-radius constructor. A legacy chunk radius of 1 maps to 12 blocks, and 0 to 0. */
+        @Deprecated
         public BeforeExplosion(ServerLevel level, BlockPos position, String cause, int radiusChunks) {
             super(level, position);
             this.cause = Objects.requireNonNull(cause);
+            this.center = position.immutable();
             setRadiusChunks(radiusChunks);
         }
-        public int radiusChunks() { return radiusChunks; }
-        public void setRadiusChunks(int value) { bounded(value, 1); radiusChunks = value; }
+        public BeforeExplosion(ServerLevel level, BlockPos position, BlockPos center, String cause, int radiusBlocks) {
+            super(level, position);
+            this.cause = Objects.requireNonNull(cause);
+            this.center = Objects.requireNonNull(center).immutable();
+            setRadiusBlocks(radiusBlocks);
+        }
+        /** Inclusive spherical radius in blocks; handlers may reduce it within 0..12. */
+        public int radiusBlocks() { return radiusBlocks; }
+        public void setRadiusBlocks(int value) { bounded(value, 12); radiusBlocks = value; }
+        /** @deprecated A compatibility flag: 0 for zero radius, 1 for any positive block radius. */
+        @Deprecated
+        public int radiusChunks() { return radiusBlocks == 0 ? 0 : 1; }
+        /** @deprecated A legacy value of 1 selects the 12-block sphere, and 0 selects its center only. */
+        @Deprecated
+        public void setRadiusChunks(int value) { bounded(value, 1); radiusBlocks = value == 0 ? 0 : 12; }
     }
     private static void bounded(long value, long maximum) {
         if (value < 0 || value > maximum) throw new IllegalArgumentException("laser event amount out of range");

@@ -1,0 +1,31 @@
+{
+  "type": "ae2lt:lightning_assembly",
+  "priority": 0,
+  "inputs": [
+    {
+      "ingredient": {
+        "item": "overload_sim:laser_frame"
+      },
+      "count": 2
+    },
+    {
+      "ingredient": {
+        "item": "ae2lt:flawless_budding_overload_crystal"
+      },
+      "count": 1
+    },
+    {
+      "ingredient": {
+        "item": "ae2lt:overload_crystal_block"
+      },
+      "count": 32
+    }
+  ],
+  "result": {
+    "id": "overload_sim:laser_source_crystal",
+    "count": 1
+  },
+  "totalEnergy": 2000000,
+  "lightningCost": 256,
+  "lightningTier": "extreme_high_voltage"
+}
