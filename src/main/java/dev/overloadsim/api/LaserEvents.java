@@ -76,13 +76,19 @@ public final class LaserEvents {
         public void setParticles(long value) {
             bounded(value, maximumParticles);
             particles = value;
-            if (value == 0) energy = 0;
+            energy = Math.min(energy, proportionalEnergyLimit());
         }
         public long energy() { return energy; }
         public void setEnergy(long value) {
-            bounded(value, maximumEnergy);
+            bounded(value, proportionalEnergyLimit());
             if (particles == 0 && value > 0) throw new IllegalArgumentException("conversion requires particles");
             energy = value;
+        }
+        private long proportionalEnergyLimit() {
+            if (maximumParticles == 0) return 0;
+            // Divide first: the remainder product is bounded by 125000 squared.
+            return maximumEnergy / maximumParticles * particles
+                    + maximumEnergy % maximumParticles * particles / maximumParticles;
         }
     }
     public static final class BeforeExplosion extends AtMachine {

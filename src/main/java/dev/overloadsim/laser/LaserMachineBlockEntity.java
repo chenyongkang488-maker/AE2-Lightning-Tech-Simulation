@@ -92,6 +92,8 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
     long boost = 100_000, extremeLightning, coreRemainder, activeUntil, lastPower;
     private final dev.overloadsim.core.CoreCollapseCycle collapse = new dev.overloadsim.core.CoreCollapseCycle();
     int outputMask = 63, fuelRemaining, particleRemaining;
+    long fuelProcessingCredit;
+    boolean conversionInProgress;
     String activeFuel = "", status = "no_structure";
     Direction particleDirection = Direction.SOUTH;
     List<LaserSegment> segments = new ArrayList<>();
@@ -195,6 +197,7 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
     }
     public int fuelRemaining() { return fuelRemaining; }
     public int particleRemaining() { return particleRemaining; }
+    public long fuelProcessingCredit() { return fuelProcessingCredit; }
     public String activeFuel() { return activeFuel; }
     public String status() { return status; }
     public Direction particleDirection() { return particleDirection; }
@@ -380,6 +383,7 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
         tag.putLong("CollapseStart",collapse.startTick()); tag.putLong("CollapseInput",collapse.lastInputTick());
         tag.putLong("Energy", energy.stored()); tag.putLong("Particles", particles.stored()); tag.putInt("OutputMask", outputMask);
         tag.putInt("FuelRemaining", fuelRemaining); tag.putInt("ParticleRemaining", particleRemaining); tag.putString("ActiveFuel", activeFuel);
+        tag.putLong("FuelProcessingCredit", fuelProcessingCredit);
         tag.putString("Status", status); tag.putInt("ParticleDirection", particleDirection.get3DDataValue());
         tag.put("FuelInput", fuelInput.serializeNBT(registries)); tag.putBoolean("HadStructure", structure != null || wasFormed);
         tag.putBoolean("ExplosionTriggered", explosionTriggered); tag.putDouble("AeInputFraction", aeInputFraction); tag.putDouble("AeOutputFraction", aeOutputFraction);
@@ -424,6 +428,7 @@ public final class LaserMachineBlockEntity extends AENetworkedBlockEntity implem
         }
         fuelRemaining = Math.clamp(tag.getInt("FuelRemaining"), 0, ParticleClock.MAX_DURATION);
         particleRemaining = Math.clamp(tag.getInt("ParticleRemaining"), 0, ParticleClock.MAX_DURATION);
+        fuelProcessingCredit = Math.clamp(tag.getLong("FuelProcessingCredit"), 0L, ParticleClock.PROCESSING_UNIT - 1);
         activeFuel = boundedText(tag.getString("ActiveFuel")); status = boundedText(tag.getString("Status"));
         int direction = tag.getInt("ParticleDirection"); particleDirection = direction >= 0 && direction < 6 ? Direction.from3DDataValue(direction) : forward();
         var fuelTag = tag.getCompound("FuelInput").copy(); fuelTag.putInt("Size", 4);

@@ -33,14 +33,17 @@ public final class ParticleFuelData extends SimpleJsonResourceReloadListener {
     private static volatile Snapshot snapshot = new Snapshot(Map.of(), Map.of(), List.of(), 0);
 
     public record Recipe(ResourceLocation id, Ingredient ingredient, int consumableDurationTicks,
-                         int particleIntervalTicks, long energyPerParticle) {
+                         int particleIntervalTicks, long energyPerParticle, long inputEnergyPerBatch) {
+        public Recipe(ResourceLocation id, Ingredient ingredient, int duration, int interval, long energy) {
+            this(id, ingredient, duration, interval, energy, 0);
+        }
         public Recipe {
             Objects.requireNonNull(id, "id");
             Objects.requireNonNull(ingredient, "ingredient");
-            new ParticleClock.Fuel(consumableDurationTicks, particleIntervalTicks, energyPerParticle);
+            new ParticleClock.Fuel(consumableDurationTicks, particleIntervalTicks, energyPerParticle, inputEnergyPerBatch);
         }
         public ParticleClock.Fuel fuel() {
-            return new ParticleClock.Fuel(consumableDurationTicks, particleIntervalTicks, energyPerParticle);
+            return new ParticleClock.Fuel(consumableDurationTicks, particleIntervalTicks, energyPerParticle, inputEnergyPerBatch);
         }
     }
 
@@ -103,7 +106,7 @@ public final class ParticleFuelData extends SimpleJsonResourceReloadListener {
                     tags.put(entry.getKey(), tagId);
                 }
                 recipes.put(entry.getKey(), new Recipe(entry.getKey(), ingredient, fuel.consumableDurationTicks(),
-                        fuel.particleIntervalTicks(), fuel.energyPerParticle()));
+                        fuel.particleIntervalTicks(), fuel.energyPerParticle(), fuel.inputEnergyPerBatch()));
             } catch (RuntimeException failure) {
                 String message = entry.getKey() + ": " + failure.getMessage();
                 messages.add(message);

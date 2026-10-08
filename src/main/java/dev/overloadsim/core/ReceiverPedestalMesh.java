@@ -81,7 +81,16 @@ public final class ReceiverPedestalMesh {
     }
 
     private static void face(List<Surface> result, int tile, boolean glow, double[] a, double[] b, double[] c, double[] d) {
-        result.add(new Surface(quad(a, b, c, d), tile, glow));
+        var face = quad(a, b, c, d);
+        // Every vertical piece shares the slab's material height. Restarting the full
+        // striped tile on the controller cut-outs made the bands jump at its corners.
+        if (tile == SIDE && Math.abs(face.a().ny()) < 1e-9)
+            face = new Quad(sideUv(face.a()), sideUv(face.b()), sideUv(face.c()), sideUv(face.d()));
+        result.add(new Surface(face, tile, glow));
+    }
+
+    private static Vertex sideUv(Vertex v) {
+        return new Vertex(v.x(),v.y(),v.z(),v.nx(),v.ny(),v.nz(),v.u(),(-3.625-v.y())/1.75);
     }
 
     private static Quad quad(double[] a, double[] b, double[] c, double[] d) {

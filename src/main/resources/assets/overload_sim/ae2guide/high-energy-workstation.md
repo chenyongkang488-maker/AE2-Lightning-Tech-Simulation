@@ -12,22 +12,49 @@ item_ids:
 
 # High Energy Workstation
 
-The workstation processes the current **overload processing factory** recipes. Pack changes and recipe removals take effect at runtime. Laser power replaces their FE and lightning costs; the machine consumes only recipe materials, including fluids.
+The workstation processes the currently loaded Overload Processing Factory recipes, including pack and script changes. It consumes the recipe's items and fluids. Laser power replaces its FE and lightning costs.
 
-Its built-in dedicated recipe converts **256 Overload Crystals into 4 Transcendent Crystals**. These pale-blue crystals produce EHV in a Tesla Coil with a Lightning Collapse Matrix, or serve as constrainer fuel. See [Transcendent Crystal](transcendent-crystal.md).
+Its dedicated recipe converts 256 Overload Crystals into 4 [Transcendent Crystals](transcendent-crystal.md). This recipe is available only in the workstation.
 
-Build a **7×7×7** enclosure using one workstation controller, one laser optical port, 141 laser frames and 75 laser glass blocks. Place the controller at the front bottom centre, facing outward. The optical port sits at the centre of the opposite wall, three blocks above the controller. The roof, floor and back wall are solid; the three other walls have 5×5 glass windows. Keep the 5³ interior empty. Formation merges the shell into light-grey pixel panels, narrow dark rims, horizontal ventilation grilles and continuous glass windows. A small yellow wrench marks the controller; four overload crystal clusters sit against the inner receiving wall and emit four translucent pink beams toward the centre of the lower work surface while powered. The cavity prevents natural spawning for every mob category, including bats.
+## Construction and laser input
 
-The optical port must face a beam with **individual strength strictly above 1,000,000,000 FE**. Separate beams do not add together. With materials and output space, a batch completes in two valid ticks, at up to 1024 parallel operations. Losing the beam or breaking the structure cancels unfinished progress without consuming materials.
+Build a 7×7×7 enclosure with one controller, one laser optical port, 141 laser frames and 75 laser glass blocks. Using local coordinates x=right, y=up and z=inward, each from 0 to 6, place the controller at (3,0,0), facing outward, and the optical port at (3,3,6). Fill the roof, floor and back wall with frames, apart from those two positions. Each of the other three walls has a 5×5 glass area inside its frame border. Keep the 5×5×5 interior empty.
 
-The controller contains nine input slots and nine output slots, each with a capacity of 1,000,000 items. Hover a slot to see the exact count. Left-click moves a normal stack, right-click moves one item, and Shift-click transfers to or from the player inventory. Automation inserts into inputs and extracts only outputs.
+Aim a laser into the back-wall port from outside. The individual beam must be strictly stronger than 1,000,000,000 FE; separate weak beams do not add together. A focus matrix is optional. With materials and output space available, two consecutive valid ticks complete a batch of up to 1024 recipe operations. Losing the beam or invalidating the structure resets unfinished progress without consuming that batch's materials.
 
-The vertical fluid tanks beside the item grids show the actual fluid texture and fill level, with tick marks. Each holds 1,024,000,000 mB and retains fluid components; hover to see the exact amount. Use a filled fluid container on the input tank to fill it, or an empty container on either tank to drain it. The output tank accepts no incoming fluid.
+Right-click the controller or an owned frame after formation to open the menu. Automatic build uses the player's inventory first, then the controller's connected AE network; creative players need no materials. The projection button previews the construction plan. Obstructions and unloaded positions prevent construction. Creative administrators can use `/overload_sim workstation demo` in empty loaded space to place a workstation and a laser chain supplied with finite resources.
 
-Any controller face accepts materials and exposes products to pipes. Input materials cannot be extracted, and output buffers cannot be filled. Two independent toolbar switches enable automatic ejection to adjacent containers and export to the connected AE network; both start off. Other shell blocks provide menu access, without item or fluid ports. Right-click an owned frame after formation to open the controller screen. Focusing is optional; the individual beam must still exceed 1GFE.
+## Storage and transport
 
-Automatic build uses the backpack first, then the connected AE network; creative players need no materials. The projection beneath it previews missing parts without changing the world. Creative administrators can use `/overload_sim workstation demo` in empty loaded space for a finite, precharged laser chain and workstation.
+The controller has nine input slots and nine output slots, each holding up to 1,000,000 items of one type and component set. Hover a slot for the exact count. Left-click moves a normal stack, right-click moves one item, and Shift-click transfers between the machine and player inventory.
 
-The controller is the only workstation-specific construction item. Existing dedicated workstation parts convert to their matching laser parts when a complete old structure forms. Breaking a loose old part drops the corresponding laser item; an old part in your inventory can be crafted into one matching laser part without extra materials. Migration preserves the controller's stored items and fluids.
+The input and output fluid tanks each hold 1,024,000,000 mB and retain fluid components. Hover for the exact amount. Click the input tank with a filled container to fill it. An empty container can drain either tank; the output tank accepts no incoming fluid. Each transaction handles one container and needs somewhere to put the resulting container.
 
-Authors can add workstation-only recipes with type `overload_sim:high_energy_workstation`, using the overload processing factory recipe format. The Java recipe-source API is documented in the repository's `docs/workstation-api.md`. Custom sources must return final executable recipes and preserve ingredient predicates and components.
+Every controller face accepts item and fluid inputs and exposes products. Pipes can insert into input buffers and extract from output buffers. They cannot extract input materials or fill output buffers. Other shell blocks provide menu access.
+
+Two independent toolbar switches enable ejection to adjacent containers and export to the connected AE network. Both default to off. Automatic output has separate item and fluid limits of 2,147,483,647 items/tick and 2,147,483,647 mB/tick, shared between AE export and adjacent ejection. It transfers only the amount accepted by the receiving inventory, tank or network. Rejected products stay in the workstation; receiving capacity and insertion rules still apply.
+
+## Data packs and Java API
+
+Add workstation-only recipes at `data/<namespace>/recipe/<path>.json` with type `overload_sim:high_energy_workstation`. For example:
+
+```json
+{
+  "type": "overload_sim:high_energy_workstation",
+  "priority": 10,
+  "inputs": [
+    {"ingredient": {"tag": "c:ingots/iron"}, "count": 4},
+    {"ingredient": {"item": "minecraft:redstone"}, "count": 1}
+  ],
+  "results": [{"id": "minecraft:gold_ingot", "count": 2}],
+  "totalEnergy": 5,
+  "lightningCost": 1,
+  "lightningTier": "high_voltage"
+}
+```
+
+This format permits up to nine counted inputs and one item result. Optional `inputFluid` and `resultFluid` use NeoForge FluidStack data. At least one input and one output are required. `totalEnergy` must be at least 5 and `lightningCost` positive, although the workstation does not charge either cost. Ingredients retain tag, alternative-item and component matching. A recipe with only fluid inputs requires all item input slots to be empty. Only declared recipe results are produced.
+
+Selection first favors the largest executable parallel count, then higher `priority`, more input kinds and greater total item demand, then recipe ID. Override `data/overload_sim/recipe/transcendent_crystal.json` to change the dedicated crystal recipe. Reload data packs with `/reload`.
+
+Java integrations can call `WorkstationRecipes.registerSource(id, source)` during common setup; the source returns current executable `Entry(id, recipe)` objects from the final RecipeManager. Preserve their ingredient predicates and components. Call `WorkstationRecipes.invalidate()` after changing a custom source. Buffer counts are available through `WorkstationBuffer.count(slot)`; normal extraction returns legal item stacks. The full reference is `docs/workstation-api.md`.

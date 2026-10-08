@@ -18,15 +18,19 @@ item_ids:
   - overload_sim:laser_optical_port
 ---
 
-# Laser and particle prototype
+# Laser and particles
 
-Build the chain in this order: **emitter → matrices → focus matrix → collapse core → particle constrainer**. Particles leave the opposite side of the core, continuing in the laser's forward direction. Put the constrainer after the core, with its input facing the core and within seven blocks of that side.
+Build the chain in this order: emitter → matrices → focus matrix → collapse core → particle constrainer. Particles leave the far side of the core in the laser's travel direction. Place a constrainer optical port facing the core, on that side and within seven blocks.
 
-The controller screen faces upstream; ordinary straight machines emit in the opposite direction and support all six directions. The emitter uses a 5³ shell with a source crystal at its center. Ordinary matrices are seven blocks across and one block thick with an empty center. New deflectors use an upright 7³ voxel sphere with four horizontal optical ports, a closed frame top, a bottom controller and a pointed pink crystal at the center. The constrainer uses three white/pink great-circle ribs supporting a transparent glass sphere. Leave at least one empty block between structure surfaces. The screen reports formation. Connect the controller with AE cable, or place one Overloaded ME Interface in the structure for the overload network.
+Laser strength and the costs below are measured per 20-tick batch. G opens this guide; right-click a controller for settings and exact resource values. The collapse core is passive: it does not accept AE cabling or frequency binding. Other controllers connect through AE cables, an installed Overloaded ME Interface or the shared overload frequency system.
 
-### Ring front view (screen facing you)
+## Construction
 
-F is laser frame, C is the matrix controller, and dots are air. The center is three blocks along the structure's up direction from its controller. For a vertical beam, that direction is north. All four ordinary rings share this template.
+Ordinary straight devices send light opposite the controller's facing direction and support all six directions. Leave at least one empty block between neighboring structure surfaces.
+
+The emitter fits within 5×5×5. Its controller is at the rear center; the source crystal is two blocks forward and the output port another two blocks forward. Use the automatic-build projection for the frame positions.
+
+Constraint, enhancement, burst and focus matrices use the same 7×7×1 ring. F=laser frame, C=matrix controller, .=air. Seen from the controller side:
 
 ```
 ..FFF..
@@ -38,38 +42,78 @@ F.....F
 ..FCF..
 ```
 
-The receiver is a voxel sphere seven blocks across. Relative to its center, x/y/z range from -3 to 3. Shell cells have squared distance x²+y²+z² from 7 through 12 inclusive. Shell cells with any coordinate equal to zero use laser frame (three intersecting great-circle ribs); remaining shell cells use glass, and every other cell is air. New receivers add a two-layer 7×7 frame plinth below the sphere, with the controller at the front centre of the upper layer. Relative to the controller the plinth extends 0..6 blocks forward, -3..3 sideways, and -1..0 along construction up. The sphere centre is three blocks forward and four blocks up: overall size 7×9×7. It uses 138 frames, 56 glass, one front-plinth controller and one upstream optical port. For vertical beams, the construction up direction is north. Align the core with the port. Creative administrators can build it with `/overload_sim laser build receiver`. Saved sphere receivers retain their original controller position, inventory and paid clocks. Earlier cube receivers still safely pause and retain inventory until rebuilt as a sphere. The emitter controller sits at the back center, its source crystal is two blocks forward, and its output port is another two blocks forward.
+The optical center is three blocks along construction-up from the controller. Construction-up is world-up for horizontal light and north for vertical light.
 
-The emitter pays 100000 FE every 20 ticks and starts with a six-block range. A constraint matrix pays 100000 FE and renews six blocks of range. An enhancement matrix adds and pays the selected 100000–9000000 FE. A burst matrix pays 64 EHV to double power. A new deflector starts with every horizontal face closed. Each direction button cycles closed, input and output. Light reaches the central crystal before splitting equally among output faces; closing every output stops incoming work. Top and bottom never carry light. The maximum beam power is 1P FE. Matrices without valid incoming light pay no running cost.
+The deflector is a world-upright 7×7×7 structure. Its center is three blocks above the bottom controller. Relative to the center, fill shell cells satisfying 7 ≤ x²+y²+z² ≤ 12 with frames. Replace the east, south, west and north face centers with optical ports; the top stays frame and the bottom is the controller. Other cells stay empty. Only horizontal ports transmit light.
 
-The virtual projection below automatic construction shows material positions: pink frames, cyan glass, amber sources and violet ports; green means a correct existing part, red means an obstacle. Enabling it returns to the world; toggle again to clear it. Formation clears it automatically. Right-click any owned frame of a formed structure to open its controls; sneaking and wrench interactions retain their usual behavior.
+The constrainer's default layout is 7×9×7. Build a two-layer 7×7 frame plinth with its controller at the front center of the upper layer. Relative to the controller, the plinth extends 0–6 blocks forward, three blocks to each side and one block down. The sphere center is three blocks forward and four blocks construction-up. Relative to that center, x/y/z range from -3 to 3. Shell cells satisfy 7 ≤ x²+y²+z² ≤ 12: use frames if any coordinate is zero, otherwise glass; leave other cells empty. Replace the upstream face-center frame with an optical port. The default materials are 138 frames, 56 glass, one port and one controller. Additional horizontal sphere-face centers may use optical ports. Align the core with an actual port and aim the port toward it.
 
-A focus matrix converges on the collapse core at the seventh block ahead. It clears breakable cells on the optical axis before the target, while unbreakable blocks stop the beam. The core activates at 1G FE and creates one particle per accumulated 512G FE, keeping the remainder. Ordinary pink beams are three blocks across; focus cones start at that width and contract toward the core. Entity damage follows the same width. Blue dots show particles travelling forward from the core to the receiver; the server owns the actual count.
+## Beam controls
+
+|Device|Per-batch behavior|
+|---|---|
+|Emitter|Pays 100,000 FE and emits 100,000 FE strength with six-block range|
+|Constraint matrix|Pays 100,000 FE and renews six blocks of range|
+|Enhancement matrix|Adds and pays the selected 100,000–9,000,000 FE, in steps of 100,000|
+|Burst matrix|Pays 64 EHV and doubles beam strength|
+|Deflector|Routes horizontal inputs equally across enabled outputs|
+|Focus matrix|Focuses on the collapse core at the seventh block ahead|
+
+Enhancement and burst preserve the remaining range. Maximum individual beam strength is 1P FE. Matrices without valid incoming light pay no running cost.
+
+Each deflector direction button cycles off, input and output. New deflectors start with all four directions off. Multiple input and output directions are allowed. Closing all outputs stops downstream light; active upstream devices still follow their own charging rules. Top and bottom cannot be selected.
+
+The focus path clears breakable blocks on its axis before the core. Unbreakable blocks stop it. The core activates at at least 1G FE and creates one particle for each accumulated 512G FE, preserving the remainder. Laser paths and active constraint fields damage entities. Constraint fields have a 2.5-block radius, prevent natural spawning while formed and deal damage only while working. Damage checks run every two ticks; a hit uses the highest overlapping damage, calculated as beam FE / 10,000 × the configured multiplier, capped at 1,000,000 damage points. The default multiplier is 1.
 
 ## Particles and sealed consumables
 
-The constrainer holds 125000 particles and 1024P FE. Inserted consumables cannot be removed through the screen or automation. Each consumable provides 100 effective working ticks. Processing pauses without particles or space for the next energy yield, preserving the paid window.
+The constrainer holds 125,000 particles and 1024P FE. Each particle represents 512G FE of incoming laser energy. Inserted consumables cannot be withdrawn through the menu or automation. One item pays for 100 effective working ticks. Missing particles or room for a whole conversion pauses the paid timer.
 
-|Consumable|Interval per particle|Yield per particle|
-|---|---|---|
-|Nether Star|100 ticks|512G FE|
-|Netherite Block|20 ticks|512G FE|
-|Singularity|10 ticks|256G FE|
-|Overloaded Singularity|2 ticks|1024G FE|
-|Plutonium / Polonium pellet (optional Mekanism)|1 tick|2048G FE|
-|Transcendent Crystal|1 tick|2048G FE|
-|Antimatter pellet (optional Mekanism)|1 tick|4096G FE|
+The following are average capacities per 20 effective ticks, with sufficient particles and output space. G=1,000,000,000 FE; P=1,000,000,000,000,000 FE.
 
-Laser instruments draw FE only from Applied Flux FE storage cells in the connected ME network. The receiver exports to those FE cells and debits only their accepted energy. Empty or full FE cells and absent Applied Flux stop the corresponding FE transaction; AE energy cells continue supplying normal network power. External FE connections and registered energy sinks remain available. Particle overflow, or dismantling a constrainer structure containing particles, triggers destruction in the loaded 3×3 chunk area centered on the machine. Stop upstream beams and drain particles before dismantling. Empty constrainers can be adjusted normally.
+|Consumable|Input capacity / 20 ticks|Average output / 20 ticks|Conversion ratio|Output per whole particle|
+|---|---|---|---|---|
+|Nether Star|1G FE|1G FE|100%|512G FE|
+|Netherite Block|16G FE|16G FE|100%|512G FE|
+|Singularity|256G FE|128G FE|50%|256G FE|
+|Overloaded Singularity|1024G FE|2048G FE|200%|1024G FE|
+|Plutonium / Polonium pellet, optional Mekanism|0.125P FE|0.5P FE|400%|2048G FE|
+|Transcendent Crystal|0.125P FE|0.5P FE|400%|2048G FE|
+|Antimatter pellet, optional Mekanism|1P FE|8P FE|800%|4096G FE|
 
-Right-click a controller for power and controls. The collapse core has only incoming strength, accumulated remainder and its threshold; it is a passive optical device without AE cabling, frequency binding or construction controls. Other controllers retain their network and construction functions. Hover over the status area for exact long values, diagnostics and consumable timers. Press G to open this page. Creative administrators can use `/overload_sim laser build <kind>` in an empty area to place one structure, or `/overload_sim laser demo` for a complete chain precharged with finite resources. The demo uses enhancement, 16 burst matrices, range constraints, focus, the core and a forward receiver. Powder-white panels, pink channels and eight equipment glyphs are painted in Blockbench; recessed screens reuse the animated ECG and the sphere uses borderless pale glass.
+Divide the two capacity columns by 20 for average FE/tick. Each conversion consumes one whole particle and outputs its whole yield at once. One effective tick can perform multiple conversions when its processing allowance, particle stock and output space permit. Fractional processing credit persists between paid fuel windows and in saves. For example, a Nether Star rule with particles available converts one particle after 10,240 effective ticks and outputs 512G FE then; it does not output 1G FE immediately every 20 ticks. A single 100-tick item does not guarantee its nominal average output. Only the sub-particle fraction is retained; unavailable particles or output space do not bank an unlimited later burst.
+
+Laser devices draw network FE from Applied Flux FE storage cells. The constrainer exports to those cells and debits only accepted FE. Empty source cells, full destination cells or absent Applied Flux stop the respective transaction. AE energy cells power the network. External FE connections and registered energy sinks also work.
+
+Particle overflow or dismantling a constrainer structure while it contains particles triggers destruction in the loaded 3×3 chunks centered on the machine, by default within 12 blocks above and below. Stop the upstream beam and consume stored particles before dismantling. Empty structures can be adjusted normally.
 
 ## Automatic construction
 
-Place and orient a controller, open its screen, then click Automatic build in the left toolbar. Survival uses the main inventory and offhand first, then the controller's currently connected AE network; direct AE cabling works before formation. Backpack-only construction also works offline. Creative needs no materials. Only missing parts are placed and valid interfaces are preserved. Missing materials, obstructions or unloaded cells prevent construction. Cancelled placement or changed extraction refunds the withdrawn materials; anything rejected by both AE and the backpack is dropped for the player. Repeating a complete build is free.
+Place and orient a controller, open its menu and click Automatic build in the left toolbar. Survival uses main inventory and offhand first, then the controller's active connected AE network. Direct cabling works before formation. Inventory-only construction works offline; Creative needs no materials.
 
-The formed constrainer has pale pink glass, segmented armour ribs, bolts and cooling slots. Individual glass blocks have a white/pink border. Stored particles drive interior orbiting dots (up to 96): no storage means no dots, while pausing does not hide stored particles. Other formed laser machines share the same industrial style. Validation uses the voxel template above; breaking or unloading restores normal construction blocks.
+Only missing parts are placed and legal interfaces or selected receiver ports are preserved. Missing materials, obstacles or unloaded cells prevent construction. Cancelled placement refunds materials; refunds rejected by both network and player inventory drop for the player. Repeating a complete build uses no materials. The projection button previews positions and clears after formation. Right-click an owned frame to open its controller; sneaking and wrench use keep their normal interactions.
 
-The formed emitter uses stepped voxel reactor armour, capacitor pods and bright pink concentric light channels. Its optical core follows the laser output direction; the rear controller and optional overload interface remain exposed.
+Creative administrators can use `/overload_sim laser build <kind>` in loaded empty space. Kinds are `emitter`, `constraint`, `enhancement`, `burst`, `deflector`, `focus`, `core` and `receiver`. `/overload_sim laser demo` builds a chain supplied with finite resources. See [High Energy Workstation](high-energy-workstation.md) for processing recipes with laser power.
 
-Formed emitter apertures and active laser paths illuminate their surroundings with real block light. Invisible, replaceable sources occupy only air and never replace plants or water; shared sources remain until the last beam releases them. Workstation processing is described on the High Energy Workstation page.
+## Configuration and API
+
+`config/overload_sim-laser.toml` contains `emitterFePerBatch`, `constraintFePerBatch`, `burstExtremeLightningPerBatch`, `laserDamageMultiplier`, `explosionVerticalRadius` and `explosionBlockBudgetPerTick`. Defaults are 100,000 FE, 100,000 FE, 64 EHV, 1, 12 blocks and 1024 broken blocks/tick. Explosion work respects unbreakable blocks and protection events, visits loaded chunks only and does not resume after a server restart.
+
+Fuel rules are `data/<namespace>/particle_conversion/<id>.json`, reloaded with `/reload`. For example, override `data/overload_sim/particle_conversion/nether_star.json`:
+
+```json
+{
+  "type": "overload_sim:particle_conversion",
+  "ingredient": {"item": "minecraft:nether_star"},
+  "consumable_count": 1,
+  "consumable_duration_ticks": 100,
+  "input_energy_per_batch": "1GFE",
+  "energy_per_particle": "512GFE"
+}
+```
+
+`ingredient` specifies exactly one item or item tag. `input_energy_per_batch` is the 20-tick input capacity; `energy_per_particle` is the whole-particle output, so their ratio to 512G FE defines conversion efficiency. Energy accepts an exact integer FE value or a unit string such as `kFE`, `GFE` or `PFE`. Input capacity must be from 1 FE to 1P FE per batch, and whole-particle output must be a positive integer FE amount. A yield larger than the 1024P FE buffer cannot process. Paid duration is 1–1,000,000 ticks; each window consumes one item and each completed conversion one particle. Rules match in stable ID order, so override the existing ID when changing a built-in.
+
+For interval-based rules, use `particle_interval_ticks` instead of `input_energy_per_batch`. The fields are mutually exclusive. The interval must not exceed the paid duration. Removed or incompatible active rules pause paid work; missing optional materials skip only their own rules. `ParticleFuelData.diagnostics()` reports rule errors.
+
+Register Java hooks through `dev.overloadsim.api.LaserExtensions` during common setup. `registerModifier` changes beam strength/range; `registerTarget` handles a beam and `deactivate` releases its source; `registerFuelProvider` supplies stable `match/resolve` fuel IDs; `registerEnergySink` returns the actually accepted long FE amount and must not mutate resources when simulating. Duplicate IDs are rejected. The reference is `docs/laser-particle-api.md`.

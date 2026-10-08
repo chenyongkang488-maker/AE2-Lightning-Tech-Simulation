@@ -16,23 +16,57 @@ item_ids:
 
 # Overload Lightning Coil
 
-Insert the coil into a networked Overload Device Workbench, install an Overload Core, and remove it. The workbench binds the coil to its grid. Keep the workbench online and loaded. Holding the tool or leaving it inside the online workbench recharges from Applied Flux FE storage cells. An empty FE cell or absent Applied Flux leaves network FE charging stopped; AE energy cells continue powering the ME network. External FE charging remains available.
+Insert the coil into a networked Overload Device Workbench and install an Overload Core. The workbench binds the coil to its grid. Keep the workbench online and loaded to use network lightning remotely.
 
-Tap and release right-click to strike the nearest unobstructed entity or block within 32 blocks. Hold for at least 1.5 seconds and release to strike yourself. Each strike costs exactly 10 HV and has a 0.5-second cooldown. The Extreme Voltage Module unlocks natural mode in the G configuration screen, costing exactly 10 EHV. Natural mode uses the upstream natural-weather classification for collectors and rituals. Lightning retains normal damage and fire.
+Holding the tool or leaving it inside the online workbench recharges it from Applied Flux FE storage cells, by default up to 10,000 FE/tick. Empty FE cells or absent Applied Flux stop this recharge. AE energy cells still power the ME network. External FE charging is also supported.
 
-Hold a blank simulation crystal in your offhand near a mob, then charge a self-strike to attempt the crystal's 33% mob binding. A real lightning hit is sufficient without taking damage, including Creative mode and canceled vanilla strike effects. Continue striking bound crystals with artificial or natural lightning to cultivate them.
+## Lightning
 
-The Mimic Tool Module grants netherite-tier universal harvesting and sword combat. Sneak-use strips logs, tills soil or flattens paths. Its four dependent modules provide unrestricted harvesting and unbreakable-block mining, efficiency up to 10, fortune up to 5, and toggleable silk touch. Enabled silk takes priority over fortune. Remove dependent modules before removing Mimic. Each module has a one-item limit.
+Tap and release right-click to strike the nearest unobstructed entity or block in sight, within 32 blocks by default. Hold for 30 ticks (1.5 seconds) and release to strike yourself. Each use produces one strike, costs exactly 10 HV and has a 10-tick (0.5-second) cooldown.
 
-The core is required for every action. Mining and melee cost 200 FE by default. Base capacity is 10 million FE; upstream T1/T2/T3 energy modules replace capacity with 1, 5 or 20 billion FE. Only one energy module may be installed. Removing it clamps stored FE to the reduced capacity. Normal block loot and protection events remain in effect, including for ultimate mining. Bedrock has no default drop.
+Install the Extreme Voltage Module and enable natural mode in G settings to spend exactly 10 EHV instead. Collectors and rituals recognize this as natural lightning. Insufficient stock of the selected voltage prevents use; the other voltage is not substituted. Lightning follows normal damage and fire rules.
 
-Pack authors can override standard crafting recipe JSON and the `resonanceCoil` range, charge, cooldown, mining cost and charge rate in the common configuration.
+With a blank simulation crystal in the offhand and a nearby mob, a charged self-strike attempts the crystal's 33% binding rule. A real hit is enough without taking damage, including Creative mode. Strike bound crystals to cultivate them; see [simulation crystals](overload-simulation.md).
 
+## Modules and FE
 
-## Shared device hub and wrench module
+Install modules at the workbench. Each of the seven coil modules has a one-item limit. The core is required for all actions.
 
-G opens the original Lightning Tech device hub. Its top-right weapon tab displays the held coil or railgun, main hand first. The module list and settings scroll.
+|Module|Use|
+|---|---|
+|Extreme Voltage|Enables the natural-lightning setting|
+|Mimic Tool|Netherite-tier harvesting, sword and shears abilities; sneak-use to strip logs, till soil or flatten paths|
+|Ultimate Destruction|Requires Mimic; ignores harvest tier and can mine unbreakable blocks|
+|Efficiency|Requires Mimic; toggle and adjust from 0 to 10, default 10|
+|Fortune|Requires Mimic; adjust from 0 to 5, default 5|
+|Silk Touch|Requires Mimic; enabled by default and takes precedence over Fortune|
+|Wrench|Enables the wrench setting; no Mimic requirement|
 
-Install the Wrench Module at the workbench; Mimic is unnecessary, but a core is required. Enable it in G to disable all right-click lightning, including an already charged release. AE rotation and sneak-disassembly follow the native rules and return stored contents. No additional FE or lightning is charged.
+Remove the four dependent modules before removing Mimic. Normal loot and protection events apply even with Ultimate Destruction; bedrock has no default drop.
 
-With optional Mekanism installed, choose Wrench, Items, Fluids, Chemical, Energy, Heat, Empty or Rotate. Close the GUI, hold an enabled wrench coil in your main hand, and use Shift + scroll to cycle forward or backward; the action bar shows the current mode and the hotbar stays selected. Native configurator actions preserve security and pipe behavior; configuration modes cycle sides on sneak-use. Empty mode drops inventory contents. Without Mekanism, AE wrench use remains available. Turning wrench mode off restores lightning; removing its module or core removes the wrench abilities.
+Mining and melee each cost 200 FE by default. Base capacity is 10,000,000 FE. One upstream T1, T2 or T3 energy module replaces it with 1,000,000,000, 5,000,000,000 or 20,000,000,000 FE. Only one energy module may be installed; removing it clamps stored FE to the remaining capacity. Lightning uses its lightning cost instead of mining FE.
+
+## G settings and wrench
+
+G opens Lightning Tech's device hub. Select the weapon tab at the top right; it uses the held coil or railgun, main hand first. The module list and settings can scroll.
+
+Wrench mode defaults to off. With a core and Wrench Module installed, enable it in G to rotate AE blocks or sneak-use to disassemble them under native return rules. Wrench mode disables right-click lightning and charged releases. It charges no extra FE or lightning.
+
+With optional Mekanism, choose Wrench, Items, Fluids, Chemical, Energy, Heat, Empty or Rotate. Close the GUI, hold the active wrench coil in the main hand and use Shift + scroll to cycle modes in either direction. Configuration modes use sneak-right-click to cycle side settings. Native security and pipe rules apply; Empty drops inventory contents. AE wrench use remains available without Mekanism. Removing the core or module disables wrench abilities; turning wrench mode off restores lightning.
+
+## Configuration and Java API
+
+Override standard crafting files at `data/<namespace>/recipe/<path>.json`. Set these values under `[resonanceCoil]` in `config/overload_sim-common.toml`:
+
+```toml
+[resonanceCoil]
+lightningRange = 32
+selfStrikeChargeTicks = 30
+lightningCooldownTicks = 10
+miningEnergyFe = 200
+chargeFePerTick = 10000
+```
+
+Supported ranges are 1–128 blocks, 1–200 charge ticks, 1–200 cooldown ticks, 0–1,000,000 FE/action and 0–1,000,000 FE/tick respectively.
+
+Java integrations use `CoilModules.install/uninstall` for validated module changes and `CoilConfiguration.apply(stack, action, value)` for settings. Installation returns a tool copy and does not deduct the supplied module; the caller must deduct one item. `CoilEnergy.INSTANCE` exposes FE charging. Read the full reference in `docs/api.md`.

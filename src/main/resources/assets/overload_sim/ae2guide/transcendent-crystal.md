@@ -11,10 +11,22 @@ item_ids:
 
 <ItemImage id="overload_sim:transcendent_crystal" scale="3" />
 
-The High Energy Workstation converts **256 Overload Crystals into 4 Transcendent Crystals**. This dedicated recipe is unavailable in the Overload Processing Factory. It uses the workstation's laser requirement, two-tick batches and up to 1024 parallel operations, consuming only materials. The crystal retains the upstream Overload Crystal silhouette and animation with a pale-blue palette.
+## Production
 
-Put the crystal into the original Tesla Coil's consumable slot and install a **Lightning Collapse Matrix** in its matrix slot. Each operation takes **five effective ticks**, consumes **one crystal and 500,000 FE**, and exports **64 Extreme High Voltage lightning** to the network. Existing High Voltage lightning is not consumed. The connected network needs room for the output.
+The [High Energy Workstation](high-energy-workstation.md) converts 256 Overload Crystals into 4 Transcendent Crystals. The recipe requires the workstation's individual laser beam above 1,000,000,000 FE and completes in two valid ticks, with up to 1024 parallel operations. It consumes materials only and is unavailable in the Overload Processing Factory.
 
-It also works as a sealed Particle Constrainer consumable with the same effect as plutonium and polonium pellets: **100 effective working ticks per crystal**, consuming **one particle per tick** to produce **2048G FE**. Missing particles or insufficient buffer space pause the paid window. Mekanism is not required for this fuel.
+## Tesla Coil
 
-Packs may override `data/overload_sim/recipe/transcendent_crystal.json` and `data/overload_sim/particle_conversion/transcendent_crystal.json`.
+Place a Transcendent Crystal in the AE2 Lightning Tech Tesla Coil's consumable slot and a Lightning Collapse Matrix (`ae2lt:lightning_collapse_matrix`) in its matrix slot. Connect the coil to an online network with space for 64 Extreme High Voltage lightning.
+
+Each operation uses one crystal and 500,000 FE, takes five effective ticks and outputs 64 EHV. It does not consume existing HV. Missing matrix, energy or network output space prevents completion.
+
+## Particle Constrainer
+
+Insert crystals into the constrainer's sealed consumable slot to convert particles into FE. Inserted consumables cannot be withdrawn. No optional Mekanism installation is required. The fuel rates, paid duration and pause conditions are listed in [Laser and particles](laser-particle.md).
+
+## Data packs
+
+Override `data/overload_sim/recipe/transcendent_crystal.json` to change workstation production. It uses type `overload_sim:high_energy_workstation`, a counted `inputs` array and a `results` array; see the workstation page for the complete format.
+
+Override `data/overload_sim/particle_conversion/transcendent_crystal.json` to change constrainer fuel behavior. That format and its limits are on the laser page. Apply data-pack changes with `/reload`.

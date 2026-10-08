@@ -1,10 +1,27 @@
 package dev.overloadsim.core;
 
 import java.util.function.ToIntFunction;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class WorkstationRenderLightingTest {
+    @Test void insetArmourFindsTheAirOutsideItsInvisibleOpaqueFrame() throws Exception {
+        var panel = new ReceiverShellMesh.Quad(point(-.3,-.3,-3.2),point(-.3,.3,-3.2),
+                point(.3,.3,-3.2),point(.3,-.3,-3.2));
+        var type = Class.forName("dev.overloadsim.core.WorkstationRenderLighting");
+        var overload = java.util.Arrays.stream(type.getMethods()).filter(m -> m.getName().equals("sample")
+                && m.getParameterCount() == 4).findFirst();
+        assertTrue(overload.isPresent(), "Merged armour needs a visible-side sampler for arbitrary laser orientations");
+        Function<Object,Object> identity = p -> p;
+        Predicate<Object> opaque = p -> coordinate(p,"z") >= -3.5;
+        ToIntFunction<Object> daylight = p -> coordinate(p,"z") < -3.5 ? 15 << 20 : 0;
+        assertEquals(15 << 20,overload.orElseThrow().invoke(null,panel,identity,daylight,opaque),
+                "A face inset into a hidden frame must sample the exposed air rather than the opaque voxel");
+        assertEquals(0,overload.orElseThrow().invoke(null,panel,identity,(ToIntFunction<Object>)p->0,opaque),
+                "An unlit room remains dark after leaving the invisible frame");
+    }
     @Test void exteriorFacesUseTheirDaylightInEveryControllerOrientation() throws Exception {
         var panel = new ReceiverShellMesh.Quad(point(-3.5,-2.5,-3.5),point(-3.5,2.5,-3.5),
                 point(-2.5,2.5,-3.5),point(-2.5,-2.5,-3.5));

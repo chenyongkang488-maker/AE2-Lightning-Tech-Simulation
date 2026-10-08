@@ -1,6 +1,6 @@
 ---
 navigation:
-  title: 多方块模拟室
+  title: Multiblock Simulation Chamber
   icon: overload_sim:simulation_controller
   parent: overload_sim:overload-simulation.md
 item_ids:
@@ -14,46 +14,84 @@ item_ids:
   - overload_sim:simulation_smelting_module
 ---
 
-# 多方块模拟室
+# Multiblock Simulation Chamber
 
-外部尺寸为 3×3×3 至 7×7×7。水晶容量依次为 9、16、25、36、49，存放在控制器中；内部空间搭建时必须为空气；成型后机器维护一个自有隐形光源。
+Build an enclosure with equal external width, height and depth from 3 to 7 blocks. The controller stores reusable Perfect Simulation Crystals.
 
-12 条边框使用模拟室框架。底部非角边框处放置**一个控制器**，使正面朝外。可以在另一处底部非角边框替换为**一个原版过载 ME 接口**。顶部整面使用模拟室框架，四侧面中央使用 AE 聚能石英玻璃；底面中央用框架或升级模块填满。
+|External size|Crystal capacity|Floor upgrade positions|
+|---|---|---|
+|3×3×3|9|1|
+|4×4×4|16|4|
+|5×5×5|25|9|
+|6×6×6|36|16|
+|7×7×7|49|25|
 
-控制器会自动检测并成型。右键打开界面；水晶栏随外部边长显示为对应正方形，中央竖条显示工作进度。下方物品栏收窄，主界面不显示高压和极高压库存总数；悬停进度条可查看状态和单批费用。G 键查看本页。放入完美模拟电鸣水晶，接入有电且有高压闪电库存的 AE 网络即可生产。
+Use simulation frames for the twelve edges and the entire roof. Place exactly one controller in a non-corner position of the bottom edge, facing outward. One other bottom-edge position may contain an Overloaded ME Interface. Fill the four side interiors with AE vibrant quartz glass. Fill the floor interior with frames or upgrade modules, and leave the chamber interior empty.
 
-## 生产与升级
+The controller detects the completed structure. Right-click it, insert perfect crystals, and connect an online ME network with HV storage. Hover the progress bar for status and batch cost.
 
-每个参加生产的水晶每 180 tick 执行一次现有模拟配方，完成时每次扣 1000 FE + 1 高压。计时期间不扣生产费用，取放水晶会中断整批且不收费；支持 Shift 快捷放入/取出。费用按水晶计算。
+## Production and upgrades
 
-控制器每 tick 最多从在线网络中的应用通量 FE 存储单元补入 10000 FE，也接受外部 FE 供电。FE 单元为空或未安装应用通量时不从 AE 能源单元换算 FE；网络本身仍需要正常 AE 供电。
+Each participating crystal produces one simulation output roll per batch. The default cycle is 180 ticks, with 1000 FE and 1 HV charged per crystal at completion. Changing any crystal slot cancels the whole unfinished batch without production charges; Shift-click also works during processing.
 
-|底部模块|效果|
+The controller accepts external FE and draws up to 10,000 FE/tick from online Applied Flux FE cells. Empty FE cells or absent Applied Flux stop network FE charging. Normal AE power is still required for the network.
+
+|Floor module|Effect|
 |---|---|
-|效率 T1 / T2 / T3|每个减少 2 / 4 / 8 tick，总共最多减 104 tick|
-|时运|每个使一次实际产物 ×2；最多 ×1024（10 个）|
-|过载（最多一个）|最终时间减半；每个水晶额外消耗 1 极高压，显示环绕电弧|
-|熔炼（最多一个）|每个水晶额外消耗 2 高压；原铁/铜/金变成双倍锭、远古残骸变为两个下界合金碎片，使能量球变为橙色；第三方原矿通过标签/显式规则适配|
+|Efficiency T1 / T2 / T3|Subtracts 2 / 4 / 8 ticks per module, with a total reduction cap of 104 ticks|
+|Fortune|Doubles the rolled output per module, up to ×1024 with ten modules|
+|Overload, at most one|Halves the final duration and adds 1 EHV per crystal|
+|Smelting, at most one|Adds 2 HV per crystal; converts raw iron, copper and gold to two ingots, and Ancient Debris to two Netherite Scraps; extra ores use tags or explicit mappings|
 
-7 阶底面有 25 个升级位：13 个 T3 + 10 个时运 + 1 个过载 + 1 个熔炼，可达 38 tick 周期。49 个铁水晶可产 100352 个铁锭，费用 49000 FE、147 高压、49 极高压。
+A 7×7×7 floor can hold thirteen T3 modules, ten Fortune modules, one Overload and one Smelting module. This gives a 38-tick cycle. With 49 iron crystals it produces 100,352 iron ingots per batch, costing 49,000 FE, 147 HV and 49 EHV.
 
-## 输出和拆解
+## Output and stored tasks
 
-输出缓冲有 128 格、四页，每格 1024 个同类同组件物品。左键取正常一组、右键取一个、Shift 将物品按正常堆叠填入背包。管道也只提取正常堆叠。外部接口不能抽走模板水晶。
+The output buffer has 128 slots on four pages. Each slot holds up to 1024 identical items with matching components. Left-click extracts a normal stack, right-click one item, and Shift-click fills player inventory in normal stacks. Pipes also extract normal stacks and cannot remove template crystals.
 
-装有过载接口时，接口绑定的无线过载频道把整机接入网络，产物自动导入网络；不能装入的部分留在缓冲。没有接口时，可通过控制器连接 AE 线缆供电/取闪电，并用管道取出产物。
+An installed Overloaded ME Interface connects the structure through its bound frequency and enables automatic product export. Products rejected by the network stay in the buffer. Controller cabling or wireless binding supplies network access but alone does not enable this interface export; pipes and manual output remain available.
 
-断电、区块卸载或拆掉结构会暂停已启动任务；恢复结构后继续，不重新抽取战利品。旧预付任务仍保留，取消时退费。生存模式拆掉控制器会把库存、缓冲、能量和未完成任务保存在控制器物品里，重新放置后恢复。缩小结构后超出容量的水晶仍可通过左侧回收按钮的视图取回（工作时也可取出，取消本批）。旧版本的玻璃顶需要换成模拟室框架；库存及已付款任务保留。
+Power loss, unloaded structure chunks or an invalid shell pause a started task. Restoring the structure continues with its saved loot roll. Changing a template restarts the batch. Removing the controller in survival saves inventory, FE and unfinished tasks into the controller item; placing it again restores them. If the structure is smaller, use the recovery view to remove crystals beyond its capacity. A missing output item's mod pauses the saved task until that item becomes available.
 
-成型后边框、顶盖和原版接口外观融为一体，四面玻璃无边框。有效容量内有完美模拟水晶时，中央一直显示粉色立体像素能量球，并约照亮周围五格。熔炼时变为橙色，过载时附加电环；只有加工时四角释放电弧、控制器显示动态心电图。离线和输出满时球体保留，空水晶时消失。
+## Automatic construction
 
-## 分层搭建
+Place and orient the controller, select size 3–7 in its left toolbar and click Automatic build. The shell extends behind it. The controller is positioned at floor-front coordinate `floor((size-1)/2)`, counted from the left corner.
 
-F=框架；C=控制器（正面向北）；G=聚能石英玻璃；U=框架或底部模块；.=空气。I 过载接口可替换任意底部非角 F，不能替换 C。
+Construction preserves legal modules, frame/glass aliases and one legal interface. It uses player inventory first, then the controller's active AE network; offline inventory construction and creative construction work. Missing materials, obstacles, unloaded positions or ownership conflicts prevent construction. Cancelled placement refunds materials. Repeating a complete build uses no materials. A formed chamber cannot be resized with this button.
 
-### 3×3×3（9 水晶，1 升级位）
+## Data packs and Java API
 
-底层 y=0
+Override `data/overload_sim/multiblock_simulation/default.json` to configure the machine policy:
+
+```json
+{
+  "policy": {
+    "ticks": 180, "reduction_cap": 104, "fortune_cap": 10,
+    "t1": 2, "t2": 4, "t3": 8,
+    "fe": 1000, "hv": 1, "overload_ehv": 1, "smelting_hv": 2
+  },
+  "smelting": [
+    {"input": "example:raw_metal", "result": "example:metal_ingot", "count": 2}
+  ],
+  "modules": [
+    {"block": "example:fast_floor", "kind": "T3"}
+  ]
+}
+```
+
+Use one policy override. Module kinds are `FRAME`, `T1`, `T2`, `T3`, `FORTUNE`, `OVERLOAD` and `SMELTING`. Frame and glass aliases use block tags `overload_sim:simulation_frames` and `simulation_glass`. Reload with `/reload`.
+
+The chamber shares simulation profiles and output recipes with the single-block machine, but uses the multiblock policy for duration and costs. It ignores the single-block recipe's `production.ticks/fe/lightning/input` fields. Fortune multiplies one rolled result per crystal.
+
+Java providers use `SimulationExtensions.registerOutputV2`; inspect `context.machine()` for `multiblock`. `MultiblockSimulationEvents.BeforeBatchStart` and `BeforeBatchCommit` can cancel a batch; `Completed` reports output after payment. Read buffer quantities with `BulkOutputBuffer.count(slot)`. Do not charge costs or insert Completed output a second time. Full reference: `docs/multiblock-api.md`.
+
+## Layer plans
+
+F=simulation frame, C=controller facing north, G=AE vibrant quartz glass, U=frame or floor module, .=air. One non-corner bottom-edge F may be replaced by an interface.
+
+### 3×3×3 (9 crystals, 1 upgrade positions)
+
+Floor y=0
 
 ```
 FCF
@@ -61,7 +99,7 @@ FUF
 FFF
 ```
 
-中间层 y=1…1
+Middle layers y=1–1
 
 ```
 FGF
@@ -69,7 +107,7 @@ G.G
 FGF
 ```
 
-顶层 y=2
+Roof y=2
 
 ```
 FFF
@@ -77,9 +115,9 @@ FFF
 FFF
 ```
 
-### 4×4×4（16 水晶，4 升级位）
+### 4×4×4 (16 crystals, 4 upgrade positions)
 
-底层 y=0
+Floor y=0
 
 ```
 FCFF
@@ -88,7 +126,7 @@ FUUF
 FFFF
 ```
 
-中间层 y=1…2
+Middle layers y=1–2
 
 ```
 FGGF
@@ -97,7 +135,7 @@ G..G
 FGGF
 ```
 
-顶层 y=3
+Roof y=3
 
 ```
 FFFF
@@ -106,19 +144,19 @@ FFFF
 FFFF
 ```
 
-### 5×5×5（25 水晶，9 升级位）
+### 5×5×5 (25 crystals, 9 upgrade positions)
 
-底层 y=0
+Floor y=0
 
 ```
-FCFFF
+FFCFF
 FUUUF
 FUUUF
 FUUUF
 FFFFF
 ```
 
-中间层 y=1…3
+Middle layers y=1–3
 
 ```
 FGGGF
@@ -128,7 +166,7 @@ G...G
 FGGGF
 ```
 
-顶层 y=4
+Roof y=4
 
 ```
 FFFFF
@@ -138,12 +176,12 @@ FFFFF
 FFFFF
 ```
 
-### 6×6×6（36 水晶，16 升级位）
+### 6×6×6 (36 crystals, 16 upgrade positions)
 
-底层 y=0
+Floor y=0
 
 ```
-FCFFFF
+FFCFFF
 FUUUUF
 FUUUUF
 FUUUUF
@@ -151,7 +189,7 @@ FUUUUF
 FFFFFF
 ```
 
-中间层 y=1…4
+Middle layers y=1–4
 
 ```
 FGGGGF
@@ -162,7 +200,7 @@ G....G
 FGGGGF
 ```
 
-顶层 y=5
+Roof y=5
 
 ```
 FFFFFF
@@ -173,12 +211,12 @@ FFFFFF
 FFFFFF
 ```
 
-### 7×7×7（49 水晶，25 升级位）
+### 7×7×7 (49 crystals, 25 upgrade positions)
 
-底层 y=0
+Floor y=0
 
 ```
-FCFFFFF
+FFFCFFF
 FUUUUUF
 FUUUUUF
 FUUUUUF
@@ -187,7 +225,7 @@ FUUUUUF
 FFFFFFF
 ```
 
-中间层 y=1…5
+Middle layers y=1–5
 
 ```
 FGGGGGF
@@ -199,7 +237,7 @@ G.....G
 FGGGGGF
 ```
 
-顶层 y=6
+Roof y=6
 
 ```
 FFFFFFF
@@ -210,7 +248,3 @@ FFFFFFF
 FFFFFFF
 FFFFFFF
 ```
-
-## Automatic construction
-
-After placing the controller, use the left-toolbar size selector to choose an external size of 3–7, then click Automatically build chamber. The shell grows behind the controller, with the controller near the middle of the bottom front edge. Missing floor/roof/edges use frames; four side panels use AE vibrant quartz glass. Existing legal upgrade modules, tagged frame/glass alternatives and one legal interface are preserved. Backpack materials are used first, with shortages drawn from the controller's connected AE storage. Offline backpack and free creative construction also work. Formed structures are not resized, and repeating a completed build consumes nothing. Obstructions, missing materials, unloaded cells and ownership conflicts are reported; cancelled placements refund their materials.

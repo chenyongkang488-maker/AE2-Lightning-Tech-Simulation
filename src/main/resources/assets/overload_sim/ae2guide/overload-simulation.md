@@ -1,6 +1,6 @@
 ---
 navigation:
-  title: 闪电科技：模拟
+  title: "Lightning Tech: Simulation"
   icon: overload_sim:overload_simulation_chamber
   parent: ae2:items-blocks-machines/items-blocks-machines-index.md
 item_ids:
@@ -10,36 +10,72 @@ item_ids:
   - overload_sim:overload_simulation_chamber
 ---
 
-# 闪电科技：模拟
+# Lightning Tech: Simulation
 
 <ItemImage id="overload_sim:blank_simulation_crystal" scale="3" />
 
-空白模拟电鸣水晶在闪电科技原生闪电模拟室中合成：1个电鸣水晶、16个过载水晶、16个紫水晶碎片，消耗200,000 FE及32个高压闪电。每次产出1个。
+This addon requires AE2, AE2 Lightning Tech, Thunderbolt and GuideME. Applied Flux is optional and provides network FE storage; external FE power can be used without it.
 
-## 雷击绑定
+Produce one Blank Simulation Crystal in Lightning Tech's Lightning Simulation Chamber from one Electro Chime Crystal, 16 Overload Crystals and 16 Amethyst Shards, using 200,000 FE and 32 HV.
 
-把空白水晶放入闪电收集器。以收集器为中心，在同一高度的 5×5 平面填满 24 个同材质的粗矿块；钻石、红石、青金石、煤、绿宝石、石英和下界合金使用对应储存块。收集器成功收集雷击后，这些方块被消耗，水晶记录对应矿物。
+## Binding and cultivation
 
-作物使用 24 格耕地上方已种下的同类植株，生长阶段可以不同。支持神秘农业及其它标准耕地作物、模组耕地和明确支持种植的种植床；绑定只消耗植株，双格植株连同上半部分消耗，不掉落采收物，保留土地。树木使用 24 格泥土类方块上的同类树苗。公共原矿/矿石标签可以自动适配其它模组；含多个候选材料或异质掉落表时停止绑定，作者可写显式规则。
+Place a blank crystal in a Lightning Collector. Fill the 24 positions surrounding the collector in a horizontal 5×5 area at its height with matching raw-material storage blocks. Diamond, redstone, lapis, coal, emerald, quartz and netherite use their corresponding storage blocks. A successfully collected strike consumes the blocks and records the mineral.
 
-通用作物水晶按成熟植株的正常采收生成产物，包括神秘农业精华、种子及正常副产物，可用于两种模拟室。来源土地等级、crux和环境加成不会被复制；特殊植株或方块实体可由整合包作者使用标签、配方与成熟状态 API 适配，已有显式配方优先。
+For crops, use 24 supported soil blocks at the collector's height with the same crop planted one block above them. Growth stages may differ. Binding consumes the plants, including the upper half of two-block plants, preserves the soil and produces no harvest drops. Trees use matching saplings on dirt-type soil. Common tags support additional minerals and crops. Ambiguous materials or differing ore loot tables need an explicit rule.
 
-左手拿空白水晶受到雷击时，有 33% 概率记录半径 5 格内最近的存活生物。只判定真实雷击命中，无需受到伤害，创造模式也可使用；人工雷同样有效。只记录生物类型，不复制装备、背包或个体数据。凋零和末影龙已开放；有刷怪蛋的存活 LivingEntity 也可以记录，玩家排除。
+Hold a blank crystal in the offhand while struck by real lightning to attempt binding the nearest living eligible mob within a five-block spherical radius, with 33% probability. Damage is unnecessary, including in Creative mode. Players are excluded; only the entity type is recorded, without equipment or individual data.
 
-已绑定水晶再接受 10 次有效雷击后成为完美水晶。可以继续放在收集器中培养，也可以拿在左手受雷击。自然雷、指令雷和人工雷都可绑定与培养；整合包作者可通过 allow_artificial=false 禁止人工雷。
+A bound crystal becomes perfect after ten further valid strikes. Cultivate it in the collector or hold it in the offhand during lightning hits. Natural, command and artificial strikes work unless a matching rule sets `allow_artificial` to false. The binding strike does not count toward cultivation.
 
-## 模拟室
+## Single-block simulation chamber
 
-模拟室接入在线 ME 网络并取得频道，使用高压闪电（HV）。FE 来自网络中的应用通量（Applied Flux）FE 存储单元；待机与加工时都会充电，默认每 tick 最多 10000 FE，满 2000000 FE 时停止。FE 单元为空或未安装应用通量时，AE 能源单元不会代替它供给 FE；也可使用外部 FE 供电。将完美水晶放入第一个槽，模板可重复使用。默认一次操作需要 1000 FE、1 HV 和 200 tick；下界合金成本更高。
+Connect the chamber to an online ME network with a channel and HV storage. Put a Perfect Simulation Crystal in the first slot; it is reusable. Default production costs 1000 FE and 1 HV per operation and takes 200 ticks. The netherite profile costs 16,000 FE and produces one Ancient Debris.
 
-闪电坍缩矩阵放第二槽：无矩阵为 1 并行，每个矩阵提供 4 并行，最多 32 个即 128 并行。右上角展开的升级栏有 4 个独立槽，每格放一张 AE2 加速卡，每张将耗时减半。也可以直接手持加速卡右键机器插入；加工中的批次保留原速度，新卡下一批生效。辅助材料槽供自定义配方消耗材料。旧版堆叠卡槽会自动迁移为独立卡槽。
+The FE buffer holds 2,000,000 FE. While online, it draws up to 10,000 FE/tick from Applied Flux FE cells, including while idle. Empty FE cells or absent Applied Flux stop network FE charging. AE energy cells power the ME network; external FE power also works.
 
-能量和辅助材料在批次开始时按实际并行一次扣除。随机战利品每次操作独立抽取，开始后固定并随任务保存。输出堵塞时等待空间；网络离线时暂停。拆除尚未完成的任务会丢失该任务，不能提前取得产物。
+Put Lightning Collapse Matrices in the second slot. With none, the chamber runs one operation at a time; each matrix provides four parallel operations, up to 32 matrices and 128 operations. The upgrade panel accepts four individual AE2 Acceleration Cards. Each halves the recipe duration, rounded up to at least one tick, without changing per-operation cost. Hand-use a card on the chamber or Shift-click it into the panel. Cards inserted during a batch apply to the next batch.
 
-自动弹出可开关，并单独开关六个方向。AE2 输入/输出总线可通过标准物品接口运输。频率按钮使用闪电科技共享的无线过载控制器界面。
+The auxiliary slot supplies materials required by custom recipes. FE, HV and auxiliary materials are paid once when the actual parallel batch starts. Each operation rolls its own loot; results are fixed and saved. A full output pauses delivery, and an offline network pauses work. Breaking the machine discards its unfinished task.
 
-生物表采用无抢夺的中性玩家击杀上下文，幻翼膜等玩家条件掉落可出现。岩浆怪和史莱姆采用各自大小。凋零产下界之星，末影龙独立25%龙蛋、25%龙首并必出龙息，坚守者产幽匿催发体、回响碎片、幽匿块各一个；特殊代码掉落和个体装备需要作者规则。
+Use the automatic-ejection switch and six direction switches to send products to adjacent inventories. Standard item automation extracts outputs only. The frequency button opens the shared overload frequency interface.
 
-## 整合包配置
+## Production rules
 
-数据包可覆盖 simulation_profile、crystal_binding、mob_crystal_binding、crystal_cultivation 和 overload_simulation 配方。支持优先级、标签、概率、能耗、耗时和命名 Java 扩展提供器。新增 simulation_mineral、simulation_mob 规则和 Java V2 扩展；修改后执行 /reload。主手水晶可用 /overload_sim explain 诊断，管理员 /overload_sim audit 导出当前适配报告。相同最高优先级的匹配配方存在冲突时会停止处理。
+Default mob simulation uses normal loot with a neutral player-kill context, no Looting and zero Luck. Slimes use size 1 and magma cubes size 2. The Wither produces one Nether Star. The Ender Dragon has independent 25% chances for a Dragon Egg and Dragon Head and always produces one Dragon's Breath. The Warden produces one Sculk Catalyst, Echo Shard and Sculk.
+
+Automatic crops produce their mature normal harvest, including seeds and side products, in both simulation chambers. Source soil tier, crux and environmental bonuses are not copied. Special code-based mob drops, equipment and plants with block-entity data require explicit output rules or Java providers.
+
+## Data packs and API
+
+Minecraft 1.21.1 uses `data/<namespace>/recipe/<path>.json`. Override existing IDs or assign a unique higher `priority`; conflicting highest-priority matches stop processing. Apply changes with `/reload`.
+
+|Directory or recipe type|Configuration|
+|---|---|
+|`simulation_profile/<id>.json`|Stable profile with `kind`, `name` and `icon`; kind is mineral, crop, tree or mob|
+|`overload_sim:crystal_binding`|Profile, priority, artificial-lightning permission and `world` material/soil selectors|
+|`overload_sim:mob_crystal_binding`|Entity ID, tag or `*`; radius, probability, disabled flag and optional condition|
+|`overload_sim:crystal_cultivation`|`cultivation.required` and `increment`, each 1–1,000,000|
+|`overload_sim:overload_simulation`|Production ticks, FE, HV, auxiliary input and outputs, entity loot or named provider|
+
+For example, replace `data/overload_sim/recipe/production/iron.json`:
+
+```json
+{
+  "type": "overload_sim:overload_simulation",
+  "profile": "overload_sim:iron",
+  "priority": 100,
+  "production": {
+    "ticks": 200, "fe": 1000, "lightning": 1,
+    "outputs": [{"item": "minecraft:raw_iron", "count": 2, "chance": 1}]
+  }
+}
+```
+
+Additional mineral and mob mappings use `simulation_mineral/<id>.json` and `simulation_mob/<id>.json`. Crop and soil aliases use `overload_sim:simulation_crops` and `simulation_farmlands` block tags. Blacklist tags cover minerals, crops and mob types.
+
+Common configuration in `config/overload_sim-common.toml` includes `matrixLimit` (1–32), `accelerationCardLimit` (0–4), `autoEjectIntervalTicks` (1–200) and `networkFeChargePerTick` (0–2,000,000; zero stops new network FE withdrawals).
+
+In Java, register named conditions and output providers through `SimulationExtensions` during common setup. Use `registerOutputV2` for outputs with explicit RNG and machine context, and `registerCropMaturityResolver` for a special crop's mature state. Duplicate IDs are rejected. `CrystalDataAccess.read/bound/perfect` reads or creates crystal data.
+
+Use `/overload_sim explain` with a crystal in the main hand, or `/overload_sim explain_block x y z` for an already loaded block. Administrators can run `/overload_sim audit` to write `overload_sim-audit.json` in the world directory. Detailed field references are in `docs/api.md`, `docs/compatibility-api.md` and `docs/crop-compatibility-api.md`. See [Multiblock Simulation Chamber](multiblock-simulation.md) for its separate production policy.

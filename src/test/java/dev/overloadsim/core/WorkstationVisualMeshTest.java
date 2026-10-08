@@ -5,6 +5,13 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class WorkstationVisualMeshTest {
+    @Test void mergedFloorDoesNotDuplicateTheNativeControllerTop() throws Exception {
+        for (var surface : surfaces("shellSurfaces")) {
+            var points = points(surface);
+            assertFalse(flat(points, "y", -2.5) && contains(points,"x",0) && contains(points,"z",-3),
+                    "The physical controller owns this top; a merged floor cap here causes flickering triangles");
+        }
+    }
     @Test void mergedOpaqueCapsCoverTheWholeFloorAndRoof() throws Exception {
         var shell = surfaces("shellSurfaces");
         for (double height : new double[]{-3.5, 3.5})

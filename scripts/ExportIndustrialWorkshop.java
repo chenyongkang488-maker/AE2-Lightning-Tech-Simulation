@@ -4,6 +4,7 @@ import dev.overloadsim.core.GateMatrixMesh;
 import dev.overloadsim.core.DeflectorShellMesh;
 import dev.overloadsim.core.DeflectorCrystalMesh;
 import dev.overloadsim.core.ReceiverPedestalMesh;
+import dev.overloadsim.core.ReceiverPortMesh;
 import dev.overloadsim.core.ReceiverShellMesh;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -44,8 +45,9 @@ class ExportIndustrialWorkshop {
             for (int axis = 0; axis < 3; axis++) {
                 surfaces.addAll(IndustrialMachineMesh.armouredRing(axis, 3.3));
             }
-            // Leave the true upstream optical-port block visible, just as the renderer does.
+            // The true optical block stays interactive behind the fitted formed collar.
             for (var face : IndustrialMachineMesh.withoutCell(surfaces,0,0,-3)) mesh(face.quad(), face.tile(), false);
+            for (var face : ReceiverPortMesh.surfaces(2,-1)) mesh(face.quad(),face.tile(),false);
         });
         group("02 · 双层机械底座", () -> {
             for (var face : ReceiverPedestalMesh.surfaces()) mesh(face.quad(), face.tile(), false);
@@ -54,6 +56,7 @@ class ExportIndustrialWorkshop {
             var surfaces = new ArrayList<IndustrialMachineMesh.Surface>();
             for (var face : ReceiverShellMesh.glass()) surfaces.add(new IndustrialMachineMesh.Surface(face,4,false));
             for (var face : IndustrialMachineMesh.withoutCell(surfaces,0,0,-3)) mesh(face.quad(),4,true);
+            for (var lens : ReceiverPortMesh.glass(2,-1)) mesh(lens,4,true);
         });
         }
         byte[] atlas = Files.readAllBytes(root.resolve("src/main/resources/assets/overload_sim/textures/block/laser_pixel_atlas.png"));

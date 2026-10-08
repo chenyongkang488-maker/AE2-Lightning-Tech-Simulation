@@ -1,7 +1,9 @@
 {
   "type": "overload_sim:particle_conversion",
-  "ingredient": { "item": "ae2lt:overload_singularity" },
+  "ingredient": {
+    "item": "ae2lt:overload_singularity"
+  },
   "consumable_duration_ticks": 100,
-  "particle_interval_ticks": 2,
-  "energy_per_particle": "1024GFE"
+  "energy_per_particle": "1024GFE",
+  "input_energy_per_batch": "1024GFE"
 }

@@ -1,6 +1,7 @@
 package dev.overloadsim.laser;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
+import dev.overloadsim.ModContent;
 import java.util.*;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.CommandSourceStack;
@@ -94,7 +95,7 @@ public final class LaserDemo {
             if(host.kind()!=LaserKind.RECEIVER)host.energy().load(host.energy().capacity());
             if(host.kind()==LaserKind.ENHANCEMENT)host.setBoost(9_000_000);
             if(host.kind()==LaserKind.BURST)host.setExtremeLightning(6_400);
-            if(host.kind()==LaserKind.RECEIVER)host.fuelInput().setStackInSlot(0,new ItemStack(Items.NETHERITE_BLOCK,64));
+            if(host.kind()==LaserKind.RECEIVER)host.fuelInput().setStackInSlot(0,new ItemStack(ModContent.TRANSCENDENT.get(),64));
             host.sync();host.saveChanges();
         }
         if(workstation!=null&&level.getBlockEntity(workstation) instanceof dev.overloadsim.workstation.HighEnergyWorkstationBlockEntity host){

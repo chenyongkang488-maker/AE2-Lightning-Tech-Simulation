@@ -28,15 +28,16 @@ public final class TranscendentFuelGameTests {
     public static void crystalPaysOneItemForOneHundredEffectiveParticleTicks(GameTestHelper h) {
         var receiver = receiver(h);
         try {
-            receiver.particles().load(101);
+            receiver.particles().load(1250);
             for (int tick=0;tick<100;tick++) ParticleConversion.tick(receiver);
             h.assertTrue(receiver.fuelInput().getStackInSlot(0).getCount()==1 && receiver.fuelRemaining()==0,
                     "one crystal funds exactly 100 effective ticks");
-            h.assertTrue(receiver.particles().stored()==1 && receiver.energy().stored()==100*FE_PER_PARTICLE,
-                    "each effective tick spends one particle and produces exactly 2048GFE");
+            h.assertTrue(receiver.particles().stored()==30 && receiver.energy().stored()==1220*FE_PER_PARTICLE
+                    && receiver.fuelProcessingCredit()==7_200_000_000_000L,
+                    "100 effective ticks at 0.125P per twenty-tick batch convert 1220 whole particles and preserve the fraction");
             ParticleConversion.tick(receiver);
             h.assertTrue(receiver.fuelInput().getStackInSlot(0).isEmpty() && receiver.fuelRemaining()==99
-                    && receiver.particles().stored()==0 && receiver.energy().stored()==101*FE_PER_PARTICLE,
+                    && receiver.particles().stored()==18 && receiver.energy().stored()==1232*FE_PER_PARTICLE,
                     "tick 101 pays for the next crystal window once");
         } finally { receiver.particles().load(0); receiver.setEnabled(false); }
         h.succeed();
@@ -49,10 +50,10 @@ public final class TranscendentFuelGameTests {
             ParticleConversion.tick(receiver);
             h.assertTrue(receiver.fuelInput().getStackInSlot(0).getCount()==2 && receiver.fuelRemaining()==0,
                     "missing particles consume no crystal");
-            receiver.particles().load(3);
+            receiver.particles().load(125);
             receiver.energy().load(receiver.energy().capacity()-FE_PER_PARTICLE+1);
             ParticleConversion.tick(receiver);
-            h.assertTrue(receiver.fuelInput().getStackInSlot(0).getCount()==2 && receiver.particles().stored()==3,
+            h.assertTrue(receiver.fuelInput().getStackInSlot(0).getCount()==2 && receiver.particles().stored()==125,
                     "insufficient FE space consumes neither crystal nor particle");
             receiver.energy().load(0);
             ParticleConversion.tick(receiver);
@@ -60,7 +61,8 @@ public final class TranscendentFuelGameTests {
             receiver.loadMachine(saved,h.getLevel().registryAccess()); receiver.checkStructure();
             ParticleConversion.tick(receiver);
             h.assertTrue(receiver.fuelInput().getStackInSlot(0).getCount()==1 && receiver.fuelRemaining()==98
-                    && receiver.particles().stored()==1 && receiver.energy().stored()==2*FE_PER_PARTICLE,
+                    && receiver.particles().stored()==101 && receiver.energy().stored()==24*FE_PER_PARTICLE
+                    && receiver.fuelProcessingCredit()==4_240_000_000_000L,
                     "reload retains the paid crystal window without charging or resetting it");
         } finally { receiver.particles().load(0); receiver.setEnabled(false); }
         h.succeed();

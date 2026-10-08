@@ -52,8 +52,14 @@ public final class WorkstationVisualMesh {
         var result=new ArrayList<IndustrialMachineMesh.Surface>();
         var floor=new ArrayList<IndustrialMachineMesh.Surface>();
         IndustrialMachineMesh.box(floor,32,-3.5,-3.5,-3.5,3.5,-2.5,3.5);
-        // Only the front-facing floor plate opens for the physical controller. The opaque caps stay whole.
-        for(var surface:floor)if(surface.quad().a().nz()!=-1)result.add(surface);
+        // The controller's native edge braces reach the floor's top plane. Let that
+        // real model own its top instead of drawing a second coplanar cap over it.
+        for(var surface:floor) {
+            if(surface.quad().a().nz()==-1)continue;
+            if(surface.quad().a().ny()==1)
+                result.addAll(IndustrialMachineMesh.withoutCell(List.of(surface),0,-3,-3));
+            else result.add(surface);
+        }
         result.add(new IndustrialMachineMesh.Surface(front(-3.5,-3.5,-.5,-2.5,-3.5),32,false));
         result.add(new IndustrialMachineMesh.Surface(front(.5,-3.5,3.5,-2.5,-3.5),32,false));
         IndustrialMachineMesh.box(result,32,-3.5,2.5,-3.5,3.5,3.5,3.5);

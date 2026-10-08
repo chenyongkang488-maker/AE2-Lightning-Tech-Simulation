@@ -1,7 +1,9 @@
 {
   "type": "overload_sim:particle_conversion",
-  "ingredient": { "item": "overload_sim:transcendent_crystal" },
+  "ingredient": {
+    "item": "overload_sim:transcendent_crystal"
+  },
   "consumable_duration_ticks": 100,
-  "particle_interval_ticks": 1,
-  "energy_per_particle": "2048GFE"
+  "energy_per_particle": "2048GFE",
+  "input_energy_per_batch": "0.125PFE"
 }

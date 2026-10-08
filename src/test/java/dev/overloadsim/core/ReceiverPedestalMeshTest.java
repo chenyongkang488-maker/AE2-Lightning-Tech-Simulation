@@ -10,6 +10,14 @@ import static org.junit.jupiter.api.Assertions.*;
 class ReceiverPedestalMeshTest {
     private static final double EPSILON = 1.0e-9;
 
+    @Test void ceramicStripesKeepTheSameHeightAcrossEverySplitAndCorner() throws Exception {
+        var bands = mesh().stream().filter(s -> s.tile() == 50 && Math.abs(s.quad().a().ny()) < EPSILON).toList();
+        assertTrue(bands.size() > 8);
+        for (var band : bands) for (var vertex : vertices(band.quad()))
+            assertEquals((-3.625 - vertex.y()) / 1.75, vertex.v(), EPSILON,
+                    "Ceramic texture height must follow the complete side, including the split front bay");
+    }
+
     @Test void ceramicBaseHasFiniteOutwardFacesInsideTheTwoLayerFootprint() throws Exception {
         var mesh = mesh();
         assertFalse(mesh.isEmpty());

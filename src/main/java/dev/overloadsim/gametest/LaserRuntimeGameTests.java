@@ -31,7 +31,9 @@ public final class LaserRuntimeGameTests {
     public static void conversionRevalidatesResourcesAfterExtensionEvent(GameTestHelper h){
         var receiver=LaserMachineGameTests.build(h,h.absolutePos(new BlockPos(8,2,8)),LaserKind.RECEIVER,Direction.NORTH);
         receiver.checkStructure();receiver.particles().load(1);receiver.fuelInput().insertItem(0,new ItemStack(Items.NETHER_STAR,2),false);
-        for(int i=0;i<99;i++)ParticleConversion.tick(receiver);
+        var state=receiver.saveMachine(h.getLevel().registryAccess());state.putInt("FuelRemaining",1);state.putInt("ParticleRemaining",1);
+        state.putString("ActiveFuel","overload_sim:nether_star");state.putLong("FuelProcessingCredit",10_239_000_000_000L);
+        receiver.loadMachine(state,h.getLevel().registryAccess());receiver.checkStructure();
         java.util.function.Consumer<dev.overloadsim.api.LaserEvents.BeforeParticleConversion> listener=e->{if(e.position.equals(receiver.getBlockPos()))receiver.particles().consume(1);};
         net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(listener);
         try{ParticleConversion.tick(receiver);h.assertTrue(receiver.energy().stored()==0&&receiver.fuelRemaining()==1,"event-drained particle cannot generate free FE or advance the paid clock");}finally{net.neoforged.neoforge.common.NeoForge.EVENT_BUS.unregister(listener);}
@@ -80,10 +82,13 @@ public final class LaserRuntimeGameTests {
         var receiver=LaserMachineGameTests.build(h,h.absolutePos(new BlockPos(8,2,8)),LaserKind.RECEIVER,Direction.NORTH);
         receiver.checkStructure();receiver.particles().load(1);
         receiver.fuelInput().insertItem(0,new ItemStack(Items.NETHER_STAR,2),false);
-        for(int i=0;i<99;i++)ParticleConversion.tick(receiver);
-        h.assertTrue(receiver.fuelInput().getStackInSlot(0).getCount()==1&&receiver.particles().stored()==1&&receiver.energy().stored()==0,"paid fuel window runs before exact boundary");
-        ParticleConversion.tick(receiver);
-        h.assertTrue(receiver.particles().stored()==0&&receiver.energy().stored()==512_000_000_000L,"tick 100 converts exactly one particle");
+        for(int i=0;i<100;i++)ParticleConversion.tick(receiver);
+        h.assertTrue(receiver.fuelInput().getStackInSlot(0).getCount()==1&&receiver.particles().stored()==1&&receiver.energy().stored()==0
+            &&receiver.fuelRemaining()==0&&receiver.fuelProcessingCredit()==100_000_000_000L,"one paid window retains fractional throughput without rounding into free FE");
+        var state=receiver.saveMachine(h.getLevel().registryAccess());state.putInt("FuelRemaining",1);state.putInt("ParticleRemaining",1);
+        state.putLong("FuelProcessingCredit",10_239_000_000_000L);
+        receiver.loadMachine(state,h.getLevel().registryAccess());receiver.checkStructure();ParticleConversion.tick(receiver);
+        h.assertTrue(receiver.particles().stored()==0&&receiver.energy().stored()==512_000_000_000L&&receiver.fuelProcessingCredit()==0,"exact 1G batch-rate credit converts one whole particle once");
         for(int i=0;i<120;i++)ParticleConversion.tick(receiver);
         h.assertTrue(receiver.fuelInput().getStackInSlot(0).getCount()==1&&receiver.energy().stored()==512_000_000_000L,"no particles pauses and consumes no additional item");
         h.succeed();

@@ -1,4 +1,4 @@
-# 激光与粒子原型 API · 0.2.0-alpha.11
+# 激光与粒子 API · 0.2.0-alpha.15
 
 目标为 Minecraft 1.21.1 / NeoForge 21.1.252 及以上已验证范围。已有模拟室、水晶、线圈及配方 ID 保持原样。激光/粒子设备仍在开发验收阶段；强能工作站控制器已有制造配方。
 
@@ -72,15 +72,27 @@ AE 连线或结构上游半面的一处闪电科技过载接口仍可连接网�
   "ingredient": {"item": "minecraft:nether_star"},
   "consumable_count": 1,
   "consumable_duration_ticks": 100,
-  "particle_interval_ticks": 100,
-  "particles_per_operation": 1,
+  "input_energy_per_batch": "1GFE",
   "energy_per_particle": "512GFE"
 }
 ```
 
-`ingredient` 指定一个 `item` 或 `tag`。能量接受精确整数或字符串 `kFE`、`GFE`、`PFE`；必须能转换为完整 long FE。持续时间 1–1,000,000 tick，粒子间隔不大于持续时间，且单次固定用一个粒子/每个窗口一个耗材。文件按稳定 ID 排序匹配，修改原配方建议直接覆盖同一 ID。
+`ingredient` 指定一个 `item` 或 `tag`。能量接受精确整数或字符串 `kFE`、`GFE`、`PFE`；必须能转换为完整 long FE。持续时间为 1–1,000,000 个有效 tick，每个窗口支付一个耗材。`input_energy_per_batch` 必须大于零且不超过 1PFE，表示每 20 tick 的平均处理能力；`energy_per_particle` 是每个真实粒子的 FE 产出。每个粒子需要 512GFE 的激光能量。文件按稳定 ID 排序匹配，修改原配方建议直接覆盖同一 ID。
 
-第一有效 tick 即支付耗材，已投入耗材不可从界面、Shift 或自动化取出。没有粒子或 FE 缓存不足时暂停两个时钟。已支付窗口保存配方 ID；配方被移除或改得与剩余时钟不兼容时暂停，不免费刷新窗口。可选模组不存在时跳过其材料规则，不影响其它配方；`ParticleFuelData.diagnostics()` 提供诊断。
+|耗材|每批可处理强度|每粒子产出|效率|
+|---|---:|---:|---:|
+|下界之星|1GFE|512GFE|100%|
+|下界合金块|16GFE|512GFE|100%|
+|奇点|256GFE|256GFE|50%|
+|过载奇点|1024GFE|1024GFE|200%|
+|钚球、钋球、超限水晶|0.125PFE|2048GFE|400%|
+|反物质球|1PFE|4096GFE|800%|
+
+仅完整粒子结算。处理时钟每个有效 tick 累加批强度，达到 `512GFE × 20` 后获得一个粒子的处理额度；不足一个粒子的余量保留并跨耗材窗口累计。下界之星需 10240 个有效 tick 处理一个已有粒子，反物质球平均每 tick 处理 97.65625 粒子。每次产出按实际整数粒子数结算，不逐 tick 四舍五入。实际库存或输出空间限制掉的完整额度作废，不储存额外突发额度。
+
+旧数据可继续使用 `particle_interval_ticks`（1 至持续时间、每次一个粒子），但不能与 `input_energy_per_batch` 同时指定。原 `ParticleClock.Fuel(duration, interval, yield)` 和 `ParticleFuelData.Recipe(id, ingredient, duration, interval, yield)` 构造器保持可用；新增带批强度的重载支持平均吞吐。
+
+第一有效 tick 即支付耗材，已投入耗材不可从界面、Shift 或自动化取出。没有粒子或 FE 缓存放不下一个粒子的产出时暂停寿命和处理额度。已支付窗口保存配方 ID 与 `FuelProcessingCredit` 精确余量；旧存档缺少余量标签时从零开始，原已支付寿命不重置。旧窗口迁移为批强度规则时不沿用旧粒子间隔。配方被移除或改得与剩余时钟不兼容时暂停，不免费刷新窗口。可选模组不存在时跳过其材料规则，不影响其它配方；`ParticleFuelData.diagnostics()` 提供诊断。
 
 ## Java 扩展与事件
 
@@ -91,7 +103,7 @@ AE 连线或结构上游半面的一处闪电科技过载接口仍可连接网�
 - `registerFuelProvider(providerId, ParticleConversionProvider)`：实现 `match(ItemStack)` 和 `resolve(recipeId)`，以稳定 ID 支持已支付窗口重载；优先采用 JSON 规则。
 - `registerEnergySink(sinkId, EnergySink)`：精确 long 输出，先于内置 AE 桥；返回 `[0, amount]` 中实际接收的 FE，模拟调用不能修改任何库存。每次最多访问 32 个按 ID 排序的后端。
 
-`LaserEvents` 中 `BeforeModifier`、`BeforeCoreEmission`、`BeforeParticleConversion`、`BeforeExplosion` 均可取消。修改数值必须经 setter，受上限校验；核心/转换事件不能增加请求粒子或产能。结算会重新检查事件后的宿主与库存。光路包含已访问节点和有界预算，闭环不能反复增幅或复制本批能量。
+`LaserEvents` 中 `BeforeModifier`、`BeforeCoreEmission`、`BeforeParticleConversion`、`BeforeExplosion` 均可取消。修改数值必须经 setter，受上限校验；核心/转换事件不能增加请求粒子或产能。转换事件减少粒子数量时，FE 上限会同比减少；批量结算期间禁止重入转换。结算会重新检查事件后的宿主与库存。光路包含已访问节点和有界预算，闭环不能反复增幅或复制本批能量。
 
 客户端仅按有界快照绘制光束、核心与少量演出粒子；不会根据渲染帧扣费或为每个库存粒子建立实体。新增 Blockbench 占位工程在 `art/blockbench/laser-prototype.bbmodel`；沿用已有美术许可范围，代码仍按项目 MIT 许可。
 

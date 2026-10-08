@@ -12,11 +12,15 @@ public final class ParticleFuelRules {
         if (integer(json, "consumable_count", 1) != 1 || integer(json, "particles_per_operation", 1) != 1)
             throw new IllegalArgumentException("conversion uses one item per window and one particle per operation");
         int duration = integer(json, "consumable_duration_ticks", 100);
-        int interval = integer(json, "particle_interval_ticks", 0);
+        boolean throughput = json.has("input_energy_per_batch");
+        if (throughput && json.has("particle_interval_ticks")) throw new IllegalArgumentException("choose input_energy_per_batch or particle_interval_ticks");
+        int interval = integer(json, "particle_interval_ticks", throughput ? 1 : 0);
+        long rate = throughput ? LaserMath.parseEnergy(json.get("input_energy_per_batch").getAsString()) : 0;
+        if (throughput && rate == 0) throw new IllegalArgumentException("input_energy_per_batch must be positive");
         if (!json.has("energy_per_particle") || !json.get("energy_per_particle").isJsonPrimitive())
             throw new IllegalArgumentException("missing energy_per_particle");
         long energy = LaserMath.parseEnergy(json.get("energy_per_particle").getAsString());
-        return new ParticleClock.Fuel(duration, interval, energy);
+        return new ParticleClock.Fuel(duration, interval, energy, rate);
     }
 
     private static int integer(JsonObject json, String key, int fallback) {

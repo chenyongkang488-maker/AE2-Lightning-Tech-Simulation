@@ -35,6 +35,7 @@ import net.neoforged.neoforge.items.*;
 public final class HighEnergyWorkstationBlockEntity extends AENetworkedBlockEntity implements IActionHost,FrequencyBindingHost {
     public static final long LASER_THRESHOLD=1_000_000_000L;
     public static final int TANK_CAPACITY=1_024_000_000,MAX_PARALLEL=1024,RECEIPT_LEASE=22;
+    public static final int AUTOMATIC_OUTPUT_LIMIT=Integer.MAX_VALUE;
     private UUID identity=UUID.randomUUID();
     private final FrequencyBindingAccess frequency=FrequencyApi.createBinding(this);
     private final WorkstationBuffer inputs=new WorkstationBuffer(this::changed),outputs=new WorkstationBuffer(this::changed);
@@ -130,7 +131,7 @@ public final class HighEnergyWorkstationBlockEntity extends AENetworkedBlockEnti
     }
     private static AutomaticConstruction.Result failure(String reason){return new AutomaticConstruction.Result(false,0,reason,List.of());}
     public void tick(){
-        if(level==null||level.isClientSide||isRemoved())return;frequency.serverTick();
+        if(level==null||level.isClientSide||isRemoved()||exporting)return;frequency.serverTick();
         if(dirty||level.getGameTime()%20==0)checkStructure();
         long currentPower=currentPower();if(power!=currentPower){power=currentPower;markForClientUpdate();}
         if(!formed()||currentPower<=LASER_THRESHOLD){if(progress!=0||pending!=null){progress=0;pending=null;markForClientUpdate();}exportOutputs();return;}
@@ -186,13 +187,14 @@ public final class HighEnergyWorkstationBlockEntity extends AENetworkedBlockEnti
         @Override public FluidStack drain(int amount,FluidAction action){return available()?tank().drain(amount,action):FluidStack.EMPTY;}
     };}
     private void exportOutputs(){
-        if(exporting||!formed())return;var exportIdentity=identity;int budget=256,fluidBudget=16_000;
+        if(exporting||!formed())return;var exportIdentity=identity;int budget=AUTOMATIC_OUTPUT_LIMIT,fluidBudget=AUTOMATIC_OUTPUT_LIMIT;
         if(networkExport&&getMainNode().isActive()&&getMainNode().getGrid()!=null){var storage=getMainNode().getGrid().getStorageService().getInventory();var source=IActionSource.ofMachine(this);
             if(!exportAlive(exportIdentity))return;
             for(int slot=0;slot<9&&budget>0;slot++){
-                var stack=outputs.extract(slot,budget,false);if(stack.isEmpty())continue;
+                int amount=Math.min(budget,outputs.count(slot));if(amount==0)continue;
+                var prototype=outputs.prototype(slot);outputs.debit(slot,amount);
                 long accepted;exporting=true;
-                try{accepted=Math.clamp(storage.insert(AEItemKey.of(stack),stack.getCount(),Actionable.MODULATE,source),0L,stack.getCount());restoreOutput(exportIdentity,slot,stack,stack.getCount()-accepted);}
+                try{accepted=Math.clamp(storage.insert(AEItemKey.of(prototype),amount,Actionable.MODULATE,source),0L,amount);restoreOutput(exportIdentity,slot,prototype,amount-accepted);}
                 finally{finishOutputTransfer();}
                 if(!exportAlive(exportIdentity))return;budget-=(int)accepted;
             }
@@ -209,9 +211,10 @@ public final class HighEnergyWorkstationBlockEntity extends AENetworkedBlockEnti
             var target=level.getCapability(Capabilities.ItemHandler.BLOCK,worldPosition.relative(side),side.getOpposite());
             if(!exportAlive(exportIdentity))return;
             if(target!=null)for(int slot=0;slot<9&&budget>0;slot++){
-                var stack=outputs.extract(slot,budget,false);if(stack.isEmpty())continue;
+                int amount=Math.min(budget,outputs.count(slot));if(amount==0)continue;
+                var prototype=outputs.prototype(slot);outputs.debit(slot,amount);
                 int accepted;exporting=true;
-                try{var left=ItemHandlerHelper.insertItemStacked(target,stack,false);accepted=stack.getCount()-left.getCount();restoreOutput(exportIdentity,slot,stack,left.getCount());}
+                try{accepted=insertOutputStacked(exportIdentity,target,prototype,amount);restoreOutput(exportIdentity,slot,prototype,amount-accepted);}
                 finally{finishOutputTransfer();}
                 if(!exportAlive(exportIdentity))return;budget-=accepted;
             }
@@ -225,6 +228,23 @@ public final class HighEnergyWorkstationBlockEntity extends AENetworkedBlockEnti
                 }}
             }
         }
+    }
+    private int insertOutputStacked(UUID expected,IItemHandler target,ItemStack prototype,int amount){
+        int remaining=amount,slots=target.getSlots();
+        // Native handlers decide how much fits, including bulk storage. Vanilla
+        // handlers split this transient offer into their legal per-slot stacks.
+        for(int pass=0;pass<2;pass++)for(int slot=0;slot<slots&&remaining>0;slot++){
+            if(!exportAlive(expected))return amount-remaining;
+            var current=target.getStackInSlot(slot);
+            if(!exportAlive(expected))return amount-remaining;
+            if(pass==0?!ItemStack.isSameItemSameComponents(current,prototype):!current.isEmpty())continue;
+            var left=target.insertItem(slot,prototype.copyWithCount(remaining),false);
+            remaining=Math.clamp(left.getCount(),0,remaining);
+            // An insert callback can remove the controller. Stop before offering
+            // another slot so the reserved remainder only enters its packed drop.
+            if(!exportAlive(expected))return amount-remaining;
+        }
+        return amount-remaining;
     }
     private boolean exportAlive(UUID expected){return level!=null&&!isRemoved()&&identity.equals(expected)&&level.hasChunkAt(worldPosition)&&level.getBlockEntity(worldPosition)==this&&formed();}
     private void restoreOutput(UUID expected,int slot,ItemStack prototype,long amount){if(amount<=0)return;if(!identity.equals(expected)||!deferredRemoval&&(isRemoved()||level.getBlockEntity(worldPosition)!=this)){Block.popResource(level,worldPosition,prototype.copyWithCount((int)amount));return;}long restored=outputs.insert(slot,prototype,amount,false);if(restored<amount)restored+=outputs.insert(prototype,amount-restored,false);if(restored<amount)Block.popResource(level,worldPosition,prototype.copyWithCount((int)(amount-restored)));}
