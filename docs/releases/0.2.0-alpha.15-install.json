@@ -1,0 +1,66 @@
+{
+  "version": "0.2.0-alpha.15",
+  "project": "Lightning Tech: Simulation",
+  "installed_at": "2026-10-08T13:22:42.040655+08:00",
+  "implementation_commit": "1cf38192ed2e695360a68dca0e53eebea457ee9c",
+  "installed_path": "D:\\mc\\.minecraft\\versions\\OverloadSim-Test-1.21.1\\mods\\lightning-tech-simulation-0.2.0-alpha.15.jar",
+  "jar_bytes": 1515434,
+  "jar_sha256": "20033795c5f8c6cfe701be8af0b2939c2a72adac1a272f7571d55720359f8729",
+  "sources_bytes": 747856,
+  "sources_sha256": "d69e5a85b17ea40c83a76cca90118596245995bd8152b931108b29635c616516",
+  "backup_path": "D:\\mc\\.minecraft\\versions\\OverloadSim-Test-1.21.1\\addon-backups\\20261008-132241\\lightning-tech-simulation-0.2.0-alpha.14.jar",
+  "backup_sha256": "e8ce67cabf552a729be2d215d159562bd97ea306b8068dd358102e5328ea865d",
+  "other_mods_unchanged": 13,
+  "configuration_files_unchanged": 51,
+  "launcher_root_files_unchanged": 5,
+  "unit_tests": 114,
+  "required_game_tests": 424,
+  "new_game_tests": 15,
+  "tested_runtimes": [
+    {
+      "minecraft": "1.21.1",
+      "neoforge": "21.1.255",
+      "ae2": "19.2.18",
+      "ae2lt": "2.1.1",
+      "thunderbolt": "2.0.2",
+      "applied_flux": "2.1.6",
+      "glodium": "2.2",
+      "mekanism": "10.7.19.85",
+      "mystical_agriculture": "8.0.28",
+      "cucumber": "8.0.16"
+    },
+    {
+      "minecraft": "1.21.1",
+      "neoforge": "21.1.252",
+      "ae2": "19.2.17",
+      "ae2lt": "2.1.0",
+      "thunderbolt": "2.0.0",
+      "applied_flux": "2.1.6",
+      "glodium": "2.2",
+      "mekanism": "10.7.19.85",
+      "mystical_agriculture": "8.0.28",
+      "cucumber": "8.0.16"
+    },
+    {
+      "minecraft": "1.21.1",
+      "neoforge": "21.1.255",
+      "ae2": "19.2.18",
+      "ae2lt": "2.1.1",
+      "thunderbolt": "2.0.2",
+      "optional_mods": []
+    }
+  ],
+  "windowed_client_verified": true,
+  "windowed_dimensions": "854x480",
+  "screenshots": [
+    "art/previews/particle-constrainer-alpha15-port.png",
+    "art/previews/laser-matrices-alpha15-lighting.png",
+    "art/previews/workstation-alpha15-controller-cap.png",
+    "art/previews/particle-fuels-alpha15-guide.png",
+    "art/previews/laser-matrices-alpha15-ground.png"
+  ],
+  "primary_worktree_artifact_hashes_match": false,
+  "primary_worktree_compiled_and_binary_entries_match": true,
+  "primary_worktree_only_resource_line_endings_differ": true,
+  "remote_published": false
+}
