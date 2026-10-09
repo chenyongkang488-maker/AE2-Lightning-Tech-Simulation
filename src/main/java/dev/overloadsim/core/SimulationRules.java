@@ -12,12 +12,12 @@ public final class SimulationRules {
         return Math.max(1, (int)(((long)ticks + (1L << cards) - 1) / (1L << cards)));
     }
     public static long batchEnergy(long perOperation, int parallel) {
-        if (perOperation < 0 || parallel < 1 || parallel > 128) throw new IllegalArgumentException("invalid cost/parallel");
+        if (perOperation < 0 || parallel < 1 || parallel > 256) throw new IllegalArgumentException("invalid cost/parallel");
         return Math.multiplyExact(perOperation, parallel);
     }
     /** Ceil a nonnegative percentage without overflowing intermediate multiplication. */
     public static long scalePercent(long amount,int percent){
-        if(amount<0||percent<0||percent>10000)throw new IllegalArgumentException("invalid amount/percentage");
+        if(amount<0||percent<0||percent>20000)throw new IllegalArgumentException("invalid amount/percentage");
         return Math.addExact(Math.multiplyExact(amount/100,percent),((amount%100)*percent+99)/100);
     }
     public static boolean withinRadius(double distanceSquared, double radius) {

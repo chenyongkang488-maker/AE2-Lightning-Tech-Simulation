@@ -111,12 +111,17 @@ public final class LaserStructureIndex {
     }
 
     public static void register(LaserMachineBlockEntity host) {
-        if (host.getLevel() instanceof ServerLevel level) CONTROLLERS.computeIfAbsent(level, ignored -> new HashMap<>()).put(host.getBlockPos().immutable(), new WeakReference<>(host));
+        if (host.getLevel() instanceof ServerLevel level) {
+            var controllers=CONTROLLERS.computeIfAbsent(level, ignored -> new HashMap<>());
+            var previous=controllers.get(host.getBlockPos());
+            if(previous==null||previous.get()!=host){controllers.put(host.getBlockPos().immutable(),new WeakReference<>(host));OpticalChanges.invalidate(level);}
+        }
     }
 
     public static void unregister(LaserMachineBlockEntity host) {
         release(host);
         if (!(host.getLevel() instanceof ServerLevel level)) return;
+        OpticalChanges.invalidate(level);
         var controllers = CONTROLLERS.get(level);
         if (controllers != null) {
             var reference = controllers.get(host.getBlockPos());
@@ -155,5 +160,8 @@ public final class LaserStructureIndex {
         NeoForge.EVENT_BUS.addListener((BlockEvent.EntityPlaceEvent event) -> changed(event.getLevel(), event.getPos(), false));
         // BreakEvent precedes mutation and may still be cancelled by another mod. Actual removal and next-tick validation settle failures.
         NeoForge.EVENT_BUS.addListener((BlockEvent.BreakEvent event) -> changed(event.getLevel(), event.getPos(), false));
+        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.level.ChunkEvent.Load event) -> {if(event.getLevel() instanceof Level level)OpticalChanges.chunksChanged(level);});
+        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.level.ChunkEvent.Unload event) -> {if(event.getLevel() instanceof Level level)OpticalChanges.chunksChanged(level);});
+        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.server.ServerStoppedEvent event) -> OpticalChanges.clearAll());
     }
 }

@@ -274,7 +274,7 @@ public abstract class TeslaCoilRecipeMixin {
         overloadSim$totalFe = overloadSim$transcendentBatch && data.contains(overloadSim$FE_TAG)
                 ? Math.clamp(data.getLong(overloadSim$FE_TAG),5L,16_000_000L) : overloadSim$TOTAL_FE;
         overloadSim$outputEhv = overloadSim$transcendentBatch && data.contains(overloadSim$TARGET_TAG)
-                ? Math.clamp(data.getLong(overloadSim$TARGET_TAG),1L,1_000_000L) : overloadSim$OUTPUT_EHV;
+                ? Math.clamp(data.getLong(overloadSim$TARGET_TAG),1L,2_000_000L) : overloadSim$OUTPUT_EHV;
         overloadSim$deliveredOutput = overloadSim$transcendentBatch
                 ? Math.clamp(data.getLong(overloadSim$OUTPUT_TAG), 0L, overloadSim$outputEhv) : 0L;
         overloadSim$reservedCrystal = overloadSim$transcendentBatch && overloadSim$deliveredOutput == 0L

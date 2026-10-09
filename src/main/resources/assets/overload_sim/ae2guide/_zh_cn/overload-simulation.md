@@ -74,7 +74,7 @@ Minecraft 1.21.1 配方路径为 `data/<namespace>/recipe/<path>.json`。建议�
 
 额外矿物和生物映射使用 `simulation_mineral/<id>.json` 与 `simulation_mob/<id>.json`。作物和土地别名使用 `overload_sim:simulation_crops`、`simulation_farmlands` 方块标签；矿物、作物与实体类型各有黑名单标签。
 
-`config/overload_sim-common.toml` 提供 `matrixLimit`（1～32）、`accelerationCardLimit`（0～4）、`autoEjectIntervalTicks`（1～200）和 `networkFeChargePerTick`（0～2,000,000；零表示停止新网络 FE 抽取）。
+`config/overload_sim-common.toml` 提供 `matrixLimit`（1～32）、`accelerationCardLimit`（0～4）、`autoEjectIntervalTicks`（1～400）和 `networkFeChargePerTick`（0～4,000,000；零表示停止新网络 FE 抽取）。
 
 Java 在 common setup 通过 `SimulationExtensions` 注册命名条件和产物提供器。`registerOutputV2` 提供明确 RNG 与机器上下文，`registerCropMaturityResolver` 提供特殊作物的成熟状态。重复 ID 拒绝注册。`CrystalDataAccess.read/bound/perfect` 用于读取或创建水晶数据。
 

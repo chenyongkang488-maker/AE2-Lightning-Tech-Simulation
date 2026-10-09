@@ -4,7 +4,7 @@
 
 作者：**qiqi**。为 **Minecraft 1.21.1 / NeoForge** 制作的 AE2 Lightning Tech 附属模组，用雷击培养可重复使用的模拟水晶，通过 ME 网络生产矿物、作物、木材和生物战利品。
 
-当前开发版本：**0.2.0-alpha.17**。包含激光、粒子约束器、自动搭建和强能工作站，并兼容新版非 Reborn 闪电科技与 AE2。网络 FE 供电使用可选 Applied Flux 的 FE 存储单元。通过 **主菜单 → 模组 → 闪电科技：模拟 → 配置** 调整机器数值、容量上限和爆炸开关，操作说明见 [机器配置](docs/MACHINE_CONFIGURATION.md)。
+当前开发版本：**0.2.0-alpha.18**。包含激光、粒子约束器、自动搭建和强能工作站，并兼容新版非 Reborn 闪电科技与 AE2。网络 FE 供电使用可选 Applied Flux 的 FE 存储单元。通过 **主菜单 → 模组 → 闪电科技：模拟 → 配置** 调整机器数值、容量上限和爆炸开关，操作说明见 [机器配置](docs/MACHINE_CONFIGURATION.md)。
 
 ![成型高能激光发射器](art/previews/laser-emitter-reactor.png)
 

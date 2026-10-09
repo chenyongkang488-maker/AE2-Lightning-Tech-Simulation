@@ -11,6 +11,20 @@ import net.neoforged.neoforge.event.entity.player.*;
 @EventBusSubscriber(modid=OverloadSimulation.ID)
 public final class CoilEvents {
     @SubscribeEvent(priority=EventPriority.LOWEST)
+    public static void recoveredBlocks(net.neoforged.neoforge.event.level.BlockDropsEvent event){
+        if(event.isCanceled()||!(event.getBreaker() instanceof ServerPlayer player)||player.isCreative()
+                ||!event.getLevel().getGameRules().getBoolean(net.minecraft.world.level.GameRules.RULE_DOBLOCKDROPS)
+                ||!CoilModules.miningReady(event.getTool())||!CoilModules.has(event.getTool(),CoilModuleItem.Type.ULTIMATE))return;
+        var state=event.getState();
+        if(!state.is(net.minecraft.world.level.block.Blocks.BEDROCK)
+                &&!net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(state.getBlock()).equals(net.minecraft.resources.ResourceLocation.parse("ae2lt:firmament_conversion_core")))return;
+        var item=state.getBlock().asItem();
+        if(item==net.minecraft.world.item.Items.AIR||event.getDrops().stream().anyMatch(drop->drop.getItem().is(item)))return;
+        var pos=event.getPos().getCenter();
+        var drop=new net.minecraft.world.entity.item.ItemEntity(event.getLevel(),pos.x,pos.y,pos.z,new net.minecraft.world.item.ItemStack(item));
+        drop.setDefaultPickUpDelay();event.getDrops().add(drop);
+    }
+    @SubscribeEvent(priority=EventPriority.LOWEST)
     public static void breaking(BlockEvent.BreakEvent event){
         var player=event.getPlayer();var stack=player.getMainHandItem();
         if(!event.isCanceled()&&CoilModules.isCoil(stack)&&!CoilMining.ready(stack))event.setCanceled(true);

@@ -29,4 +29,12 @@ class SimulationRulesTest {
         assertEquals(128_000, SimulationRules.batchEnergy(1000,128));
         assertThrows(ArithmeticException.class, () -> SimulationRules.batchEnergy(Long.MAX_VALUE,2));
     }
+    @Test void doubledParallelAndPercentBoundariesStayExact() {
+        assertEquals(256_000, SimulationRules.batchEnergy(1000,256));
+        assertEquals(200_000_000L, SimulationRules.scalePercent(1_000_000,20_000));
+        assertEquals(200, SimulationRules.scalePercent(1,19_999));
+        assertThrows(IllegalArgumentException.class, () -> SimulationRules.batchEnergy(1000,257));
+        assertThrows(IllegalArgumentException.class, () -> SimulationRules.scalePercent(1,20_001));
+        assertThrows(ArithmeticException.class, () -> SimulationRules.scalePercent(Long.MAX_VALUE,20_000));
+    }
 }

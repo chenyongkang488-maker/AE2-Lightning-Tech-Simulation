@@ -86,7 +86,7 @@ profile `overload_sim:any` 是默认兜底。首次绑定的雷击不算培养�
 
 ticks/fe/lightning 为单次操作成本，lightning 指 HV（高压闪电）单位，内置配方均为 1。能量不足时降低实际并行；每个并行单独抽取 outputs 中各项概率。批次启动一次扣费，模板不消耗，input 按实际并行消耗。input 中 chance 不参与消耗逻辑，建议省略。
 
-默认无矩阵 1 并行，N 个矩阵为 4N 并行，上限 32 个/128 并行。加速卡范围 0..4，耗时为 `ceil(ticks / 2^cards)`，最低 1 tick，单次成本不变。COMMON 配置可降低矩阵和加速卡数量上限。
+默认无矩阵 1 并行，N 个矩阵为 4N 并行，上限 32 个/128 并行。加速卡范围 0..4，耗时为 `ceil(ticks / 2^cards)`，最低 1 tick，单次成本不变。COMMON 配置可降低矩阵和加速卡数量上限；机器配置可调整每矩阵提供并行，最大并行可提高到 256，默认仍为 128。
 
 fe/lightning 0..1000000000，ticks 1..1000000，outputs 最多 64 项，每项 count 1..4096，chance 0..1。自定义 Java 输出提供器同样限制单次最多 64 项、每项最多 4096 件。实际产物按物品堆叠上限拆分后保存，单次总量最多 4096 件、最多 256 个物品栈，超过限制会拒绝启动并返还已预留的 HV。
 
@@ -124,7 +124,7 @@ NeoForge.EVENT_BUS 的事件：
 
 ## 自动化接口与指南
 
-在线且取得频道时，每个服务器 tick 从 ME 库存中的 Applied Flux FE 存储单元取出整数 FE，补充本地缓冲；待机、加工和输出堵塞时均可充电。单方块、多方块、线圈和激光仪器共用这条供能规则。未安装 Applied Flux 或 FE 单元为空时不抽取 FE；AE 能源单元只承担正常网络运行开销，不换算为仪器 FE。COMMON 配置 `networkFeChargePerTick` 默认 10000，范围 0..2000000，0 关闭单方块模拟室的新网络 FE 抽取。缓冲容量 2000000 FE；满电或离线时停止抽取，外部 FE 能力保持可用。
+在线且取得频道时，每个服务器 tick 从 ME 库存中的 Applied Flux FE 存储单元取出整数 FE，补充本地缓冲；待机、加工和输出堵塞时均可充电。单方块、多方块、线圈和激光仪器共用这条供能规则。未安装 Applied Flux 或 FE 单元为空时不抽取 FE；AE 能源单元只承担正常网络运行开销，不换算为仪器 FE。COMMON 配置 `networkFeChargePerTick` 默认 10000，范围 0..4000000，0 关闭单方块模拟室的新网络 FE 抽取。缓冲容量 2000000 FE；满电或离线时停止抽取，外部 FE 能力保持可用。
 
 库存取出后若本地缓存无法全额接受，剩余 FE 退回原网络库存；原库存拒收的部分保存在机器的持久化 FE 余量中，后续优先补入本地缓存，满缓存和离线均不会丢失。多方块沿用 `FeCredit` 账本；单方块和激光设备使用 `NetworkFeCredit`，线圈在原有 `custom_data` 中保存 `overload_sim:network_fe_credit` 并保留其它数据。旧 AE 换算的小数标签仍保存，但新交易不产生小数。生产批次的 FE 支付与缓存充电分开计算，不增加配方成本。新批次和退款使用 HV；旧 alpha.1 已付费任务保留快照，旧退款记录按 EHV 返还。
 
@@ -142,7 +142,7 @@ GuideME 页面位于 `assets/overload_sim/ae2guide/overload-simulation.md`，中
 
 `dev.overloadsim.tool.CoilModules` 提供 `install`、`uninstall`、`entries`、`has`、`setCore` 和 `capacity`。返回的物品为副本，安装不扣除传入物品，调用者负责扣除一件；安装检查重复类型和拟态前置，仍有依赖模块时拒绝卸载拟态。只接受本模组线圈和七个指定模块，以及闪电科技 T1/T2/T3 能量模块。
 
-`CoilSettings` 保存不可变配置，效果访问器会检查当前模块和核心；精准优先于时运。核心、模块、配置与 long FE 分别使用 `coil_core`、`coil_modules`、`coil_settings`、`coil_fe` Data Component。`CoilEnergy.INSTANCE` 暴露标准 FE item capability，`refill` 按工具绑定的在线工作站网络充电；持有工具或把它留在在线工作站时持续充电，默认 10,000 FE/tick。支持最多 20,000,000,000 FE 的组件缓存，int FE capability 查询按 Integer.MAX_VALUE 钳制。
+`CoilSettings` 保存不可变配置，效果访问器会检查当前模块和核心；精准优先于时运。核心、模块、配置与 long FE 分别使用 `coil_core`、`coil_modules`、`coil_settings`、`coil_fe` Data Component。`CoilEnergy.INSTANCE` 暴露标准 FE item capability，`refill` 按工具绑定的在线工作站网络充电；持有工具或把它留在在线工作站时持续充电，默认 10,000 FE/tick。支持最多 40,000,000,000 FE 的组件缓存，int FE capability 查询按 Integer.MAX_VALUE 钳制。
 
 `CoilLightning.target(player,self)` 计算服务器端有效目标；`fire(player,stack,self)` 校验核心、绑定、冷却和目标，严格支付 10 个所选 HV/EHV，生成失败返还。EHV 使用上游自然雷标记，不修改全局天气。COMMON 配置 `resonanceCoil` 可调整射程、蓄力、冷却、采矿 FE 和充电速率；七个模块及工具使用标准 crafting 配方，可通过数据包覆盖。G 配置沿用原生 DeviceHubMenu 武器页，配置包校验菜单、玩家、所选页与原始手持物品引用；指南 `resonance-coil.md` 对应工具及全部模块。
 

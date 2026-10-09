@@ -64,8 +64,8 @@ final class DeflectorBatchRouter {
     static void remove(LaserMachineBlockEntity root, boolean stopped) {
         var old = ROUTES.remove(root);
         if (old == null) return;
-        refresh();
         if (!stopped) return;
+        refresh();
         for (var shared : old.targets()) {
             long remaining = activePower(shared.shares());
             var target = shared.target();
@@ -125,26 +125,8 @@ final class DeflectorBatchRouter {
             if (path != null && !LaserNetwork.valid(level, path)) LaserNetwork.clear(requested, true);
             return true;
         }
-        var candidates = new ArrayList<>(LaserStructureIndex.controllers(level).stream().limit(256).toList());
-        if (!candidates.contains(requested)) candidates.add(requested);
-        for (var node : candidates) node.checkStructure();
-        var ports = ports(level, candidates);
-        var edges = new HashMap<LaserMachineBlockEntity, Set<LaserMachineBlockEntity>>();
-        for (var matrix : candidates) if (matrix.kind() == LaserKind.DEFLECTOR && matrix.formed() && matrix.enabled()) {
-            var next = new LinkedHashSet<LaserMachineBlockEntity>();
-            for (var side : outputs(matrix)) {
-                var target = nextMatrix(level, ports, matrix.center().relative(side, 3), side, MachineSettings.intValue(MachineSettings.LASER_DEFLECTOR_RANGE));
-                if (target != null) next.add(target);
-            }
-            edges.put(matrix, next);
-        }
-        var reaches = new HashMap<LaserMachineBlockEntity, Set<LaserMachineBlockEntity>>();
-        for (var source : candidates) if (source.kind() == LaserKind.EMITTER && source.formed() && source.enabled()) {
-            var first = nextMatrix(level, ports, source.center().relative(source.forward(), 2), source.forward(), MachineSettings.intValue(MachineSettings.LASER_EMITTER_RANGE));
-            var reachable = new LinkedHashSet<LaserMachineBlockEntity>();
-            if (first != null) reachable(first, edges, reachable);
-            reaches.put(source, reachable);
-        }
+        var topology = topology(level, requested);
+        var ports = topology.ports(); var edges = topology.edges(); var reaches = topology.reaches();
         var component = new LinkedHashSet<>(reaches.getOrDefault(requested, Set.of()));
         if (component.isEmpty()) {
             if (ROUTES.containsKey(requested)) LaserNetwork.clear(requested, true);
@@ -180,9 +162,9 @@ final class DeflectorBatchRouter {
             LaserNetwork.clear(source, false);
             PROCESSED.put(source, now);
             source.checkStructure();
-            if(LaserSettings.emitterFe()>MachineSettings.beamLimit()){source.status="beam_limit";source.refreshLaserLights();source.sync();continue;}
+            if(LaserSettings.emitterFe()>MachineSettings.beamLimit()){LaserNetwork.clear(source,true);source.status="beam_limit";source.refreshLaserLights();source.sync();continue;}
             if (!source.enabled() || !source.formed() || !source.tryPay(LaserSettings.emitterFe(), 0, false)) {
-                source.status = "no_energy"; source.refreshLaserLights(); source.sync(); continue;
+                LaserNetwork.clear(source,true); source.status = "no_energy"; source.refreshLaserLights(); source.sync(); continue;
             }
             batch.roots.add(source);
             batch.nodes.put(source, new LinkedHashSet<>(Set.of(source)));
@@ -199,6 +181,43 @@ final class DeflectorBatchRouter {
             old.hook().deactivate(old.context()); revoked.add(old);
         }
         return true;
+    }
+    private record Topology(long revision, int emitterRange, int deflectorRange, int constraintRange,
+            Map<BlockPos,LaserMachineBlockEntity> ports,
+            Map<LaserMachineBlockEntity,Set<LaserMachineBlockEntity>> edges,
+            Map<LaserMachineBlockEntity,Set<LaserMachineBlockEntity>> reaches) {}
+    private static final Map<ServerLevel,Topology> TOPOLOGY=new WeakHashMap<>();
+    static void invalidate(ServerLevel level){TOPOLOGY.remove(level);}
+    static void clearTopology(){TOPOLOGY.clear();}
+    private static Topology topology(ServerLevel level,LaserMachineBlockEntity requested){
+        int emitterRange=MachineSettings.intValue(MachineSettings.LASER_EMITTER_RANGE);
+        int deflectorRange=MachineSettings.intValue(MachineSettings.LASER_DEFLECTOR_RANGE);
+        int constraintRange=MachineSettings.intValue(MachineSettings.LASER_CONSTRAINT_RANGE);
+        var cached=TOPOLOGY.get(level);
+        if(cached!=null&&cached.revision()==OpticalChanges.revision(level)&&cached.emitterRange()==emitterRange
+                &&cached.deflectorRange()==deflectorRange&&cached.constraintRange()==constraintRange)return cached;
+        var candidates = new ArrayList<>(LaserStructureIndex.controllers(level).stream().limit(256).toList());
+        if (!candidates.contains(requested)) candidates.add(requested);
+        for (var node : candidates) node.checkStructure();
+        var ports = ports(level, candidates);
+        var edges = new HashMap<LaserMachineBlockEntity, Set<LaserMachineBlockEntity>>();
+        for (var matrix : candidates) if (matrix.kind() == LaserKind.DEFLECTOR && matrix.formed() && matrix.enabled()) {
+            var next = new LinkedHashSet<LaserMachineBlockEntity>();
+            for (var side : outputs(matrix)) {
+                var target = nextMatrix(level, ports, matrix.center().relative(side, 3), side, MachineSettings.intValue(MachineSettings.LASER_DEFLECTOR_RANGE));
+                if (target != null) next.add(target);
+            }
+            edges.put(matrix, next);
+        }
+        var reaches = new HashMap<LaserMachineBlockEntity, Set<LaserMachineBlockEntity>>();
+        for (var source : candidates) if (source.kind() == LaserKind.EMITTER && source.formed() && source.enabled()) {
+            var first = nextMatrix(level, ports, source.center().relative(source.forward(), 2), source.forward(), MachineSettings.intValue(MachineSettings.LASER_EMITTER_RANGE));
+            var reachable = new LinkedHashSet<LaserMachineBlockEntity>();
+            if (first != null) reachable(first, edges, reachable);
+            reaches.put(source, reachable);
+        }
+        var result=new Topology(OpticalChanges.revision(level),emitterRange,deflectorRange,constraintRange,ports,edges,reaches);
+        TOPOLOGY.put(level,result);return result;
     }
     private static void reachable(LaserMachineBlockEntity node, Map<LaserMachineBlockEntity, Set<LaserMachineBlockEntity>> edges, Set<LaserMachineBlockEntity> seen) {
         if (!seen.add(node)) return;
@@ -246,13 +265,13 @@ final class DeflectorBatchRouter {
                     range = target.kind() == LaserKind.CONSTRAINT ? MachineSettings.intValue(MachineSettings.LASER_CONSTRAINT_RANGE) : range - distance;
                     start = pos; continued = true; break;
                 }
-                var block = level.getBlockState(pos); var id = BuiltInRegistries.BLOCK.getKey(block.getBlock());
+                var block = OpticalChanges.block(level,pos); var id = BuiltInRegistries.BLOCK.getKey(block.getBlock());
                 if (LaserExtensions.target(id) != null) return null;
                 if (LaserExtensions.modifier(id) != null) {
                     if (!visited.add(pos)) return null;
                     start = pos; range = 64; continued = true; break;
                 }
-                if (!block.getCollisionShape(level, pos).isEmpty()) return null;
+                if (!OpticalChanges.clear(level,pos)) return null;
             }
             if (!continued) return null;
         }
@@ -411,7 +430,7 @@ final class DeflectorBatchRouter {
                         } else if (range > 0) queue.add(new Beam(pos, beam.direction(), power, range, visited, allocation, beam.physicalSource()));
                         break;
                     }
-                    var state = level.getBlockState(pos); var id = BuiltInRegistries.BLOCK.getKey(state.getBlock());
+                    var state = OpticalChanges.block(level,pos); var id = BuiltInRegistries.BLOCK.getKey(state.getBlock());
                     var customTarget = LaserExtensions.target(id);
                     if (customTarget != null) {
                         watch(pos, state, beam.shares());
@@ -435,7 +454,7 @@ final class DeflectorBatchRouter {
                         }
                         break;
                     }
-                    if (!state.getCollisionShape(level, pos).isEmpty()) { end = pos; break; }
+                    if (!OpticalChanges.clear(level,pos)) { end = pos; break; }
                     end = pos; cell(pos, beam.shares());
                     if (distance == beam.range()) { line(beam.start(), end, beam.energy(), beam.shares()); drawn = true; }
                 }

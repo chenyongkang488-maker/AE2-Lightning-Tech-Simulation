@@ -15,7 +15,7 @@ import net.neoforged.neoforge.energy.IEnergyStorage;
 public final class CoilEnergy implements DeviceEnergyBuffer {
     private static final String CREDIT_TAG="overload_sim:network_fe_credit";
     public static final CoilEnergy INSTANCE=new CoilEnergy();private CoilEnergy(){}
-    public static long read(ItemStack s){return Math.clamp(s.getOrDefault(ModContent.COIL_FE.get(),0L),0L,20_000_000_000L);}
+    public static long read(ItemStack s){return Math.clamp(s.getOrDefault(ModContent.COIL_FE.get(),0L),0L,40_000_000_000L);}
     public static void clamp(ItemStack s){s.set(ModContent.COIL_FE.get(),read(s));}
     @Override public long stored(ItemStack s){return read(s);}
     @Override public long capacity(ItemStack s){return CoilModules.capacity(s);}

@@ -37,6 +37,17 @@ import net.neoforged.neoforge.items.IItemHandler;
 @PrefixGameTestTemplate(false)
 public final class WorkstationConfigurationGameTests {
     @GameTest(template="laser_empty",batch="configuration_workstation")
+    public static void doubledParallelCeilingCommitsMoreThanEightBillionProducts(GameTestHelper h){
+        withSettings(Map.of(MachineSettings.WORKSTATION_MAX_PARALLEL,2_097_152,MachineSettings.WORKSTATION_SLOT_CAPACITY,Integer.MAX_VALUE),()->{
+            var host=WorkstationGameTests.build(h,Direction.NORTH);host.inputs().insert(0,new ItemStack(Items.IRON_INGOT),2_097_152,false);
+            var recipe=new OverloadProcessingRecipe(10_000,List.of(new OverloadProcessingIngredient(Ingredient.of(Items.IRON_INGOT),1)),FluidStack.EMPTY,List.of(new ItemStack(Items.GOLD_INGOT,4096)),FluidStack.EMPTY,5,1,LightningKey.Tier.HIGH_VOLTAGE);
+            withRecipe(h,recipe,()->{host.receiveLaser(Direction.NORTH,2_000_000_000L,h.getLevel().getGameTime());host.tick();host.tick();
+                long actual=0;for(int slot=0;slot<9;slot++)actual+=host.outputs().count(slot);
+                h.assertTrue(host.inputs().empty()&&host.lastParallel()==2_097_152&&actual==8_589_934_592L,"doubled maximum settles the full batch across bounded output slots without overflow");
+            });
+        });h.succeed();
+    }
+    @GameTest(template="laser_empty",batch="configuration_workstation")
     public static void configuredStrictGateParallelAndCycleCommitOnlyAtThirdTick(GameTestHelper h) {
         withSettings(Map.of(MachineSettings.WORKSTATION_LASER_THRESHOLD,10L,
                 MachineSettings.WORKSTATION_MAX_PARALLEL,7,MachineSettings.WORKSTATION_CYCLE_TICKS,3),()->{

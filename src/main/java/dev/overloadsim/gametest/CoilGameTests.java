@@ -206,12 +206,24 @@ public class CoilGameTests {
         java.util.function.Consumer<net.neoforged.neoforge.event.level.BlockEvent.BreakEvent> cancel=e->{if(e.getPos().equals(pos))e.setCanceled(true);};net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(cancel);
         try{h.assertTrue(!dev.overloadsim.tool.CoilMining.breakUnbreakable(player,pos)&&CoilEnergyValue(coil)==10000,"cancel does not break or spend");}finally{net.neoforged.neoforge.common.NeoForge.EVENT_BUS.unregister(cancel);}
         h.assertTrue(dev.overloadsim.tool.CoilMining.breakUnbreakable(player,pos)&&level.isEmptyBlock(pos)&&CoilEnergyValue(coil)==9800,"ultimate breaks bedrock for 200 FE");
+        h.assertTrue(level.getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,new net.minecraft.world.phys.AABB(pos).inflate(1)).stream().filter(e->e.getItem().is(net.minecraft.world.item.Items.BEDROCK)).mapToInt(e->e.getItem().getCount()).sum()==1,"ultimate returns exactly one bedrock item");
         level.setBlockAndUpdate(pos,net.minecraft.core.registries.BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2lt:firmament_conversion_core")).defaultBlockState());
         h.assertTrue(dev.overloadsim.tool.CoilMining.breakUnbreakable(player,pos)&&level.isEmptyBlock(pos),"also breaks original firmament core");
+        h.assertTrue(level.getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,new net.minecraft.world.phys.AABB(pos).inflate(1)).stream().filter(e->e.getItem().is(net.minecraft.core.registries.BuiltInRegistries.ITEM.get(ResourceLocation.parse("ae2lt:firmament_conversion_core")))).mapToInt(e->e.getItem().getCount()).sum()==1,"ultimate returns exactly one firmament conversion core item");
         level.setBlockAndUpdate(pos,net.minecraft.world.level.block.Blocks.BEDROCK.defaultBlockState());dev.overloadsim.tool.CoilModules.setCore(coil,ItemStack.EMPTY);
         h.assertTrue(!dev.overloadsim.tool.CoilMining.breakUnbreakable(player,pos)&&!level.isEmptyBlock(pos),"removed core gates ultimate");h.succeed();
     }
     private static long CoilEnergyValue(ItemStack s){return dev.overloadsim.tool.CoilEnergy.read(s);}
+    @GameTest(template="empty")
+    public static void canceledUltimateDropsDoNotBypassTheServerLootEvent(GameTestHelper h){
+        var coil=ready(h);dev.overloadsim.tool.CoilModules.install(coil,module(dev.overloadsim.tool.CoilModuleItem.Type.ULTIMATE));
+        var player=player(h);player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND,coil);var pos=h.absolutePos(new BlockPos(5,1,5));player.setPos(pos.getX()+.5,pos.getY()+1,pos.getZ()+2.5);
+        h.getLevel().setBlockAndUpdate(pos,net.minecraft.world.level.block.Blocks.BEDROCK.defaultBlockState());
+        java.util.function.Consumer<net.neoforged.neoforge.event.level.BlockDropsEvent> cancel=e->{if(e.getLevel()==h.getLevel()&&e.getPos().equals(pos))e.setCanceled(true);};net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(cancel);
+        try{h.assertTrue(dev.overloadsim.tool.CoilMining.breakUnbreakable(player,pos)&&CoilEnergyValue(coil)==9800,"accepted block removal still pays its normal mining fee");
+            h.assertTrue(h.getLevel().getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,new net.minecraft.world.phys.AABB(pos).inflate(1)).isEmpty(),"cancelled loot suppresses the added bedrock drop");
+        }finally{net.neoforged.neoforge.common.NeoForge.EVENT_BUS.unregister(cancel);}h.succeed();
+    }
     private static ItemStack ready(GameTestHelper h){var coil=new ItemStack(dev.overloadsim.ModContent.COIL.get());dev.overloadsim.tool.CoilModules.setCore(coil,com.moakiee.ae2lt.registry.ModItems.ULTIMATE_OVERLOAD_CORE.toStack());dev.overloadsim.tool.CoilModules.install(coil,module(dev.overloadsim.tool.CoilModuleItem.Type.MIMIC));coil.set(dev.overloadsim.ModContent.COIL_FE.get(),10000L);return coil;}
     private static java.util.List<net.minecraft.world.entity.LightningBolt> bolts(GameTestHelper h,net.minecraft.server.level.ServerPlayer p){return h.getLevel().getEntitiesOfClass(net.minecraft.world.entity.LightningBolt.class,p.getBoundingBox().inflate(2),b->b.getPersistentData().getBoolean("overload_sim.coil_lightning"));}
     private static ItemStack equipped(GameTestHelper h,OverloadDeviceWorkbenchBlockEntity bench){var coil=ready(h);bench.getDeviceInventory().setItemDirect(0,coil);return coil;}

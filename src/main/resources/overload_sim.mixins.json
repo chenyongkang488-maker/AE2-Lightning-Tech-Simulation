@@ -8,6 +8,8 @@
     "CollectorMixin",
     "CoilWorkbenchMixin",
     "CoilMiningCommitMixin",
+    "FirmamentRecoveryMixin",
+    "LaserBlockChangeMixin",
     "CoilAEWrenchMixin",
     "CoilHubHostMixin",
     "CoilHubMenuMixin",

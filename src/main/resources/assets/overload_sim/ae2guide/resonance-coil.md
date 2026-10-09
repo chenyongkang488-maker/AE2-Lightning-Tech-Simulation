@@ -42,9 +42,9 @@ Install modules at the workbench. Each of the seven coil modules has a one-item 
 |Silk Touch|Requires Mimic; enabled by default and takes precedence over Fortune|
 |Wrench|Enables the wrench setting; no Mimic requirement|
 
-Remove the four dependent modules before removing Mimic. Normal loot and protection events apply even with Ultimate Destruction; bedrock has no default drop.
+Remove the four dependent modules before removing Mimic. Protection events still apply with Ultimate Destruction. Successfully mining bedrock or a Firmament Conversion Core returns one corresponding block item; cancelled drops produce no items. Place a recovered core in the Overworld to process its original recipes without a Firmament Starship. Supply all recipe materials and leave room for outputs.
 
-Mining and melee each cost 200 FE by default. Base capacity is 10,000,000 FE. One upstream T1, T2 or T3 energy module replaces it with 1,000,000,000, 5,000,000,000 or 20,000,000,000 FE. Only one energy module may be installed; removing it clamps stored FE to the remaining capacity. Lightning uses its lightning cost instead of mining FE.
+Mining and melee each cost 200 FE by default. Base capacity is 10,000,000 FE. One upstream T1, T2 or T3 energy module replaces it with 1,000,000,000, 5,000,000,000 or 20,000,000,000 FE. Only one energy module may be installed; removing it retains stored FE and pauses further charging while above the remaining capacity. Lightning uses its lightning cost instead of mining FE.
 
 ## G settings and wrench
 
@@ -67,6 +67,6 @@ miningEnergyFe = 200
 chargeFePerTick = 10000
 ```
 
-Supported ranges are 1–128 blocks, 1–200 charge ticks, 1–200 cooldown ticks, 0–1,000,000 FE/action and 0–1,000,000 FE/tick respectively.
+Supported ranges are 1–256 blocks, 1–400 charge ticks, 1–400 cooldown ticks, 0–2,000,000 FE/action and 0–2,000,000 FE/tick respectively.
 
 Java integrations use `CoilModules.install/uninstall` for validated module changes and `CoilConfiguration.apply(stack, action, value)` for settings. Installation returns a tool copy and does not deduct the supplied module; the caller must deduct one item. `CoilEnergy.INSTANCE` exposes FE charging. Read the full reference in `docs/api.md`.

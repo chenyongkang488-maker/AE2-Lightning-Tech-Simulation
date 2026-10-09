@@ -12,12 +12,12 @@ public final class LaserSettings {
     static {
         var b=new ModConfigSpec.Builder();
         EMITTER_FE=b.translation("overload_sim.configuration.laser.emitterFePerBatch").comment("Emitter FE consumed and emitted per 20-tick batch.").defineInRange("emitterFePerBatch",100_000L,1L,dev.overloadsim.core.LaserMath.MAX_BEAM);
-        CONSTRAINT_FE=b.translation("overload_sim.configuration.laser.constraintFePerBatch").comment("Constraint matrix FE per 20-tick batch.").defineInRange("constraintFePerBatch",100_000L,0L,1_000_000_000L);
-        BURST_EHV=b.translation("overload_sim.configuration.laser.burstExtremeLightningPerBatch").comment("Burst matrix extreme voltage cost per 20-tick batch.").defineInRange("burstExtremeLightningPerBatch",64L,0L,1_000_000_000L);
-        DAMAGE=b.translation("overload_sim.configuration.laser.laserDamageMultiplier").defineInRange("laserDamageMultiplier",1D,0D,100D);
+        CONSTRAINT_FE=b.translation("overload_sim.configuration.laser.constraintFePerBatch").comment("Constraint matrix FE per 20-tick batch.").defineInRange("constraintFePerBatch",100_000L,0L,2_000_000_000L);
+        BURST_EHV=b.translation("overload_sim.configuration.laser.burstExtremeLightningPerBatch").comment("Burst matrix extreme voltage cost per 20-tick batch.").defineInRange("burstExtremeLightningPerBatch",64L,0L,2_000_000_000L);
+        DAMAGE=b.translation("overload_sim.configuration.laser.laserDamageMultiplier").defineInRange("laserDamageMultiplier",1D,0D,200D);
         EXPLOSION_ENABLED=b.translation("overload_sim.configuration.explosion.explosionEnabled").comment("Enable charged receiver explosions. False disables destruction, entity damage, sound and animation. Radius is configured in overload_sim-machines.toml.").define("explosionEnabled",true);
         BLAST_HEIGHT=b.translation("overload_sim.configuration.explosion.explosionVerticalRadius").comment("Legacy setting retained for existing configs; ignored. Use explosion.radius in overload_sim-machines.toml.").defineInRange("explosionVerticalRadius",12,1,64);
-        BLAST_BUDGET=b.translation("overload_sim.configuration.explosion.explosionBlockBudgetPerTick").comment("Maximum block positions processed per tick for a receiver explosion.").defineInRange("explosionBlockBudgetPerTick",1024,64,4096);
+        BLAST_BUDGET=b.translation("overload_sim.configuration.explosion.explosionBlockBudgetPerTick").comment("Maximum block positions processed per tick for a receiver explosion.").defineInRange("explosionBlockBudgetPerTick",1024,64,8192);
         SPEC=b.build();
     }
     private LaserSettings(){}

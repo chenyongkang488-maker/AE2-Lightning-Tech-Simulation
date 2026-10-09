@@ -83,5 +83,6 @@ public final class LaserExtensions {
     private static <T> void register(Map<ResourceLocation, T> hooks, ResourceLocation id, T hook) {
         if (hooks.putIfAbsent(Objects.requireNonNull(id), Objects.requireNonNull(hook)) != null)
             throw new IllegalArgumentException("duplicate laser extension " + id);
+        dev.overloadsim.laser.OpticalChanges.clearAll();
     }
 }

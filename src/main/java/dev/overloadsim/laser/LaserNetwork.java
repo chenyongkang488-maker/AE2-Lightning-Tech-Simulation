@@ -36,6 +36,7 @@ public final class LaserNetwork {
     private LaserNetwork(){}
     public static void register(LaserMachineBlockEntity host){}
     public static void unregister(LaserMachineBlockEntity host){
+        OpticalChanges.invalidate(host.getLevel());
         clear(host);
         for(var root:List.copyOf(PATHS.keySet()))if(PATHS.get(root)!=null&&PATHS.get(root).nodes().contains(host))clear(root);
     }
@@ -56,9 +57,11 @@ public final class LaserNetwork {
             if(node.isRemoved()||!level.hasChunkAt(node.getBlockPos())||!node.enabled())return false;
             node.checkStructure();if(!node.formed())return false;
         }
-        for(var pos:path.clearCells())if(!level.hasChunkAt(pos)||!level.getBlockState(pos).getCollisionShape(level,pos).isEmpty())return false;
-        for(var entry:path.watched().entrySet())if(!level.hasChunkAt(entry.getKey())||!level.getBlockState(entry.getKey()).equals(entry.getValue()))return false;
-        return true;
+        var cached=OpticalChanges.valid(level,path);if(cached!=null)return cached;
+        boolean valid=true;
+        for(var pos:path.clearCells())if(!level.hasChunkAt(pos)||!OpticalChanges.clear(level,pos)){valid=false;break;}
+        if(valid)for(var entry:path.watched().entrySet())if(!level.hasChunkAt(entry.getKey())||!OpticalChanges.block(level,entry.getKey()).equals(entry.getValue())){valid=false;break;}
+        OpticalChanges.remember(level,path,valid);return valid;
     }
     private static void clear(LaserMachineBlockEntity root){
         clear(root,true);
@@ -66,6 +69,7 @@ public final class LaserNetwork {
     static void clear(LaserMachineBlockEntity root,boolean stopped){
         var old=PATHS.remove(root);
         DeflectorBatchRouter.remove(root,stopped);
+        if(!stopped)return; // A new batch replaces the old visual atomically; never publish an empty renewal.
         if(stopped)stopLostTargets(old,List.of());
         if(old!=null)for(var node:old.nodes()){if(DeflectorBatchRouter.retained(node))continue;node.activeUntil=0;node.lastPower=0;if(stopped)node.stopCollapseVisuals();node.sync();}
         if(!root.segments.isEmpty()||root.lastPower!=0){root.segments=List.of();root.lastPower=0;root.activeUntil=0;root.sync();}
@@ -75,8 +79,8 @@ public final class LaserNetwork {
         if(!(root.getLevel() instanceof ServerLevel level))return;
         if(DeflectorBatchRouter.process(root))return;
         var previous=PATHS.get(root);clear(root,false);root.checkStructure();
-        if(LaserSettings.emitterFe()>MachineSettings.beamLimit()){root.status="beam_limit";stopLostCores(previous,List.of());stopLostTargets(previous,List.of());root.refreshLaserLights();root.sync();return;}
-        if(!root.enabled()||!root.formed()||!root.tryPay(LaserSettings.emitterFe(),0,false)){stopLostCores(previous,List.of());stopLostTargets(previous,List.of());root.refreshLaserLights();root.status="no_energy";root.sync();return;}
+        if(LaserSettings.emitterFe()>MachineSettings.beamLimit()){clear(root,true);root.status="beam_limit";stopLostCores(previous,List.of());stopLostTargets(previous,List.of());root.refreshLaserLights();root.sync();return;}
+        if(!root.enabled()||!root.formed()||!root.tryPay(LaserSettings.emitterFe(),0,false)){clear(root,true);stopLostCores(previous,List.of());stopLostTargets(previous,List.of());root.refreshLaserLights();root.status="no_energy";root.sync();return;}
         long now=level.getGameTime();
         var candidates=LaserStructureIndex.controllers(level).stream().limit(256).toList();
         for(var node:candidates)node.checkStructure();
@@ -151,7 +155,7 @@ public final class LaserNetwork {
                     }else if(power>0&&range>0)queue.add(new Beam(pos,beam.direction(),power,range,visited));
                     break;
                 }
-                var state=level.getBlockState(pos);var id=BuiltInRegistries.BLOCK.getKey(state.getBlock());
+                var state=OpticalChanges.block(level,pos);var id=BuiltInRegistries.BLOCK.getKey(state.getBlock());
                 var customTarget=LaserExtensions.target(id);
                 if(customTarget!=null)watched.put(pos.immutable(),state);
                 if(customTarget!=null){
@@ -171,7 +175,7 @@ public final class LaserNetwork {
                     }
                     break;
                 }
-                if(!state.getCollisionShape(level,pos).isEmpty()){end=pos;break;}
+                if(!OpticalChanges.clear(level,pos)){end=pos;break;}
                 end=pos;clearCells.add(pos);
                 if(distance==beam.range()){add(lines,beam.start(),end,beam.energy(),false,false);drawn=true;}
             }

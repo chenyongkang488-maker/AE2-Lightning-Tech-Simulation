@@ -74,7 +74,7 @@ For example, replace `data/overload_sim/recipe/production/iron.json`:
 
 Additional mineral and mob mappings use `simulation_mineral/<id>.json` and `simulation_mob/<id>.json`. Crop and soil aliases use `overload_sim:simulation_crops` and `simulation_farmlands` block tags. Blacklist tags cover minerals, crops and mob types.
 
-Common configuration in `config/overload_sim-common.toml` includes `matrixLimit` (1–32), `accelerationCardLimit` (0–4), `autoEjectIntervalTicks` (1–200) and `networkFeChargePerTick` (0–2,000,000; zero stops new network FE withdrawals).
+Common configuration in `config/overload_sim-common.toml` includes `matrixLimit` (1–32), `accelerationCardLimit` (0–4), `autoEjectIntervalTicks` (1–400) and `networkFeChargePerTick` (0–4,000,000; zero stops new network FE withdrawals).
 
 In Java, register named conditions and output providers through `SimulationExtensions` during common setup. Use `registerOutputV2` for outputs with explicit RNG and machine context, and `registerCropMaturityResolver` for a special crop's mature state. Duplicate IDs are rejected. `CrystalDataAccess.read/bound/perfect` reads or creates crystal data.
 
