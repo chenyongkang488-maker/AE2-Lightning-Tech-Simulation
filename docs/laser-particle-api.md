@@ -45,8 +45,8 @@ NBT 保存 `OpticalInputMask`、`OpticalOutputMask`、`DeflectorShapeVersion=1` 
 
 ## 精确资源与配置
 
-强度按每 20 tick 一批计量；实体伤害每两 tick 一次。库存与费用使用 `long`，GUI 简写只影响显示。固定原型边界：光束 1P FE，核心阈值 1G FE，粒子费用 512G FE，库存 125,000 粒子，约束器 FE 容量 1024P。强化 100k–9000k FE、每批爆发 64 极高压。生存常规 FE 接口每次仍是 `int`，对接高容量储能建议使用下面的 long 接口。
-强化界面使用可拖动滑条；`laserSetBoost` 绝对值操作接受 100k～9M、100k 整数步长，服务器检查当前会话、宿主身份与成型状态。原 `laserBoost` 步进操作继续兼容。
+强度按每 20 tick 一批计量；实体伤害默认每两 tick 一次。库存与费用使用 `long`，GUI 简写只影响显示。默认值：光束上限 1P FE，核心阈值 1G FE，粒子费用 512G FE，库存 125,000 粒子，约束器 FE 容量 1024P。强化 100k–9000k FE、每批爆发 64 极高压。alpha.17 可在主菜单模组配置中调整机器容量、阈值、伤害间隔、射程、强化范围与爆发倍率，见 [机器配置](MACHINE_CONFIGURATION.md)；粒子换算费用及协议批次仍固定。生存常规 FE 接口每次仍是 `int`，对接高容量储能建议使用下面的 long 接口。
+强化界面使用可拖动滑条；`laserSetBoost` 绝对值操作按服务端配置的最小值、最大值和步长校验，默认接受 100k～9M、100k 整数步长，服务器还检查当前会话、宿主身份与成型状态。原 `laserBoost` 步进操作继续兼容。
 
 `LaserSegment` 增加 `particleCount` 和 `launchTick`，原五参数构造器继续可用，且不会伪造粒子产量。真实接收结算成功后才发送有限飞行快照；每个实产粒子对应一个飞行光点，八 tick 内到达，重复快照不重新播放。`ParticleFlightVisuals` 保留有界客户端时钟记录，客户端动画不结算资源。
 
@@ -108,6 +108,8 @@ AE 连线或结构上游半面的一处闪电科技过载接口仍可连接网�
 - `registerEnergySink(sinkId, EnergySink)`：精确 long 输出，先于内置 AE 桥；返回 `[0, amount]` 中实际接收的 FE，模拟调用不能修改任何库存。每次最多访问 32 个按 ID 排序的后端。
 
 `LaserEvents` 中 `BeforeModifier`、`BeforeCoreEmission`、`BeforeParticleConversion`、`BeforeExplosion` 均可取消。修改数值必须经 setter，受上限校验；核心/转换事件不能增加请求粒子或产能。转换事件减少粒子数量时，FE 上限会同比减少；批量结算期间禁止重入转换。结算会重新检查事件后的宿主与库存。光路包含已访问节点和有界预算，闭环不能反复增幅或复制本批能量。
+
+alpha.17 的 `explosion.radius` 决定球形爆炸半径，默认 12 格、范围 1–64，重新进入世界后生效。`BeforeExplosion.setRadiusBlocks` 仅能在 0 至事件初始半径内调整，不能扩大管理员配置的范围；旧 chunk 构造器仍以 12 格为兼容上限。新机器保存历史容量标记，降低限额仍保留旧存量；标记缺失的旧存档按历史容量验证，升限不会放大异常旧数值。
 
 客户端仅按有界快照绘制光束、核心与少量演出粒子；不会根据渲染帧扣费或为每个库存粒子建立实体。新增 Blockbench 占位工程在 `art/blockbench/laser-prototype.bbmodel`；沿用已有美术许可范围，代码仍按项目 MIT 许可。
 

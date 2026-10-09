@@ -35,6 +35,39 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @GameTestHolder(OverloadSimulation.ID)
 @PrefixGameTestTemplate(false)
 public final class TranscendentTeslaGameTests {
+    @GameTest(template="laser_empty",timeoutTicks=80)
+    public static void configuredCrystalRecipeFreezesFeAndPartialOutputAcrossReload(GameTestHelper h){
+        withCoil(h,f->{
+            SimulationConfigurationGameTests.withValue(dev.overloadsim.config.MachineSettings.TESLA_CRYSTAL_FE,300_000L,()->
+            SimulationConfigurationGameTests.withValue(dev.overloadsim.config.MachineSettings.TESLA_CRYSTAL_EHV,40L,()->{
+                f.storage.shortInsert=true;f.storage.refuseExtremeExtraction=true;prepare(h,f,1,300_000,true);ticks(f,5);
+                h.assertTrue(f.coil.getCurrentTotalEnergy()==300_000&&f.coil.isReadyToCommit()&&f.storage.extreme==17,"configured recipe pays new FE and journals partial actual output");
+            }));
+            var saved=f.coil.saveWithoutMetadata(h.getLevel().registryAccess());
+            SimulationConfigurationGameTests.withValue(dev.overloadsim.config.MachineSettings.TESLA_CRYSTAL_FE,100_000L,()->
+            SimulationConfigurationGameTests.withValue(dev.overloadsim.config.MachineSettings.TESLA_CRYSTAL_EHV,9L,()->{
+                f.coil.loadTag(saved,h.getLevel().registryAccess());
+                h.assertTrue(f.coil.getConsumedEnergy()==300_000&&f.coil.getCurrentTotalEnergy()==300_000,"load restores frozen batch FE before upstream clamps consumed energy");
+                f.storage.shortInsert=false;tick(f);
+                h.assertTrue(f.storage.extreme==40&&!f.coil.hasLockedMode()&&f.coil.getInventory().getStackInSlot(0).isEmpty(),"original output promise completes once despite lower current config");
+            }));
+        });
+    }
+
+    @GameTest(template="laser_empty",timeoutTicks=80)
+    public static void legacyLockedCrystalBatchUsesHistoricalFeAndOutput(GameTestHelper h){
+        withCoil(h,f->{
+            prepare(h,f,1,500_000,true);ticks(f,4);var saved=f.coil.saveWithoutMetadata(h.getLevel().registryAccess());
+            saved.remove("OverloadSimTranscendentTotalFe");saved.remove("OverloadSimTranscendentOutputEhv");
+            SimulationConfigurationGameTests.withValue(dev.overloadsim.config.MachineSettings.TESLA_CRYSTAL_FE,5L,()->
+            SimulationConfigurationGameTests.withValue(dev.overloadsim.config.MachineSettings.TESLA_CRYSTAL_EHV,1L,()->{
+                f.coil.loadTag(saved,h.getLevel().registryAccess());
+                h.assertTrue(f.coil.getCurrentTotalEnergy()==500_000&&f.coil.getConsumedEnergy()==400_000,"legacy locked job restores historical fees independently of current values");
+                tick(f);h.assertTrue(f.storage.extreme==64&&!f.coil.hasLockedMode(),"legacy job completes historical output exactly once");
+                prepare(h,f,1,5,true);ticks(f,5);h.assertTrue(f.storage.extreme==65&&!f.coil.hasLockedMode(),"minimum five-FE new job advances all five native processing steps");
+            }));
+        });
+    }
     private record Fixture(TeslaCoilBlockEntity coil, LightningStorage storage) {}
 
     private static ItemStack crystal(GameTestHelper h, int count) {

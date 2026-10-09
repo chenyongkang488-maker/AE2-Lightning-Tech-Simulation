@@ -12,6 +12,25 @@ import java.util.Optional;
 @GameTestHolder(OverloadSimulation.ID)
 @PrefixGameTestTemplate(false)
 public class SimulationGameTests {
+    @GameTest(template="empty",timeoutTicks=110)
+    public static void configuredFeesAndTimeFreezeIntoNewChamberJob(GameTestHelper h){
+        var machine=capacityMachine(h);var crystal=machine.inventory().getStackInSlot(0).copy();machine.inventory().setStackInSlot(0,ItemStack.EMPTY);
+        h.runAtTickTime(80,()->{
+            SimulationConfigurationGameTests.withValue(dev.overloadsim.config.MachineSettings.SIMULATION_MAX_PARALLEL,1,()->
+            SimulationConfigurationGameTests.withValue(dev.overloadsim.config.MachineSettings.SIMULATION_TIME_PERCENT,150,()->
+            SimulationConfigurationGameTests.withValue(dev.overloadsim.config.MachineSettings.SIMULATION_ENERGY_COST_PERCENT,125,()->
+            SimulationConfigurationGameTests.withValue(dev.overloadsim.config.MachineSettings.SIMULATION_LIGHTNING_COST_PERCENT,150,()->{
+                machine.inventory().setStackInSlot(0,crystal);
+                try{var start=machine.getClass().getDeclaredMethod("start",net.minecraft.server.level.ServerLevel.class);start.setAccessible(true);start.invoke(machine,h.getLevel());}
+                catch(ReflectiveOperationException e){throw new RuntimeException(e);}
+                h.assertTrue(machine.busy()&&machine.actualParallel()==1&&machine.totalTicks()==19,"new job applies scaled recipe time before four acceleration cards");
+                assertPaidBatch(h,machine,1250,2);
+            }))));
+            var saved=machine.saveWithoutMetadata(h.getLevel().registryAccess());var restored=new dev.overloadsim.machine.SimulationChamberBlockEntity(machine.getBlockPos(),machine.getBlockState());restored.setLevel(h.getLevel());restored.loadTag(saved,h.getLevel().registryAccess());
+            h.assertTrue(restored.busy()&&restored.totalTicks()==19&&restored.actualParallel()==1,"started job keeps original duration and participants after settings restore and reload");
+            assertPaidBatch(h,restored,1250,2);h.succeed();
+        });
+    }
     @GameTest(template="empty")
     public static void crystalDisplayUpdatesWithoutOpeningMachineMenu(GameTestHelper h){
         var level=h.getLevel();var pos=h.absolutePos(new BlockPos(5,1,5));level.setBlockAndUpdate(pos,ModContent.CHAMBER.get().defaultBlockState());

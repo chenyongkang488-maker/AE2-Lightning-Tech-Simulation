@@ -15,7 +15,7 @@ import net.neoforged.neoforge.energy.IEnergyStorage;
 public final class CoilEnergy implements DeviceEnergyBuffer {
     private static final String CREDIT_TAG="overload_sim:network_fe_credit";
     public static final CoilEnergy INSTANCE=new CoilEnergy();private CoilEnergy(){}
-    public static long read(ItemStack s){return Math.clamp(s.getOrDefault(ModContent.COIL_FE.get(),0L),0L,CoilModules.capacity(s));}
+    public static long read(ItemStack s){return Math.clamp(s.getOrDefault(ModContent.COIL_FE.get(),0L),0L,20_000_000_000L);}
     public static void clamp(ItemStack s){s.set(ModContent.COIL_FE.get(),read(s));}
     @Override public long stored(ItemStack s){return read(s);}
     @Override public long capacity(ItemStack s){return CoilModules.capacity(s);}
@@ -32,7 +32,7 @@ public final class CoilEnergy implements DeviceEnergyBuffer {
     public static void charge(ItemStack s,IGrid grid){charge(s,grid,IActionSource.empty());}
     public static void charge(ItemStack s,IGrid grid,IActionSource source){
         settleCredit(s);
-        int request=(int)Math.min(CoilModules.capacity(s)-read(s),SimulationConfig.COIL_CHARGE_FE.get());if(request<=0)return;
+        int request=(int)Math.min(Math.max(0,CoilModules.capacity(s)-read(s)),SimulationConfig.COIL_CHARGE_FE.get());if(request<=0)return;
         var transfer=AppliedFluxEnergy.extractInto(grid,source,request,amount->INSTANCE.receiveFe(s,(int)amount,false));
         if(transfer.credit()>0)setCredit(s,Math.addExact(credit(s),transfer.credit()));
     }
@@ -47,6 +47,6 @@ public final class CoilEnergy implements DeviceEnergyBuffer {
         public int extractEnergy(int amount,boolean simulate){return 0;}
         public int getEnergyStored(){return (int)Math.min(Integer.MAX_VALUE,read(s));}
         public int getMaxEnergyStored(){return (int)Math.min(Integer.MAX_VALUE,capacity(s));}
-        public boolean canExtract(){return false;}public boolean canReceive(){return true;}
+        public boolean canExtract(){return false;}public boolean canReceive(){return read(s)<capacity(s);}
     };}
 }

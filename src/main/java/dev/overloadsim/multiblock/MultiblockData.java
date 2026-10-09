@@ -1,5 +1,7 @@
 package dev.overloadsim.multiblock;
 import java.util.*;
+import dev.overloadsim.config.MachineSettings;
+import dev.overloadsim.core.SimulationRules;
 import com.google.gson.*;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -11,10 +13,10 @@ import net.minecraft.world.item.crafting.*;
 import net.minecraft.world.level.block.Block;
 public final class MultiblockData extends SimpleJsonResourceReloadListener {
     public record Policy(int ticks,int reductionCap,int fortuneCap,int t1,int t2,int t3,long fe,long hv,long overloadEhv,long smeltingHv){
-        public int duration(SimulationStructure s){long reduction=Math.min(reductionCap,s.t1()*(long)t1+s.t2()*(long)t2+s.t3()*(long)t3);long time=Math.max(1,ticks-reduction);return (int)(s.overload()?(time+1)/2:time);}
+        public int duration(SimulationStructure s){long reduction=Math.min(reductionCap,s.t1()*(long)t1+s.t2()*(long)t2+s.t3()*(long)t3);long time=Math.max(1,ticks-reduction);long base=s.overload()?(time+1)/2:time;return (int)Math.min(1_000_000,SimulationRules.scalePercent(base,MachineSettings.intValue(MachineSettings.MULTIBLOCK_TIME_PERCENT)));}
         public long multiplier(SimulationStructure s){return 1L<<Math.min(s.fortune(),fortuneCap);}
-        public MultiblockRules.Costs cost(int n,SimulationStructure s){return new MultiblockRules.Costs(Math.multiplyExact(n,fe),Math.multiplyExact(n,Math.addExact(hv,s.smelting()?smeltingHv:0)),Math.multiplyExact(n,s.overload()?overloadEhv:0));}
-        public String signature(SimulationStructure s){return toString()+":"+s.capacity()+":"+s.t1()+":"+s.t2()+":"+s.t3()+":"+s.fortune()+":"+s.overload()+":"+s.smelting()+":"+generation();}
+        public MultiblockRules.Costs cost(int n,SimulationStructure s){int lightningPercent=MachineSettings.intValue(MachineSettings.MULTIBLOCK_LIGHTNING_COST_PERCENT);return new MultiblockRules.Costs(Math.multiplyExact(n,SimulationRules.scalePercent(fe,MachineSettings.intValue(MachineSettings.MULTIBLOCK_ENERGY_COST_PERCENT))),Math.multiplyExact(n,SimulationRules.scalePercent(Math.addExact(hv,s.smelting()?smeltingHv:0),lightningPercent)),Math.multiplyExact(n,SimulationRules.scalePercent(s.overload()?overloadEhv:0,lightningPercent)));}
+        public String signature(SimulationStructure s){return toString()+":"+s.capacity()+":"+s.t1()+":"+s.t2()+":"+s.t3()+":"+s.fortune()+":"+s.overload()+":"+s.smelting()+":"+MachineSettings.intValue(MachineSettings.MULTIBLOCK_MAX_CRYSTALS)+":"+MachineSettings.intValue(MachineSettings.MULTIBLOCK_TIME_PERCENT)+":"+MachineSettings.intValue(MachineSettings.MULTIBLOCK_ENERGY_COST_PERCENT)+":"+MachineSettings.intValue(MachineSettings.MULTIBLOCK_LIGHTNING_COST_PERCENT)+":"+generation();}
     }
     public record Smelt(ResourceLocation result,int count){}
     private static final Policy DEFAULT=new Policy(180,104,10,2,4,8,1000,1,1,2);

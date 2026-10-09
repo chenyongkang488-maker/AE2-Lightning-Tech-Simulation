@@ -6,6 +6,7 @@ import appeng.api.networking.security.IActionSource;
 import com.moakiee.ae2lt.device.network.RailgunNetworkBinding;
 import com.moakiee.ae2lt.me.key.LightningKey;
 import dev.overloadsim.SimulationConfig;
+import dev.overloadsim.config.MachineSettings;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.item.ItemStack;
@@ -37,14 +38,15 @@ public final class CoilLightning {
         var binding=RailgunNetworkBinding.INSTANCE.resolve(stack,player);if(!binding.success()||binding.grid()==null)return Result.UNBOUND;
         boolean natural=CoilSettings.read(stack).natural(stack);var key=natural?LightningKey.EXTREME_HIGH_VOLTAGE:LightningKey.HIGH_VOLTAGE;
         var inventory=binding.grid().getStorageService().getInventory();var source=IActionSource.ofPlayer(player);
-        if(inventory.extract(key,10,Actionable.SIMULATE,source)!=10)return Result.NO_LIGHTNING;
+        int cost=MachineSettings.intValue(MachineSettings.COIL_LIGHTNING_COST);
+        if(inventory.extract(key,cost,Actionable.SIMULATE,source)!=cost)return Result.NO_LIGHTNING;
         var bolt=EntityType.LIGHTNING_BOLT.create(player.serverLevel());if(bolt==null)return Result.SPAWN_FAILED;
-        long got=inventory.extract(key,10,Actionable.MODULATE,source);
-        if(got!=10){if(got>0)inventory.insert(key,got,Actionable.MODULATE,source);return Result.NO_LIGHTNING;}
+        long got=inventory.extract(key,cost,Actionable.MODULATE,source);
+        if(got!=cost){if(got>0)inventory.insert(key,got,Actionable.MODULATE,source);return Result.NO_LIGHTNING;}
         bolt.moveTo(target.get());bolt.setCause(player);bolt.setVisualOnly(false);
         bolt.getPersistentData().putBoolean("ae2lt.natural_weather_lightning",natural);
         bolt.getPersistentData().putBoolean("overload_sim.coil_lightning",true);
-        if(!player.serverLevel().addFreshEntity(bolt)){inventory.insert(key,10,Actionable.MODULATE,source);return Result.SPAWN_FAILED;}
+        if(!player.serverLevel().addFreshEntity(bolt)){inventory.insert(key,cost,Actionable.MODULATE,source);return Result.SPAWN_FAILED;}
         player.getCooldowns().addCooldown(stack.getItem(),SimulationConfig.COIL_COOLDOWN.get());return Result.SUCCESS;
     }
 }

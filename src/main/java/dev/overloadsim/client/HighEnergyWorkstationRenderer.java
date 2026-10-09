@@ -81,7 +81,7 @@ public final class HighEnergyWorkstationRenderer implements BlockEntityRenderer<
                     OverlayTexture.NO_OVERLAY);
             poses.popPose();
         }
-        if(host.currentPower()>HighEnergyWorkstationBlockEntity.LASER_THRESHOLD){
+        if(host.currentPower()>host.laserThreshold()){
             // The existing fixed translucent beacon pass follows opaque geometry and writes colour only.
             var beam=buffers.getBuffer(RenderType.beaconBeam(InventoryMenu.BLOCK_ATLAS,true));
             for(var ray:WorkstationOptics.rays()) {

@@ -1,5 +1,6 @@
 package dev.overloadsim.multiblock;
 
+import dev.overloadsim.config.MachineSettings;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.*;
 import net.minecraft.world.item.ItemStack;
@@ -13,12 +14,13 @@ public final class BulkOutputBuffer {
     private void check(int slot){if(slot<0||slot>=SLOTS)throw new IllegalArgumentException("bulk slot");}
     public ItemStack prototype(int slot){check(slot);return items[slot].copy();}
     public int count(int slot){check(slot);return counts[slot];}
+    public int slotLimit(){return MachineSettings.intValue(MachineSettings.MULTIBLOCK_OUTPUT_SLOT_LIMIT);}
     public long insert(ItemStack item,long amount,boolean simulate){
         if(item.isEmpty()||amount<=0)return 0;
         long left=amount;
         for(int pass=0;pass<2;pass++)for(int i=0;i<SLOTS&&left>0;i++){
             if(pass==0?counts[i]>0&&ItemStack.isSameItemSameComponents(items[i],item):counts[i]==0){
-                int moved=(int)Math.min(left,LIMIT-counts[i]);left-=moved;
+                int moved=(int)Math.min(left,Math.max(0,slotLimit()-counts[i]));left-=moved;
                 if(!simulate&&moved>0){items[i]=item.copyWithCount(1);counts[i]+=moved;}
             }
         }
@@ -45,7 +47,7 @@ public final class BulkOutputBuffer {
         java.util.Arrays.fill(items,ItemStack.EMPTY);java.util.Arrays.fill(counts,0);
         for(var value:tag.getList("Entries",Tag.TAG_COMPOUND)){
             var entry=(CompoundTag)value;int slot=entry.getInt("Slot"),qty=entry.getInt("Quantity");
-            if(slot<0||slot>=SLOTS||qty<1||qty>LIMIT)continue;
+            if(slot<0||slot>=SLOTS||qty<1)continue;
             var item=ItemStack.parseOptional(registries,entry.getCompound("Item"));
             if(!item.isEmpty()){items[slot]=item.copyWithCount(1);counts[slot]=qty;}
         }

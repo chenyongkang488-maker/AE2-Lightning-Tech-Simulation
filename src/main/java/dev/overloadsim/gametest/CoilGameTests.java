@@ -13,6 +13,21 @@ import dev.overloadsim.OverloadSimulation;
 @GameTestHolder(OverloadSimulation.ID)
 @PrefixGameTestTemplate(false)
 public class CoilGameTests {
+    @GameTest(template="empty",timeoutTicks=130)
+    public static void configuredLightningDebitUsesSelectedVoltageAndRefundsFailedSpawn(GameTestHelper h){
+        var bench=network(h);var coil=equipped(h,bench);var player=player(h);player.setPos(bench.getBlockPos().getCenter());
+        h.runAtTickTime(80,()->{
+            SimulationConfigurationGameTests.withValue(dev.overloadsim.config.MachineSettings.COIL_LIGHTNING_COST,13,()->{
+                var store=bench.getGrid().getStorageService().getInventory();var source=appeng.api.networking.security.IActionSource.empty();var hv=com.moakiee.ae2lt.me.key.LightningKey.HIGH_VOLTAGE;
+                h.assertTrue(dev.overloadsim.tool.CoilLightning.fire(player,coil,true)==dev.overloadsim.tool.CoilLightning.Result.SUCCESS&&store.extract(hv,100,appeng.api.config.Actionable.SIMULATE,source)==27,"selected voltage debits configured thirteen lightning");
+                player.getCooldowns().removeCooldown(coil.getItem());bolts(h,player).forEach(net.minecraft.world.entity.Entity::discard);
+                java.util.function.Consumer<net.neoforged.neoforge.event.entity.EntityJoinLevelEvent> cancel=e->{if(e.getEntity() instanceof net.minecraft.world.entity.LightningBolt&&e.getEntity().getPersistentData().getBoolean("overload_sim.coil_lightning"))e.setCanceled(true);};
+                net.neoforged.neoforge.common.NeoForge.EVENT_BUS.addListener(cancel);
+                try{h.assertTrue(dev.overloadsim.tool.CoilLightning.fire(player,coil,true)==dev.overloadsim.tool.CoilLightning.Result.SPAWN_FAILED&&store.extract(hv,100,appeng.api.config.Actionable.SIMULATE,source)==27,"failed spawn refunds exact configured lightning debit");}
+                finally{net.neoforged.neoforge.common.NeoForge.EVENT_BUS.unregister(cancel);}
+            });h.succeed();
+        });
+    }
     @GameTest(template="empty")
     public static void moduleDependenciesPersistAndCapacityClamps(GameTestHelper h) {
         var coil=new ItemStack(dev.overloadsim.ModContent.COIL.get());
@@ -28,7 +43,7 @@ public class CoilGameTests {
         a.energyBuffer().receiveFe(coil,Integer.MAX_VALUE,false);
         var copy=ItemStack.parse(r,coil.save(r)).orElseThrow();
         h.assertTrue(a.listModuleEntries(copy,r).size()==3&&a.energyBuffer().stored(copy)==Integer.MAX_VALUE,"loadout and FE survive serialization");
-        h.assertTrue(!a.uninstallOne(copy,r,"energy").isEmpty()&&a.energyBuffer().stored(copy)==10_000_000L,"module removal clamps FE");
+        h.assertTrue(!a.uninstallOne(copy,r,"energy").isEmpty()&&a.energyBuffer().stored(copy)==Integer.MAX_VALUE,"module removal preserves previously paid FE");
         h.assertTrue(!a.uninstallOne(copy,r,"efficiency_module").isEmpty()&&!a.uninstallOne(copy,r,"mimic_tool_module").isEmpty(),"remove children then parent without losing items");
         h.succeed();
     }

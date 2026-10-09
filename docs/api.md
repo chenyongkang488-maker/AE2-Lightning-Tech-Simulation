@@ -1,4 +1,6 @@
-# 数据包与 Java API（0.1.0-alpha.11）
+# 数据包与 Java API（0.2.0-alpha.17）
+
+机器运行数值与容量现在可通过主菜单模组列表的原生“配置”界面调整，见 [机器配置](MACHINE_CONFIGURATION.md)。本文下方未特别标注的固定数值描述默认配置；新 `MachineSettings` 参数使用 WORLD 重启缓存，重新进入世界后生效。公开旧常量继续代表兼容默认值，读取机器实际容量和运行阈值应使用对应实例访问器。旧 COMMON 配置键保持原路径，配方、产物与耗材数据包 API 保持可用。
 
 新增激光与粒子子系统见 [激光 API](laser-particle-api.md)。
 

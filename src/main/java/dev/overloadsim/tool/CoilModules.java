@@ -4,6 +4,7 @@ import java.util.*;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemContainerContents;
 import dev.overloadsim.ModContent;
+import dev.overloadsim.config.MachineSettings;
 import com.moakiee.ae2lt.celestweave.ArmorEnergyModuleItem;
 import com.moakiee.ae2lt.registry.ModItems;
 
@@ -46,5 +47,5 @@ public final class CoilModules {
         else if(core.is(ModItems.ULTIMATE_OVERLOAD_CORE.get()))coil.set(ModContent.COIL_CORE.get(),core.copyWithCount(1));
     }
     public static boolean miningReady(ItemStack coil){return hasCore(coil)&&has(coil,CoilModuleItem.Type.MIMIC);}
-    public static long capacity(ItemStack coil){return entries(coil).stream().filter(CoilModules::isEnergy).mapToLong(s->((ArmorEnergyModuleItem)s.getItem()).armorCapacityFe()).max().orElse(10_000_000L);}
+    public static long capacity(ItemStack coil){long capacity=entries(coil).stream().filter(CoilModules::isEnergy).mapToLong(s->((ArmorEnergyModuleItem)s.getItem()).armorCapacityFe()).max().orElse(MachineSettings.longValue(MachineSettings.COIL_BASE_CAPACITY));return Math.min(capacity,MachineSettings.longValue(MachineSettings.COIL_CAPACITY_LIMIT));}
 }

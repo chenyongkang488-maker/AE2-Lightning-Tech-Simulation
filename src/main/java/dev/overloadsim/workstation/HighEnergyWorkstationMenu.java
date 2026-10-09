@@ -47,6 +47,11 @@ public final class HighEnergyWorkstationMenu extends AEBaseMenu implements Frequ
     @GuiSync(44) public String buildFeedback = "";
     @GuiSync(45) public GenericStack inputFluidDisplay;
     @GuiSync(46) public GenericStack outputFluidDisplay;
+    @GuiSync(47) public long laserThreshold=HighEnergyWorkstationBlockEntity.LASER_THRESHOLD;
+    @GuiSync(48) public int cycleTicks=2;
+    @GuiSync(49) public int parallelLimit=HighEnergyWorkstationBlockEntity.MAX_PARALLEL;
+    @GuiSync(50) public int slotCapacity=WorkstationBuffer.LIMIT;
+    @GuiSync(51) public int tankCapacity=HighEnergyWorkstationBlockEntity.TANK_CAPACITY;
     private final HighEnergyWorkstationBlockEntity host;
     private final UUID hostIdentity;
     private final BlockPos frameAnchor;
@@ -113,12 +118,12 @@ public final class HighEnergyWorkstationMenu extends AEBaseMenu implements Frequ
     public void toggleNetworkExport() { sendClientAction("workstationNetwork"); }
     public void autoBuild() { sendClientAction("workstationBuild"); }
 
-    /** Exact counts never enter ItemStack's normal network codec. The CSV is at most 143 characters. */
+    /** Exact counts never enter ItemStack's normal network codec. The CSV is at most 197 characters. */
     public long quantity(int slot) {
-        if (slot < 0 || slot >= DISPLAYS || quantities.length() > DISPLAYS * 8) return 0;
+        if (slot < 0 || slot >= DISPLAYS || quantities.length() > DISPLAYS * 11) return 0;
         var parts = quantities.split(",", -1);
         if (parts.length != DISPLAYS) return 0;
-        try { return Math.clamp(Long.parseLong(parts[slot]), 0, SLOT_CAPACITY); }
+        try { return Math.clamp(Long.parseLong(parts[slot]), 0, Integer.MAX_VALUE); }
         catch (NumberFormatException ignored) { return 0; }
     }
 
@@ -271,10 +276,13 @@ public final class HighEnergyWorkstationMenu extends AEBaseMenu implements Frequ
             frequency = host.getFrequencyId();
             eject = host.eject();
             networkExport = host.networkExport();
-            var csv = new StringBuilder(DISPLAYS * 8);
+            var settings=WorkstationSettings.capture();
+            laserThreshold=settings.laserThreshold();cycleTicks=settings.cycleTicks();parallelLimit=settings.maxParallel();
+            slotCapacity=settings.slotCapacity();tankCapacity=settings.tankCapacity();
+            var csv = new StringBuilder(DISPLAYS * 11);
             for (int i = 0; i < DISPLAYS; i++) {
                 if (i > 0) csv.append(',');
-                csv.append(Math.clamp(buffer(i).count(localSlot(i)), 0, SLOT_CAPACITY));
+                csv.append(Math.max(0,buffer(i).count(localSlot(i))));
                 display.setStackInSlot(i, buffer(i).prototype(localSlot(i)));
             }
             quantities = csv.toString();

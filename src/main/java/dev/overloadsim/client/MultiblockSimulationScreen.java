@@ -97,7 +97,7 @@ public final class MultiblockSimulationScreen extends AEBaseScreen<MultiblockSim
         g.drawString(font,menu.capacity==0?Component.translatable("gui.overload_sim.multiblock.unformed_size",menu.buildSize,menu.buildSize,menu.buildSize):Component.translatable("gui.overload_sim.multiblock.crystals",present,menu.capacity),10,20,color,false);
         g.drawString(font,Component.translatable("gui.overload_sim.multiblock.outputs",menu.page+1),right,20,color,false);
         g.drawString(font,Component.literal(menu.duration+" tick · ×"+menu.multiplier),right,128,color,false);
-        g.drawString(font,Component.literal("FE "+menu.fe+" / 2000000"),right,141,color,false);
+        g.drawString(font,Component.literal("FE "+menu.fe+" / "+menu.feCapacity),right,141,color,false);
     }
     @Override public void renderSlot(GuiGraphics g,Slot slot){
         if(slot.index<49||slot.index>=81){super.renderSlot(g,slot);return;}
@@ -116,7 +116,7 @@ public final class MultiblockSimulationScreen extends AEBaseScreen<MultiblockSim
     }
     @Override public void render(GuiGraphics g,int mx,int my,float partial){
         super.render(g,mx,my,partial);var slot=getSlotUnderMouse();
-        if(slot!=null&&slot.index>=49&&slot.index<81&&!slot.getItem().isEmpty())g.renderTooltip(font,java.util.List.of(slot.getItem().getHoverName(),Component.literal(menu.quantity(slot.index-49)+" / 1024"),Component.translatable("gui.overload_sim.multiblock.take")),java.util.Optional.empty(),mx,my);
+        if(slot!=null&&slot.index>=49&&slot.index<81&&!slot.getItem().isEmpty())g.renderTooltip(font,java.util.List.of(slot.getItem().getHoverName(),Component.literal(menu.quantity(slot.index-49)+" / "+menu.outputSlotLimit),Component.translatable("gui.overload_sim.multiblock.take")),java.util.Optional.empty(),mx,my);
         int px=leftPos+layout.progressLeft();if(mx>=px-2&&mx<px+8&&my>=topPos+32&&my<topPos+154)
             g.renderTooltip(font,java.util.List.of(Component.translatable("status.overload_sim."+menu.status),Component.translatable("gui.overload_sim.multiblock.error",menu.problem),Component.literal("FE "+menu.feCost+" · HV "+menu.hvCost+" · EHV "+menu.ehvCost),Component.translatable("gui.overload_sim.multiblock.frequency",menu.frequency)),java.util.Optional.empty(),mx,my);
     }

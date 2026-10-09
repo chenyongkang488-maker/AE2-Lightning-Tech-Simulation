@@ -53,7 +53,7 @@ public final class LaserExplosion {
         if (!LaserSettings.explosionEnabled() || !(host.getLevel() instanceof ServerLevel level) || host.explosionTriggered()) return;
         var centerBlock = host.center().immutable();
         var event = new LaserEvents.BeforeExplosion(level, host.getBlockPos(), centerBlock,
-                host.formed() ? "particle_overflow" : "containment_broken", ExplosionSphere.MAX_RADIUS_BLOCKS);
+                host.formed() ? "particle_overflow" : "containment_broken", dev.overloadsim.config.MachineSettings.intValue(dev.overloadsim.config.MachineSettings.EXPLOSION_RADIUS));
         NeoForge.EVENT_BUS.post(event);
         if (event.isCanceled() || !LaserSettings.explosionEnabled() || !host.markExplosionTriggered()) return;
 

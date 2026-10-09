@@ -3,7 +3,11 @@ import dev.overloadsim.*;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModList;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
+import net.neoforged.neoforge.client.gui.ConfigurationScreen;
+import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterRenderBuffersEvent;
 import com.mojang.blaze3d.vertex.ByteBufferBuilder;
@@ -11,6 +15,10 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.world.inventory.InventoryMenu;
 @EventBusSubscriber(modid=OverloadSimulation.ID,bus=EventBusSubscriber.Bus.MOD,value=Dist.CLIENT)
 public class ClientRegistration {
+    @SubscribeEvent public static void configScreen(FMLClientSetupEvent event){
+        ModList.get().getModContainerById(OverloadSimulation.ID).orElseThrow()
+                .registerExtensionPoint(IConfigScreenFactory.class,ConfigurationScreen::new);
+    }
     @SubscribeEvent public static void reactorGlowBuffer(RegisterRenderBuffersEvent event){
         var glow=RenderType.beaconBeam(InventoryMenu.BLOCK_ATLAS,false);
         // The beacon shader preserves pixel colours without entity directional

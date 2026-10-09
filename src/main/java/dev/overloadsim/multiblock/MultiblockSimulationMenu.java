@@ -34,6 +34,8 @@ public class MultiblockSimulationMenu extends AEBaseMenu implements FrequencyBin
     @GuiSync(44) public int frequency=-1;
     @GuiSync(45) public int buildSize=3;
     @GuiSync(46) public String constructionFeedback="";
+    @GuiSync(47) public int feCapacity=2_000_000;
+    @GuiSync(48) public int outputSlotLimit=1024;
     private final SimulationControllerBlockEntity host;
     private final UUID hostIdentity;
     private final net.minecraft.core.BlockPos frameAnchor;
@@ -85,8 +87,8 @@ public class MultiblockSimulationMenu extends AEBaseMenu implements FrequencyBin
         refresh();if(expectedPage!=page||expectedRevision!=revision)return;
         int slot=page*VISIBLE_OUTPUTS+visible;var buffer=host.outputs();
         if(mode==2){
-            while(buffer.count(slot)>0){
-                var offered=buffer.extract(slot,Integer.MAX_VALUE,true);int before=offered.getCount();player.getInventory().add(offered);
+            for(int attempt=0;attempt<36&&buffer.count(slot)>0;attempt++){
+                var offered=buffer.extract(slot,Integer.MAX_VALUE,true);int before=offered.getCount();insertOrdinaryInventory(player.getInventory(),offered);
                 int moved=before-offered.getCount();if(moved==0)break;buffer.debit(slot,moved);
             }
         }else{
@@ -97,6 +99,19 @@ public class MultiblockSimulationMenu extends AEBaseMenu implements FrequencyBin
             if(taken.isEmpty())return;
             if(carried.isEmpty())setCarried(taken);else{carried.grow(taken.getCount());setCarried(carried);}
         }host.saveChanges();force=true;refresh();broadcastChanges();
+    }
+    /** Creative Inventory.add discards rejected offers; debit only insertion into the 36 ordinary slots. */
+    private static void insertOrdinaryInventory(Inventory inventory,ItemStack offered){
+        for(int pass=0;pass<2&&!offered.isEmpty();pass++)for(int slot=0;slot<36&&!offered.isEmpty();slot++){
+            var current=inventory.getItem(slot);
+            if(pass==0&&(current.isEmpty()||!ItemStack.isSameItemSameComponents(current,offered)))continue;
+            if(pass==1&&!current.isEmpty())continue;
+            int limit=Math.min(inventory.getMaxStackSize(),offered.getMaxStackSize());
+            int moved=Math.min(offered.getCount(),Math.max(0,limit-current.getCount()));
+            if(moved==0)continue;
+            if(current.isEmpty())inventory.setItem(slot,offered.copyWithCount(moved));else current.grow(moved);
+            offered.shrink(moved);inventory.setChanged();
+        }
     }
     private void refresh(){
         if(!isServerSide())return;boolean changed=force;
@@ -118,7 +133,7 @@ public class MultiblockSimulationMenu extends AEBaseMenu implements FrequencyBin
     @Override public void broadcastChanges(){
         if(isServerSide()){
             buildSize=host.selectedBuildSize();
-            var s=host.structure();capacity=s==null?0:s.capacity();fe=host.energy().getEnergyStored();status=host.status();
+            var s=host.structure();capacity=s==null?0:s.capacity();fe=host.energy().getEnergyStored();feCapacity=host.energy().getMaxEnergyStored();outputSlotLimit=host.outputs().slotLimit();status=host.status();
             var batch=host.batch();remaining=batch==null?0:batch.remaining;duration=batch==null?s==null?180:MultiblockData.policy().duration(s):batch.duration;
             participants=batch==null?0:batch.inputs.size();multiplier=s==null?1:MultiblockData.policy().multiplier(s);
             // Totals are no longer part of this UI; avoid simulating a full network extraction every tick.

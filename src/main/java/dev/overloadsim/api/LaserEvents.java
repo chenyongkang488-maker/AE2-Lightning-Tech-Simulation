@@ -96,29 +96,33 @@ public final class LaserEvents {
         /** Optical center block; position continues to identify the controller. */
         public final BlockPos center;
         private int radiusBlocks;
+        private final int maximumRadius;
         /** @deprecated Use the block-radius constructor. A legacy chunk radius of 1 maps to 12 blocks, and 0 to 0. */
         @Deprecated
         public BeforeExplosion(ServerLevel level, BlockPos position, String cause, int radiusChunks) {
             super(level, position);
             this.cause = Objects.requireNonNull(cause);
             this.center = position.immutable();
+            maximumRadius=12;
             setRadiusChunks(radiusChunks);
         }
         public BeforeExplosion(ServerLevel level, BlockPos position, BlockPos center, String cause, int radiusBlocks) {
             super(level, position);
             this.cause = Objects.requireNonNull(cause);
             this.center = Objects.requireNonNull(center).immutable();
+            bounded(radiusBlocks,dev.overloadsim.core.ExplosionSphere.HARD_RADIUS_LIMIT);
+            maximumRadius=radiusBlocks;
             setRadiusBlocks(radiusBlocks);
         }
-        /** Inclusive spherical radius in blocks; handlers may reduce it within 0..12. */
+        /** Handlers may reduce the configured radius, never expand it beyond the initial value (at most 64). */
         public int radiusBlocks() { return radiusBlocks; }
-        public void setRadiusBlocks(int value) { bounded(value, 12); radiusBlocks = value; }
+        public void setRadiusBlocks(int value) { bounded(value, maximumRadius); radiusBlocks = value; }
         /** @deprecated A compatibility flag: 0 for zero radius, 1 for any positive block radius. */
         @Deprecated
         public int radiusChunks() { return radiusBlocks == 0 ? 0 : 1; }
         /** @deprecated A legacy value of 1 selects the 12-block sphere, and 0 selects its center only. */
         @Deprecated
-        public void setRadiusChunks(int value) { bounded(value, 1); radiusBlocks = value == 0 ? 0 : 12; }
+        public void setRadiusChunks(int value) { bounded(value, 1); radiusBlocks = value == 0 ? 0 : Math.min(12,maximumRadius); }
     }
     private static void bounded(long value, long maximum) {
         if (value < 0 || value > maximum) throw new IllegalArgumentException("laser event amount out of range");

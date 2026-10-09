@@ -18,6 +18,8 @@ import dev.overloadsim.compat.AppliedFluxEnergy;
 import dev.overloadsim.compat.AppliedFluxRefunds;
 import dev.overloadsim.compat.FrequencyBindingLifecycle;
 import dev.overloadsim.core.SimulationRules;
+import dev.overloadsim.config.ConfiguredEnergyStorage;
+import dev.overloadsim.config.MachineSettings;
 import dev.overloadsim.data.*;
 import net.minecraft.core.*;
 import net.minecraft.core.component.DataComponentMap;
@@ -56,7 +58,7 @@ public class SimulationChamberBlockEntity extends AENetworkedBlockEntity impleme
         public int getSlotLimit(int slot){return slot<SLOTS?inventory.getSlotLimit(slot):upgrades.getSlotLimit(slot-SLOTS);}
         public boolean isItemValid(int slot,ItemStack s){return slot<SLOTS?inventory.isItemValid(slot,s):upgrades.isItemValid(slot-SLOTS,s);}
     };
-    private final EnergyStorage energy=new EnergyStorage(2_000_000,2_000_000,0){@Override public int receiveEnergy(int max,boolean simulate){int moved=super.receiveEnergy(max,simulate);if(moved>0&&!simulate)saveChanges();return moved;}};
+    private final EnergyStorage energy=new ConfiguredEnergyStorage(()->MachineSettings.intValue(MachineSettings.SIMULATION_ENERGY_CAPACITY),()->MachineSettings.intValue(MachineSettings.SIMULATION_RECEIVE_PER_CALL),this::saveChanges);
     private final List<ItemStack> pending=new ArrayList<>();
     private CrystalData taskCrystal;
     private ResourceLocation taskRecipe;
@@ -88,7 +90,7 @@ public class SimulationChamberBlockEntity extends AENetworkedBlockEntity impleme
     @Override protected void saveVisualState(CompoundTag data){super.saveVisualState(data);data.putByte("SimulationVisual",(byte)visualFlags);}
     @Override protected void loadVisualState(CompoundTag data){super.loadVisualState(data);visualFlags=data.getByte("SimulationVisual")&3;}
     public int remaining(){return remaining;}public int totalTicks(){return totalTicks;}public int actualParallel(){return actualParallel;}public int status(){return status;}public boolean eject(){return eject;}public int outputMask(){return outputMask;}
-    public int maximumParallel(){return SimulationRules.parallel(Math.min(32,inventory.getStackInSlot(1).getCount()));}
+    public int maximumParallel(){int matrices=Math.min(SimulationConfig.MATRIX_LIMIT.get(),inventory.getStackInSlot(1).getCount());return Math.min(MachineSettings.intValue(MachineSettings.SIMULATION_MAX_PARALLEL),Math.max(1,matrices*MachineSettings.intValue(MachineSettings.SIMULATION_PARALLEL_PER_MATRIX)));}
     public void toggleEject(){eject=!eject;saveChanges();}
     public void toggleSide(int side){if(side>=0&&side<6){outputMask^=1<<side;saveChanges();}}
     public void tick(){
@@ -106,17 +108,18 @@ public class SimulationChamberBlockEntity extends AENetworkedBlockEntity impleme
             flushPending();if(!pending.isEmpty()){status=4;return;}
             var completed=taskCrystal;taskActive=false;taskCrystal=null;status=0;saveChanges();NeoForge.EVENT_BUS.post(new SimulationEvents.Completed("production",server,worldPosition,completed));return;
         }
-        if(server.getGameTime()%10==0)start(server);
+        if(server.getGameTime()%MachineSettings.intValue(MachineSettings.SIMULATION_START_INTERVAL)==0)start(server);
     }
     private void start(ServerLevel server){
         var crystal=inventory.getStackInSlot(0).copy();var data=CrystalDataAccess.read(crystal);
         if(!crystal.is(ModContent.PERFECT.get())||data.isEmpty()){status=0;return;}if(SimulationData.profile(server,data.get().profile()).isEmpty()){status=6;return;}
         if(!getMainNode().isActive()){status=2;return;}
         var chosen=SimulationResolvers.production(server,data.get());if(chosen.isEmpty()){status=5;return;}var production=chosen.get().config();
+        production=new SimulationRecipe.Production(production.ticks(),SimulationRules.scalePercent(production.fe(),MachineSettings.intValue(MachineSettings.SIMULATION_ENERGY_COST_PERCENT)),SimulationRules.scalePercent(production.lightning(),MachineSettings.intValue(MachineSettings.SIMULATION_LIGHTNING_COST_PERCENT)),production.outputs(),production.provider(),production.entityLoot(),production.input());
         boolean dynamic=chosen.get().mineral().isPresent();int p=outputParallel(production,maximumParallel(),dynamic);if(p<1){status=4;return;}
         if(production.lightning()>0)p=(int)Math.min(p,LightningNetwork.extract(this,Long.MAX_VALUE,true)/production.lightning());
         if(production.input().isPresent()){var input=production.input().get();var aux=inventory.getStackInSlot(3);if(!BuiltInRegistries.ITEM.getKey(aux.getItem()).equals(input.item())){status=3;return;}p=Math.min(p,aux.getCount()/input.count());}
-        if(production.fe()>0){p=(int)Math.min(p,energy.getMaxEnergyStored()/production.fe());p=(int)Math.min(p,energy.getEnergyStored()/production.fe());}
+        if(production.fe()>0)p=(int)Math.min(p,energy.getEnergyStored()/production.fe());
         if(p<1){status=3;return;}
         if(NeoForge.EVENT_BUS.post(new SimulationEvents.BeforeSimulation(server,worldPosition,data.get(),p)).isCanceled())return;
         // A listener may mutate inventory/energy/network. Verify the full transaction again.
@@ -128,7 +131,7 @@ public class SimulationChamberBlockEntity extends AENetworkedBlockEntity impleme
         var fixed=new ArrayList<ItemStack>();try{for(int op=0;op<p;op++)fixed.addAll(chosen.get().roll(server,worldPosition,data.get(),"single"));}catch(RuntimeException error){lightningRefund=Math.addExact(lightningRefund,extracted);status=5;saveChanges();LOG.error("Invalid simulation output for {}",chosen.get().id(),error);return;}
         long feCost=SimulationRules.batchEnergy(production.fe(),p);energy.deserializeNBT(server.registryAccess(),IntTag.valueOf(energy.getEnergyStored()-(int)feCost));
         if(production.input().isPresent()){var aux=inventory.getStackInSlot(3).copy();aux.shrink(production.input().get().count()*p);inventory.setStackInSlot(3,aux);}
-        pending.clear();pending.addAll(fixed);taskCrystal=data.get();taskRecipe=chosen.get().id();actualParallel=p;cardsSnapshot=getInstalledUpgrades(AEItems.SPEED_CARD);totalTicks=SimulationRules.duration(production.ticks(),cardsSnapshot);remaining=totalTicks;paidFe=feCost;paidLightning=lightningCost;taskActive=true;status=1;saveChanges();
+        pending.clear();pending.addAll(fixed);taskCrystal=data.get();taskRecipe=chosen.get().id();actualParallel=p;cardsSnapshot=getInstalledUpgrades(AEItems.SPEED_CARD);totalTicks=SimulationRules.duration((int)SimulationRules.scalePercent(production.ticks(),MachineSettings.intValue(MachineSettings.SIMULATION_TIME_PERCENT)),cardsSnapshot);remaining=totalTicks;paidFe=feCost;paidLightning=lightningCost;taskActive=true;status=1;saveChanges();
     }
     private void chargeFromNetwork(int requestedFe){
         claimNetworkFeRefund();
@@ -173,7 +176,7 @@ public class SimulationChamberBlockEntity extends AENetworkedBlockEntity impleme
         }if(stack.isEmpty())iter.remove();else break;}saveChanges();
     }
     private void ejectOutputs(){
-        int budget=64;
+        int budget=MachineSettings.intValue(MachineSettings.SIMULATION_EJECT_PER_CYCLE);
         for(var side:Direction.values()){
             if((outputMask&(1<<side.ordinal()))==0||!level.hasChunkAt(worldPosition.relative(side)))continue;
             var target=level.getCapability(Capabilities.ItemHandler.BLOCK,worldPosition.relative(side),side.getOpposite());if(target==null)continue;

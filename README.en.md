@@ -6,10 +6,11 @@ By **qiqi**. A **Minecraft 1.21.1 / NeoForge** addon for AE2 Lightning Tech.
 Grow reusable simulation crystals with lightning, then use an ME network
 to produce minerals, crops, wood and mob loot.
 
-Current development version: **0.2.0-alpha.5**. Includes lasers, particle
-constrainers and automatic multiblock construction, with the stable branch's
-compatibility fixes for the current non-Reborn Lightning Tech and AE2.
-The new laser/particle devices are experimental and have no survival recipes yet.
+Current development version: **0.2.0-alpha.17**. Includes lasers, particle
+constrainers, automatic construction and the high-energy workstation, with
+survival recipes and compatibility with current Lightning Tech and AE2.
+Use **Title screen → Mods → Lightning Tech: Simulation → Config** to tune
+machine values, capacities and the explosion switch. See [configuration instructions](docs/MACHINE_CONFIGURATION.md).
 
 ![Simulation crystals](art/crystal_preview.png)
 

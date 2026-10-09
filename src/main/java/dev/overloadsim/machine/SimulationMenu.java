@@ -22,6 +22,7 @@ public class SimulationMenu extends AEBaseMenu implements FrequencyBindingMenuHo
     @GuiSync(37) public int outputMask;
     @GuiSync(38) public int frequency;
     @GuiSync(39) public long highVoltage;
+    @GuiSync(40) public int feCapacity=2_000_000;
     private final SimulationChamberBlockEntity host;
     public static MenuType<SimulationMenu> createType(){return MenuTypeBuilder.create(SimulationMenu::new,SimulationChamberBlockEntity.class).withMenuTitle(h->Component.translatable("block.overload_sim.overload_simulation_chamber")).buildUnregistered(ModContent.id("overload_simulation_chamber"));}
     public SimulationMenu(int id,Inventory inv,SimulationChamberBlockEntity host){super(ModContent.MENU.get(),id,inv,host);this.host=host;
@@ -38,7 +39,7 @@ public class SimulationMenu extends AEBaseMenu implements FrequencyBindingMenuHo
     public void toggleEject(){sendClientAction("eject");}public void toggleSide(int side){sendClientAction("side",side);}
     public void clearSides(){sendClientAction("clearSides");}
     public ItemStack neighborIcon(int side){var level=host.getLevel();var pos=host.getBlockPos().relative(net.minecraft.core.Direction.from3DDataValue(side));return level!=null&&level.hasChunkAt(pos)?new ItemStack(level.getBlockState(pos).getBlock()):ItemStack.EMPTY;}
-    @Override public void broadcastChanges(){if(isServerSide()){fe=host.energy().getEnergyStored();remaining=host.remaining();duration=host.totalTicks();parallel=host.actualParallel();maximum=host.maximumParallel();status=host.status();eject=host.eject();outputMask=host.outputMask();frequency=host.getFrequencyId();highVoltage=dev.overloadsim.compat.LightningNetwork.extract(host,Long.MAX_VALUE,true);}super.broadcastChanges();}
+    @Override public void broadcastChanges(){if(isServerSide()){fe=host.energy().getEnergyStored();feCapacity=host.energy().getMaxEnergyStored();remaining=host.remaining();duration=host.totalTicks();parallel=host.actualParallel();maximum=host.maximumParallel();status=host.status();eject=host.eject();outputMask=host.outputMask();frequency=host.getFrequencyId();highVoltage=dev.overloadsim.compat.LightningNetwork.extract(host,Long.MAX_VALUE,true);}super.broadcastChanges();}
     @Override public boolean stillValid(Player player){return !host.isRemoved()&&player.level()==host.getLevel()&&player.distanceToSqr(host.getBlockPos().getCenter())<=64;}
     @Override protected java.util.List<Slot> getQuickMoveDestinationSlots(ItemStack stack,boolean fromPlayerSide){
         if(!fromPlayerSide)return super.getQuickMoveDestinationSlots(stack,false);

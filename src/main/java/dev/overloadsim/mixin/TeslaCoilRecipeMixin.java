@@ -8,6 +8,7 @@ import com.moakiee.ae2lt.machine.teslacoil.TeslaCoilMode;
 import com.moakiee.ae2lt.me.key.LightningKey;
 import com.moakiee.ae2lt.registry.ModItems;
 import dev.overloadsim.ModContent;
+import dev.overloadsim.config.MachineSettings;
 import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -32,10 +33,14 @@ public abstract class TeslaCoilRecipeMixin {
     @Unique private static final String overloadSim$RECIPE_TAG = "OverloadSimTranscendentBatch";
     @Unique private static final String overloadSim$OUTPUT_TAG = "OverloadSimTranscendentDelivered";
     @Unique private static final String overloadSim$RESERVED_TAG = "OverloadSimTranscendentReserved";
+    @Unique private static final String overloadSim$FE_TAG = "OverloadSimTranscendentTotalFe";
+    @Unique private static final String overloadSim$TARGET_TAG = "OverloadSimTranscendentOutputEhv";
 
     @Shadow @Final private TeslaCoilInventory inventory;
     @Shadow private TeslaCoilMode lockedMode;
     @Unique private boolean overloadSim$transcendentBatch;
+    @Unique private long overloadSim$totalFe = overloadSim$TOTAL_FE;
+    @Unique private long overloadSim$outputEhv = overloadSim$OUTPUT_EHV;
     /** Nonzero output means the batch already owns its consumed crystal, even on insert-only storage. */
     @Unique private long overloadSim$deliveredOutput;
     @Unique private ItemStack overloadSim$reservedCrystal = ItemStack.EMPTY;
@@ -49,6 +54,12 @@ public abstract class TeslaCoilRecipeMixin {
     private boolean overloadSim$isCrystal(ItemStack stack) {
         return !stack.isEmpty() && stack.is(ModContent.TRANSCENDENT.get());
     }
+
+    @Unique
+    private long overloadSim$recipeFe(){return overloadSim$transcendentBatch?overloadSim$totalFe:MachineSettings.longValue(MachineSettings.TESLA_CRYSTAL_FE);}
+
+    @Unique
+    private long overloadSim$recipeOutput(){return overloadSim$transcendentBatch?overloadSim$outputEhv:MachineSettings.longValue(MachineSettings.TESLA_CRYSTAL_EHV);}
 
     @Unique
     private boolean overloadSim$hasMatrix() {
@@ -83,6 +94,8 @@ public abstract class TeslaCoilRecipeMixin {
         if (lockedMode == null) {
             // Set before upstream assigns lockedMode and asks for this batch's size.
             overloadSim$transcendentBatch = overloadSim$isCrystal(inventory.getStackInSlot(TeslaCoilInventory.SLOT_DUST));
+            overloadSim$totalFe = MachineSettings.longValue(MachineSettings.TESLA_CRYSTAL_FE);
+            overloadSim$outputEhv = MachineSettings.longValue(MachineSettings.TESLA_CRYSTAL_EHV);
             overloadSim$deliveredOutput = 0L;
             overloadSim$reservedCrystal = ItemStack.EMPTY;
         }
@@ -120,7 +133,7 @@ public abstract class TeslaCoilRecipeMixin {
     private void overloadSim$crystalOutputSpace(TeslaCoilMode mode, long batchSize,
             CallbackInfoReturnable<Boolean> cir) {
         if (overloadSim$isCrystalRecipe()) {
-            long remaining = overloadSim$OUTPUT_EHV - overloadSim$deliveredOutput;
+            long remaining = overloadSim$recipeOutput() - overloadSim$deliveredOutput;
             boolean accepted = batchSize == 1L && overloadSim$isLive()
                     && (remaining == 0L || simulateInsert(LightningKey.EXTREME_HIGH_VOLTAGE, remaining) >= remaining);
             cir.setReturnValue(accepted && overloadSim$isLive());
@@ -131,7 +144,7 @@ public abstract class TeslaCoilRecipeMixin {
     private void overloadSim$oneCrystalBatch(TeslaCoilMode mode, CallbackInfoReturnable<Long> cir) {
         if (overloadSim$isCrystalRecipe()) {
             boolean accepted = overloadSim$isLive() && overloadSim$hasCrystalPrerequisites()
-                    && simulateInsert(LightningKey.EXTREME_HIGH_VOLTAGE, overloadSim$OUTPUT_EHV) >= overloadSim$OUTPUT_EHV
+                    && simulateInsert(LightningKey.EXTREME_HIGH_VOLTAGE, overloadSim$recipeOutput()) >= overloadSim$recipeOutput()
                     && overloadSim$isLive();
             cir.setReturnValue(accepted ? 1L : 0L);
         }
@@ -140,7 +153,7 @@ public abstract class TeslaCoilRecipeMixin {
     @Inject(method = "getTotalEnergyFor", at = @At("HEAD"), cancellable = true)
     private void overloadSim$crystalEnergy(TeslaCoilMode mode, long batchSize, CallbackInfoReturnable<Long> cir) {
         if (mode != null && batchSize > 0L && overloadSim$isCrystalRecipe()) {
-            cir.setReturnValue(overloadSim$TOTAL_FE);
+            cir.setReturnValue(overloadSim$recipeFe());
         }
     }
 
@@ -155,7 +168,7 @@ public abstract class TeslaCoilRecipeMixin {
     private boolean overloadSim$commitCrystal() {
         var host = (TeslaCoilBlockEntity) (Object) this;
         if (!overloadSim$isLive() || !host.isReadyToCommit() || !overloadSim$hasCrystalPrerequisites()) return false;
-        long remaining = overloadSim$OUTPUT_EHV - overloadSim$deliveredOutput;
+        long remaining = overloadSim$recipeOutput() - overloadSim$deliveredOutput;
         if (remaining == 0L) return true;
 
         if (overloadSim$deliveredOutput == 0L && overloadSim$reservedCrystal.isEmpty()) {
@@ -236,6 +249,8 @@ public abstract class TeslaCoilRecipeMixin {
     private void overloadSim$saveRecipe(CompoundTag data, HolderLookup.Provider registries, CallbackInfo ci) {
         if (lockedMode != null && overloadSim$transcendentBatch) {
             data.putBoolean(overloadSim$RECIPE_TAG, true);
+            data.putLong(overloadSim$FE_TAG, overloadSim$totalFe);
+            data.putLong(overloadSim$TARGET_TAG, overloadSim$outputEhv);
             data.putLong(overloadSim$OUTPUT_TAG, overloadSim$deliveredOutput);
             if (!overloadSim$reservedCrystal.isEmpty()) {
                 data.put(overloadSim$RESERVED_TAG, overloadSim$reservedCrystal.save(registries));
@@ -244,6 +259,8 @@ public abstract class TeslaCoilRecipeMixin {
             }
         } else {
             data.remove(overloadSim$RECIPE_TAG);
+            data.remove(overloadSim$FE_TAG);
+            data.remove(overloadSim$TARGET_TAG);
             data.remove(overloadSim$OUTPUT_TAG);
             data.remove(overloadSim$RESERVED_TAG);
         }
@@ -253,8 +270,13 @@ public abstract class TeslaCoilRecipeMixin {
     private void overloadSim$loadRecipe(CompoundTag data, HolderLookup.Provider registries, CallbackInfo ci) {
         // Upstream clamps consumed FE against getLockedTotalEnergy during load, before a TAIL hook could run.
         overloadSim$transcendentBatch = data.contains("LockedMode") && data.getBoolean(overloadSim$RECIPE_TAG);
+        // Tags absent in alpha.16 locked batches retain the historical contract, not today's settings.
+        overloadSim$totalFe = overloadSim$transcendentBatch && data.contains(overloadSim$FE_TAG)
+                ? Math.clamp(data.getLong(overloadSim$FE_TAG),5L,16_000_000L) : overloadSim$TOTAL_FE;
+        overloadSim$outputEhv = overloadSim$transcendentBatch && data.contains(overloadSim$TARGET_TAG)
+                ? Math.clamp(data.getLong(overloadSim$TARGET_TAG),1L,1_000_000L) : overloadSim$OUTPUT_EHV;
         overloadSim$deliveredOutput = overloadSim$transcendentBatch
-                ? Math.clamp(data.getLong(overloadSim$OUTPUT_TAG), 0L, overloadSim$OUTPUT_EHV) : 0L;
+                ? Math.clamp(data.getLong(overloadSim$OUTPUT_TAG), 0L, overloadSim$outputEhv) : 0L;
         overloadSim$reservedCrystal = overloadSim$transcendentBatch && overloadSim$deliveredOutput == 0L
                 && data.contains(overloadSim$RESERVED_TAG)
                 ? ItemStack.parse(registries, data.getCompound(overloadSim$RESERVED_TAG)).orElse(ItemStack.EMPTY)

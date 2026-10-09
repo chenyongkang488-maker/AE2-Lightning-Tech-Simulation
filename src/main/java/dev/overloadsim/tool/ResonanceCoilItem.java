@@ -5,6 +5,7 @@ import com.moakiee.ae2lt.device.DeviceKind;
 import net.minecraft.world.item.Item;
 import java.util.List;
 import dev.overloadsim.*;
+import dev.overloadsim.config.MachineSettings;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
@@ -72,7 +73,7 @@ public class ResonanceCoilItem extends Item implements DeviceItem {
     }
     @Override public float getDestroySpeed(ItemStack stack,BlockState state){
         if(!CoilModules.miningReady(stack))return 1;
-        int efficiency=CoilSettings.read(stack).efficiencyLevel(stack);return 9+(efficiency>0?efficiency*efficiency+1:0);
+        int efficiency=CoilSettings.read(stack).efficiencyLevel(stack);return (float)MachineSettings.doubleValue(MachineSettings.COIL_BASE_MINING_SPEED)+(efficiency>0?efficiency*efficiency+1:0);
     }
     @Override public boolean canPerformAction(ItemStack stack,ItemAbility ability){
         if(CoilWrench.ability(stack,ability))return true;

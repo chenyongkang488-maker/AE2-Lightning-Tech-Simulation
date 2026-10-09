@@ -105,13 +105,13 @@ public final class HighEnergyWorkstationScreen extends AEBaseScreen<HighEnergyWo
         for (var slot : menu.slots) if (slot.isActive())
             SimulationScreen.icon(g, Icon.SLOT_BACKGROUND, x + slot.x - 1, y + slot.y - 1);
         SimulationScreen.icon(g, Icon.ARROW_RIGHT, x + 91, y + 92);
-        bar(g, x + 92, y + 114, 16, Math.clamp(menu.progress, 0, 2), 2, 0xFFED99C5);
+        bar(g, x + 92, y + 114, 16, menu.progress, menu.cycleTicks, 0xFFED99C5);
         g.fill(x + 12, y + 148, x + 188, y + 149, 0xFFB5A9BC);
-        fluidTank(g,x+10,y+71,menu.inputFluidDisplay);
-        fluidTank(g,x+180,y+71,menu.outputFluidDisplay);
+        fluidTank(g,x+10,y+71,menu.inputFluidDisplay,menu.tankCapacity);
+        fluidTank(g,x+180,y+71,menu.outputFluidDisplay,menu.tankCapacity);
     }
 
-    private static void fluidTank(GuiGraphics g,int x,int y,GenericStack display){
+    private static void fluidTank(GuiGraphics g,int x,int y,GenericStack display,int capacity){
         g.fill(x,y,x+14,y+60,0xFF77768C);
         g.fill(x+1,y+1,x+13,y+59,0xFFFDF8FC);
         g.fill(x+2,y+2,x+12,y+58,0xFFAAACC1);
@@ -121,7 +121,7 @@ public final class HighEnergyWorkstationScreen extends AEBaseScreen<HighEnergyWo
             if(texture!=null){
                 var sprite=Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(texture);
                 int color=properties.getTintColor(fluid);
-                int fill=Math.clamp((int)Math.ceil(display.amount()*56.0/dev.overloadsim.workstation.HighEnergyWorkstationBlockEntity.TANK_CAPACITY),1,56);
+                int fill=Math.clamp((int)Math.ceil(display.amount()*56.0/Math.max(1,capacity)),1,56);
                 g.enableScissor(x+2,y+58-fill,x+12,y+58);
                 for(int bottom=y+58;bottom>y+58-fill;bottom-=16)
                     g.blit(x+2,bottom-16,0,10,16,sprite,(color>>16&255)/255f,(color>>8&255)/255f,(color&255)/255f,(color>>>24)/255f);
@@ -150,7 +150,7 @@ public final class HighEnergyWorkstationScreen extends AEBaseScreen<HighEnergyWo
         text(g, Component.translatable("gui.overload_sim.workstation.parallel", menu.parallel), 12, 51, 176);
         text(g, Component.translatable("gui.overload_sim.workstation.inputs"), 33, 62, 55);
         text(g, Component.translatable("gui.overload_sim.workstation.outputs"), 115, 62, 55);
-        text(g, Component.literal(menu.progress + "/2"), 91, 121, 30);
+        text(g, Component.literal(menu.progress + "/" + menu.cycleTicks), 91, 121, 30);
         text(g, Component.translatable("gui.overload_sim.workstation.fluid_input_compact",LaserScreen.compact(menu.inputFluidAmount)), 10, 137, 79);
         text(g, Component.translatable("gui.overload_sim.workstation.fluid_output_compact",LaserScreen.compact(menu.outputFluidAmount)), 112, 137, 82);
         text(g, Component.translatable("container.inventory"), 20, 150, 162);
@@ -204,13 +204,13 @@ public final class HighEnergyWorkstationScreen extends AEBaseScreen<HighEnergyWo
         if (slot != null && slot.index >= 0 && slot.index < HighEnergyWorkstationMenu.DISPLAYS) {
             var lines = new ArrayList<Component>();
             if (!slot.getItem().isEmpty()) lines.add(slot.getItem().getHoverName());
-            lines.add(Component.translatable("gui.overload_sim.workstation.slot_count", menu.quantity(slot.index), HighEnergyWorkstationMenu.SLOT_CAPACITY));
+            lines.add(Component.translatable("gui.overload_sim.workstation.slot_count", menu.quantity(slot.index), menu.slotCapacity));
             lines.add(Component.translatable("gui.overload_sim.workstation." + (slot.index < 9 ? "input_hint" : "output_hint")));
             g.renderTooltip(font, lines, Optional.empty(), mx, my);
         } else if (mx >= leftPos + 10 && mx < leftPos + 190 && my >= topPos + 24 && my < topPos + 64) {
             g.renderTooltip(font, List.of(Component.translatable("gui.overload_sim.workstation.exact_strength", menu.power),
-                    Component.translatable("gui.overload_sim.workstation.laser_gate"),
-                    Component.translatable("gui.overload_sim.workstation.cycle"),
+                    Component.translatable("gui.overload_sim.workstation.laser_gate",menu.laserThreshold),
+                    Component.translatable("gui.overload_sim.workstation.cycle",menu.parallelLimit,menu.cycleTicks),
                     Component.translatable("gui.overload_sim.workstation.last_recipe", menu.recipe.isEmpty()
                             ? Component.translatable("gui.overload_sim.workstation.no_recipe") : Component.literal(menu.recipe)),
                     Component.translatable("gui.overload_sim.multiblock.frequency", menu.frequency)), Optional.empty(), mx, my);
@@ -219,7 +219,7 @@ public final class HighEnergyWorkstationScreen extends AEBaseScreen<HighEnergyWo
             String name = input ? menu.inputFluid : menu.outputFluid;
             long amount = input ? menu.inputFluidAmount : menu.outputFluidAmount;
             g.renderTooltip(font, List.of(name.isEmpty() ? Component.translatable("gui.overload_sim.workstation.empty_fluid") : Component.literal(name),
-                    Component.translatable("gui.overload_sim.workstation.fluid_capacity", amount,dev.overloadsim.workstation.HighEnergyWorkstationBlockEntity.TANK_CAPACITY),
+                    Component.translatable("gui.overload_sim.workstation.fluid_capacity", amount,menu.tankCapacity),
                     Component.translatable("gui.overload_sim.workstation.fluid_hint")), Optional.empty(), mx, my);
         }
     }

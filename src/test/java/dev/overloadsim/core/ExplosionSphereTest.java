@@ -28,8 +28,13 @@ class ExplosionSphereTest {
 
     @Test void rejectsRadiusExpansionAndNeverTreatsNonFiniteCoordinatesAsInside() {
         assertThrows(IllegalArgumentException.class, () -> ExplosionSphere.contains(-1, 0, 0, 0));
-        assertThrows(IllegalArgumentException.class, () -> ExplosionSphere.contains(13, 0, 0, 0));
+        assertThrows(IllegalArgumentException.class, () -> ExplosionSphere.contains(65, 0, 0, 0));
         assertFalse(ExplosionSphere.contains(12, Double.NaN, 0, 0));
         assertFalse(ExplosionSphere.contains(12, Double.POSITIVE_INFINITY, 0, 0));
+    }
+    @Test void supportsConfiguredRadiusWithTheSameSphericalBoundary() {
+        assertTrue(ExplosionSphere.contains(20, 20, 0, 0));
+        assertFalse(ExplosionSphere.contains(20, 15, 0, 15));
+        assertTrue(ExplosionSphere.contains(64, 0, -64, 0));
     }
 }

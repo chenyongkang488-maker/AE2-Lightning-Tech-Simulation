@@ -24,7 +24,7 @@ public final class MultiblockPackets {
         },buf->{
             int menu=buf.readVarInt(),page=buf.readVarInt(),revision=buf.readVarInt();if(page<0||page>3)throw new IllegalArgumentException("page");
             var items=new ArrayList<ItemStack>();var counts=new ArrayList<Integer>();
-            for(int i=0;i<32;i++){items.add(ItemStack.OPTIONAL_STREAM_CODEC.decode(buf));int count=buf.readVarInt();if(count<0||count>1024)throw new IllegalArgumentException("quantity");counts.add(count);}
+            for(int i=0;i<32;i++){items.add(ItemStack.OPTIONAL_STREAM_CODEC.decode(buf));int count=buf.readVarInt();if(count<0)throw new IllegalArgumentException("quantity");counts.add(count);}
             return new Snapshot(menu,page,revision,List.copyOf(items),List.copyOf(counts));
         });
         public Type<Snapshot> type(){return TYPE;}

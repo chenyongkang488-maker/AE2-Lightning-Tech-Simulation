@@ -31,7 +31,7 @@ public final class CoilMenu extends AbstractContainerMenu {
     private void refresh(){
         if(inventory.player.level().isClientSide())return;var s=stack();var settings=CoilSettings.read(s);
         data.set(0,settings.extreme()?1:0);data.set(1,settings.efficiencyEnabled()?1:0);data.set(2,settings.efficiency());data.set(3,settings.fortune());data.set(4,settings.silk()?1:0);
-        int mask=0;for(var type:CoilModuleItem.Type.values())if(CoilModules.has(s,type))mask|=1<<type.ordinal();data.set(5,mask);data.set(6,CoilModules.hasCore(s)?1:0);data.set(7,(int)(CoilEnergy.read(s)*10000/CoilModules.capacity(s)));
+        int mask=0;for(var type:CoilModuleItem.Type.values())if(CoilModules.has(s,type))mask|=1<<type.ordinal();data.set(5,mask);data.set(6,CoilModules.hasCore(s)?1:0);data.set(7,(int)Math.min(10000,CoilEnergy.read(s)*10000/CoilModules.capacity(s)));
     }
     @Override public void broadcastChanges(){refresh();super.broadcastChanges();}
 }

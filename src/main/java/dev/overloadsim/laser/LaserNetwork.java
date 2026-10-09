@@ -5,6 +5,7 @@ import dev.overloadsim.ModContent;
 import dev.overloadsim.api.LaserEvents;
 import dev.overloadsim.api.LaserExtensions;
 import dev.overloadsim.core.LaserMath;
+import dev.overloadsim.config.MachineSettings;
 import java.util.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -45,7 +46,7 @@ public final class LaserNetwork {
         if(!host.enabled()||!host.formed()||path!=null&&!valid(level,path)){clear(host);return;}
         long now=level.getGameTime();
         if(now%20==0)processEmitter(host);
-        if(now%2==0&&host.activeUntil>now&&!host.segments.isEmpty()){
+        if(now%MachineSettings.intValue(MachineSettings.LASER_DAMAGE_INTERVAL)==0&&host.activeUntil>now&&!host.segments.isEmpty()){
             var current=PATHS.get(host);
             damage(level,host.segments,current==null?List.of():current.nodes().stream().filter(node->DeflectorBatchRouter.ownsNode(host,node)).toList());
         }
@@ -74,6 +75,7 @@ public final class LaserNetwork {
         if(!(root.getLevel() instanceof ServerLevel level))return;
         if(DeflectorBatchRouter.process(root))return;
         var previous=PATHS.get(root);clear(root,false);root.checkStructure();
+        if(LaserSettings.emitterFe()>MachineSettings.beamLimit()){root.status="beam_limit";stopLostCores(previous,List.of());stopLostTargets(previous,List.of());root.refreshLaserLights();root.sync();return;}
         if(!root.enabled()||!root.formed()||!root.tryPay(LaserSettings.emitterFe(),0,false)){stopLostCores(previous,List.of());stopLostTargets(previous,List.of());root.refreshLaserLights();root.status="no_energy";root.sync();return;}
         long now=level.getGameTime();
         var candidates=LaserStructureIndex.controllers(level).stream().limit(256).toList();
@@ -95,7 +97,7 @@ public final class LaserNetwork {
         var clearCells=new ArrayList<BlockPos>();var watched=new HashMap<BlockPos,BlockState>();var queue=new ArrayDeque<Beam>();
         var acceptedTargets=new ArrayList<ExternalTarget>();
         var start=root.center().relative(root.forward(),2);
-        queue.add(new Beam(start,root.forward(),LaserSettings.emitterFe(),6,new HashSet<>(Set.of(root.getBlockPos()))));
+        queue.add(new Beam(start,root.forward(),LaserSettings.emitterFe(),MachineSettings.intValue(MachineSettings.LASER_EMITTER_RANGE),new HashSet<>(Set.of(root.getBlockPos()))));
         var claims=CLAIMS.computeIfAbsent(level,l->new Claims());if(claims.tick!=now){claims.tick=now;claims.inputs.clear();}
         int hops=0,steps=0;
         while(!queue.isEmpty()&&hops++<MAX_HOPS&&steps<MAX_STEPS&&lines.size()<128){
@@ -115,9 +117,9 @@ public final class LaserNetwork {
                     long power=beam.energy(),cost=0,ehv=0;int range=beam.range()-distance;
                     try{
                         switch(target.kind()){
-                            case CONSTRAINT->{cost=LaserSettings.constraintFe();range=6;}
+                            case CONSTRAINT->{cost=LaserSettings.constraintFe();range=MachineSettings.intValue(MachineSettings.LASER_CONSTRAINT_RANGE);}
                             case ENHANCEMENT->{cost=target.boost();power=LaserMath.boost(power,cost);}
-                            case BURST->{ehv=LaserSettings.burstEhv();power=LaserMath.amplify(power);}
+                            case BURST->{ehv=LaserSettings.burstEhv();power=MachineSettings.amplify(power);}
                             case FOCUS->{range=7;}
                             default->{}
                         }
@@ -130,6 +132,7 @@ public final class LaserNetwork {
                     if(!valid(level,new Path(List.copyOf(nodes),List.copyOf(clearCells),Map.copyOf(watched),List.of())))break;
                     if(target.kind()==LaserKind.DEFLECTOR&&target.sideMode(beam.direction().getOpposite())!=LaserMachineBlockEntity.SIDE_INPUT)break;
                     power=event.outputEnergy();range=event.range();
+                    if(power>MachineSettings.beamLimit()){target.status="beam_limit";target.sync();break;}
                     if(power==0){target.status="idle";target.sync();break;}
                     if(!target.tryPay(cost,ehv,false)){target.status="no_energy";target.sync();break;}
                     target.lastPower=power;target.activeUntil=now+22;target.status="working";target.sync();
@@ -143,7 +146,7 @@ public final class LaserNetwork {
                                 &&!target.center().relative(d,3).equals(target.getBlockPos())).toList();
                         if(!faces.isEmpty()){
                             var split=LaserMath.split(power,faces.size());
-                            for(int i=0;i<faces.size();i++)if(split[i]>0){var d=faces.get(i);var out=target.center().relative(d,3);add(lines,target.center(),out,split[i],false,false);queue.add(new Beam(out,d,split[i],6,new HashSet<>(visited)));}
+                            for(int i=0;i<faces.size();i++)if(split[i]>0){var d=faces.get(i);var out=target.center().relative(d,3);add(lines,target.center(),out,split[i],false,false);queue.add(new Beam(out,d,split[i],MachineSettings.intValue(MachineSettings.LASER_DEFLECTOR_RANGE),new HashSet<>(visited)));}
                         }else{target.status="no_outputs";target.activeUntil=0;target.sync();}
                     }else if(power>0&&range>0)queue.add(new Beam(pos,beam.direction(),power,range,visited));
                     break;
@@ -164,7 +167,7 @@ public final class LaserNetwork {
                     if(result!=null&&level.hasChunkAt(pos)){
                         var event=new LaserEvents.BeforeModifier(level,pos,id,beam.energy(),result.energy(),result.range());NeoForge.EVENT_BUS.post(event);
                         if(!event.isCanceled()&&level.hasChunkAt(pos)&&level.getBlockState(pos).equals(state)&&!root.isRemoved()&&root.enabled()
-                                &&valid(level,new Path(List.copyOf(nodes),List.copyOf(clearCells),Map.copyOf(watched),List.of()))&&event.outputEnergy()>0&&event.range()>0){var visited=new HashSet<>(beam.visited());visited.add(pos);queue.add(new Beam(pos,beam.direction(),event.outputEnergy(),event.range(),visited));}
+                                &&valid(level,new Path(List.copyOf(nodes),List.copyOf(clearCells),Map.copyOf(watched),List.of()))&&event.outputEnergy()>0&&event.outputEnergy()<=MachineSettings.beamLimit()&&event.range()>0){var visited=new HashSet<>(beam.visited());visited.add(pos);queue.add(new Beam(pos,beam.direction(),event.outputEnergy(),event.range(),visited));}
                     }
                     break;
                 }
@@ -272,5 +275,5 @@ public final class LaserNetwork {
         var source=new DamageSource(level.registryAccess().registryOrThrow(Registries.DAMAGE_TYPE).getHolderOrThrow(DAMAGE));
         hits.forEach((entity,amount)->entity.hurt(source,amount));
     }
-    private static float damageAmount(long power){return (float)Math.min(1_000_000D,power/10000D*LaserSettings.damageScale());}
+    private static float damageAmount(long power){return (float)Math.min(MachineSettings.doubleValue(MachineSettings.LASER_MAX_DAMAGE),power/10000D*LaserSettings.damageScale());}
 }

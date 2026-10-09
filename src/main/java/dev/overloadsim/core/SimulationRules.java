@@ -15,6 +15,11 @@ public final class SimulationRules {
         if (perOperation < 0 || parallel < 1 || parallel > 128) throw new IllegalArgumentException("invalid cost/parallel");
         return Math.multiplyExact(perOperation, parallel);
     }
+    /** Ceil a nonnegative percentage without overflowing intermediate multiplication. */
+    public static long scalePercent(long amount,int percent){
+        if(amount<0||percent<0||percent>10000)throw new IllegalArgumentException("invalid amount/percentage");
+        return Math.addExact(Math.multiplyExact(amount/100,percent),((amount%100)*percent+99)/100);
+    }
     public static boolean withinRadius(double distanceSquared, double radius) {
         return distanceSquared >= 0 && radius >= 0 && distanceSquared <= radius * radius;
     }

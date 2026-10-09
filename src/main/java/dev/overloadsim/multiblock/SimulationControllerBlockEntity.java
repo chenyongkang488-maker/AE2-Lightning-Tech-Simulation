@@ -10,6 +10,8 @@ import com.moakiee.ae2lt.api.frequency.FrequencyApi;
 import com.moakiee.ae2lt.api.frequency.FrequencyBindingAccess;
 import com.moakiee.ae2lt.api.frequency.FrequencyBindingHost;
 import dev.overloadsim.*;
+import dev.overloadsim.config.ConfiguredEnergyStorage;
+import dev.overloadsim.config.MachineSettings;
 import dev.overloadsim.api.CrystalDataAccess;
 import net.minecraft.core.*;
 import net.minecraft.core.component.DataComponentMap;
@@ -42,9 +44,7 @@ public class SimulationControllerBlockEntity extends AENetworkedBlockEntity impl
     private record Roll(ItemStack input,List<ItemStack> output){}
     private final Map<Integer,Roll> rolls=new HashMap<>();
     private String rollGeneration=MultiblockData.generation();
-    private final EnergyStorage energy=new EnergyStorage(2_000_000,2_000_000,0){
-        @Override public int receiveEnergy(int amount,boolean simulate){int received=super.receiveEnergy(amount,simulate);if(received>0&&!simulate)saveChanges();return received;}
-    };
+    private final EnergyStorage energy=new ConfiguredEnergyStorage(()->MachineSettings.intValue(MachineSettings.MULTIBLOCK_ENERGY_CAPACITY),()->MachineSettings.intValue(MachineSettings.MULTIBLOCK_RECEIVE_PER_CALL),this::saveChanges);
     private int visualSize,visualFlags;private BlockPos visualMin;private List<ItemStack> visualCrystals=List.of();
     private final Object visualToken=new Object();
     private final ItemStackHandler crystals=new ItemStackHandler(49){
@@ -63,7 +63,7 @@ public class SimulationControllerBlockEntity extends AENetworkedBlockEntity impl
         public ItemStack getStackInSlot(int slot){if(slot<49)return crystals.getStackInSlot(slot);return outputs.extract(slot-49,Integer.MAX_VALUE,true);}
         public ItemStack insertItem(int slot,ItemStack item,boolean sim){return slot<49?crystals.insertItem(slot,item,sim):item;}
         public ItemStack extractItem(int slot,int amount,boolean sim){var result=slot<49?ItemStack.EMPTY:outputs.extract(slot-49,amount,sim);if(!sim&&!result.isEmpty())saveChanges();return result;}
-        public int getSlotLimit(int slot){return slot<49?1:1024;}
+        public int getSlotLimit(int slot){return slot<49?1:outputs.slotLimit();}
         public boolean isItemValid(int slot,ItemStack item){return slot<49&&crystals.isItemValid(slot,item);}
     };
     public SimulationControllerBlockEntity(BlockPos p,BlockState s){super(MultiblockContent.CONTROLLER_ENTITY.get(),p,s);getMainNode().setFlags(GridFlags.REQUIRE_CHANNEL).setIdlePowerUsage(2).setVisualRepresentation(MultiblockContent.CONTROLLER_ITEM.get());}
@@ -127,7 +127,7 @@ public class SimulationControllerBlockEntity extends AENetworkedBlockEntity impl
         bridge.refresh();charge();
         if(refundHv>0||refundEhv>0){refundHv-=bridge.insert(false,refundHv);refundEhv-=bridge.insert(true,refundEhv);saveChanges();if(refundHv>0||refundEhv>0){status=7;return;}}
         if(structure==null){status=6;return;}if(!loaded()){status=8;return;}
-        if(level.getGameTime()%5==0)bridge.export();
+        if(level.getGameTime()%MachineSettings.intValue(MachineSettings.MULTIBLOCK_EXPORT_INTERVAL)==0)bridge.export();
         if(!getMainNode().isActive()){status=2;return;}
         if(batch==null){try{batch=SimulationBatchPlanner.plan(this,nextCrystal);}catch(RuntimeException e){status=5;org.slf4j.LoggerFactory.getLogger(getClass()).error("Invalid multiblock simulation output",e);return;}saveChanges();}
         if(batch==null){status=3;return;}
@@ -172,7 +172,7 @@ public class SimulationControllerBlockEntity extends AENetworkedBlockEntity impl
     private void charge(){
         if(!isRemoved()){long restored=AppliedFluxRefunds.claim(level,identity);if(restored>0){feCredit=Math.addExact(feCredit,restored);saveChanges();}}
         if(feCredit>0){int credited=energy.receiveEnergy((int)Math.min(Integer.MAX_VALUE,feCredit),false);feCredit-=credited;if(credited>0)saveChanges();}
-        var grid=getMainNode().getGrid();int needed=Math.min(10000,energy.getMaxEnergyStored()-energy.getEnergyStored());
+        var grid=getMainNode().getGrid();int needed=Math.min(MachineSettings.intValue(MachineSettings.MULTIBLOCK_NETWORK_FE_PER_TICK),energy.getMaxEnergyStored()-energy.getEnergyStored());
         if(needed<=0||isRemoved()||grid==null||!getMainNode().isActive())return;
         var transfer=AppliedFluxEnergy.extractInto(grid,IActionSource.ofMachine(this),needed,amount->isRemoved()?0:energy.receiveEnergy((int)amount,false));
         if(transfer.credit()>0){if(isRemoved())AppliedFluxRefunds.deposit(level,identity,transfer.credit());else feCredit=Math.addExact(feCredit,transfer.credit());}

@@ -31,7 +31,7 @@ import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.fluids.capability.templates.FluidTank;
 import net.neoforged.neoforge.items.*;
 
-/** Server authority: no FE/lightning debit, only two valid laser ticks and an atomic material transaction. */
+/** Server authority: no FE/lightning debit, valid laser ticks and an atomic material transaction. */
 public final class HighEnergyWorkstationBlockEntity extends AENetworkedBlockEntity implements IActionHost,FrequencyBindingHost {
     public static final long LASER_THRESHOLD=1_000_000_000L;
     public static final int TANK_CAPACITY=1_024_000_000,MAX_PARALLEL=1024,RECEIPT_LEASE=22;
@@ -39,13 +39,15 @@ public final class HighEnergyWorkstationBlockEntity extends AENetworkedBlockEnti
     private UUID identity=UUID.randomUUID();
     private final FrequencyBindingAccess frequency=FrequencyApi.createBinding(this);
     private final WorkstationBuffer inputs=new WorkstationBuffer(this::changed),outputs=new WorkstationBuffer(this::changed);
-    private final FluidTank inputTank=new FluidTank(TANK_CAPACITY){@Override protected void onContentsChanged(){changed();}};
-    private final FluidTank outputTank=new FluidTank(TANK_CAPACITY){@Override protected void onContentsChanged(){changed();}};
+    private final FluidTank inputTank=createTank();
+    private final FluidTank outputTank=createTank();
     private final Object workstationVisualToken=new Object();
     private final WorkstationLaserLease laserLease=new WorkstationLaserLease();
     private boolean claimed,visualFormed,dirty=true,loading,frequencyUnloading,eject,networkExport;
     private boolean exporting,deferredRemoval,replacementDropEmitted;
     private long power,revision,selectionRevision=-1,dropPreparedTick=Long.MIN_VALUE;
+    private long visualLaserThreshold=LASER_THRESHOLD;
+    private WorkstationSettings selectedSettings;
     private List<WorkstationRecipes.Entry> selectionCatalog;
     private WorkstationRecipes.Batch cachedSelection,pending;
     private int progress,lastParallel;
@@ -64,7 +66,20 @@ public final class HighEnergyWorkstationBlockEntity extends AENetworkedBlockEnti
     public boolean formed(){return level!=null&&!isRemoved()&&(level.isClientSide?visualFormed:claimed&&loaded()&&level.getBlockEntity(worldPosition)==this);}
     public long currentPower(){return level!=null&&formed()?(level.isClientSide?power:laserLease.power(level.getGameTime())):0;}
     public int progress(){return progress;}
-    public boolean working(){return formed()&&currentPower()>LASER_THRESHOLD&&pending!=null;}
+    public long laserThreshold(){return level!=null&&level.isClientSide?visualLaserThreshold:WorkstationSettings.capture().laserThreshold();}
+    public int cycleTicks(){return WorkstationSettings.capture().cycleTicks();}
+    public int parallelLimit(){return WorkstationSettings.capture().maxParallel();}
+    public int slotCapacity(){return WorkstationSettings.slotLimit();}
+    public int tankCapacity(){return WorkstationSettings.tankLimit();}
+    public boolean working(){return formed()&&currentPower()>laserThreshold()&&pending!=null;}
+    private FluidTank createTank(){return new FluidTank(TANK_CAPACITY){
+        @Override public int getCapacity(){return tankCapacity();}
+        @Override public int fill(FluidStack resource,FluidAction action){
+            int free=Math.max(0,getCapacity()-getFluidAmount());if(free==0||resource.isEmpty())return 0;
+            setCapacity(getCapacity());return super.fill(resource.copyWithAmount(Math.min(free,resource.getAmount())),action);
+        }
+        @Override protected void onContentsChanged(){changed();}
+    };}
     public int lastParallel(){return lastParallel;}
     public String lastRecipe(){return lastRecipe;}
     /** Legacy integration methods: controller automation now has fixed input/output buffers on every face. */
@@ -112,7 +127,7 @@ public final class HighEnergyWorkstationBlockEntity extends AENetworkedBlockEnti
     }
     public void releaseLaserSource(BlockPos source,UUID sourceIdentity){
         if(source==null||sourceIdentity==null)return;laserLease.releaseSource(new LaserSource(source,sourceIdentity));power=level==null?0:laserLease.power(level.getGameTime());
-        if(power<=LASER_THRESHOLD){pending=null;progress=0;}markForClientUpdate();
+        if(power<=laserThreshold()){pending=null;progress=0;}markForClientUpdate();
     }
     public AutomaticConstruction.Result build(ServerPlayer player){
         if(level==null||level.isClientSide||isRemoved()||player.level()!=level||player.distanceToSqr(worldPosition.getCenter())>64)return failure("unavailable");
@@ -124,22 +139,24 @@ public final class HighEnergyWorkstationBlockEntity extends AENetworkedBlockEnti
     private static AutomaticConstruction.Result failure(String reason){return new AutomaticConstruction.Result(false,0,reason,List.of());}
     public void tick(){
         if(level==null||level.isClientSide||isRemoved()||exporting)return;frequency.serverTick();
+        var settings=WorkstationSettings.capture();
+        if(!settings.equals(selectedSettings)){selectedSettings=settings;cachedSelection=null;selectionRevision=-1;pending=null;progress=0;markForClientUpdate();}
         if(dirty||level.getGameTime()%20==0)checkStructure();
         long currentPower=currentPower();if(power!=currentPower){power=currentPower;markForClientUpdate();}
-        if(!formed()||currentPower<=LASER_THRESHOLD){if(progress!=0||pending!=null){progress=0;pending=null;markForClientUpdate();}exportOutputs();return;}
+        if(!formed()||currentPower<=settings.laserThreshold()){if(progress!=0||pending!=null){progress=0;pending=null;markForClientUpdate();}exportOutputs(settings);return;}
         var catalog=WorkstationRecipes.recipes(level.getRecipeManager());
-        if(selectionRevision!=revision||selectionCatalog!=catalog){cachedSelection=WorkstationRecipes.select(level.getRecipeManager(),inputs,outputs,fluidInput(),fluidOutput()).orElse(null);selectionRevision=revision;selectionCatalog=catalog;}
+        if(selectionRevision!=revision||selectionCatalog!=catalog){cachedSelection=WorkstationRecipes.select(level.getRecipeManager(),inputs,outputs,fluidInput(),fluidOutput(),settings).orElse(null);selectionRevision=revision;selectionCatalog=catalog;}
         var candidate=cachedSelection;
-        if(candidate==null){pending=null;progress=0;exportOutputs();return;}
+        if(candidate==null){pending=null;progress=0;exportOutputs(settings);return;}
         if(pending==null||pending.entry().recipe()!=candidate.entry().recipe()||!pending.entry().id().equals(candidate.entry().id())||pending.parallel()!=candidate.parallel()){pending=candidate;progress=0;}
         progress++;markForClientUpdate();
-        if(progress>=2){checkStructure();
+        if(progress>=settings.cycleTicks()){checkStructure();
             var current=WorkstationRecipes.find(level.getRecipeManager(),pending==null?candidate.entry().id():pending.entry().id()).orElse(null);
-            var verified=current==null?null:WorkstationRecipes.evaluate(current,inputs,outputs,fluidInput(),fluidOutput()).orElse(null);
-            if(formed()&&currentPower()>LASER_THRESHOLD&&pending!=null&&verified!=null&&verified.entry().recipe()==pending.entry().recipe()&&verified.parallel()==pending.parallel())commit(verified);
+            var verified=current==null?null:WorkstationRecipes.evaluate(current,inputs,outputs,fluidInput(),fluidOutput(),settings).orElse(null);
+            if(formed()&&currentPower()>settings.laserThreshold()&&pending!=null&&verified!=null&&verified.entry().recipe()==pending.entry().recipe()&&verified.parallel()==pending.parallel())commit(verified);
             pending=null;progress=0;selectionRevision=-1;markForClientUpdate();
         }
-        exportOutputs();
+        exportOutputs(settings);
     }
     private void commit(WorkstationRecipes.Batch batch){
         var nextInputs=inputs.copy();for(int slot=0;slot<9;slot++)nextInputs.debit(slot,batch.debit()[slot]);
@@ -153,13 +170,13 @@ public final class HighEnergyWorkstationBlockEntity extends AENetworkedBlockEnti
         @Override public ItemStack getStackInSlot(int slot){check(slot);var buffer=slot<9?inputs:outputs;return buffer.extract(slot%9,64,true);}
         @Override public ItemStack insertItem(int slot,ItemStack stack,boolean simulate){check(slot);if(slot>=9||!formed())return stack;int moved=(int)inputs.insert(slot,stack,stack.getCount(),simulate);return moved==stack.getCount()?ItemStack.EMPTY:stack.copyWithCount(stack.getCount()-moved);}
         @Override public ItemStack extractItem(int slot,int amount,boolean simulate){check(slot);return slot<9||!formed()?ItemStack.EMPTY:outputs.extract(slot-9,amount,simulate);}
-        @Override public int getSlotLimit(int slot){check(slot);return WorkstationBuffer.LIMIT;}
+        @Override public int getSlotLimit(int slot){check(slot);return slotCapacity();}
         @Override public boolean isItemValid(int slot,ItemStack stack){check(slot);return slot<9&&!stack.isEmpty();}
     };}
     public IFluidHandler fluidAutomation(Direction side){return new IFluidHandler(){
         @Override public int getTanks(){return 2;}
         @Override public FluidStack getFluidInTank(int tank){if(tank<0||tank>1)throw new IllegalArgumentException("workstation tank");return tank==0?fluidInput():fluidOutput();}
-        @Override public int getTankCapacity(int tank){if(tank<0||tank>1)throw new IllegalArgumentException("workstation tank");return TANK_CAPACITY;}
+        @Override public int getTankCapacity(int tank){if(tank<0||tank>1)throw new IllegalArgumentException("workstation tank");return tankCapacity();}
         @Override public boolean isFluidValid(int tank,FluidStack fluid){return tank==0;}
         @Override public int fill(FluidStack fluid,FluidAction action){return !formed()?0:inputTank.fill(fluid,action);}
         @Override public FluidStack drain(FluidStack fluid,FluidAction action){return !formed()?FluidStack.EMPTY:outputTank.drain(fluid,action);}
@@ -172,14 +189,14 @@ public final class HighEnergyWorkstationBlockEntity extends AENetworkedBlockEnti
         private void check(int index){if(index!=0)throw new IllegalArgumentException("manual fluid slot");}
         @Override public int getTanks(){return 1;}
         @Override public FluidStack getFluidInTank(int index){check(index);return tank().getFluid().copy();}
-        @Override public int getTankCapacity(int index){check(index);return TANK_CAPACITY;}
+        @Override public int getTankCapacity(int index){check(index);return tankCapacity();}
         @Override public boolean isFluidValid(int index,FluidStack fluid){check(index);return !output;}
         @Override public int fill(FluidStack fluid,FluidAction action){return output||!available()?0:tank().fill(fluid,action);}
         @Override public FluidStack drain(FluidStack fluid,FluidAction action){return available()?tank().drain(fluid,action):FluidStack.EMPTY;}
         @Override public FluidStack drain(int amount,FluidAction action){return available()?tank().drain(amount,action):FluidStack.EMPTY;}
     };}
-    private void exportOutputs(){
-        if(exporting||!formed())return;var exportIdentity=identity;int budget=AUTOMATIC_OUTPUT_LIMIT,fluidBudget=AUTOMATIC_OUTPUT_LIMIT;
+    private void exportOutputs(WorkstationSettings settings){
+        if(exporting||!formed())return;var exportIdentity=identity;int budget=settings.itemExportLimit(),fluidBudget=settings.fluidExportLimit();
         if(networkExport&&getMainNode().isActive()&&getMainNode().getGrid()!=null){var storage=getMainNode().getGrid().getStorageService().getInventory();var source=IActionSource.ofMachine(this);
             if(!exportAlive(exportIdentity))return;
             for(int slot=0;slot<9&&budget>0;slot++){
@@ -239,11 +256,13 @@ public final class HighEnergyWorkstationBlockEntity extends AENetworkedBlockEnti
         return amount-remaining;
     }
     private boolean exportAlive(UUID expected){return level!=null&&!isRemoved()&&identity.equals(expected)&&level.hasChunkAt(worldPosition)&&level.getBlockEntity(worldPosition)==this&&formed();}
-    private void restoreOutput(UUID expected,int slot,ItemStack prototype,long amount){if(amount<=0)return;if(!identity.equals(expected)||!deferredRemoval&&(isRemoved()||level.getBlockEntity(worldPosition)!=this)){Block.popResource(level,worldPosition,prototype.copyWithCount((int)amount));return;}long restored=outputs.insert(slot,prototype,amount,false);if(restored<amount)restored+=outputs.insert(prototype,amount-restored,false);if(restored<amount)Block.popResource(level,worldPosition,prototype.copyWithCount((int)(amount-restored)));}
+    private void restoreOutput(UUID expected,int slot,ItemStack prototype,long amount){if(amount<=0)return;if(!identity.equals(expected)||!deferredRemoval&&(isRemoved()||level.getBlockEntity(worldPosition)!=this)){Block.popResource(level,worldPosition,prototype.copyWithCount((int)amount));return;}outputs.restore(slot,prototype,amount);}
     private void restoreFluidOutput(FluidStack fluid){
         // The outbound drain reserves this exact room. A removed controller still owns
         // its old tank until finishOutputTransfer creates the sole inventory snapshot.
-        if(outputTank.fill(fluid,IFluidHandler.FluidAction.EXECUTE)!=fluid.getAmount())throw new IllegalStateException("workstation output fluid reservation was changed during transfer");
+        var existing=outputTank.getFluid();long restored=(long)existing.getAmount()+fluid.getAmount();
+        if(restored>Integer.MAX_VALUE||!existing.isEmpty()&&!FluidStack.isSameFluidSameComponents(existing,fluid))throw new IllegalStateException("workstation output fluid reservation was changed during transfer");
+        outputTank.setFluid(fluid.copyWithAmount((int)restored));
     }
     private void finishOutputTransfer(){
         exporting=false;
@@ -254,13 +273,13 @@ public final class HighEnergyWorkstationBlockEntity extends AENetworkedBlockEnti
         var input=new CompoundTag();var output=new CompoundTag();inputTank.writeToNBT(registries,input);outputTank.writeToNBT(registries,output);tag.put("InputFluid",input);tag.put("OutputFluid",output);
         tag.putBoolean("Eject",eject);tag.putBoolean("NetworkExport",networkExport);tag.putInt("LastParallel",lastParallel);tag.putString("LastRecipe",lastRecipe);return tag;
     }
-    public void loadMachine(CompoundTag tag,HolderLookup.Provider registries){loading=true;try{if(tag.hasUUID("Identity"))identity=tag.getUUID("Identity");inputs.load(tag.getCompound("Inputs"),registries);outputs.load(tag.getCompound("Outputs"),registries);inputTank.readFromNBT(registries,tag.getCompound("InputFluid"));outputTank.readFromNBT(registries,tag.getCompound("OutputFluid"));eject=tag.getBoolean("Eject");networkExport=tag.getBoolean("NetworkExport");lastParallel=Math.clamp(tag.getInt("LastParallel"),0,1024);lastRecipe=tag.getString("LastRecipe");}finally{loading=false;}dirty=true;pending=null;progress=0;power=0;laserLease.clear();selectionRevision=-1;revision++;}
+    public void loadMachine(CompoundTag tag,HolderLookup.Provider registries){loading=true;try{if(tag.hasUUID("Identity"))identity=tag.getUUID("Identity");inputs.load(tag.getCompound("Inputs"),registries);outputs.load(tag.getCompound("Outputs"),registries);inputTank.readFromNBT(registries,tag.getCompound("InputFluid"));outputTank.readFromNBT(registries,tag.getCompound("OutputFluid"));eject=tag.getBoolean("Eject");networkExport=tag.getBoolean("NetworkExport");lastParallel=Math.max(0,tag.getInt("LastParallel"));lastRecipe=tag.getString("LastRecipe");}finally{loading=false;}dirty=true;pending=null;progress=0;power=0;laserLease.clear();selectionRevision=-1;revision++;}
     @Override public void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){super.saveAdditional(tag,registries);frequency.save(tag);tag.put("Workstation",saveMachine(registries));}
     @Override public void loadTag(CompoundTag tag,HolderLookup.Provider registries){super.loadTag(tag,registries);frequency.load(tag);loadMachine(tag.getCompound("Workstation"),registries);}
-    @Override protected void writeToStream(RegistryFriendlyByteBuf data){super.writeToStream(data);data.writeBoolean(formed());data.writeVarLong(currentPower());data.writeVarInt(progress);data.writeVarInt(lastParallel);data.writeUtf(lastRecipe);for(int slot=0;slot<9;slot++){ItemStack.OPTIONAL_STREAM_CODEC.encode(data,inputs.prototype(slot));data.writeVarInt(inputs.count(slot));}}
-    @Override protected boolean readFromStream(RegistryFriendlyByteBuf data){super.readFromStream(data);visualFormed=data.readBoolean();power=Math.max(0,data.readVarLong());progress=Math.clamp(data.readVarInt(),0,2);lastParallel=Math.clamp(data.readVarInt(),0,1024);lastRecipe=data.readUtf();var next=new WorkstationBuffer();for(int slot=0;slot<9;slot++){var stack=ItemStack.OPTIONAL_STREAM_CODEC.decode(data);int count=Math.clamp(data.readVarInt(),0,WorkstationBuffer.LIMIT);next.insert(slot,stack,count,false);}loading=true;try{inputs.replace(next);}finally{loading=false;}publishMenuAnchors();return true;}
-    @Override protected void saveVisualState(CompoundTag tag){super.saveVisualState(tag);tag.putBoolean("Formed",formed());tag.putLong("Power",currentPower());tag.putInt("Progress",progress);if(level!=null)tag.put("Inputs",inputs.save(level.registryAccess()));}
-    @Override protected void loadVisualState(CompoundTag tag){super.loadVisualState(tag);visualFormed=tag.getBoolean("Formed");power=Math.max(0,tag.getLong("Power"));progress=Math.clamp(tag.getInt("Progress"),0,2);if(level!=null)inputs.load(tag.getCompound("Inputs"),level.registryAccess());publishMenuAnchors();}
+    @Override protected void writeToStream(RegistryFriendlyByteBuf data){super.writeToStream(data);data.writeBoolean(formed());data.writeVarLong(currentPower());data.writeVarInt(progress);data.writeVarInt(lastParallel);data.writeUtf(lastRecipe);for(int slot=0;slot<9;slot++){ItemStack.OPTIONAL_STREAM_CODEC.encode(data,inputs.prototype(slot));data.writeVarInt(inputs.count(slot));}data.writeVarLong(laserThreshold());}
+    @Override protected boolean readFromStream(RegistryFriendlyByteBuf data){super.readFromStream(data);visualFormed=data.readBoolean();power=Math.max(0,data.readVarLong());progress=Math.clamp(data.readVarInt(),0,72000);lastParallel=Math.max(0,data.readVarInt());lastRecipe=data.readUtf();var next=new WorkstationBuffer();for(int slot=0;slot<9;slot++){var stack=ItemStack.OPTIONAL_STREAM_CODEC.decode(data);int count=Math.max(0,data.readVarInt());if(!stack.isEmpty())next.restore(slot,stack,count);}visualLaserThreshold=Math.max(0,data.readVarLong());loading=true;try{inputs.replace(next);}finally{loading=false;}publishMenuAnchors();return true;}
+    @Override protected void saveVisualState(CompoundTag tag){super.saveVisualState(tag);tag.putBoolean("Formed",formed());tag.putLong("Power",currentPower());tag.putLong("LaserThreshold",laserThreshold());tag.putInt("Progress",progress);if(level!=null)tag.put("Inputs",inputs.save(level.registryAccess()));}
+    @Override protected void loadVisualState(CompoundTag tag){super.loadVisualState(tag);visualFormed=tag.getBoolean("Formed");power=Math.max(0,tag.getLong("Power"));visualLaserThreshold=tag.contains("LaserThreshold")?Math.max(0,tag.getLong("LaserThreshold")):LASER_THRESHOLD;progress=Math.clamp(tag.getInt("Progress"),0,72000);if(level!=null)inputs.load(tag.getCompound("Inputs"),level.registryAccess());publishMenuAnchors();}
     private void publishMenuAnchors(){if(level!=null&&level.isClientSide){WorkstationMenuAnchors.publish(this);publishWorkstationVisuals();}}
     public void publishWorkstationVisuals(){WorkstationShellVisuals.publish(this,workstationVisualToken);}
     public boolean workstationVisualsVisible(){return WorkstationShellVisuals.visible(this);}

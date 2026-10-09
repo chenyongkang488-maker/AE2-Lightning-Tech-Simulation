@@ -7,6 +7,7 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.world.item.ItemStack;
 import dev.overloadsim.ModContent;
+import dev.overloadsim.config.MachineSettings;
 
 /** Immutable public configuration; effect getters also check the current loadout. */
 public record CoilSettings(boolean extreme, boolean efficiencyEnabled, int efficiency, int fortune, boolean silk,boolean wrench,int wrenchMode) {
@@ -26,7 +27,7 @@ public record CoilSettings(boolean extreme, boolean efficiencyEnabled, int effic
     public boolean wrenchActive(ItemStack stack){return wrench&&CoilModules.hasCore(stack)&&CoilModules.has(stack,CoilModuleItem.Type.WRENCH);}
     public static CoilSettings read(ItemStack stack){return stack.getOrDefault(ModContent.COIL_SETTINGS.get(),DEFAULT);}
     public boolean natural(ItemStack stack){return extreme&&CoilModules.has(stack,CoilModuleItem.Type.EXTREME);}
-    public int efficiencyLevel(ItemStack stack){return efficiencyEnabled&&CoilModules.miningReady(stack)&&CoilModules.has(stack,CoilModuleItem.Type.EFFICIENCY)?efficiency:0;}
+    public int efficiencyLevel(ItemStack stack){return efficiencyEnabled&&CoilModules.miningReady(stack)&&CoilModules.has(stack,CoilModuleItem.Type.EFFICIENCY)?Math.min(efficiency,MachineSettings.intValue(MachineSettings.COIL_EFFICIENCY_LIMIT)):0;}
     public boolean silkActive(ItemStack stack){return silk&&CoilModules.miningReady(stack)&&CoilModules.has(stack,CoilModuleItem.Type.SILK);}
-    public int fortuneLevel(ItemStack stack){return !silkActive(stack)&&CoilModules.miningReady(stack)&&CoilModules.has(stack,CoilModuleItem.Type.FORTUNE)?fortune:0;}
+    public int fortuneLevel(ItemStack stack){return !silkActive(stack)&&CoilModules.miningReady(stack)&&CoilModules.has(stack,CoilModuleItem.Type.FORTUNE)?Math.min(fortune,MachineSettings.intValue(MachineSettings.COIL_FORTUNE_LIMIT)):0;}
 }

@@ -1,6 +1,7 @@
 package dev.overloadsim.multiblock;
 import java.util.*;
 import dev.overloadsim.*;
+import dev.overloadsim.config.MachineSettings;
 import dev.overloadsim.api.*;
 import dev.overloadsim.data.*;
 import net.minecraft.server.level.ServerLevel;
@@ -13,6 +14,7 @@ public final class SimulationBatchPlanner {
         long available=per.fe()==0?49:host.availableFe()/per.fe();
         if(per.hv()>0)available=Math.min(available,host.bridge().extract(false,Long.MAX_VALUE,true)/per.hv());
         if(per.ehv()>0)available=Math.min(available,host.bridge().extract(true,Long.MAX_VALUE,true)/per.ehv());
+        available=Math.min(available,MachineSettings.intValue(MachineSettings.MULTIBLOCK_MAX_CRYSTALS));
         if(available<1)return null;
         var reserve=host.outputs().copy();var out=new ArrayList<SimulationBatch.Output>();var inputs=new HashMap<Integer,ItemStack>();int nextSlot=start;
         for(int i=0;i<s.capacity()&&inputs.size()<available;i++){

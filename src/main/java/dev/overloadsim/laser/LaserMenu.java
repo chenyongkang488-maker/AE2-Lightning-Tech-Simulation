@@ -9,6 +9,7 @@ import appeng.menu.implementations.MenuTypeBuilder;
 import appeng.menu.slot.AppEngSlot;
 import com.moakiee.ae2lt.api.frequency.FrequencyBindingMenuHost;
 import dev.overloadsim.ModContent;
+import dev.overloadsim.config.MachineSettings;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -36,6 +37,13 @@ public final class LaserMenu extends AEBaseMenu implements FrequencyBindingMenuH
     @GuiSync(45) public long extremeLightning;
     @GuiSync(46) public String buildFeedback="";
     @GuiSync(47) public int frequency = -1;
+    @GuiSync(48) public long coreThreshold=dev.overloadsim.core.LaserMath.CORE_THRESHOLD;
+    @GuiSync(49) public long particleCapacity=LaserMachineBlockEntity.PARTICLE_CAPACITY;
+    @GuiSync(50) public long boostMinimum=100_000;
+    @GuiSync(51) public long boostMaximum=9_000_000;
+    @GuiSync(52) public long boostStep=100_000;
+    @GuiSync(53) public int burstMultiplier=2;
+    @GuiSync(54) public int outputRange=6;
     private final LaserMachineBlockEntity host;
     private final java.util.UUID hostIdentity;
     private final net.minecraft.core.BlockPos frameAnchor;
@@ -82,8 +90,8 @@ public final class LaserMenu extends AEBaseMenu implements FrequencyBindingMenuH
         registerClientAction("laserBoost", Integer.class, step -> {
             if (step == null || (step != -1 && step != 1) || !validAction()
                     || host.kind() != LaserKind.ENHANCEMENT || !validStructure()) return;
-            long value = Math.clamp(host.boost(), 100_000L, 9_000_000L);
-            host.setBoost(Math.clamp(value + step * 100_000L, 100_000L, 9_000_000L));
+            long value = host.boost();
+            host.setBoost(Math.clamp(value + step * MachineSettings.boostStep(), MachineSettings.boostMinimum(), MachineSettings.boostMaximum()));
         });
         registerClientAction("laserSide", Integer.class, side -> {
             if (side == null || side < 2 || side >= 6 || !validAction()
@@ -92,7 +100,7 @@ public final class LaserMenu extends AEBaseMenu implements FrequencyBindingMenuH
             host.setSideMode(direction,(host.sideMode(direction)+1)%3);
         });
         registerClientAction("laserSetBoost", Long.class, value -> {
-            if (value == null || value < 100_000 || value > 9_000_000 || value % 100_000 != 0
+            if (value == null || value < MachineSettings.boostMinimum() || value > MachineSettings.boostMaximum() || (value-MachineSettings.boostMinimum()) % MachineSettings.boostStep() != 0
                     || !validAction() || host.kind() != LaserKind.ENHANCEMENT || !validStructure()) return;
             host.setBoost(value);
         });
@@ -132,6 +140,10 @@ public final class LaserMenu extends AEBaseMenu implements FrequencyBindingMenuH
             fuelRemaining = host.fuelRemaining(); particleRemaining = host.particleRemaining();
             activeFuel = host.activeFuel(); status = host.status(); extremeLightning = host.extremeLightning();
             frequency = host.getFrequencyId();
+            coreThreshold=host.coreThreshold();particleCapacity=host.particles().capacity();
+            boostMinimum=MachineSettings.boostMinimum();boostMaximum=MachineSettings.boostMaximum();boostStep=MachineSettings.boostStep();
+            burstMultiplier=MachineSettings.intValue(MachineSettings.LASER_BURST_MULTIPLIER);
+            outputRange=MachineSettings.intValue(host.kind()==LaserKind.EMITTER?MachineSettings.LASER_EMITTER_RANGE:host.kind()==LaserKind.DEFLECTOR?MachineSettings.LASER_DEFLECTOR_RANGE:MachineSettings.LASER_CONSTRAINT_RANGE);
         }
         super.broadcastChanges();
     }

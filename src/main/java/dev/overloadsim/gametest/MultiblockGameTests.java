@@ -10,6 +10,81 @@ import net.neoforged.neoforge.gametest.PrefixGameTestTemplate;
 @PrefixGameTestTemplate(false)
 public class MultiblockGameTests {
     @GameTest(template="empty")
+    public static void bulkSnapshotCodecRoundTripsIntMaxCounts(GameTestHelper h){
+        var items=new java.util.ArrayList<net.minecraft.world.item.ItemStack>();var counts=new java.util.ArrayList<Integer>();
+        for(int i=0;i<32;i++){items.add(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_INGOT));counts.add(i==0?Integer.MAX_VALUE:i==31?2000:1);}
+        var original=new dev.overloadsim.multiblock.MultiblockPackets.Snapshot(17,3,123,java.util.List.copyOf(items),java.util.List.copyOf(counts));
+        var buf=new net.minecraft.network.RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.buffer(),h.getLevel().registryAccess());
+        try{
+            dev.overloadsim.multiblock.MultiblockPackets.Snapshot.CODEC.encode(buf,original);
+            var decoded=dev.overloadsim.multiblock.MultiblockPackets.Snapshot.CODEC.decode(buf);
+            h.assertTrue(decoded.page()==3&&decoded.counts().getFirst()==Integer.MAX_VALUE&&decoded.counts().getLast()==2000,"actual network codec preserves counts above historical slot limit");
+            h.assertTrue(decoded.items().stream().allMatch(item->item.getCount()==1&&item.is(net.minecraft.world.item.Items.IRON_INGOT)),"large machine quantities remain independent of legal prototype stack codec");
+            buf.clear();counts.set(0,-1);
+            dev.overloadsim.multiblock.MultiblockPackets.Snapshot.CODEC.encode(buf,new dev.overloadsim.multiblock.MultiblockPackets.Snapshot(17,3,124,items,counts));
+            boolean rejected=false;try{dev.overloadsim.multiblock.MultiblockPackets.Snapshot.CODEC.decode(buf);}catch(IllegalArgumentException expected){rejected=true;}
+            h.assertTrue(rejected,"expanded quantity codec still rejects negative stored quantities");
+        }finally{buf.release();}h.succeed();
+    }
+
+    @GameTest(template="empty")
+    public static void creativeFullInventoryShiftKeepsIntMaxBulkOutputAndTerminates(GameTestHelper h){
+        SimulationConfigurationGameTests.withValue(dev.overloadsim.config.MachineSettings.MULTIBLOCK_OUTPUT_SLOT_LIMIT,Integer.MAX_VALUE,()->{
+            var c=build(h,h.absolutePos(new net.minecraft.core.BlockPos(2,1,2)),3);c.checkStructure();c.outputs().insert(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_INGOT),Integer.MAX_VALUE,false);
+            var player=boundedBulkPlayer(h);player.setGameMode(net.minecraft.world.level.GameType.CREATIVE);player.setPos(c.getBlockPos().getCenter());
+            for(int i=0;i<36;i++)player.getInventory().setItem(i,new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.STONE,64));
+            var menu=new dev.overloadsim.multiblock.MultiblockSimulationMenu(1,player.getInventory(),c);player.containerMenu=menu;menu.broadcastChanges();
+            long started=System.nanoTime();menu.take(player,0,menu.revision(),0,2);
+            h.assertTrue(System.nanoTime()-started<1_000_000_000L,"full inventory shift finishes without enumerating billions of stored items");
+            h.assertTrue(c.outputs().count(0)==Integer.MAX_VALUE&&bulkInventoryIron(player)==0,"creative full inventory cannot discard or debit any bulk quantity");player.containerMenu=player.inventoryMenu;
+        });h.succeed();
+    }
+
+    @GameTest(template="empty")
+    public static void creativePartialInventoryShiftDebitsOnlyTheSingleAcceptedItem(GameTestHelper h){
+        SimulationConfigurationGameTests.withValue(dev.overloadsim.config.MachineSettings.MULTIBLOCK_OUTPUT_SLOT_LIMIT,Integer.MAX_VALUE,()->{
+            var c=build(h,h.absolutePos(new net.minecraft.core.BlockPos(2,1,2)),3);c.checkStructure();c.outputs().insert(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_INGOT),Integer.MAX_VALUE,false);
+            var player=boundedBulkPlayer(h);player.setGameMode(net.minecraft.world.level.GameType.CREATIVE);player.setPos(c.getBlockPos().getCenter());
+            for(int i=0;i<36;i++)player.getInventory().setItem(i,new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.STONE,64));
+            player.getInventory().setItem(0,new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.IRON_INGOT,63));
+            var menu=new dev.overloadsim.multiblock.MultiblockSimulationMenu(1,player.getInventory(),c);player.containerMenu=menu;menu.broadcastChanges();menu.take(player,0,menu.revision(),0,2);
+            h.assertTrue(c.outputs().count(0)==Integer.MAX_VALUE-1&&bulkInventoryIron(player)==64,"partial creative inventory accepts one item and leaves every rejected item in bulk storage");player.containerMenu=player.inventoryMenu;
+        });h.succeed();
+    }
+
+    /** Real Inventory.add semantics, with an observation guard that prevents a regression hanging the server. */
+    private static net.minecraft.server.level.ServerPlayer boundedBulkPlayer(GameTestHelper h){
+        return new net.neoforged.neoforge.common.util.FakePlayer(h.getLevel(),new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(),"bulk-bound")){
+            private net.minecraft.world.entity.player.Inventory observed;
+            @Override public net.minecraft.world.entity.player.Inventory getInventory(){
+                if(observed==null)observed=new net.minecraft.world.entity.player.Inventory(this){
+                    private int offers;
+                    @Override public boolean add(net.minecraft.world.item.ItemStack stack){
+                        h.assertTrue(++offers<=36,"shift must not repeatedly discard bulk stacks when a creative inventory is full");
+                        return super.add(stack);
+                    }
+                };return observed;
+            }
+        };
+    }
+    private static int bulkInventoryIron(net.minecraft.server.level.ServerPlayer player){int total=0;for(int i=0;i<36;i++){var item=player.getInventory().getItem(i);if(item.is(net.minecraft.world.item.Items.IRON_INGOT))total+=item.getCount();}return total;}
+    @GameTest(template="empty",timeoutTicks=110)
+    public static void participantLimitLeavesStoredCrystalsAndStartedJobIntact(GameTestHelper h){
+        var c=powered(h,3);h.runAtTickTime(80,()->{
+            c.crystals().setStackInSlot(0,ironCrystal());c.crystals().setStackInSlot(1,ironCrystal());c.crystals().setStackInSlot(2,ironCrystal());
+            SimulationConfigurationGameTests.withValue(dev.overloadsim.config.MachineSettings.MULTIBLOCK_MAX_CRYSTALS,1,()->{
+                var planned=dev.overloadsim.multiblock.SimulationBatchPlanner.plan(c,0);
+                h.assertTrue(planned!=null&&planned.inputs.size()==1,"configured participant cap limits planner's real batch");
+                h.assertTrue(c.crystals().getStackInSlot(1).is(dev.overloadsim.ModContent.PERFECT.get())&&c.crystals().getStackInSlot(2).is(dev.overloadsim.ModContent.PERFECT.get()),"nonparticipating crystals remain stored");
+            });
+            var started=dev.overloadsim.multiblock.SimulationBatchPlanner.plan(c,0);h.assertTrue(started!=null&&started.inputs.size()==3,"restored cap admits all three crystals");started.started=true;started.remaining=71;
+            var saved=c.saveMachine(h.getLevel().registryAccess());saved.put("Batch",started.save(h.getLevel().registryAccess()));
+            SimulationConfigurationGameTests.withValue(dev.overloadsim.config.MachineSettings.MULTIBLOCK_MAX_CRYSTALS,1,()->{
+                c.loadMachine(saved,h.getLevel().registryAccess());h.assertTrue(c.batch().inputs.size()==3&&c.batch().remaining==71,"lower limit does not rewrite a started batch");
+            });h.succeed();
+        });
+    }
+    @GameTest(template="empty")
     public static void hiddenCrystalSlotsStillReceiveInventoryPackets(GameTestHelper h){
         var inventory=new net.neoforged.neoforge.items.ItemStackHandler(49);
         var slot=new dev.overloadsim.multiblock.SimulationCrystalSlot(new appeng.api.inventories.PlatformInventoryWrapper(inventory),48);

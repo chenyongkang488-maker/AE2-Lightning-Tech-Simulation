@@ -35,7 +35,7 @@ public class SimulationScreen extends AEBaseScreen<SimulationMenu> {
         super.drawBG(g,x,y,mouseX,mouseY,partial);
         for(var slot:menu.slots)if(slot.isActive()&&menu.getSlotSemantic(slot)!=SlotSemantics.UPGRADE)icon(g,Icon.SLOT_BACKGROUND,x+slot.x-1,y+slot.y-1);
         g.fill(x+10,y+26,x+23,y+80,0xFF87899F);g.fill(x+11,y+27,x+22,y+79,0xFFE2E3ED);g.fill(x+12,y+28,x+21,y+78,0xFF999DB4);
-        int filled=(int)(50L*menu.fe/2_000_000);g.fill(x+12,y+78-filled,x+21,y+78,0xFF626C90);
+        int filled=(int)Math.clamp(50L*menu.fe/Math.max(1,menu.feCapacity),0,50);g.fill(x+12,y+78-filled,x+21,y+78,0xFF626C90);
         for(int tick=0;tick<5;tick++)g.fill(x+18,y+29+tick*10,x+22,y+30+tick*10,0xFFE2E3ED);
         g.fill(x+60,y+36,x+94,y+40,0xFF999DB4);g.fill(x+91,y+32,x+95,y+44,0xFF999DB4);g.fill(x+95,y+34,x+97,y+42,0xFF999DB4);g.fill(x+97,y+36,x+99,y+40,0xFF999DB4);
         int width=menu.duration<=0||menu.status==0?0:(int)(34L*Math.clamp(menu.duration-menu.remaining,0,menu.duration)/menu.duration);g.fill(x+60,y+36,x+60+width,y+40,0xFF636C90);

@@ -40,6 +40,26 @@ import dev.overloadsim.api.LaserEvents;
 @GameTestHolder(OverloadSimulation.ID)
 @PrefixGameTestTemplate(false)
 public final class LaserDeflectorMultiInputGameTests {
+    @GameTest(template="laser_empty",batch="configuration_laser")
+    public static void longerConstraintRangeStillDiscoversAndSumsEverySource(GameTestHelper h){
+        var setting=dev.overloadsim.config.MachineSettings.LASER_CONSTRAINT_RANGE;int old=setting.get();
+        setting.set(10);setting.clearCache();
+        try{
+            var matrix=LaserMachineGameTests.build(h,h.absolutePos(new BlockPos(23,5,12)),LaserKind.DEFLECTOR,Direction.NORTH);
+            var west=LaserMachineGameTests.build(h,h.absolutePos(new BlockPos(3,8,12)),LaserKind.EMITTER,Direction.WEST);
+            var constraint=LaserMachineGameTests.build(h,h.absolutePos(new BlockPos(10,5,12)),LaserKind.CONSTRAINT,Direction.WEST);
+            var north=LaserMachineGameTests.build(h,h.absolutePos(new BlockPos(23,8,2)),LaserKind.EMITTER,Direction.NORTH);
+            matrix.setSideMode(Direction.WEST,LaserMachineBlockEntity.SIDE_INPUT);matrix.setSideMode(Direction.NORTH,LaserMachineBlockEntity.SIDE_INPUT);
+            matrix.setSideMode(Direction.EAST,LaserMachineBlockEntity.SIDE_OUTPUT);matrix.setSideMode(Direction.SOUTH,LaserMachineBlockEntity.SIDE_OUTPUT);
+            for(var node:List.of(matrix,west,constraint,north)){node.checkStructure();h.assertTrue(node.formed(),"extended-range fixture forms "+node.kind());node.energy().load(400_000);}
+            var east=matrix.center().east(5);var south=matrix.center().south(5);target(h,east);target(h,south);
+            try(var f=new Fixture(h,west,north,matrix,east,south)){
+                LaserNetwork.processEmitter(west);LaserNetwork.processEmitter(north);
+                h.assertTrue(matrix.currentPower()==200_000&&f.received(east)==100_000&&f.received(south)==100_000,"graph discovery follows the configured ten-block constraint range and merges both inputs exactly once");
+                h.assertTrue(west.energy().stored()==300_000&&north.energy().stored()==300_000&&constraint.energy().stored()==300_000,"all source and modifier costs settle once");
+            }
+        }finally{setting.set(old);setting.clearCache();}h.succeed();
+    }
     private record TargetKey(ServerLevel level, BlockPos position) {}
     private static final Map<TargetKey, List<LaserExtensions.TargetContext>> RECEIVED = new HashMap<>();
     private static final Map<TargetKey, Long> MODIFIED_POWER = new HashMap<>();

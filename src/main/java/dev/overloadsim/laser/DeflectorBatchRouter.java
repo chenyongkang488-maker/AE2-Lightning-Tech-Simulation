@@ -3,6 +3,7 @@ package dev.overloadsim.laser;
 import dev.overloadsim.api.LaserEvents;
 import dev.overloadsim.api.LaserExtensions;
 import dev.overloadsim.core.LaserMath;
+import dev.overloadsim.config.MachineSettings;
 import java.math.BigInteger;
 import java.util.*;
 import net.minecraft.core.BlockPos;
@@ -132,14 +133,14 @@ final class DeflectorBatchRouter {
         for (var matrix : candidates) if (matrix.kind() == LaserKind.DEFLECTOR && matrix.formed() && matrix.enabled()) {
             var next = new LinkedHashSet<LaserMachineBlockEntity>();
             for (var side : outputs(matrix)) {
-                var target = nextMatrix(level, ports, matrix.center().relative(side, 3), side, 6);
+                var target = nextMatrix(level, ports, matrix.center().relative(side, 3), side, MachineSettings.intValue(MachineSettings.LASER_DEFLECTOR_RANGE));
                 if (target != null) next.add(target);
             }
             edges.put(matrix, next);
         }
         var reaches = new HashMap<LaserMachineBlockEntity, Set<LaserMachineBlockEntity>>();
         for (var source : candidates) if (source.kind() == LaserKind.EMITTER && source.formed() && source.enabled()) {
-            var first = nextMatrix(level, ports, source.center().relative(source.forward(), 2), source.forward(), 6);
+            var first = nextMatrix(level, ports, source.center().relative(source.forward(), 2), source.forward(), MachineSettings.intValue(MachineSettings.LASER_EMITTER_RANGE));
             var reachable = new LinkedHashSet<LaserMachineBlockEntity>();
             if (first != null) reachable(first, edges, reachable);
             reaches.put(source, reachable);
@@ -179,13 +180,14 @@ final class DeflectorBatchRouter {
             LaserNetwork.clear(source, false);
             PROCESSED.put(source, now);
             source.checkStructure();
+            if(LaserSettings.emitterFe()>MachineSettings.beamLimit()){source.status="beam_limit";source.refreshLaserLights();source.sync();continue;}
             if (!source.enabled() || !source.formed() || !source.tryPay(LaserSettings.emitterFe(), 0, false)) {
                 source.status = "no_energy"; source.refreshLaserLights(); source.sync(); continue;
             }
             batch.roots.add(source);
             batch.nodes.put(source, new LinkedHashSet<>(Set.of(source)));
             batch.powers.put(source, new HashMap<>(Map.of(source, LaserSettings.emitterFe())));
-            batch.queue.add(new Beam(source.center().relative(source.forward(), 2), source.forward(), LaserSettings.emitterFe(), 6,
+            batch.queue.add(new Beam(source.center().relative(source.forward(), 2), source.forward(), LaserSettings.emitterFe(), MachineSettings.intValue(MachineSettings.LASER_EMITTER_RANGE),
                     new HashSet<>(Set.of(source.getBlockPos())), Map.of(source, LaserSettings.emitterFe()), source));
         }
         batch.run(); batch.publish();
@@ -241,7 +243,7 @@ final class DeflectorBatchRouter {
                     if (target.kind() == LaserKind.DEFLECTOR) return target.sideMode(direction.getOpposite()) == LaserMachineBlockEntity.SIDE_INPUT ? target : null;
                     if (target.forward() != direction || target.kind() == LaserKind.CORE || target.kind() == LaserKind.RECEIVER || target.kind() == LaserKind.FOCUS
                             || !visited.add(target.getBlockPos())) return null;
-                    range = target.kind() == LaserKind.CONSTRAINT ? 6 : range - distance;
+                    range = target.kind() == LaserKind.CONSTRAINT ? MachineSettings.intValue(MachineSettings.LASER_CONSTRAINT_RANGE) : range - distance;
                     start = pos; continued = true; break;
                 }
                 var block = level.getBlockState(pos); var id = BuiltInRegistries.BLOCK.getKey(block.getBlock());
@@ -330,11 +332,12 @@ final class DeflectorBatchRouter {
                     try { total = LaserMath.boost(total, beam.energy()); } catch (IllegalArgumentException tooStrong) { overLimit = true; }
                     beam.shares().forEach((source, power) -> shares.merge(source, power, Long::sum)); visited.addAll(beam.visited());
                 }
-                if (overLimit) { matrix.status = "beam_limit"; matrix.activeUntil = 0; matrix.lastPower = 0; matrix.sync(); continue; }
-                var event = new LaserEvents.BeforeModifier(level, matrix.getBlockPos(), BuiltInRegistries.BLOCK.getKey(matrix.getBlockState().getBlock()), total, total, 6);
+                if (overLimit || total>MachineSettings.beamLimit()) { matrix.status = "beam_limit"; matrix.activeUntil = 0; matrix.lastPower = 0; matrix.sync(); continue; }
+                var event = new LaserEvents.BeforeModifier(level, matrix.getBlockPos(), BuiltInRegistries.BLOCK.getKey(matrix.getBlockState().getBlock()), total, total, MachineSettings.intValue(MachineSettings.LASER_DEFLECTOR_RANGE));
                 NeoForge.EVENT_BUS.post(event); matrix.checkStructure();
                 if (event.isCanceled() || !matrix.formed() || !matrix.enabled()
                         || arriving.stream().anyMatch(b -> matrix.sideMode(b.direction().getOpposite()) != LaserMachineBlockEntity.SIDE_INPUT)) continue;
+                if(event.outputEnergy()>MachineSettings.beamLimit()){matrix.status="beam_limit";matrix.sync();continue;}
                 var allocationShares = validShares(scale(shares, event.outputEnergy()));
                 long power = allocationShares.values().stream().mapToLong(Long::longValue).sum();
                 var faces = outputs(matrix); if (power <= 0 || faces.isEmpty()) { matrix.status = faces.isEmpty() ? "no_outputs" : "idle"; matrix.sync(); continue; }
@@ -352,7 +355,7 @@ final class DeflectorBatchRouter {
                 for (int i = 0; i < faces.size(); i++) if (split[i] > 0) {
                     var d = faces.get(i); var out = matrix.center().relative(d, 3); var allocation = Map.copyOf(outputShares.get(i));
                     line(matrix.center(), out, split[i], allocation);
-                    queue.add(new Beam(out, d, split[i], 6, new HashSet<>(visited), allocation, matrix));
+                    if(event.range()>0)queue.add(new Beam(out, d, split[i], event.range(), new HashSet<>(visited), allocation, matrix));
                 }
                 drain();
             }
@@ -378,9 +381,9 @@ final class DeflectorBatchRouter {
                         long power = beam.energy(), cost = 0, ehv = 0; int range = beam.range() - distance;
                         try {
                             switch (target.kind()) {
-                                case CONSTRAINT -> { cost = LaserSettings.constraintFe(); range = 6; }
+                                case CONSTRAINT -> { cost = LaserSettings.constraintFe(); range = MachineSettings.intValue(MachineSettings.LASER_CONSTRAINT_RANGE); }
                                 case ENHANCEMENT -> { cost = target.boost(); power = LaserMath.boost(power, cost); }
-                                case BURST -> { ehv = LaserSettings.burstEhv(); power = LaserMath.amplify(power); }
+                                case BURST -> { ehv = LaserSettings.burstEhv(); power = MachineSettings.amplify(power); }
                                 case FOCUS -> range = 7;
                                 default -> {}
                             }
@@ -388,6 +391,7 @@ final class DeflectorBatchRouter {
                         var event = new LaserEvents.BeforeModifier(level, target.getBlockPos(), BuiltInRegistries.BLOCK.getKey(target.getBlockState().getBlock()), beam.energy(), power, range);
                         NeoForge.EVENT_BUS.post(event); target.checkStructure();
                         if (event.isCanceled() || !target.formed() || !target.enabled()) break;
+                        if(event.outputEnergy()>MachineSettings.beamLimit()){target.status="beam_limit";target.sync();break;}
                         var allocation = validShares(scale(beam.shares(), event.outputEnergy()));
                         power = allocation.values().stream().mapToLong(Long::longValue).sum(); range = event.range();
                         if (power <= 0 || !target.tryPay(cost, ehv, false)) break;
@@ -422,7 +426,7 @@ final class DeflectorBatchRouter {
                         var result = custom.modify(new LaserExtensions.BeamContext(level, pos, beam.direction(), beam.energy(), beam.range() - distance, now));
                         if (result != null && level.hasChunkAt(pos)) {
                             var event = new LaserEvents.BeforeModifier(level, pos, id, beam.energy(), result.energy(), result.range()); NeoForge.EVENT_BUS.post(event);
-                            if (!event.isCanceled() && level.hasChunkAt(pos) && level.getBlockState(pos).equals(state) && event.outputEnergy() > 0 && event.range() > 0) {
+                            if (!event.isCanceled() && level.hasChunkAt(pos) && level.getBlockState(pos).equals(state) && event.outputEnergy() > 0 && event.outputEnergy()<=MachineSettings.beamLimit() && event.range() > 0) {
                                 var visited = new HashSet<>(beam.visited()); visited.add(pos);
                                 var allocation = validShares(scale(beam.shares(), event.outputEnergy()));
                                 long energy = allocation.values().stream().mapToLong(Long::longValue).sum();

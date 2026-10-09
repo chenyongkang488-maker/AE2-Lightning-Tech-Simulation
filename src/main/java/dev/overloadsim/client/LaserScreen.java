@@ -104,7 +104,7 @@ public final class LaserScreen extends AEBaseScreen<LaserMenu> {
         enable.setTooltip(Tooltip.create(Component.translatable("gui.overload_sim.laser.control_hint")));
         build.active=!menu.formed;
         projection.active=!menu.formed&&menu.kind()!=LaserKind.CORE;
-        if (boostSlider != null) { boostSlider.active = menu.formed; boostSlider.synchronize(); }
+        if (boostSlider != null) { boostSlider.active = menu.formed&&menu.boostMaximum>menu.boostMinimum; boostSlider.synchronize(); }
         for (int side = 0; side < 6; side++) if (sides[side] != null) {
             boolean input = (menu.inputMask&(1<<side))!=0;
             var face = Component.translatable("gui.overload_sim.laser.face." + Direction.from3DDataValue(side).getName());
@@ -118,13 +118,14 @@ public final class LaserScreen extends AEBaseScreen<LaserMenu> {
         private boolean dragging;
         private long requested;
         BoostSlider(int x,int y) {
-            super(x,y,204,18,Component.empty(),normalized(menu.boost));
-            requested=menu.boost;updateMessage();
-            setTooltip(Tooltip.create(Component.translatable("gui.overload_sim.laser.boost_slider_hint")));
+            super(x,y,204,18,Component.empty(),0);
+            value=normalized(menu.boost);requested=menu.boost;updateMessage();
+            setTooltip(Tooltip.create(Component.translatable("gui.overload_sim.laser.boost_slider_configured",compact(menu.boostMinimum),compact(menu.boostMaximum),compact(menu.boostStep))));
         }
-        private static double normalized(long amount){return (Math.clamp(amount,100_000L,9_000_000L)/100_000.0-1)/89;}
-        private long selected(){return (1+Math.round(value*89))*100_000;}
-        void synchronize(){if(!dragging){value=normalized(menu.boost);requested=menu.boost;updateMessage();}}
+        private long steps(){return Math.max(0,menu.boostMaximum-menu.boostMinimum)/Math.max(1,menu.boostStep);}
+        private double normalized(long amount){long steps=steps();return steps==0?0:Math.clamp((double)(amount-menu.boostMinimum)/Math.max(1,menu.boostStep)/steps,0,1);}
+        private long selected(){return menu.boostMinimum+Math.round(value*steps())*Math.max(1,menu.boostStep);}
+        void synchronize(){if(!dragging){value=normalized(menu.boost);requested=menu.boost;updateMessage();}setTooltip(Tooltip.create(Component.translatable("gui.overload_sim.laser.boost_slider_configured",compact(menu.boostMinimum),compact(menu.boostMaximum),compact(menu.boostStep))));}
         @Override protected void updateMessage(){setMessage(Component.literal(compact(selected())+" FE"));}
         @Override protected void applyValue(){long amount=selected();if(amount!=requested){requested=amount;menu.requestBoost(amount);}}
         @Override public void onClick(double x,double y){dragging=true;super.onClick(x,y);}
@@ -135,7 +136,7 @@ public final class LaserScreen extends AEBaseScreen<LaserMenu> {
             g.fill(getX()+2,getY()+height-3,getX()+2+filled,getY()+height-2,active?0xFFEE98C4:0xFF88879B);
         }
         @Override public boolean keyPressed(int key,int scan,int modifiers){
-            if(key==262||key==263){value=normalized(selected()+(key==262?100_000:-100_000));updateMessage();applyValue();return true;}
+            if(key==262||key==263){value=normalized(selected()+(key==262?menu.boostStep:-menu.boostStep));updateMessage();applyValue();return true;}
             return super.keyPressed(key,scan,modifiers);
         }
     }
@@ -148,7 +149,7 @@ public final class LaserScreen extends AEBaseScreen<LaserMenu> {
         for (var slot : menu.slots) if (slot.isActive())
             SimulationScreen.icon(g, Icon.SLOT_BACKGROUND, x + slot.x - 1, y + slot.y - 1);
         if (menu.kind() == LaserKind.RECEIVER) {
-            bar(g, x + 10, y + 98, 204, menu.particleCount, 125_000, 0xFF7AC5E8);
+            bar(g, x + 10, y + 98, 204, menu.particleCount, menu.particleCapacity, 0xFF7AC5E8);
             bar(g, x + 10, y + 107, 204, menu.energy, menu.energyCapacity, 0xFFEE98C4);
         }
     }
@@ -165,7 +166,7 @@ public final class LaserScreen extends AEBaseScreen<LaserMenu> {
         if (menu.kind() == LaserKind.CORE) {
             line(g, "gui.overload_sim.laser.current_strength", 10, 30, compact(menu.power));
             line(g, "gui.overload_sim.laser.core_remainder", 10, 49, compact(menu.coreRemainder));
-            line(g, "gui.overload_sim.laser.core_threshold", 10, 68, compact(dev.overloadsim.core.LaserMath.CORE_THRESHOLD));
+            line(g, "gui.overload_sim.laser.core_threshold", 10, 68, compact(menu.coreThreshold));
             return;
         }
         line(g, "gui.overload_sim.laser." + (menu.formed ? "formed" : "unformed"), 10, 28);
@@ -186,11 +187,11 @@ public final class LaserScreen extends AEBaseScreen<LaserMenu> {
                 line(g, "gui.overload_sim.laser.fuel_ticks", 92, 133, menu.fuelRemaining);
             }
             case BURST -> {
-                line(g, "gui.overload_sim.laser.burst_hint", 10, 80);
+                line(g, "gui.overload_sim.laser.burst_configured", 10, 80,menu.burstMultiplier);
                 line(g, "gui.overload_sim.laser.ehv", 10, 98, menu.extremeLightning);
             }
             case FOCUS -> line(g, "gui.overload_sim.laser.focus_hint", 10, 80);
-            default -> line(g, "gui.overload_sim.laser.range_hint", 10, 80);
+            default -> line(g, "gui.overload_sim.laser.range_configured", 10, 80,menu.outputRange);
         }
         g.drawString(font, Component.translatable("container.inventory"), 31, 150, TEXT, false);
     }
@@ -219,7 +220,7 @@ public final class LaserScreen extends AEBaseScreen<LaserMenu> {
             if (mx >= leftPos + 8 && mx <= leftPos + 215 && my >= topPos + 25 && my <= topPos + 85)
                 g.renderTooltip(font, List.of(Component.translatable("gui.overload_sim.laser.exact_strength", menu.power),
                         Component.translatable("gui.overload_sim.laser.core_remainder", Long.toString(menu.coreRemainder)),
-                        Component.translatable("gui.overload_sim.laser.core_threshold", Long.toString(dev.overloadsim.core.LaserMath.CORE_THRESHOLD))),
+                        Component.translatable("gui.overload_sim.laser.core_threshold", Long.toString(menu.coreThreshold))),
                         Optional.empty(), mx, my);
             return;
         }
