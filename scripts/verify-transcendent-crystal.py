@@ -39,7 +39,8 @@ def verify():
             area = (0, frame * 16, 16, (frame + 1) * 16)
             assert generated.crop(area).getchannel("A").getbbox() == original.crop(area).getchannel("A").getbbox()
 
-    assert (ASSETS / f"textures/item/{NAME}.png.mcmeta").read_bytes() == original_metadata, "animation timing and frame order stay byte-identical"
+    # Git normalizes text resources to LF; whitespace does not change animation timing or frame order.
+    assert json.loads((ASSETS / f"textures/item/{NAME}.png.mcmeta").read_text(encoding="utf-8")) == json.loads(original_metadata), "animation timing and frame order stay identical"
     model = json.loads((ASSETS / f"models/item/{NAME}.json").read_text(encoding="utf-8"))
     original_model["textures"]["layer0"] = f"overload_sim:item/{NAME}"
     assert model == original_model, "retain the original model and inherited item display transforms"
