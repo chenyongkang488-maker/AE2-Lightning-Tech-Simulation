@@ -15,7 +15,9 @@ Configure 36 virtual resource samples on two pages. No sample is consumed. The p
 
 NORMAL mode supplies adjacent inventories. WIRELESS mode supplies the bound face of each target. The modes are mutually exclusive. Supply continues until the grid lacks stock or a target refuses insertion; configured amounts limit each source slot's total transfer per cycle, not target inventory levels. Unlimited mode removes the slot quantity limit. Targets rotate fairly.
 
-In WIRELESS mode, right-click the interface with the Wireless Overload Connector. Hold Shift and scroll to select slots 1–36, then right-click the target's input face. Ctrl-click binds matching adjacent targets. Repeated binding does not remove a connection; use the Targets view to remove one or clear a source slot. Right-click air to clear the tool selection.
+In WIRELESS mode, right-click the interface with the Wireless Overload Connector. Hold Shift and scroll to select slots 1–36, then right-click the target's input face. Clicking that face again removes only the selected source slot's link. Ctrl-click adds missing links to matching adjacent targets without removing existing links. The Targets view can remove one link or clear a source slot. Right-click air to clear the tool selection.
+
+Right-click the interface with a supported crafting, fuzzy or induction card to insert it directly. AE2's native Shift-right-click upgrade insertion is also supported.
 
 Changing a sample changes the resource supplied by that slot's existing connections. Clearing a sample pauses its resource output. Empty slots can bind targets. Install an Applied Flux induction card to send FE to all connected target faces, including empty resource slots. Each FE target face is counted once. Without Applied Flux or the card, FE supply is disabled.
 

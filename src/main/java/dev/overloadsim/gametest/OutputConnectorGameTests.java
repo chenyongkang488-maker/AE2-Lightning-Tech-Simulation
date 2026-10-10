@@ -55,18 +55,24 @@ public final class OutputConnectorGameTests {
         h.assertTrue(OverloadedWirelessConnectorItem.hasSelection(stack) && stack.get(DataComponents.CUSTOM_DATA).copyTag().getString("test:foreign").equals("keep"), "clear preserves upstream and unrelated data");
         h.succeed();
     }
-    @GameTest(template = "empty") public static void emptySlotsCycleAndDuplicateBindingNeverDisconnects(GameTestHelper h) {
+    @GameTest(template = "empty") public static void emptySlotsCycleAndRepeatClickDisconnectsOnlySelectedLink(GameTestHelper h) {
         var source = source(h); var player = player(h);
         h.assertTrue(use(player, source.getBlockPos(), Direction.UP, false), "select source");
         var target = source.getBlockPos().east();
         h.getLevel().setBlockAndUpdate(target, Blocks.CHEST.defaultBlockState());
         h.assertTrue(use(player, target, Direction.WEST, false), "empty slot may bind");
-        h.assertTrue(use(player, target, Direction.WEST, false) && source.getConnections().size() == 1, "repeat leaves binding present");
+        h.assertTrue(use(player, target, Direction.WEST, false) && source.getConnections().isEmpty(), "repeat removes the selected slot face");
+        h.assertTrue(use(player, target, Direction.WEST, false) && source.getConnections().size() == 1, "third click binds again");
         player.setShiftKeyDown(true);
         h.assertTrue(OutputConnector.cycle(player, 0, -1) && OutputSourceSelection.read(player.getMainHandItem()).sourceSlot() == 35, "reverse wraps into empty slot36");
         h.assertTrue(use(player, target, Direction.WEST, false) && source.getConnections().size() == 2, "same target face accepts distinct source slot");
         h.assertTrue(OutputConnector.cycle(player, 0, 1) && OutputSourceSelection.read(player.getMainHandItem()).sourceSlot() == 0, "forward wraps back to slot1");
         h.assertTrue(use(player, target, Direction.UP, false) && source.getConnections().size() == 3, "same resource slot can bind additional face");
+        h.assertTrue(use(player, target, Direction.WEST, false) && source.getConnections().size() == 2,
+                "disconnect leaves the other slot and other face present");
+        h.assertTrue(source.getConnections().stream().anyMatch(link -> link.sourceSlot() == 35 && link.face() == Direction.WEST)
+                && source.getConnections().stream().anyMatch(link -> link.sourceSlot() == 0 && link.face() == Direction.UP),
+                "unrelated links retain their exact slot and face");
         h.succeed();
     }
     @GameTest(template = "empty") public static void batchAddsEachContiguousTargetOnce(GameTestHelper h) {

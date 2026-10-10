@@ -64,6 +64,8 @@
 
 使用 Java **21 JDK**；发布检查脚本需要 Python **3.11 或以上**。Gradle 8.8 由仓库内 Wrapper 下载并校验。脚本不要求特定盘符。开发依赖放在忽略的 `libs/`，不会捆绑进发布 JAR。
 
+JEI 19.44.0.403 仅用于编译可选的机器配方浏览集成，bootstrap 同时下载并校验；玩家可自行选择是否安装 JEI。
+
 Windows PowerShell：
 
 ```powershell

@@ -1,5 +1,11 @@
 [
   {
+    "file": "jei-1.21.1-neoforge-19.44.0.403.jar",
+    "url": "https://maven.blamejared.com/mezz/jei/jei-1.21.1-neoforge/19.44.0.403/jei-1.21.1-neoforge-19.44.0.403.jar",
+    "sha256": "31890ccbaf93cf90e2816b8f7cfb5a1340fe20bd8a1680a84e0050f7e07769bd",
+    "compileOnly": true
+  },
+  {
     "file": "ae2lt-2.1.1.jar",
     "url": "https://mediafilez.forgecdn.net/files/9024/605/ae2lt-2.1.1.jar",
     "sha256": "38ab438c2afc1af897e9fdb28fa89db47417a346774da718b1132829dfc517c5"

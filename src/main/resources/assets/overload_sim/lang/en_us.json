@@ -482,5 +482,14 @@
   "gui.overload_sim.output.direction.south": "South",
   "gui.overload_sim.output.direction.west": "West",
   "gui.overload_sim.output.direction.east": "East",
-  "gui.overload_sim.output.need_tool": "Hold a Wireless Overload Connector to delete links. Keep it in the offhand to open the interface with an empty main hand."
+  "gui.overload_sim.output.need_tool": "Hold a Wireless Overload Connector to delete links. Keep it in the offhand to open the interface with an empty main hand.",
+  "message.overload_sim.output_tool.unbound": "Slot %s (%s): disconnected target face %s.",
+  "jei.overload_sim.workstation.laser": "Single beam strength > %s FE",
+  "jei.overload_sim.workstation.cycle": "%s ticks/cycle; up to %s parallel",
+  "jei.overload_sim.workstation.materials_only": "Materials only; no recipe FE/lightning cost",
+  "jei.overload_sim.tesla.title": "Tesla Coil: Transcendent Crystal",
+  "jei.overload_sim.tesla.matrix": "Lightning Collapse Matrix required; not consumed",
+  "jei.overload_sim.tesla.output": "Produces %s extreme high voltage",
+  "jei.overload_sim.tesla.energy": "Consumes %s FE/crystal",
+  "jei.overload_sim.tesla.cycle": "5 active ticks/crystal (extreme high voltage mode)"
 }

@@ -23,6 +23,7 @@
     "defaultRequire": 1
   },
   "client": [
+    "TeslaJeiClickAreaMixin",
     "OutputConnectorRendererMixin",
     "CoilHubScreenMixin",
     "CoilMouseScrollMixin",

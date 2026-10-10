@@ -35,7 +35,7 @@ import net.neoforged.neoforge.items.IItemHandler;
 import org.jetbrains.annotations.Nullable;
 
 /** An output-only network proxy; deliberately independent of AE's InterfaceLogic. */
-public final class OutputInterfaceBlockEntity extends AENetworkedBlockEntity implements IActionHost,FrequencyBindingHost {
+public final class OutputInterfaceBlockEntity extends AENetworkedBlockEntity implements IActionHost,FrequencyBindingHost,appeng.api.upgrades.IUpgradeableObject {
     public static final int SLOT_COUNT=36, MAX_CONNECTIONS=1024;
     public enum InterfaceMode { NORMAL, WIRELESS }
     public enum IOSpeedMode { NORMAL, FAST }

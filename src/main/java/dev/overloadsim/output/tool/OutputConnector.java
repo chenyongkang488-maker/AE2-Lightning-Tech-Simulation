@@ -65,6 +65,16 @@ public final class OutputConnector {
         var source = resolve(player, stack, selection);
         if (source == null) return false;
         if (!allowedSource(source, player)) { hint(player, "denied"); return false; }
+        // A direct repeat click toggles only this source slot and this exact target face.
+        // Removal does not require a live receiving capability: stale targets remain removable.
+        var clicked = new OutputConnection(selection.sourceSlot(), level.dimension(), pos, face);
+        if (!batch && source.removeConnection(clicked)) {
+            player.displayClientMessage(Component.translatable("message.overload_sim.output_tool.unbound",
+                    selection.sourceSlot() + 1, keyName(source, selection.sourceSlot()),
+                    Component.translatable("gui.overload_sim.output.direction." + face.getName()))
+                    .withStyle(ChatFormatting.GREEN), true);
+            return true;
+        }
         var requested = new ArrayList<OutputConnection>();
         int skipped = 0;
         for (var candidate : WirelessConnectorTargetHelper.collectTargets(level, pos, batch,

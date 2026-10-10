@@ -482,5 +482,14 @@
   "gui.overload_sim.output.direction.south": "南",
   "gui.overload_sim.output.direction.west": "西",
   "gui.overload_sim.output.direction.east": "东",
-  "gui.overload_sim.output.need_tool": "删除连接需手持无线过载连接工具；放在副手可用空主手打开界面。"
+  "gui.overload_sim.output.need_tool": "删除连接需手持无线过载连接工具；放在副手可用空主手打开界面。",
+  "message.overload_sim.output_tool.unbound": "槽 %s（%s）：已取消目标面 %s 的连接。",
+  "jei.overload_sim.workstation.laser": "单束激光强度 > %s FE",
+  "jei.overload_sim.workstation.cycle": "%s tick／轮，最多 %s 并行",
+  "jei.overload_sim.workstation.materials_only": "仅消耗材料，无配方 FE／高压扣费",
+  "jei.overload_sim.tesla.title": "特斯拉线圈：超限水晶",
+  "jei.overload_sim.tesla.matrix": "必须安装闪电坍缩矩阵；矩阵不消耗",
+  "jei.overload_sim.tesla.output": "产出 %s 极高压",
+  "jei.overload_sim.tesla.energy": "消耗 %s FE／水晶",
+  "jei.overload_sim.tesla.cycle": "5 个有效 tick／水晶（极高压模式）"
 }

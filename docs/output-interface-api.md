@@ -24,6 +24,6 @@ if (level.getBlockEntity(sourcePos) instanceof OutputInterfaceBlockEntity source
 
 主菜单 → 模组 → 闪电科技：模拟 → 配置中的 `overload_sim-output.toml` 提供 `wirelessRange`（默认 128，0 为无限）及 `allowCrossDimension`（默认 true）。跨维度不比较坐标，目标区块始终按已加载状态处理。配置修改实时生效，越界的已有连接保留并暂停；配置重新允许后恢复。
 
-连接工具操作：右键无线模式的源接口，Shift＋滚轮循环选择全部 36 个槽，再右键目标面。Ctrl 批量绑定相邻同种方块。重复连接只提示已连接；在目标管理页删除单条或清空某槽。右键空气清除工具选择。
+连接工具操作：右键无线模式的源接口，Shift＋滚轮循环选择全部 36 个槽，再右键目标面。再次单击同一目标面取消当前源槽的该连接，不影响其它槽或面。Ctrl 批量绑定相邻同种方块，仅添加缺失连接；也可在目标管理页删除单条或清空某槽。右键空气清除工具选择。手持支持的合成卡、模糊卡或感应卡右键接口可直接插入，Shift＋右键也支持 AE2 原生插卡。
 
 新接口的数据、工具选择和注册 ID 与原接口独立，不迁移或改写原接口存档。AE2LT 原接口参考代码及相关署名、许可见项目 `LICENSES.md` 与 `THIRD_PARTY_NOTICES.md`。

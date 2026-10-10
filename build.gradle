@@ -18,6 +18,7 @@ neoForge {
     mods { overload_sim { sourceSet sourceSets.main; if (gradle.startParameter.taskNames.any { it.tokenize(':').last() == 'runGameTestServer' }) sourceSet sourceSets.compatibilityFixtures } }
 }
 dependencies {
+    compileOnly files('libs/jei-1.21.1-neoforge-19.44.0.403.jar')
     compileOnly files('libs/Mekanism-1.21.1-10.7.19.85.jar')
     if(project.hasProperty('mekTests')) runtimeOnly files('libs/Mekanism-1.21.1-10.7.19.85.jar')
     if(project.hasProperty('cropTests')) runtimeOnly files('libs/MysticalAgriculture-1.21.1-8.0.28.jar', 'libs/Cucumber-1.21.1-8.0.16.jar')
