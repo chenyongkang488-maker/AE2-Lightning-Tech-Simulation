@@ -1,0 +1,18 @@
+{
+  "version": "0.2.1-alpha.6",
+  "date": "2026-10-10",
+  "instance": "D:\\mc\\.minecraft\\versions\\New Age Science and Technology",
+  "installedJar": "D:\\mc\\.minecraft\\versions\\New Age Science and Technology\\mods\\lightning-tech-simulation-0.2.1-alpha.6.jar",
+  "sha256": "f1b47a4d5f1808c1176ef93cfb1b852ba531026357cb93ee233f6a7d30e929e0",
+  "backup": [
+    {
+      "path": "D:\\mc\\.minecraft\\versions\\New Age Science and Technology\\addon-backups\\20261010-235430\\lightning-tech-simulation-0.2.1-alpha.5.jar",
+      "sha256": "1f2e44f17253031e9cb9148f7d730f1ecad2243728782faa3ef25449acd153dd"
+    }
+  ],
+  "implementationCommit": "4b8916d0f26168f396820a98f3302330ad545dd6",
+  "tag": "v0.2.1-alpha.6",
+  "build": "gradlew jar sourcesJar: BUILD SUCCESSFUL",
+  "tests": "Skipped at user request; existing connector test expectations updated but not run; no client verification",
+  "scope": "Only addon JAR replaced; repeat-click unlink, direct upgrade insertion and optional JEI machine pages; worlds, other mods and settings not modified"
+}
