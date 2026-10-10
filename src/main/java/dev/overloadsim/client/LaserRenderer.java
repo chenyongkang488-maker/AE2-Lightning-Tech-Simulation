@@ -30,7 +30,6 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
 import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
-import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -45,6 +44,8 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
     private final BlockEntityRendererProvider.Context context;
     private final Map<LaserMachineBlockEntity,Skin> skins = new WeakHashMap<>();
     private final Map<LaserMachineBlockEntity,Lighting> lighting = new WeakHashMap<>();
+    private final Map<LaserMachineBlockEntity,Geometry> geometry = new WeakHashMap<>();
+    private final PreparedMachineMesh crystal=PreparedMachineMesh.surfaces(DeflectorCrystalMesh.surfaces());
     private final Map<LaserMachineBlockEntity,ParticleFlightVisuals.Clock> flights = new WeakHashMap<>();
     private record Basis(Vec3 right,Vec3 up,Vec3 forward) {
         Vec3 apply(double x,double y,double z) { return right.scale(x).add(up.scale(y)).add(forward.scale(z)); }
@@ -53,17 +54,30 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
     private record Skin(Direction facing,boolean pedestal,long tick,List<BlockPos> openings,
             List<IndustrialMachineMesh.Surface> mesh,List<ReceiverShellMesh.Quad> glass) {}
     private record Lighting(BlockPos center,Basis basis,PreparedSurfaceLighting samples) {}
+    private record Geometry(List<IndustrialMachineMesh.Surface> source,List<ReceiverShellMesh.Quad> glass,
+            Vec3 center,Basis basis,PreparedMachineMesh body,PreparedMachineMesh panes,
+            PreparedMachineMesh screen,PreparedMachineMesh core) {}
 
     public LaserRenderer(BlockEntityRendererProvider.Context context) { this.context = context; }
     @Override public boolean shouldRenderOffScreen(LaserMachineBlockEntity be) { return be.formed(); }
     @Override public int getViewDistance() { return 128; }
 
     @Override public AABB getRenderBoundingBox(LaserMachineBlockEntity be) {
-        AABB box = new AABB(be.getBlockPos());
+        AABB box = bodyBounds(be);
+        int count = 0;
+        for (LaserSegment segment : be.segments()) {
+            if (++count > MAX_SEGMENTS) break;
+            if (valid(segment)) box = box.minmax(segment.bounds());
+        }
+        return box;
+    }
+
+    private static AABB bodyBounds(LaserMachineBlockEntity be) {
+        AABB box=new AABB(be.getBlockPos());
         if (be.formed()) {
             Vec3 center=Vec3.atCenterOf(be.center());
-            double radius=be.kind()==LaserKind.CORE?1.85:be.kind()==LaserKind.EMITTER?2.85:
-                    be.kind()==LaserKind.CONSTRAINT||be.kind()==LaserKind.FOCUS?4.2:3.65;
+            // Include rotating core corners, outer matrix collars and burst arcs at every animation age.
+            double radius=be.kind()==LaserKind.CORE?3:be.kind()==LaserKind.EMITTER?3.75:4.3;
             box=box.minmax(new AABB(center,center).inflate(radius));
             if(be.kind()==LaserKind.RECEIVER&&be.receiverPedestalLayout()) {
                 var basis=basis(be);
@@ -73,30 +87,41 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
                 }
             }
         }
-        int count = 0;
-        for (LaserSegment segment : be.segments()) {
-            if (++count > MAX_SEGMENTS) break;
-            if (valid(segment)) box = box.minmax(segment.bounds());
-        }
         return box;
     }
 
     @Override public void render(LaserMachineBlockEntity be, float partial, PoseStack poses,
             MultiBufferSource buffers, int light, int overlay) {
         if (be.getLevel() == null || !be.formed()) return;
+        boolean bodyVisible=ClientRenderVisibility.visible(bodyBounds(be));
+        boolean active=be.activeUntil()>be.getLevel().getGameTime();
+        if(!bodyVisible) {
+            if(!active)return;
+            boolean beamVisible=false;int checked=0;
+            for(var segment:be.segments()) {
+                if(++checked>MAX_SEGMENTS)break;
+                if(valid(segment)&&ClientRenderVisibility.visible(segment.bounds())){beamVisible=true;break;}
+            }
+            if(!beamVisible)return;
+        }
         double time = be.getLevel().getGameTime() + partial;
         Vec3 origin = Vec3.atLowerCornerOf(be.getBlockPos());
         Vec3 center = Vec3.atCenterOf(be.center()).subtract(origin);
-        var skin=be.receiverSkinVisible()?skin(be,basis(be)):null;
-        var faceLight=surfaceLighting(be,light);
-        if (skin!=null) machineSkin(be,skin,center,poses,buffers,faceLight);
-        if (be.kind()==LaserKind.CORE) industrialMesh(IndustrialMachineMesh.coreAttachments(),poses.last(),
-                buffers.getBuffer(RenderType.entitySolid(InventoryMenu.BLOCK_ATLAS)),atlas(),center,faceLight,basis(be));
-        boolean active = be.activeUntil() > be.getLevel().getGameTime();
-        if (be.kind() == LaserKind.CORE && active) LaserEnergyEffects.core(context,center,time,be.collapseStartTick(),poses,buffers);
+        if(bodyVisible) {
+            var basis=basis(be);
+            var skin=be.receiverSkinVisible()?skin(be,basis):null;
+            var prepared=geometry(be,skin,center,basis);
+            var faceLight=surfaceLighting(be,light);
+            if(skin!=null)machineSkin(be,prepared,center,poses,buffers,faceLight);
+            if(be.kind()==LaserKind.CORE) {
+                var solid=buffers.getBuffer(RenderType.entitySolid(InventoryMenu.BLOCK_ATLAS));
+                prepared.core.draw(poses.last(),solid,solid,atlas(),faceLight);
+                if(active)LaserEnergyEffects.core(context,center,time,be.collapseStartTick(),poses,buffers);
+            }
+        }
         VertexConsumer vertices = buffers.getBuffer(RenderType.lightning());
         Matrix4f matrix = poses.last().pose();
-        if (be.kind() == LaserKind.RECEIVER)
+        if (be.kind() == LaserKind.RECEIVER && bodyVisible)
             containment(matrix, vertices, center, time, be.particles().stored(), be.particles().capacity());
         ParticleFlightVisuals.Clock flightClock=null;
         if(be.kind()==LaserKind.EMITTER){
@@ -105,7 +130,7 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
                     .mapToLong(LaserSegment::launchTick).toArray());
         }
         if (!active) return;
-        if(be.kind()==LaserKind.BURST&&be.lastPower()>0){
+        if(be.kind()==LaserKind.BURST&&be.lastPower()>0&&bodyVisible){
             var b=basis(be);LaserEnergyEffects.burst(matrix,vertices,center,b.right,b.up,b.forward,time,be.getBlockPos().asLong());
         }
         var energySprite=Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(ModContent.id("block/laser_energy_flow"));
@@ -114,6 +139,7 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
         for (LaserSegment segment : be.segments()) {
             if (++count > MAX_SEGMENTS) break;
             if (!valid(segment)) continue;
+            if (!ClientRenderVisibility.visible(segment.bounds())) continue;
             Vec3 start = segment.start().subtract(origin), end = segment.end().subtract(origin);
             if (segment.particle()) {
                 int dots = flightClock==null?ParticleFlightVisuals.visibleCount(segment.particleCount(),segment.launchTick(),time)
@@ -165,26 +191,41 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
         return cached.samples.beginFrame(be.getLevel(),fallback);
     }
 
-    private void machineSkin(LaserMachineBlockEntity be,Skin skin,Vec3 center,PoseStack poses,MultiBufferSource buffers,
+    private Geometry geometry(LaserMachineBlockEntity be,Skin skin,Vec3 center,Basis basis) {
+        List<IndustrialMachineMesh.Surface> source=skin==null?List.of():skin.mesh;
+        List<ReceiverShellMesh.Quad> glass=skin==null?List.of():skin.glass;
+        var cached=geometry.get(be);
+        if(cached==null||cached.source!=source||cached.glass!=glass||!cached.center.equals(center)||!cached.basis.equals(basis)) {
+            cached=new Geometry(source,glass,center,basis,
+                    PreparedMachineMesh.surfaces(source,center,basis.right,basis.up,basis.forward),
+                    PreparedMachineMesh.panes(glass,center,basis.right,basis.up,basis.forward,66.5f,2.5f,11,11),
+                    PreparedMachineMesh.panes(List.of(ReceiverPedestalMesh.screen()),center,basis.right,basis.up,basis.forward,0,0,128,128),
+                    PreparedMachineMesh.surfaces(be.kind()==LaserKind.CORE?IndustrialMachineMesh.coreAttachments():List.of(),
+                            center,basis.right,basis.up,basis.forward));
+            geometry.put(be,cached);
+        }
+        return cached;
+    }
+
+    private void machineSkin(LaserMachineBlockEntity be,Geometry prepared,Vec3 center,PoseStack poses,MultiBufferSource buffers,
             ToIntFunction<ReceiverShellMesh.Quad> faceLight) {
         var sprite = atlas();
         var porcelain = buffers.getBuffer(RenderType.entitySolid(InventoryMenu.BLOCK_ATLAS));
-        var basis=basis(be);
         var emissive = buffers.getBuffer(RenderType.beaconBeam(InventoryMenu.BLOCK_ATLAS,false));
-        industrialMesh(skin.mesh,poses.last(),porcelain,sprite,center,faceLight,basis,emissive);
+        prepared.body.draw(poses.last(),porcelain,emissive,sprite,faceLight);
         if(be.kind()==LaserKind.DEFLECTOR) {
             poses.pushPose();poses.translate(center.x,center.y,center.z);
             poses.mulPose(com.mojang.math.Axis.YP.rotationDegrees((float)((be.getLevel().getGameTime()%7200)*.05)));
-            industrialMesh(DeflectorCrystalMesh.surfaces(),poses.last(),emissive,sprite,Vec3.ZERO,q -> LightTexture.FULL_BRIGHT,basis);
+            crystal.draw(poses.last(),emissive,emissive,sprite,q -> LightTexture.FULL_BRIGHT);
             poses.popPose();
         }
         if(be.kind()==LaserKind.RECEIVER) {
             // Keep the established fixed translucent buffer; never flush it while opaque atlas geometry is queued.
             var glass=buffers.getBuffer(RenderType.entityTranslucent(InventoryMenu.BLOCK_ATLAS));
-            shellMesh(skin.glass,poses.last(),glass,sprite,center,faceLight,basis,66.5f,2.5f,11,11);
+            prepared.panes.draw(poses.last(),glass,glass,sprite,faceLight);
             if(be.receiverPedestalLayout()) {
                 var screen=Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(ModContent.id("block/simulation_controller_ecg"));
-                shellMesh(List.of(ReceiverPedestalMesh.screen()),poses.last(),emissive,screen,center,q -> LightTexture.FULL_BRIGHT,basis,0,0,128,128);
+                prepared.screen.draw(poses.last(),emissive,emissive,screen,q -> LightTexture.FULL_BRIGHT);
             }
         }
     }
@@ -263,52 +304,6 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
         }
         var next=new Skin(facing,pedestal,tick,List.copyOf(openings),List.copyOf(result),panes);
         skins.put(be,next);lighting.remove(be);return next;
-    }
-
-    private static void industrialMesh(List<IndustrialMachineMesh.Surface> mesh,PoseStack.Pose pose,VertexConsumer vertices,
-            TextureAtlasSprite sprite,Vec3 center,ToIntFunction<ReceiverShellMesh.Quad> faceLight,Basis basis) {
-        industrialMesh(mesh,pose,vertices,sprite,center,faceLight,basis,vertices);
-    }
-
-    private static void industrialMesh(List<IndustrialMachineMesh.Surface> mesh,PoseStack.Pose pose,VertexConsumer vertices,
-            TextureAtlasSprite sprite,Vec3 center,ToIntFunction<ReceiverShellMesh.Quad> faceLight,Basis basis,VertexConsumer emissive) {
-        for(var surface:mesh) {
-            float u=(surface.tile()%8)*16+.5f,v=(surface.tile()/8)*16+.5f;
-            var q=surface.quad();int panelLight=surface.glow()?LightTexture.FULL_BRIGHT:faceLight.applyAsInt(q);
-            // Each surface is drawn once; the opaque beacon shader keeps lights
-            // unshaded while establishing depth before translucent port glass.
-            var target=surface.glow()?emissive:vertices;
-            shellVertex(q.a(),pose,target,sprite,center,panelLight,basis,u,v,15,15);
-            shellVertex(q.b(),pose,target,sprite,center,panelLight,basis,u,v,15,15);
-            shellVertex(q.c(),pose,target,sprite,center,panelLight,basis,u,v,15,15);
-            shellVertex(q.d(),pose,target,sprite,center,panelLight,basis,u,v,15,15);
-        }
-    }
-
-    private static void shellMesh(java.util.List<ReceiverShellMesh.Quad> mesh, PoseStack.Pose pose, VertexConsumer vertices,
-            TextureAtlasSprite sprite, Vec3 center, ToIntFunction<ReceiverShellMesh.Quad> faceLight,Basis basis, float u, float v, float width, float height) {
-        for (var quad : mesh) {
-            int light=faceLight.applyAsInt(quad);
-            shellVertex(quad.a(), pose, vertices, sprite, center, light,basis, u, v, width, height);
-            shellVertex(quad.b(), pose, vertices, sprite, center, light,basis, u, v, width, height);
-            shellVertex(quad.c(), pose, vertices, sprite, center, light,basis, u, v, width, height);
-            shellVertex(quad.d(), pose, vertices, sprite, center, light,basis, u, v, width, height);
-        }
-    }
-
-    private static void shellVertex(ReceiverShellMesh.Vertex vertex, PoseStack.Pose pose, VertexConsumer vertices,
-            TextureAtlasSprite sprite, Vec3 center, int light,Basis basis, float u, float v, float width, float height) {
-        double x=vertex.x(),y=vertex.y(),z=vertex.z(),nx=vertex.nx(),ny=vertex.ny(),nz=vertex.nz();
-        // Basis arithmetic stays allocation-free for the cached mesh's thousands of vertices.
-        vertices.addVertex(pose.pose(),
-                (float)(center.x+basis.right.x*x+basis.up.x*y+basis.forward.x*z),
-                (float)(center.y+basis.right.y*x+basis.up.y*y+basis.forward.y*z),
-                (float)(center.z+basis.right.z*x+basis.up.z*y+basis.forward.z*z))
-                .setColor(255, 255, 255, 255).setUv(sprite.getU((float) (u + vertex.u() * width) / 128), sprite.getV((float) (v + vertex.v() * height) / 128))
-                .setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(pose,
-                        (float)(basis.right.x*nx+basis.up.x*ny+basis.forward.x*nz),
-                        (float)(basis.right.y*nx+basis.up.y*ny+basis.forward.y*nz),
-                        (float)(basis.right.z*nx+basis.up.z*ny+basis.forward.z*nz));
     }
 
     private static boolean finite(Vec3 v) {
