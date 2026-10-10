@@ -1,0 +1,19 @@
+{
+  "version": "0.2.1-alpha.2",
+  "date": "2026-10-10",
+  "instance": "D:\\mc\\.minecraft\\versions\\OverloadSim-Test-1.21.1",
+  "installedJar": "D:\\mc\\.minecraft\\versions\\OverloadSim-Test-1.21.1\\mods\\lightning-tech-simulation-0.2.1-alpha.2.jar",
+  "sha256": "b3b01790abd605581a1283e87e0380145a2b3f461fe89d352eff71f5b158dcc1",
+  "backup": [
+    {
+      "path": "D:\\mc\\.minecraft\\versions\\OverloadSim-Test-1.21.1\\addon-backups\\20261010-125713\\lightning-tech-simulation-0.2.1-alpha.1.jar",
+      "sha256": "6de15737f63f2f8e14466ac7d7520906785c36461ffbf1096603eed5c35c29b6"
+    }
+  ],
+  "implementationCommit": "d0b5dc010e0211d250820453edff5e7c62a97c7e",
+  "tag": "v0.2.1-alpha.2",
+  "build": "gradlew jar sourcesJar: BUILD SUCCESSFUL",
+  "tests": "Skipped after changes at explicit user request",
+  "clientAcceptance": "User manual testing",
+  "scope": "Only addon JAR backed up and replaced; no instance launch or configuration/world edits"
+}
