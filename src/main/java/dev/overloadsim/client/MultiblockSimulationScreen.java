@@ -3,7 +3,6 @@ import appeng.client.gui.AEBaseScreen;
 import appeng.client.gui.Icon;
 import appeng.client.gui.widgets.IconButton;
 import com.moakiee.ae2lt.api.frequency.FrequencyApi;
-import com.moakiee.ae2lt.client.TextureToggleButton;
 import appeng.client.gui.style.StyleManager;
 import appeng.menu.SlotSemantics;
 import dev.overloadsim.core.MultiblockMenuLayout;

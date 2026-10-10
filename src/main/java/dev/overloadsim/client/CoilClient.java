@@ -1,6 +1,5 @@
 package dev.overloadsim.client;
 
-import com.moakiee.ae2lt.client.DeviceHubKeyMappings;
 import dev.overloadsim.*;
 import dev.overloadsim.tool.*;
 import net.minecraft.client.Minecraft;
@@ -22,7 +21,7 @@ public final class CoilClient {
     @SubscribeEvent(priority=EventPriority.HIGHEST)
     public static void keys(ClientTickEvent.Pre event){
         var mc=Minecraft.getInstance();if(!canScrollWrench(mc)){WRENCH_SCROLL.reset();scrollingPlayer=null;scrollingSlot=-1;}if(mc.player==null||mc.screen!=null)return;
-        if(CoilModules.isCoil(dev.overloadsim.compat.CoilHubAccess.weapon(mc.player)))while(DeviceHubKeyMappings.OPEN_CONFIG.consumeClick())PacketDistributor.sendToServer(new CoilPackets.Open());
+        if(CoilModules.isCoil(dev.overloadsim.compat.CoilHubAccess.weapon(mc.player)))while(AE2LTClientBridge.openConfigKey().consumeClick())PacketDistributor.sendToServer(new CoilPackets.Open());
     }
     /** Called before vanilla accumulation, which would hide fractional input from NeoForge's event. */
     public static boolean scrollWrench(long window,double delta){

@@ -8,7 +8,6 @@ import appeng.client.gui.widgets.IconButton;
 import appeng.client.gui.style.StyleManager;
 import appeng.menu.SlotSemantics;
 import com.moakiee.ae2lt.api.frequency.FrequencyApi;
-import com.moakiee.ae2lt.client.TextureToggleButton;
 import dev.overloadsim.laser.LaserKind;
 import dev.overloadsim.laser.LaserMenu;
 import net.minecraft.client.gui.GuiGraphics;

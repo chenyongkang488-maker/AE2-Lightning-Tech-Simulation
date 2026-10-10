@@ -14,7 +14,7 @@ import appeng.client.gui.widgets.SettingToggleButton;
 import appeng.client.gui.widgets.UpgradesPanel;
 import appeng.menu.SlotSemantics;
 import com.moakiee.ae2lt.api.frequency.FrequencyApi;
-import com.moakiee.ae2lt.client.TextureToggleButton;
+import dev.overloadsim.client.TextureToggleButton;
 import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.gui.GuiGraphics;

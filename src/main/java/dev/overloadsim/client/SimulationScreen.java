@@ -10,7 +10,6 @@ import appeng.client.gui.widgets.ActionButton;
 import appeng.client.gui.widgets.UpgradesPanel;
 import appeng.menu.SlotSemantics;
 import com.moakiee.ae2lt.api.frequency.FrequencyApi;
-import com.moakiee.ae2lt.client.TextureToggleButton;
 import dev.overloadsim.machine.SimulationMenu;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;

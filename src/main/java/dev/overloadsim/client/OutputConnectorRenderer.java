@@ -5,7 +5,6 @@
 package dev.overloadsim.client;
 
 import appeng.client.render.overlay.OverlayRenderType;
-import com.moakiee.ae2lt.client.Ae2ltRenderTypes;
 import com.moakiee.ae2lt.item.OverloadedWirelessConnectorItem;
 import com.moakiee.ae2lt.logic.WirelessConnectorTargetHelper;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -96,7 +95,7 @@ public final class OutputConnectorRenderer {
                 if(host!=null)renderHost(pose,buffers,mc.level,host,false);
             }
         } finally {pose.popPose();}
-        buffers.endBatch(Ae2ltRenderTypes.getFaceSeeThrough());
+        buffers.endBatch(AE2LTClientBridge.faceSeeThrough());
         buffers.endBatch(OverlayRenderType.getBlockHilightFace());
         buffers.endBatch(OverlayRenderType.getBlockHilightLine());
     }
@@ -199,7 +198,7 @@ public final class OutputConnectorRenderer {
     }
     private static void renderInnerCube(PoseStack poseStack, MultiBufferSource buffer,
             BlockPos pos, int color) {
-        VertexConsumer vc = buffer.getBuffer(Ae2ltRenderTypes.getFaceSeeThrough());
+        VertexConsumer vc = buffer.getBuffer(AE2LTClientBridge.faceSeeThrough());
         int[] c = OverlayRenderType.decomposeColor(color);
 
         poseStack.pushPose();

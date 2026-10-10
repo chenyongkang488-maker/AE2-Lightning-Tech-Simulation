@@ -29,7 +29,7 @@ Optional integration checks:
   `libs/`, then add `-PfluxTests`.
 
 Compilation targets AE2 19.2.17 / AE2LT 2.1.0 / Thunderbolt 2.0.0. The default
-runtime uses AE2 19.2.18 / AE2LT 2.1.1 / Thunderbolt 2.0.2. To test the same
+runtime uses AE2 19.2.18 / AE2LT 2.1.2-beta2 / Thunderbolt 2.0.3-beta2. To test the same
 classes against the original runtime without editing sources:
 
 ```powershell
