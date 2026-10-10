@@ -9,6 +9,8 @@ item_ids:
 
 # Overload Output Interface
 
+While holding the connector, same-dimension links and target faces use a fixed color for each of the 36 source slots. Selecting a source shows that source's links and a preview on the aimed target face. Multiple slots sharing a face have separate endpoints. Empty slots keep their link overlays; cross-dimension links are not drawn in the current dimension.
+
 Configure 36 virtual resource samples on two pages. No sample is consumed. The paired storage slots show resources in the connected ME grid. This device sends resources out and rejects deposits and collection from targets.
 
 NORMAL mode supplies adjacent inventories. WIRELESS mode supplies the bound face of each target. The modes are mutually exclusive. Supply continues until the grid lacks stock or a target refuses insertion; configured amounts limit each source slot's total transfer per cycle, not target inventory levels. Unlimited mode removes the slot quantity limit. Targets rotate fairly.

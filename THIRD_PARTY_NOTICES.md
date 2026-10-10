@@ -56,9 +56,13 @@ LICENSES/LGPL-3.0.txt and LICENSES/GPL-3.0.txt, and under META-INF/licenses in b
 Original routing, refund, API and test additions
 are credited to qiqi / Lightning Tech: Simulation contributors.
 
-The Blockbench project art/overload_output_interface.bbmodel embeds the original
-assets/ae2lt/textures/block/overloaded_interface.png as a licensed editing
-reference (also retained in art/output-interface/). AE2 Lightning Tech contributors
-are credited; the texture retains CC BY-NC-SA 3.0. Runtime models reference that
-texture supplied by the installed AE2 Lightning Tech dependency. Outward arrow
-geometry is original MIT artwork. No upstream binary is redistributed.
+The Blockbench project art/overload_output_interface.bbmodel embeds a pink,
+pearl-white and ice-blue adaptation of assets/ae2lt/textures/block/overloaded_interface.png.
+The original editing reference remains in art/output-interface/. The recolored
+texture is bundled as assets/overload_sim/textures/block/overload_output_interface.png,
+retaining CC BY-NC-SA 3.0 with attribution to AE2 Lightning Tech contributors;
+qiqi made the color adaptation with the built-in image editing tool. Arrow
+geometry from alpha.1 was removed in alpha.2. Overlay rendering geometry is
+adapted from WirelessConnectorRenderer and retains LGPL-3.0-only attribution
+in OutputConnectorRenderer.java; source-slot coloring and routing are addon
+changes. No upstream binary is redistributed.

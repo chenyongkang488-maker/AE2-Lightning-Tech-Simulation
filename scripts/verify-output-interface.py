@@ -26,10 +26,12 @@ assert read("assets/overload_sim/models/item/overload_output_interface.json")["p
 blockstate = read("assets/overload_sim/blockstates/overload_output_interface.json")
 assert all(v["model"] == "overload_sim:block/overload_output_interface" for v in blockstate["variants"].values())
 model = read("assets/overload_sim/models/block/overload_output_interface.json")
-assert len(model["elements"]) > 1, "Must contain distinct outward arrow geometry"
+assert len(model["elements"]) == 1, "Plain interface shell must have no arrow overlays"
+assert model["textures"]["base"] == "overload_sim:block/overload_output_interface"
+assert (RES / "assets/overload_sim/textures/block/overload_output_interface.png").is_file()
 native = json.loads((ROOT / "art/overload_output_interface.bbmodel").read_text(encoding="utf-8"))
-assert len(native["elements"]) == len(model["elements"]) == 25
-assert len(set(native["outliner"])) == 25
+assert len(native["elements"]) == len(model["elements"]) == 1
+assert len(set(native["outliner"])) == 1
 for editable, runtime in zip(native["elements"], model["elements"]):
     assert editable["from"] == runtime["from"] and editable["to"] == runtime["to"]
     assert set(editable["faces"]) == {"north", "south", "east", "west", "up", "down"}

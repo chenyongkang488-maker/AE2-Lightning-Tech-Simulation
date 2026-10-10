@@ -8,7 +8,7 @@ replace the licenses of adapted code and artwork from AE2 Lightning Tech.
 | --- | --- | --- |
 | Original addon Java code, scripts and documentation, excluding the adapted files below | MIT | qiqi and Lightning Tech: Simulation contributors |
 | Output-interface Java implementation and screen layout adapted from AE2 Lightning Tech (see SPDX headers and layout comment) | LGPL-3.0-only | AE2 Lightning Tech contributors; qiqi |
-| Overload Output Interface reference shell texture embedded in the Blockbench project | CC BY-NC-SA 3.0 | AE2 Lightning Tech contributors |
+| Overload Output Interface reference and recolored shell texture, including Blockbench copies | CC BY-NC-SA 3.0 | AE2 Lightning Tech contributors; color adaptation qiqi |
 | Original chamber/coil geometry, metal textures and separately drawn lightning | MIT | qiqi and Lightning Tech: Simulation contributors |
 | Original laser pixel atlas, equipment geometry and spherical receiver workshop | MIT | qiqi and Lightning Tech: Simulation contributors |
 | Simulation crystal sprites, crystal logo and embedded copies | CC BY-NC-SA 3.0 | Adapted from AE2 Lightning Tech Reborn contributors |

@@ -20,6 +20,8 @@ import java.util.*;
 import net.minecraft.core.*;
 import net.minecraft.core.component.DataComponentMap;
 import net.minecraft.nbt.*;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -41,6 +43,8 @@ public final class OutputInterfaceBlockEntity extends AENetworkedBlockEntity imp
     private final FrequencyBindingAccess frequency=FrequencyApi.createBinding(this);
     private final OutputInterfaceLogic logic;
     private final List<OutputConnection> connections=new ArrayList<>();
+    private final List<OutputConnection> connectionView=Collections.unmodifiableList(connections);
+    private int renderRevision;
     private final boolean[] unlimited=new boolean[SLOT_COUNT];
     private final OutputTransferLedger<AEKey> ledger=new OutputTransferLedger<>(this::changed);
     private @Nullable OutputRefundOrigin refundOrigin;
@@ -85,6 +89,9 @@ public final class OutputInterfaceBlockEntity extends AENetworkedBlockEntity imp
     public void setLastViewedPage(int page){int valid=Math.max(0,Math.min(1,page));if(lastViewedPage!=valid){lastViewedPage=valid;changed();}}
     public @Nullable AEKey getConfiguredKey(int slot){return slot>=0&&slot<SLOT_COUNT?logic.getConfig().getKey(slot):null;}
     public List<OutputConnection> getConnections(){return List.copyOf(connections);}
+    /** Read-only live view for the client render thread; public API callers use getConnections(). */
+    public List<OutputConnection> getRenderConnections(){return connectionView;}
+    public int getRenderRevision(){return renderRevision;}
     public boolean addConnection(OutputConnection connection) {
         if(connection==null||connection.sourceSlot()<0||connection.sourceSlot()>=SLOT_COUNT||connections.size()>=MAX_CONNECTIONS||connections.contains(connection))return false;
         if(level==null||level.isClientSide||!isConnectionAllowed(connection))return false;
@@ -307,6 +314,39 @@ public final class OutputInterfaceBlockEntity extends AENetworkedBlockEntity imp
     @Override public void importSettings(SettingsFrom mode,DataComponentMap settings,Player player){super.importSettings(mode,settings,player);frequency.importMemorySettings(mode,settings,tag->loadOutput(tag,level.registryAccess(),false));}
     @Override public void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){super.saveAdditional(tag,registries);frequency.save(tag);saveOutput(tag,registries,true);}
     @Override public void loadTag(CompoundTag tag,HolderLookup.Provider registries){super.loadTag(tag,registries);frequency.load(tag);loadOutput(tag,registries,true);}
+    /** Only visual routing state is shared; private refunds and network inventories stay server-side. */
+    @Override protected void writeToStream(RegistryFriendlyByteBuf data) {
+        super.writeToStream(data);
+        data.writeEnum(interfaceMode);
+        data.writeVarInt(connections.size());
+        for(var connection:connections) {
+            data.writeByte(connection.sourceSlot());
+            data.writeResourceLocation(connection.dimension().location());
+            data.writeBlockPos(connection.pos());
+            data.writeEnum(connection.face());
+        }
+    }
+    @Override protected boolean readFromStream(RegistryFriendlyByteBuf data) {
+        boolean changed=super.readFromStream(data);
+        var mode=data.readEnum(InterfaceMode.class);
+        int count=data.readVarInt();
+        if(count<0||count>MAX_CONNECTIONS)throw new IllegalArgumentException("Invalid output connection count");
+        var received=new ArrayList<OutputConnection>(count);
+        var unique=new HashSet<OutputConnection>();
+        for(int index=0;index<count;index++) {
+            int slot=data.readUnsignedByte();
+            var dimension=net.minecraft.resources.ResourceKey.create(Registries.DIMENSION,data.readResourceLocation());
+            var pos=data.readBlockPos();
+            var face=data.readEnum(Direction.class);
+            if(slot>=SLOT_COUNT)throw new IllegalArgumentException("Invalid output source slot");
+            var connection=new OutputConnection(slot,dimension,pos,face);
+            if(unique.add(connection))received.add(connection);
+        }
+        if(interfaceMode!=mode||!connections.equals(received)) {
+            interfaceMode=mode;connections.clear();connections.addAll(received);renderRevision++;changed=true;
+        }
+        return changed;
+    }
     public CompoundTag saveOwnedRefunds(HolderLookup.Provider registries){var tag=new CompoundTag();writeRefunds(tag,registries);return tag;}
     public void loadOwnedRefunds(CompoundTag tag,HolderLookup.Provider registries){readRefunds(tag,registries);changed();}
     /** Loot inside an external insertion callback must wait until its result is settled. */
