@@ -1,0 +1,67 @@
+{
+  "version": "0.2.1-alpha.1",
+  "tag": "v0.2.1-alpha.1",
+  "artifacts": [
+    {
+      "file": "lightning-tech-simulation-0.2.1-alpha.1.jar",
+      "bytes": 1849484,
+      "sha256": "6de15737f63f2f8e14466ac7d7520906785c36461ffbf1096603eed5c35c29b6"
+    },
+    {
+      "file": "lightning-tech-simulation-0.2.1-alpha.1-sources.jar",
+      "bytes": 890198,
+      "sha256": "77bd49f47d15ab214727f0ed888bbed610e5fdc6fe40c7b2f2c63909762b0ed5"
+    }
+  ],
+  "installed_at": "2026-10-10T11:09:34.326256+08:00",
+  "implementation_commit": "a56de839973d292d9f2169b17586608b8d613558",
+  "baseline_commit": "241ca88c9c3868a6a9d4136dfbab1a3088c23ce4",
+  "instance": "D:\\mc\\.minecraft\\versions\\OverloadSim-Test-1.21.1",
+  "installed_jar": "D:\\mc\\.minecraft\\versions\\OverloadSim-Test-1.21.1\\mods\\lightning-tech-simulation-0.2.1-alpha.1.jar",
+  "installed_sha256": "6de15737f63f2f8e14466ac7d7520906785c36461ffbf1096603eed5c35c29b6",
+  "backup_jar": "D:\\mc\\.minecraft\\versions\\OverloadSim-Test-1.21.1\\addon-backups\\20261010-110856\\lightning-tech-simulation-0.2.0-alpha.18.jar",
+  "backup_sha256": "3b059610eceb31c64ee431ba6a3223e92da306bc1a991fe321893e130fc50547",
+  "protected_files": {
+    "count": 205,
+    "result": "unchanged",
+    "baseline": "D:\\MinecraftDev\\OverloadSimulation\\build\\verification\\alpha21\\instance-before.json"
+  },
+  "junit": {
+    "tests": 136,
+    "failures": 0,
+    "errors": 0
+  },
+  "game_test_matrix": [
+    {
+      "environment": "new-flux",
+      "required_game_tests": 527,
+      "result": "passed",
+      "log": "D:\\MinecraftDev\\OverloadSimulation\\build\\verification\\alpha21\\output-final-new-flux.log",
+      "sha256": "050e655f2b7b6d48fb4fa1dc365a6b48489c557edf85de32922c9ab73dfd21c0"
+    },
+    {
+      "environment": "old-flux",
+      "required_game_tests": 527,
+      "result": "passed",
+      "log": "D:\\MinecraftDev\\OverloadSimulation\\build\\verification\\alpha21\\output-final-old-flux.log",
+      "sha256": "c9d26208cf7ec6388a932712e74586827da57041e1f5373ed226fb815958fbb8"
+    },
+    {
+      "environment": "new-base",
+      "required_game_tests": 527,
+      "result": "passed",
+      "log": "D:\\MinecraftDev\\OverloadSimulation\\build\\verification\\alpha21\\output-final-new-base.log",
+      "sha256": "97eb631dec8c87314a41da2184da7d78ba86a4b42c1916a6b57c280e05950bde"
+    },
+    {
+      "environment": "old-base",
+      "required_game_tests": 527,
+      "result": "passed",
+      "log": "D:\\MinecraftDev\\OverloadSimulation\\build\\verification\\alpha21\\output-final-old-base.log",
+      "sha256": "982aa2eada7103c861631ffed40b2dc7b9834b520b41a886b2b3067b71caea08"
+    }
+  ],
+  "visual_evidence": "art/verification/alpha21/",
+  "canonical_jar_review": "All class bytes identical to window-reviewed worktree JAR; text line endings normalized to Git LF.",
+  "local_tag": "v0.2.1-alpha.1"
+}
