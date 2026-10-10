@@ -15,7 +15,7 @@ public abstract class CoilMouseScrollMixin {
 
     @Inject(method="onScroll",at=@At("HEAD"),cancellable=true)
     private void overloadSim$scroll(long window,double deltaX,double deltaY,CallbackInfo ci){
-        if(CoilClient.scrollWrench(window,deltaY)){
+        if(dev.overloadsim.output.tool.OutputConnectorClient.scroll(window,deltaY)||CoilClient.scrollWrench(window,deltaY)){
             // Do not let a partial tool gesture leak into hotbar scrolling after Shift is released.
             accumulatedScrollX=0;accumulatedScrollY=0;ci.cancel();
         }

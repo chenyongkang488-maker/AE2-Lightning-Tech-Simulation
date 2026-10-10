@@ -27,6 +27,8 @@ def verify(tag=None):
         "META-INF/LICENSES.md": ROOT / "LICENSES.md",
         "META-INF/THIRD_PARTY_NOTICES.md": ROOT / "THIRD_PARTY_NOTICES.md",
         "META-INF/AE2LT-LICENSE_ASSETS.md": ROOT / "art/licenses/AE2LT-LICENSE_ASSETS.md",
+        "META-INF/licenses/LGPL-3.0.txt": ROOT / "LICENSES/LGPL-3.0.txt",
+        "META-INF/licenses/GPL-3.0.txt": ROOT / "LICENSES/GPL-3.0.txt",
     }
     artifacts = []
     for classifier in ("", "-sources"):

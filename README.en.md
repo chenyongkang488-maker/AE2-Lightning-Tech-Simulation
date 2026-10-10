@@ -144,3 +144,5 @@ Use the repository's bilingual issue templates and include exact versions,
 reproduction steps and a log/crash report. Historical validation is recorded in
 [docs/verification.md](docs/verification.md). Long-running worlds, multiplayer
 and additional third-party mods need further testing.
+
+Overload Output Interface adds 36 virtual resource slots, wired neighbor output and slot-specific wireless targets. It accepts no passive input. See [output interface API and configuration](docs/output-interface-api.md).

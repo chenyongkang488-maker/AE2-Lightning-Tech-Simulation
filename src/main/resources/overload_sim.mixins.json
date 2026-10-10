@@ -5,6 +5,8 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "CollectorInventoryMixin",
+    "OutputConnectorItemMixin",
+    "OutputConnectorPacketMixin",
     "CollectorMixin",
     "CoilWorkbenchMixin",
     "CoilMiningCommitMixin",

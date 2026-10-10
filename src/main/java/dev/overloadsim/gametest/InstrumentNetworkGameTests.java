@@ -190,6 +190,9 @@ public final class InstrumentNetworkGameTests {
         h.getLevel().setBlockAndUpdate(largePos, MultiblockContent.CONTROLLER.get().defaultBlockState());
         machines.add((AENetworkedBlockEntity) h.getLevel().getBlockEntity(smallPos));
         machines.add((AENetworkedBlockEntity) h.getLevel().getBlockEntity(largePos));
+        var outputPos = h.absolutePos(new BlockPos(14, 2, 15));
+        h.getLevel().setBlockAndUpdate(outputPos, dev.overloadsim.output.OutputContent.BLOCK.get().defaultBlockState());
+        machines.add((AENetworkedBlockEntity) h.getLevel().getBlockEntity(outputPos));
         h.runAtTickTime(30, () -> {
             for (var machine : machines) useCard(h, source, machine);
         });
@@ -257,6 +260,7 @@ public final class InstrumentNetworkGameTests {
         for (var kind : LaserKind.values()) if (kind != LaserKind.CORE) states.add(LaserContent.machine(kind).defaultBlockState());
         states.add(ModContent.CHAMBER.get().defaultBlockState());
         states.add(MultiblockContent.CONTROLLER.get().defaultBlockState());
+        states.add(dev.overloadsim.output.OutputContent.BLOCK.get().defaultBlockState());
         for (int index = 0; index < states.size(); index++) {
             var pos = h.absolutePos(new BlockPos(8 + index % 4 * 3, 2, 9 + index / 4 * 3));
             var state = states.get(index);

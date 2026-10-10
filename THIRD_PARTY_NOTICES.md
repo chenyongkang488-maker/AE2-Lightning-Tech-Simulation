@@ -25,7 +25,7 @@ script is addon code under MIT; the reference JAR is not bundled.
 
 The chamber frame geometry, metal atlas and separately drawn lightning overlay
 are original addon work under this project's MIT license. The addon Java code
-remains MIT. Reference mod binaries are neither committed nor bundled.
+remains MIT except the adapted portions identified below. Reference mod binaries are neither committed nor bundled.
 
 The seven coil module icons are adapted from AE2LT 2.1.0's
 `assets/ae2lt/textures/item/overload_module_base.png`. The original beveled case
@@ -45,3 +45,20 @@ tiles 52–53, and the independent 64-frame `laser_energy_flow` texture are
 original qiqi/addon work under MIT. The crystal reference is used for shape
 and palette only; no reference pixels were copied. Existing derived simulation
 crystal and coil-module artwork continues to retain its separate asset license.
+
+## Overload Output Interface (0.2.1)
+
+The independent output interface references AE2 Lightning Tech/Reborn's
+OverloadedInterfaceLogic/BlockEntity/Menu/Screen and Wireless Overload Connector
+implementation. Adapted Java portions preserve LGPL-3.0-only attribution
+in their source headers and screen layout comment; the license texts are included at
+LICENSES/LGPL-3.0.txt and LICENSES/GPL-3.0.txt, and under META-INF/licenses in both JARs.
+Original routing, refund, API and test additions
+are credited to qiqi / Lightning Tech: Simulation contributors.
+
+The Blockbench project art/overload_output_interface.bbmodel embeds the original
+assets/ae2lt/textures/block/overloaded_interface.png as a licensed editing
+reference (also retained in art/output-interface/). AE2 Lightning Tech contributors
+are credited; the texture retains CC BY-NC-SA 3.0. Runtime models reference that
+texture supplied by the installed AE2 Lightning Tech dependency. Outward arrow
+geometry is original MIT artwork. No upstream binary is redistributed.

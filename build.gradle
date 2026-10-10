@@ -43,9 +43,11 @@ tasks.named('processResources') {
     from('LICENSES.md') { into 'META-INF' }
     from('THIRD_PARTY_NOTICES.md') { into 'META-INF' }
     from('art/licenses/AE2LT-LICENSE_ASSETS.md') { into 'META-INF' }
+    from('LICENSES') { into 'META-INF/licenses' }
 }
 tasks.named('sourcesJar') {
     from(['LICENSE', 'LICENSES.md', 'THIRD_PARTY_NOTICES.md', 'art/licenses/AE2LT-LICENSE_ASSETS.md']) { into 'META-INF' }
+    from('LICENSES') { into 'META-INF/licenses' }
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 tasks.register('verifyReleaseVersion') {

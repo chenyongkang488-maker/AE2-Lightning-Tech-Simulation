@@ -16,6 +16,7 @@ public class OverloadSimulation {
         ModContent.register(bus);container.registerConfig(ModConfig.Type.COMMON,SimulationConfig.SPEC);
         container.registerConfig(ModConfig.Type.COMMON,dev.overloadsim.laser.LaserSettings.SPEC,"overload_sim-laser.toml");
         container.registerConfig(ModConfig.Type.COMMON,dev.overloadsim.config.MachineSettings.SPEC,"overload_sim-machines.toml");
+        container.registerConfig(ModConfig.Type.COMMON,dev.overloadsim.output.OutputInterfaceConfig.SPEC,"overload_sim-output.toml");
         dev.overloadsim.api.SimulationExtensions.registerOutputV2(dev.overloadsim.data.CropSimulationData.PROVIDER,dev.overloadsim.machine.SimulationCropLoot::roll);
         dev.overloadsim.multiblock.SimulationStructureIndex.register();
         dev.overloadsim.laser.LaserStructureIndex.register();

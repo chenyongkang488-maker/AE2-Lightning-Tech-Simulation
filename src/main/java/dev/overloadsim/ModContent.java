@@ -52,12 +52,12 @@ public final class ModContent {
     public static final Map<SimulationRecipe.Kind,DeferredHolder<RecipeSerializer<?>,RecipeSerializer<SimulationRecipe>>> SERIALIZERS=new EnumMap<>(SimulationRecipe.Kind.class);
     static {for(var kind:SimulationRecipe.Kind.values()){String name=switch(kind){case BINDING->"crystal_binding";case MOB_BINDING->"mob_crystal_binding";case CULTIVATION->"crystal_cultivation";case PRODUCTION->"overload_simulation";};RECIPE_TYPES.put(kind,TYPES.register(name,()->new RecipeType<SimulationRecipe>(){public String toString(){return id(name).toString();}}));SERIALIZERS.put(kind,RECIPE_SERIALIZERS.register(name,()->new SimulationRecipe.Serializer(kind)));}}
     private static final DeferredRegister<CreativeModeTab> TABS=DeferredRegister.create(Registries.CREATIVE_MODE_TAB,OverloadSimulation.ID);
-    static {TABS.register("main",()->CreativeModeTab.builder().title(Component.translatable("itemGroup.overload_sim")).icon(()->new ItemStack(PERFECT.get())).displayItems((p,o)->{o.accept(BLANK);o.accept(BOUND);o.accept(PERFECT);o.accept(TRANSCENDENT);o.accept(CHAMBER_ITEM);o.accept(COIL);for(var m:COIL_UPGRADES.values())o.accept(m);for(var b:dev.overloadsim.multiblock.MultiblockContent.playerBlocks())o.accept(b.asItem());for(var b:dev.overloadsim.laser.LaserContent.playerBlocks())o.accept(b.asItem());for(var b:dev.overloadsim.workstation.WorkstationContent.playerBlocks())o.accept(b.asItem());}).build());}
-    public static void register(IEventBus bus){dev.overloadsim.data.EnchantedBookIngredient.register(bus);dev.overloadsim.multiblock.MultiblockContent.register(bus);dev.overloadsim.laser.LaserContent.register(bus);dev.overloadsim.workstation.WorkstationContent.register(bus);ITEMS.register(bus);BLOCKS.register(bus);COMPONENTS.register(bus);BLOCK_ENTITIES.register(bus);MENUS.register(bus);TYPES.register(bus);RECIPE_SERIALIZERS.register(bus);TABS.register(bus);}
+    static {TABS.register("main",()->CreativeModeTab.builder().title(Component.translatable("itemGroup.overload_sim")).icon(()->new ItemStack(PERFECT.get())).displayItems((p,o)->{o.accept(BLANK);o.accept(BOUND);o.accept(PERFECT);o.accept(TRANSCENDENT);o.accept(CHAMBER_ITEM);o.accept(dev.overloadsim.output.OutputContent.ITEM);o.accept(COIL);for(var m:COIL_UPGRADES.values())o.accept(m);for(var b:dev.overloadsim.multiblock.MultiblockContent.playerBlocks())o.accept(b.asItem());for(var b:dev.overloadsim.laser.LaserContent.playerBlocks())o.accept(b.asItem());for(var b:dev.overloadsim.workstation.WorkstationContent.playerBlocks())o.accept(b.asItem());}).build());}
+    public static void register(IEventBus bus){dev.overloadsim.output.OutputContent.register(bus);dev.overloadsim.data.EnchantedBookIngredient.register(bus);dev.overloadsim.multiblock.MultiblockContent.register(bus);dev.overloadsim.laser.LaserContent.register(bus);dev.overloadsim.workstation.WorkstationContent.register(bus);ITEMS.register(bus);BLOCKS.register(bus);COMPONENTS.register(bus);BLOCK_ENTITIES.register(bus);MENUS.register(bus);TYPES.register(bus);RECIPE_SERIALIZERS.register(bus);TABS.register(bus);}
     public static void setup(FMLCommonSetupEvent e){e.enqueueWork(()->{
         dev.overloadsim.multiblock.MultiblockContent.setup();
         dev.overloadsim.laser.LaserContent.setup();
-        dev.overloadsim.workstation.WorkstationContent.setup();
+        dev.overloadsim.workstation.WorkstationContent.setup();dev.overloadsim.output.OutputContent.setup();
         CHAMBER.get().setBlockEntity(SimulationChamberBlockEntity.class,CHAMBER_ENTITY.get(),null,(level,pos,state,be)->be.tick());
         AEBaseBlockEntity.registerBlockEntityItem(CHAMBER_ENTITY.get(),CHAMBER_ITEM.get());
         appeng.api.upgrades.Upgrades.add(appeng.core.definitions.AEItems.SPEED_CARD,CHAMBER_ITEM.get(),4);
@@ -74,7 +74,7 @@ public final class ModContent {
                     if(CoilEnergy.read(tool)!=before)be.saveChanges();
                 });
     });}
-    public static void capabilities(RegisterCapabilitiesEvent e){
+    public static void capabilities(RegisterCapabilitiesEvent e){dev.overloadsim.output.OutputContent.capabilities(e);
         dev.overloadsim.laser.LaserContent.capabilities(e);
         dev.overloadsim.workstation.WorkstationContent.capabilities(e);
         e.registerBlockEntity(appeng.api.AECapabilities.IN_WORLD_GRID_NODE_HOST,dev.overloadsim.multiblock.MultiblockContent.CONTROLLER_ENTITY.get(),(be,context)->be);

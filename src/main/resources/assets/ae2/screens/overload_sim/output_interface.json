@@ -1,0 +1,16 @@
+{
+  "_comment": "Layout adapted from AE2LT OverloadedInterfaceScreen and overloaded_interface.json, Moakiee and contributors, LGPL-3.0-only. Texture is provided by the upstream dependency.",
+  "includes": ["../common/common.json", "../common/player_inventory.json"],
+  "background": {"texture": "guis/ex_interface.png", "srcRect": [0, 0, 176, 253]},
+  "slots": {
+    "LTS_OUTPUT_CONFIG_0": {"left": 8, "top": 53, "grid": "HORIZONTAL"},
+    "LTS_OUTPUT_STORAGE_0": {"left": 8, "top": 71, "grid": "HORIZONTAL"},
+    "LTS_OUTPUT_CONFIG_1": {"left": 8, "top": 113, "grid": "HORIZONTAL"},
+    "LTS_OUTPUT_STORAGE_1": {"left": 8, "top": 131, "grid": "HORIZONTAL"},
+    "LTS_OUTPUT_CONFIG_2": {"left": 8, "top": 53, "grid": "HORIZONTAL"},
+    "LTS_OUTPUT_STORAGE_2": {"left": 8, "top": 71, "grid": "HORIZONTAL"},
+    "LTS_OUTPUT_CONFIG_3": {"left": 8, "top": 113, "grid": "HORIZONTAL"},
+    "LTS_OUTPUT_STORAGE_3": {"left": 8, "top": 131, "grid": "HORIZONTAL"}
+  },
+  "text": {"dialog_title": {"text": {"translate": "block.overload_sim.overload_output_interface"}, "position": {"left": 8, "top": 6}}}
+}

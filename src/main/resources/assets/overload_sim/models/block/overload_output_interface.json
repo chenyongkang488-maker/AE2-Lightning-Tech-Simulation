@@ -1,0 +1,684 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "base": "ae2lt:block/overloaded_interface",
+    "particle": "ae2lt:block/overloaded_interface"
+  },
+  "elements": [
+    {
+      "name": "Original interface shell",
+      "from": [
+        0,
+        0,
+        0
+      ],
+      "to": [
+        16,
+        16,
+        16
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#base",
+          "cullface": "north"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#base",
+          "cullface": "south"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#base",
+          "cullface": "east"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#base",
+          "cullface": "west"
+        },
+        "up": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#base",
+          "cullface": "up"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#base",
+          "cullface": "down"
+        }
+      }
+    },
+    {
+      "name": "Output arrow north 0",
+      "from": [
+        6,
+        7,
+        -0.04
+      ],
+      "to": [
+        13,
+        9,
+        -0.02
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "uv": [
+            1,
+            1,
+            2,
+            2
+          ],
+          "texture": "#base"
+        }
+      }
+    },
+    {
+      "name": "Output arrow north 1",
+      "from": [
+        5,
+        5,
+        -0.04
+      ],
+      "to": [
+        7,
+        11,
+        -0.02
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "uv": [
+            1,
+            1,
+            2,
+            2
+          ],
+          "texture": "#base"
+        }
+      }
+    },
+    {
+      "name": "Output arrow north 2",
+      "from": [
+        4,
+        6,
+        -0.04
+      ],
+      "to": [
+        5,
+        10,
+        -0.02
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "uv": [
+            1,
+            1,
+            2,
+            2
+          ],
+          "texture": "#base"
+        }
+      }
+    },
+    {
+      "name": "Output arrow north 3",
+      "from": [
+        3,
+        7,
+        -0.04
+      ],
+      "to": [
+        4,
+        9,
+        -0.02
+      ],
+      "shade": false,
+      "faces": {
+        "north": {
+          "uv": [
+            1,
+            1,
+            2,
+            2
+          ],
+          "texture": "#base"
+        }
+      }
+    },
+    {
+      "name": "Output arrow south 0",
+      "from": [
+        3,
+        7,
+        16.02
+      ],
+      "to": [
+        10,
+        9,
+        16.04
+      ],
+      "shade": false,
+      "faces": {
+        "south": {
+          "uv": [
+            1,
+            1,
+            2,
+            2
+          ],
+          "texture": "#base"
+        }
+      }
+    },
+    {
+      "name": "Output arrow south 1",
+      "from": [
+        9,
+        5,
+        16.02
+      ],
+      "to": [
+        11,
+        11,
+        16.04
+      ],
+      "shade": false,
+      "faces": {
+        "south": {
+          "uv": [
+            1,
+            1,
+            2,
+            2
+          ],
+          "texture": "#base"
+        }
+      }
+    },
+    {
+      "name": "Output arrow south 2",
+      "from": [
+        11,
+        6,
+        16.02
+      ],
+      "to": [
+        12,
+        10,
+        16.04
+      ],
+      "shade": false,
+      "faces": {
+        "south": {
+          "uv": [
+            1,
+            1,
+            2,
+            2
+          ],
+          "texture": "#base"
+        }
+      }
+    },
+    {
+      "name": "Output arrow south 3",
+      "from": [
+        12,
+        7,
+        16.02
+      ],
+      "to": [
+        13,
+        9,
+        16.04
+      ],
+      "shade": false,
+      "faces": {
+        "south": {
+          "uv": [
+            1,
+            1,
+            2,
+            2
+          ],
+          "texture": "#base"
+        }
+      }
+    },
+    {
+      "name": "Output arrow east 0",
+      "from": [
+        16.02,
+        7,
+        6
+      ],
+      "to": [
+        16.04,
+        9,
+        13
+      ],
+      "shade": false,
+      "faces": {
+        "east": {
+          "uv": [
+            1,
+            1,
+            2,
+            2
+          ],
+          "texture": "#base"
+        }
+      }
+    },
+    {
+      "name": "Output arrow east 1",
+      "from": [
+        16.02,
+        5,
+        5
+      ],
+      "to": [
+        16.04,
+        11,
+        7
+      ],
+      "shade": false,
+      "faces": {
+        "east": {
+          "uv": [
+            1,
+            1,
+            2,
+            2
+          ],
+          "texture": "#base"
+        }
+      }
+    },
+    {
+      "name": "Output arrow east 2",
+      "from": [
+        16.02,
+        6,
+        4
+      ],
+      "to": [
+        16.04,
+        10,
+        5
+      ],
+      "shade": false,
+      "faces": {
+        "east": {
+          "uv": [
+            1,
+            1,
+            2,
+            2
+          ],
+          "texture": "#base"
+        }
+      }
+    },
+    {
+      "name": "Output arrow east 3",
+      "from": [
+        16.02,
+        7,
+        3
+      ],
+      "to": [
+        16.04,
+        9,
+        4
+      ],
+      "shade": false,
+      "faces": {
+        "east": {
+          "uv": [
+            1,
+            1,
+            2,
+            2
+          ],
+          "texture": "#base"
+        }
+      }
+    },
+    {
+      "name": "Output arrow west 0",
+      "from": [
+        -0.04,
+        7,
+        3
+      ],
+      "to": [
+        -0.02,
+        9,
+        10
+      ],
+      "shade": false,
+      "faces": {
+        "west": {
+          "uv": [
+            1,
+            1,
+            2,
+            2
+          ],
+          "texture": "#base"
+        }
+      }
+    },
+    {
+      "name": "Output arrow west 1",
+      "from": [
+        -0.04,
+        5,
+        9
+      ],
+      "to": [
+        -0.02,
+        11,
+        11
+      ],
+      "shade": false,
+      "faces": {
+        "west": {
+          "uv": [
+            1,
+            1,
+            2,
+            2
+          ],
+          "texture": "#base"
+        }
+      }
+    },
+    {
+      "name": "Output arrow west 2",
+      "from": [
+        -0.04,
+        6,
+        11
+      ],
+      "to": [
+        -0.02,
+        10,
+        12
+      ],
+      "shade": false,
+      "faces": {
+        "west": {
+          "uv": [
+            1,
+            1,
+            2,
+            2
+          ],
+          "texture": "#base"
+        }
+      }
+    },
+    {
+      "name": "Output arrow west 3",
+      "from": [
+        -0.04,
+        7,
+        12
+      ],
+      "to": [
+        -0.02,
+        9,
+        13
+      ],
+      "shade": false,
+      "faces": {
+        "west": {
+          "uv": [
+            1,
+            1,
+            2,
+            2
+          ],
+          "texture": "#base"
+        }
+      }
+    },
+    {
+      "name": "Output arrow up 0",
+      "from": [
+        3,
+        16.02,
+        7
+      ],
+      "to": [
+        10,
+        16.04,
+        9
+      ],
+      "shade": false,
+      "faces": {
+        "up": {
+          "uv": [
+            1,
+            1,
+            2,
+            2
+          ],
+          "texture": "#base"
+        }
+      }
+    },
+    {
+      "name": "Output arrow up 1",
+      "from": [
+        9,
+        16.02,
+        5
+      ],
+      "to": [
+        11,
+        16.04,
+        11
+      ],
+      "shade": false,
+      "faces": {
+        "up": {
+          "uv": [
+            1,
+            1,
+            2,
+            2
+          ],
+          "texture": "#base"
+        }
+      }
+    },
+    {
+      "name": "Output arrow up 2",
+      "from": [
+        11,
+        16.02,
+        6
+      ],
+      "to": [
+        12,
+        16.04,
+        10
+      ],
+      "shade": false,
+      "faces": {
+        "up": {
+          "uv": [
+            1,
+            1,
+            2,
+            2
+          ],
+          "texture": "#base"
+        }
+      }
+    },
+    {
+      "name": "Output arrow up 3",
+      "from": [
+        12,
+        16.02,
+        7
+      ],
+      "to": [
+        13,
+        16.04,
+        9
+      ],
+      "shade": false,
+      "faces": {
+        "up": {
+          "uv": [
+            1,
+            1,
+            2,
+            2
+          ],
+          "texture": "#base"
+        }
+      }
+    },
+    {
+      "name": "Output arrow down 0",
+      "from": [
+        6,
+        -0.04,
+        7
+      ],
+      "to": [
+        13,
+        -0.02,
+        9
+      ],
+      "shade": false,
+      "faces": {
+        "down": {
+          "uv": [
+            1,
+            1,
+            2,
+            2
+          ],
+          "texture": "#base"
+        }
+      }
+    },
+    {
+      "name": "Output arrow down 1",
+      "from": [
+        5,
+        -0.04,
+        5
+      ],
+      "to": [
+        7,
+        -0.02,
+        11
+      ],
+      "shade": false,
+      "faces": {
+        "down": {
+          "uv": [
+            1,
+            1,
+            2,
+            2
+          ],
+          "texture": "#base"
+        }
+      }
+    },
+    {
+      "name": "Output arrow down 2",
+      "from": [
+        4,
+        -0.04,
+        6
+      ],
+      "to": [
+        5,
+        -0.02,
+        10
+      ],
+      "shade": false,
+      "faces": {
+        "down": {
+          "uv": [
+            1,
+            1,
+            2,
+            2
+          ],
+          "texture": "#base"
+        }
+      }
+    },
+    {
+      "name": "Output arrow down 3",
+      "from": [
+        3,
+        -0.04,
+        7
+      ],
+      "to": [
+        4,
+        -0.02,
+        9
+      ],
+      "shade": false,
+      "faces": {
+        "down": {
+          "uv": [
+            1,
+            1,
+            2,
+            2
+          ],
+          "texture": "#base"
+        }
+      }
+    }
+  ]
+}
