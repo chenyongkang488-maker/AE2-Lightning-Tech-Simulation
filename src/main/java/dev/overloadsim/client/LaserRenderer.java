@@ -23,12 +23,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
-import java.util.HashMap;
-import java.util.function.Function;
 import java.util.function.ToIntFunction;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
@@ -47,6 +44,7 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
     private static final int SIDES = 12, MAX_SEGMENTS = 128;
     private final BlockEntityRendererProvider.Context context;
     private final Map<LaserMachineBlockEntity,Skin> skins = new WeakHashMap<>();
+    private final Map<LaserMachineBlockEntity,Lighting> lighting = new WeakHashMap<>();
     private final Map<LaserMachineBlockEntity,ParticleFlightVisuals.Clock> flights = new WeakHashMap<>();
     private record Basis(Vec3 right,Vec3 up,Vec3 forward) {
         Vec3 apply(double x,double y,double z) { return right.scale(x).add(up.scale(y)).add(forward.scale(z)); }
@@ -54,6 +52,7 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
     }
     private record Skin(Direction facing,boolean pedestal,long tick,List<BlockPos> openings,
             List<IndustrialMachineMesh.Surface> mesh,List<ReceiverShellMesh.Quad> glass) {}
+    private record Lighting(BlockPos center,Basis basis,PreparedSurfaceLighting samples) {}
 
     public LaserRenderer(BlockEntityRendererProvider.Context context) { this.context = context; }
     @Override public boolean shouldRenderOffScreen(LaserMachineBlockEntity be) { return be.formed(); }
@@ -88,8 +87,9 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
         double time = be.getLevel().getGameTime() + partial;
         Vec3 origin = Vec3.atLowerCornerOf(be.getBlockPos());
         Vec3 center = Vec3.atCenterOf(be.center()).subtract(origin);
+        var skin=be.receiverSkinVisible()?skin(be,basis(be)):null;
         var faceLight=surfaceLighting(be,light);
-        if (be.receiverSkinVisible()) machineSkin(be,center,poses,buffers,faceLight);
+        if (skin!=null) machineSkin(be,skin,center,poses,buffers,faceLight);
         if (be.kind()==LaserKind.CORE) industrialMesh(IndustrialMachineMesh.coreAttachments(),poses.last(),
                 buffers.getBuffer(RenderType.entitySolid(InventoryMenu.BLOCK_ATLAS)),atlas(),center,faceLight,basis(be));
         boolean active = be.activeUntil() > be.getLevel().getGameTime();
@@ -152,27 +152,24 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
         return new Basis(up.cross(f),up,f);
     }
 
-    private static ToIntFunction<ReceiverShellMesh.Quad> surfaceLighting(LaserMachineBlockEntity be,int fallback) {
-        var basis=basis(be);var origin=be.center().getCenter();var level=be.getLevel();
-        record Sample(int light,boolean opaque) {}
-        var samples=new HashMap<BlockPos,Sample>();
-        Function<WorkstationRenderLighting.Point,Sample> at=p -> samples.computeIfAbsent(BlockPos.containing(p.x(),p.y(),p.z()),pos -> {
-            if(!level.getChunkSource().hasChunk(pos.getX()>>4,pos.getZ()>>4))return new Sample(fallback,false);
-            return new Sample(LevelRenderer.getLightColor(level,pos),level.getBlockState(pos).getLightBlock(level,pos)>=15);
-        });
-        Function<WorkstationRenderLighting.Point,WorkstationRenderLighting.Point> world=p ->
-                new WorkstationRenderLighting.Point(origin.x+basis.right.x*p.x()+basis.up.x*p.y()+basis.forward.x*p.z(),
-                        origin.y+basis.right.y*p.x()+basis.up.y*p.y()+basis.forward.y*p.z(),
-                        origin.z+basis.right.z*p.x()+basis.up.z*p.y()+basis.forward.z*p.z());
-        return quad -> WorkstationRenderLighting.sample(quad,world,p -> at.apply(p).light(),p -> at.apply(p).opaque());
+    private ToIntFunction<ReceiverShellMesh.Quad> surfaceLighting(LaserMachineBlockEntity be,int fallback) {
+        var basis=basis(be);var center=be.center();var cached=lighting.get(be);
+        if(cached==null||!cached.center.equals(center)||!cached.basis.equals(basis)) {
+            var origin=center.getCenter();
+            var samples=new PreparedSurfaceLighting(p -> new WorkstationRenderLighting.Point(
+                    origin.x+basis.right.x*p.x()+basis.up.x*p.y()+basis.forward.x*p.z(),
+                    origin.y+basis.right.y*p.x()+basis.up.y*p.y()+basis.forward.y*p.z(),
+                    origin.z+basis.right.z*p.x()+basis.up.z*p.y()+basis.forward.z*p.z()),true);
+            cached=new Lighting(center,basis,samples);lighting.put(be,cached);
+        }
+        return cached.samples.beginFrame(be.getLevel(),fallback);
     }
 
-    private void machineSkin(LaserMachineBlockEntity be,Vec3 center,PoseStack poses,MultiBufferSource buffers,
+    private void machineSkin(LaserMachineBlockEntity be,Skin skin,Vec3 center,PoseStack poses,MultiBufferSource buffers,
             ToIntFunction<ReceiverShellMesh.Quad> faceLight) {
         var sprite = atlas();
         var porcelain = buffers.getBuffer(RenderType.entitySolid(InventoryMenu.BLOCK_ATLAS));
         var basis=basis(be);
-        var skin=skin(be,basis);
         var emissive = buffers.getBuffer(RenderType.beaconBeam(InventoryMenu.BLOCK_ATLAS,false));
         industrialMesh(skin.mesh,poses.last(),porcelain,sprite,center,faceLight,basis,emissive);
         if(be.kind()==LaserKind.DEFLECTOR) {
@@ -265,7 +262,7 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
             }
         }
         var next=new Skin(facing,pedestal,tick,List.copyOf(openings),List.copyOf(result),panes);
-        skins.put(be,next);return next;
+        skins.put(be,next);lighting.remove(be);return next;
     }
 
     private static void industrialMesh(List<IndustrialMachineMesh.Surface> mesh,PoseStack.Pose pose,VertexConsumer vertices,

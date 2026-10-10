@@ -11,14 +11,14 @@ import dev.overloadsim.core.WorkstationRenderLighting;
 import dev.overloadsim.core.WorkstationOptics;
 import dev.overloadsim.workstation.HighEnergyWorkstationBlockEntity;
 import java.util.List;
-import java.util.HashMap;
+import java.util.Map;
+import java.util.WeakHashMap;
 import java.util.function.ToIntFunction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LightTexture;
-import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
@@ -37,6 +37,8 @@ import net.minecraft.world.phys.Vec3;
 public final class HighEnergyWorkstationRenderer implements BlockEntityRenderer<HighEnergyWorkstationBlockEntity> {
     private final BlockEntityRendererProvider.Context context;
     private final BlockState crystal;
+    private final Map<HighEnergyWorkstationBlockEntity,Lighting> lighting=new WeakHashMap<>();
+    private record Lighting(BlockPos center,int turns,PreparedSurfaceLighting samples) {}
     public HighEnergyWorkstationRenderer(BlockEntityRendererProvider.Context context) {
         this.context=context;
         crystal=BuiltInRegistries.BLOCK.get(ResourceLocation.parse("ae2lt:overload_crystal_cluster"))
@@ -59,14 +61,15 @@ public final class HighEnergyWorkstationRenderer implements BlockEntityRenderer<
         poses.mulPose(Axis.YP.rotationDegrees(rotation));
         int turns=switch(host.facing()){case EAST->1;case SOUTH->2;case WEST->3;default->0;};
         var origin=host.center().getCenter();
-        var lightCache=new HashMap<BlockPos,Integer>();
-        ToIntFunction<WorkstationRenderLighting.Point> lightAt=p -> {
-            var position=BlockPos.containing(p.x(),p.y(),p.z());
-            return lightCache.computeIfAbsent(position,pos -> host.getLevel().hasChunkAt(pos)
-                    ?LevelRenderer.getLightColor(host.getLevel(),pos):light);
-        };
-        ToIntFunction<ReceiverShellMesh.Quad> faceLight=q -> WorkstationRenderLighting.sample(q,
-                origin.x,origin.y,origin.z,turns,lightAt);
+        var cached=lighting.get(host);
+        if(cached==null||!cached.center.equals(host.center())||cached.turns!=turns) {
+            var samples=new PreparedSurfaceLighting(p -> WorkstationRenderLighting.world(p.x(),p.y(),p.z(),
+                    origin.x,origin.y,origin.z,turns),false);
+            cached=new Lighting(host.center(),turns,samples);lighting.put(host,cached);
+        }
+        var frame=cached.samples.beginFrame(host.getLevel(),light);
+        ToIntFunction<WorkstationRenderLighting.Point> lightAt=frame::lightAt;
+        ToIntFunction<ReceiverShellMesh.Quad> faceLight=frame;
         var atlas=Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(ModContent.id("block/workstation_shell_atlas"));
         if(host.workstationVisualsVisible()) {
             mesh(WorkstationVisualMesh.shellSurfaces(),poses.last(),buffers,atlas,faceLight);
