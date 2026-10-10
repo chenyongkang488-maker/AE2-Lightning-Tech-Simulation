@@ -1,0 +1,19 @@
+{
+  "version": "0.2.1-alpha.3",
+  "date": "2026-10-10",
+  "instance": "D:\\mc\\.minecraft\\versions\\New Age Science and Technology",
+  "installedJar": "D:\\mc\\.minecraft\\versions\\New Age Science and Technology\\mods\\lightning-tech-simulation-0.2.1-alpha.3.jar",
+  "sha256": "b4165bec8ef15b3358dd31b7e9f2d878946222feb3b27af2ab8191ce0ac79be2",
+  "backup": [
+    {
+      "path": "D:\\mc\\.minecraft\\versions\\New Age Science and Technology\\addon-backups\\20261010-131712\\lightning-tech-simulation-0.2.1-alpha.2.jar",
+      "sha256": "b3b01790abd605581a1283e87e0380145a2b3f461fe89d352eff71f5b158dcc1"
+    }
+  ],
+  "implementationCommit": "4c85eb9d5b8b89d92cc8244572ce739b5a4acb5d",
+  "tag": "v0.2.1-alpha.3",
+  "build": "gradlew jar sourcesJar: BUILD SUCCESSFUL",
+  "diagnosis": "User crash archive: Sodium LevelSlice.getLightEngine UnsupportedOperationException during laser_frame chunk meshing",
+  "tests": "Skipped at user request; no automated or in-game acceptance after changes",
+  "scope": "Only addon JAR backed up and replaced in user-confirmed crash instance; no launch or world/config/shader/other mod edits"
+}
