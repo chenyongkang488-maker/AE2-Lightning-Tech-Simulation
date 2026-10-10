@@ -36,6 +36,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
+import org.joml.Quaternionf;
 
 /** One local construction guide. It only reads loaded client blocks; it never sends build requests. */
 @EventBusSubscriber(modid = OverloadSimulation.ID, value = Dist.CLIENT)
@@ -60,7 +61,7 @@ public final class ConstructionProjection {
                     .setDepthTestState(RenderStateShard.NO_DEPTH_TEST)
                     .setWriteMaskState(RenderStateShard.COLOR_WRITE)
                     .setCullState(RenderStateShard.NO_CULL)
-                    .setOutputState(RenderStateShard.PARTICLES_TARGET)
+                    .setOutputState(RenderStateShard.MAIN_TARGET)
                     .createCompositeState(false));
     private static final RenderType FILLS = RenderType.create(
             "overload_sim_construction_projection_fill", DefaultVertexFormat.POSITION_COLOR,
@@ -70,10 +71,11 @@ public final class ConstructionProjection {
                     .setDepthTestState(RenderStateShard.NO_DEPTH_TEST)
                     .setWriteMaskState(RenderStateShard.COLOR_WRITE)
                     .setCullState(RenderStateShard.NO_CULL)
-                    .setOutputState(RenderStateShard.PARTICLES_TARGET)
+                    .setOutputState(RenderStateShard.MAIN_TARGET)
                     .createCompositeState(false));
 
     private static Preview active;
+    private static final Quaternionf CAMERA_ROTATION=new Quaternionf();
 
     private ConstructionProjection() {}
 
@@ -280,7 +282,7 @@ public final class ConstructionProjection {
 
     @SubscribeEvent
     public static void render(RenderLevelStageEvent event) {
-        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_PARTICLES) return;
+        if (event.getStage() != RenderLevelStageEvent.Stage.AFTER_LEVEL) return;
         validateActive();
         if (active == null) return;
         var preview = active;
@@ -289,6 +291,10 @@ public final class ConstructionProjection {
         var buffers = Minecraft.getInstance().renderBuffers().bufferSource();
         pose.pushPose();
         try {
+            // AFTER_LEVEL supplies an empty pose stack. Match the native wireless
+            // guide's camera view rotation and draw after shader/particle passes.
+            CAMERA_ROTATION.set(event.getCamera().rotation()).invert();
+            pose.mulPose(CAMERA_ROTATION);
             var fill = buffers.getBuffer(FILLS);
             for (var cell : preview.drawing) {
                 var p = cell.position();

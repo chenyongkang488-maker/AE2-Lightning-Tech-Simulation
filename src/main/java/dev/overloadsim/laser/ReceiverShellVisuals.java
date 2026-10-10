@@ -1,6 +1,7 @@
 package dev.overloadsim.laser;
 
 import dev.overloadsim.core.ReceiverShellRegistry;
+import dev.overloadsim.compat.BlockRenderViewLevel;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,11 +13,10 @@ import java.util.WeakHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.lighting.LevelLightEngine;
 
 /** Cosmetic ownership only: neither block states nor server structure data are changed. */
 public final class ReceiverShellVisuals {
-    private static final Map<LevelLightEngine, World> WORLDS = Collections.synchronizedMap(new WeakHashMap<>());
+    private static final Map<Level, World> WORLDS = Collections.synchronizedMap(new WeakHashMap<>());
     private static final class World {
         final WeakReference<Level> level;
         final ReceiverShellRegistry registry = new ReceiverShellRegistry();
@@ -60,7 +60,7 @@ public final class ReceiverShellVisuals {
     public static void remove(LaserMachineBlockEntity controller, Object token) {
         var level = controller.getLevel();
         if (level == null || !level.isClientSide) return;
-        var world = WORLDS.get(level.getLightEngine());
+        var world = WORLDS.get(level);
         if (world == null) return;
         var owner = controller.getBlockPos();
         synchronized (world) {
@@ -70,26 +70,27 @@ public final class ReceiverShellVisuals {
         refresh(level, world.registry.remove(token, owner.getX(), owner.getY(), owner.getZ()));
     }
 
-    /** RenderChunkRegion shares its world's light engine; shell parts need no block entity lookup. */
+    /** Shell parts need no block entities, and meshing views need not provide a light engine. */
     public static boolean hidden(BlockAndTintGetter region, BlockPos pos) {
-        var world = WORLDS.get(region.getLightEngine());
+        var level=BlockRenderViewLevel.level(region);
+        var world = level==null?null:WORLDS.get(level);
         return world != null && world.registry.hidden(pos.getX(), pos.getY(), pos.getZ());
     }
 
     public static boolean visible(LaserMachineBlockEntity controller, Object token) {
         var level = controller.getLevel();
         if (level == null || !level.isClientSide) return false;
-        var world = WORLDS.get(level.getLightEngine()); var owner = controller.getBlockPos();
+        var world = WORLDS.get(level); var owner = controller.getBlockPos();
         return world != null && world.registry.owns(token, owner.getX(), owner.getY(), owner.getZ());
     }
 
     public static void unloadChunk(Level level, int x, int z) {
-        var world = WORLDS.get(level.getLightEngine());
+        var world = WORLDS.get(level);
         if (world != null) refresh(level, world.registry.unloadChunk(x, z));
     }
 
     public static void loadedChunk(Level level) {
-        var world = WORLDS.get(level.getLightEngine());
+        var world = WORLDS.get(level);
         if (world != null) synchronized (world) { world.pending = true; }
     }
 
@@ -117,7 +118,7 @@ public final class ReceiverShellVisuals {
     }
 
     private static World world(Level level) {
-        synchronized (WORLDS) { return WORLDS.computeIfAbsent(level.getLightEngine(), key -> new World(level)); }
+        synchronized (WORLDS) { return WORLDS.computeIfAbsent(level, key -> new World(level)); }
     }
     private static boolean chunkLoaded(Level level, BlockPos pos) {
         // ClientLevel.hasChunkAt always returns true; ChunkSource checks FULL with load=false.

@@ -1,6 +1,7 @@
 package dev.overloadsim.workstation;
 
 import dev.overloadsim.core.ReceiverShellRegistry;
+import dev.overloadsim.compat.BlockRenderViewLevel;
 import dev.overloadsim.laser.LaserContent;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -13,11 +14,10 @@ import java.util.WeakHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.lighting.LevelLightEngine;
 
 /** Cosmetic shell ownership uses the existing immutable receiver registry, without server formation. */
 public final class WorkstationShellVisuals {
-    private static final Map<LevelLightEngine, World> WORLDS = Collections.synchronizedMap(new WeakHashMap<>());
+    private static final Map<Level, World> WORLDS = Collections.synchronizedMap(new WeakHashMap<>());
     private record Controller(WeakReference<HighEnergyWorkstationBlockEntity> host, Object token) {}
     private static final class World {
         final WeakReference<Level> level;
@@ -55,7 +55,7 @@ public final class WorkstationShellVisuals {
     public static void remove(HighEnergyWorkstationBlockEntity host, Object token) {
         var level = host.getLevel();
         if (level == null || !level.isClientSide) return;
-        var world = WORLDS.get(level.getLightEngine());
+        var world = WORLDS.get(level);
         if (world == null) return;
         var owner = host.getBlockPos();
         synchronized (world) {
@@ -68,7 +68,7 @@ public final class WorkstationShellVisuals {
     public static boolean visible(HighEnergyWorkstationBlockEntity host) {
         var level = host.getLevel();
         if (level == null || !level.isClientSide || host.isRemoved() || !host.formed()) return false;
-        var world = WORLDS.get(level.getLightEngine());
+        var world = WORLDS.get(level);
         if (world == null) return false;
         var owner = host.getBlockPos();
         synchronized (world) {
@@ -78,19 +78,20 @@ public final class WorkstationShellVisuals {
         }
     }
 
-    /** RenderChunkRegion shares the world's light engine; ordinary shell cells need no block entity. */
+    /** Ordinary shell cells need no block entity or meshing-view light engine. */
     public static boolean hidden(BlockAndTintGetter region, BlockPos position) {
-        var world = WORLDS.get(region.getLightEngine());
+        var level=BlockRenderViewLevel.level(region);
+        var world = level==null?null:WORLDS.get(level);
         return world != null && world.registry.hidden(position.getX(), position.getY(), position.getZ());
     }
 
     public static void unloadChunk(Level level, int x, int z) {
-        var world = WORLDS.get(level.getLightEngine());
+        var world = WORLDS.get(level);
         if (world != null) refresh(level, world.registry.unloadChunk(x, z));
     }
 
     public static void loadedChunk(Level level) {
-        var world = WORLDS.get(level.getLightEngine());
+        var world = WORLDS.get(level);
         if (world != null) synchronized (world) { world.pending = true; }
     }
 
@@ -116,7 +117,7 @@ public final class WorkstationShellVisuals {
     }
 
     private static World world(Level level) {
-        synchronized (WORLDS) { return WORLDS.computeIfAbsent(level.getLightEngine(), ignored -> new World(level)); }
+        synchronized (WORLDS) { return WORLDS.computeIfAbsent(level, ignored -> new World(level)); }
     }
 
     private static boolean chunkLoaded(Level level, BlockPos position) {
