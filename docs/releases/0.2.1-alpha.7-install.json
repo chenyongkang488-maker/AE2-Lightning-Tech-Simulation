@@ -1,0 +1,72 @@
+{
+  "version": "0.2.1-alpha.7",
+  "date": "2026-10-11",
+  "instance": "D:\\mc\\.minecraft\\versions\\New Age Science and Technology",
+  "implementationCommit": "9b97a023ca568ff0a10106e5bcdd0377d5d9a5a1",
+  "tag": "v0.2.1-alpha.7",
+  "components": [
+    {
+      "installedJar": "D:\\mc\\.minecraft\\versions\\New Age Science and Technology\\mods\\ae2lt-2.1.2-beta2.jar",
+      "sha256": "710954ace5c346df6a4ec8aa050745636c031d89dace3b05ac85475fa25d49fb",
+      "backup": "D:\\mc\\.minecraft\\versions\\New Age Science and Technology\\addon-backups\\20261011-002057-upstream\\ae2lt-2.1.0-beta.6.alpha.1.jar",
+      "backupSha256": "bb508267953b9b217feff7cb76db2d78150daf6e2752085dae6a6161ae2c672e",
+      "action": "updated"
+    },
+    {
+      "installedJar": "D:\\mc\\.minecraft\\versions\\New Age Science and Technology\\mods\\thunderbolt-2.0.3-beta2.jar",
+      "sha256": "9e45573895742144c1895a67ce08fe7a3967a50b413095edee68ccb3dbfba6a9",
+      "backup": "D:\\mc\\.minecraft\\versions\\New Age Science and Technology\\addon-backups\\20261011-002057-upstream\\thunderbolt-2.0.0.jar",
+      "backupSha256": "13430a9a6bbb189375b199d5c27d5568fc57975630ef149854d9645c9d4af7f8",
+      "action": "updated"
+    },
+    {
+      "installedJar": "D:\\mc\\.minecraft\\versions\\New Age Science and Technology\\mods\\ae2ltpp-1.2.2-beta.jar",
+      "sha256": "fae18612ee21d9df9dc5517a4b1ebc5ebd52a024d074ad7ff0c9eee348ca7a57",
+      "backup": "D:\\mc\\.minecraft\\versions\\New Age Science and Technology\\addon-backups\\20261011-002057-upstream\\ae2ltpp-1.2.2-beta.jar",
+      "backupSha256": "fae18612ee21d9df9dc5517a4b1ebc5ebd52a024d074ad7ff0c9eee348ca7a57",
+      "action": "already latest, preserved"
+    },
+    {
+      "installedJar": "D:\\mc\\.minecraft\\versions\\New Age Science and Technology\\mods\\lightning-tech-simulation-0.2.1-alpha.7.jar",
+      "sha256": "443f4326eb96cd45dcd3cffd001a62db00fbf082b1010c72211862344295afff",
+      "backup": "D:\\mc\\.minecraft\\versions\\New Age Science and Technology\\addon-backups\\20261011-002057-upstream\\lightning-tech-simulation-0.2.1-alpha.6.jar",
+      "backupSha256": "f1b47a4d5f1808c1176ef93cfb1b852ba531026357cb93ee233f6a7d30e929e0",
+      "action": "updated"
+    }
+  ],
+  "officialReleases": [
+    {
+      "project": "ae2-lightning-tech",
+      "version": "2.1.2-beta2",
+      "versionId": "Hj7rsUUQ",
+      "datePublished": "2026-10-09T14:03:49.635818Z",
+      "file": "ae2lt-2.1.2-beta2.jar",
+      "source": "https://cdn.modrinth.com/data/ArHeh5Fz/versions/Hj7rsUUQ/ae2lt-2.1.2-beta2.jar",
+      "sha256": "710954ace5c346df6a4ec8aa050745636c031d89dace3b05ac85475fa25d49fb",
+      "sha512": "4ea4371f8e8e886c2ca74b0b8f8e89eac572a256f2842c0fc7e9e91269aa1dfaa9531f61be68131d5b32969bcebc5e6ede189791b9914c5c84bbcb1fc83e8549"
+    },
+    {
+      "project": "thunderbolt-core",
+      "version": "2.0.3-beta2",
+      "versionId": "oyVnlG5A",
+      "datePublished": "2026-10-09T14:00:15.539816Z",
+      "file": "thunderbolt-2.0.3-beta2.jar",
+      "source": "https://cdn.modrinth.com/data/M5jhzZXH/versions/oyVnlG5A/thunderbolt-2.0.3-beta2.jar",
+      "sha256": "9e45573895742144c1895a67ce08fe7a3967a50b413095edee68ccb3dbfba6a9",
+      "sha512": "179d0d2d14059245717f5af58b21eaab9ac033932f26facb3e73dcdc34633c31baec672a1682a6bf16cbf97f1703dd72aba4bcb0f93bcb284d31407a94ea35f1"
+    },
+    {
+      "project": "ae2lt-packaged-pattern-provider",
+      "version": "1.2.2-beta",
+      "versionId": "gpNiszro",
+      "datePublished": "2026-10-08T02:45:09.406437Z",
+      "file": "ae2ltpp-1.2.2-beta.jar",
+      "source": "https://cdn.modrinth.com/data/QrbJwOfn/versions/gpNiszro/ae2ltpp-1.2.2-beta.jar",
+      "sha256": "fae18612ee21d9df9dc5517a4b1ebc5ebd52a024d074ad7ff0c9eee348ca7a57",
+      "sha512": "1c196fb8166cf811424943c8b2cba38e9547307208659eda2f3659fcc0c81a82d8a7b495dc6f36c577f1ee6719378cfd68313186a0891fd3246e39cfff89d108"
+    }
+  ],
+  "build": "gradlew jar sourcesJar: BUILD SUCCESSFUL",
+  "tests": "Skipped at user request; static diagnostic reading of metadata and relevant client/native declarations only; no automated tests or client launch",
+  "scope": "AE2LT and Thunderbolt updated; packaged provider already latest and preserved; addon client relocation bridge installed; other mods, worlds and configuration not modified"
+}
