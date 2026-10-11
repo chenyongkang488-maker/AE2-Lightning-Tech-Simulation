@@ -6,9 +6,10 @@ By **qiqi**. A **Minecraft 1.21.1 / NeoForge** addon for AE2 Lightning Tech.
 Grow reusable simulation crystals with lightning, then use an ME network
 to produce minerals, crops, wood and mob loot.
 
-Current development version: **0.2.0-alpha.17**. Includes lasers, particle
-constrainers, automatic construction and the high-energy workstation, with
-survival recipes and compatibility with current Lightning Tech and AE2.
+Current release: **0.2.1**, the first public release of the 0.2 series.
+It includes the complete laser and particle production line, automatic construction,
+the high-energy workstation, Transcendent Crystals and the Overload Output Interface.
+0.2.0 was not released separately. See the [full release notes](docs/release/0.2.1.en.md).
 Use **Title screen → Mods → Lightning Tech: Simulation → Config** to tune
 machine values, capacities and the explosion switch. See [configuration instructions](docs/MACHINE_CONFIGURATION.md).
 
@@ -26,8 +27,8 @@ ZIP are development downloads, not game mods.
 | Minecraft | 1.21.1 |
 | NeoForge | ≥21.1.252, <21.2; tested 21.1.252 / 21.1.255 |
 | Applied Energistics 2 | ≥19.2.17, <20; tested 19.2.17 / 19.2.18 |
-| AE2 Lightning Tech | ≥2.1.0, <3; tested old Reborn 2.1.0 / current main project 2.1.1 |
-| Thunderbolt Core | ≥2.0.0, <3; tested 2.0.0 / 2.0.2 |
+| AE2 Lightning Tech | ≥2.1.0, <3; recommended main project 2.1.2-beta2, retaining Reborn 2.1.0 support |
+| Thunderbolt Core | ≥2.0.0, <3; recommended 2.0.3-beta2, retaining 2.0.0 support |
 | GuideME | ≥21.1.19, <21.2; tested 21.1.19 |
 
 Metadata admits later updates in these series; tested versions are listed separately.
@@ -134,9 +135,10 @@ and Blockbench editing.
 
 ## Licensing and feedback
 
-Code, documentation and original artwork use **MIT**. Crystal artwork, the crystal
-logo and seven module icons adapted from AE2 Lightning Tech Reborn retain
-**CC BY-NC-SA 3.0**. See [LICENSES.md](LICENSES.md) and
+Original code, documentation and artwork use **MIT**. Adapted output-interface
+code and screen layout use **LGPL-3.0-only**. Derived crystal artwork (including
+Transcendent Crystals), the logo, seven module icons and output-interface textures
+retain **CC BY-NC-SA 3.0**. See [LICENSES.md](LICENSES.md) and
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for scope, sources and changes.
 This is an independent addon project.
 

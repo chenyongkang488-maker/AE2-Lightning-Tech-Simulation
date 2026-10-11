@@ -61,9 +61,12 @@ public final class LaserParticleRoutingGameTests {
             h.assertTrue(receiver.particles().stored()==1,"the contacted side port receives its one real particle");
             receiver.particles().load(0);
             h.getLevel().setBlockAndUpdate(port,LaserContent.FRAME.get().defaultBlockState());
+            h.assertTrue(source.segments().isEmpty(),"replacing the contacted port immediately clears the previous active optical path");
             receiver.checkStructure();LaserNetwork.tick(source);
             h.assertTrue(receiver.formed(),"the other selected south port keeps the receiver formed");
-            h.assertTrue(source.segments().isEmpty(),"replacing the contacted port cannot leave the previous active optical path");
+            // A batch-boundary tick may legitimately draw a new upstream beam after clearing the old path.
+            h.assertTrue(source.segments().stream().noneMatch(LaserSegment::particle),"a renewed upstream beam cannot retain the removed port's particle delivery");
+            h.assertTrue(receiver.particles().stored()==0,"a removed optical port receives no further particles");
         } finally {NeoForge.EVENT_BUS.unregister(boost);receiver.particles().load(0);source.setEnabled(false);}
         h.succeed();
     }

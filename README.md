@@ -4,7 +4,7 @@
 
 作者：**qiqi**。为 **Minecraft 1.21.1 / NeoForge** 制作的 AE2 Lightning Tech 附属模组，用雷击培养可重复使用的模拟水晶，通过 ME 网络生产矿物、作物、木材和生物战利品。
 
-当前开发版本：**0.2.1-alpha.3**。包含激光、粒子约束器、自动搭建和强能工作站，并兼容新版非 Reborn 闪电科技与 AE2。网络 FE 供电使用可选 Applied Flux 的 FE 存储单元。通过 **主菜单 → 模组 → 闪电科技：模拟 → 配置** 调整机器数值、容量上限和爆炸开关，操作说明见 [机器配置](docs/MACHINE_CONFIGURATION.md)。
+当前发布版本：**0.2.1**。这是 0.2 系列首次公开发布，包含整套激光与粒子产线、强能工作站、超限水晶和过载输出接口；0.2.0 未单独发布。完整内容见 [0.2.1 更新公告](docs/release/0.2.1.md)。网络 FE 供电使用可选 Applied Flux 的 FE 存储单元。通过 **主菜单 → 模组 → 闪电科技：模拟 → 配置** 调整机器数值、容量上限和爆炸开关，操作说明见 [机器配置](docs/MACHINE_CONFIGURATION.md)。
 
 ![成型高能激光发射器](art/previews/laser-emitter-reactor.png)
 
@@ -19,8 +19,8 @@
 | Minecraft | 1.21.1 |
 | NeoForge | ≥21.1.252、<21.2；已验证 21.1.252 / 21.1.255 |
 | Applied Energistics 2 | ≥19.2.17、<20；已验证 19.2.17 / 19.2.18 |
-| AE2 Lightning Tech | ≥2.1.0、<3；已验证旧 Reborn 2.1.0 / 新主项目 2.1.1 |
-| Thunderbolt Core | ≥2.0.0、<3；已验证 2.0.0 / 2.0.2 |
+| AE2 Lightning Tech | ≥2.1.0、<3；推荐新主项目 2.1.2-beta2，保留旧 Reborn 2.1.0 支持 |
+| Thunderbolt Core | ≥2.0.0、<3；推荐 2.0.3-beta2，保留 2.0.0 支持 |
 | GuideME | ≥21.1.19、<21.2；已验证 21.1.19 |
 
 版本声明允许表内系列的后续更新，已实测版本单独列出；未来版本若更改 API，仍可能需要修复。前置自身的版本要求也必须满足。旧 Reborn 与新主项目使用相同模组 ID，选用其中一套，不要同时安装。兼容矩阵和复测命令见 [开发版前置兼容记录](docs/development-upstream-compatibility.md)。Mekanism 为可选兼容模组，已验证 10.7.19.85；Mystical Agriculture / Cucumber 为可选作物兼容测试环境，已验证 8.0.28 / 8.0.16。
@@ -87,7 +87,7 @@ python3 scripts/verify-release.py
 
 ## 美术与许可
 
-Blockbench 分层工程保存在 [art/](art/)，完美模拟水晶用作模组标志。水晶和七个模块图标改编自 AE2 Lightning Tech Reborn 的素材，保留 **CC BY-NC-SA 3.0**；代码、文档及原创模型和电弧使用 **MIT**。出处、修改说明及范围见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) 和 [LICENSES.md](LICENSES.md)。这是独立附属项目。
+Blockbench 分层工程保存在 [art/](art/)，完美模拟水晶用作模组标志。原创代码、文档和原创美术使用 **MIT**；改编的过载输出接口代码与界面布局使用 **LGPL-3.0-only**；改编水晶（含超限水晶）、标志、七个模块图标及输出接口贴图保留 **CC BY-NC-SA 3.0**。出处、修改说明及范围见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) 和 [LICENSES.md](LICENSES.md)。这是独立附属项目，前置模组不随发布包分发。
 
 ## 反馈与测试范围
 

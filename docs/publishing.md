@@ -1,6 +1,7 @@
 # 发布操作单
 
-> 本文首次发布步骤保留 0.1.1-beta.1 的历史信息。当前开发版为 0.2.0-alpha.6；
+> 本文首次发布步骤保留 0.1.1-beta.1 的历史信息。当前发布版为 0.2.1；
+> 0.2.0 未单独公开，完整公告见 [0.2.1](release/0.2.1.md)。
 > 版本和前置要求以 README 及 [开发版兼容记录](development-upstream-compatibility.md) 为准。
 > 现有 GitHub 仓库为 https://github.com/chenyongkang488-maker/AE2-Lightning-Tech-Simulation 。
 

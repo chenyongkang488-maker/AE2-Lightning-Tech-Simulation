@@ -1,5 +1,17 @@
 # Changelog / 更新记录
 
+## [0.2.1] — 2026-10-11
+
+本次为 0.2 系列首次公开更新，合并未单独发布的 0.2.0 激光产线和 0.2.1 过载输出接口，基于 alpha.7 的最终实现。
+
+- 新增完整激光与粒子产线：高能激光发射器、约束/强化/爆发/偏折/聚焦矩阵、坍缩核心和粒子约束器；支持光路配置、守恒分流和粒子转换产能。
+- 新增强能工作站与超限水晶：激光驱动的 7×7×7 多方块加工，支持物品、流体及 AE 产物导出；超限水晶可用于特斯拉极高压生产和约束器耗材。
+- 新增过载输出接口：36 个虚拟样板槽，普通相邻输出或按源槽位定向无线输出，多目标轮询、彩色连接光线、目标管理及感应卡 FE 供能。
+- 补充多方块自动搭建与施工投影、原生机器配置页、G 指南和 JEI 页面；修复 Sodium 搭建后崩溃并优化外壳光照缓存与视野裁剪。
+- 适配 AE2 Lightning Tech 2.1.2-beta2 与 Thunderbolt 2.0.3-beta2，保留旧前置路径和已有模组/存档 ID；完整公告见 docs/release/0.2.1.md。
+
+First public 0.2-series release, combining the previously unpublished laser/particle production line with the Overload Output Interface, high-energy workstation, Transcendent Crystal, construction/configuration tools and upstream compatibility fixes. See docs/release/0.2.1.en.md.
+
 ## [0.2.1-alpha.7] — 2026-10-11
 
 - 兼容 AE2 Lightning Tech 2.1.2-beta2 移动后的客户端按钮、快捷键及连接渲染包路径；保留旧 Reborn 2.1.0 与主项目2.1.1路径支持，沿用原生界面按钮外观和行为。
