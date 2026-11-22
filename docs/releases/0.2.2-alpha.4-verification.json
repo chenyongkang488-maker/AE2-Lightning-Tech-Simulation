@@ -1,0 +1,152 @@
+{
+  "version": "0.2.2-alpha.4",
+  "date": "2026-10-22",
+  "base_commit": "7ee6724",
+  "branch": "codex/matrix-six-ports",
+  "artifacts": [
+    {
+      "file": "lightning-tech-simulation-0.2.2-alpha.4.jar",
+      "bytes": 1982602,
+      "sha256": "dcf8332f6b7ed27de80aea829d6e7835dc13d2f0ed8353e8992018d241cde715"
+    },
+    {
+      "file": "lightning-tech-simulation-0.2.2-alpha.4-sources.jar",
+      "bytes": 942301,
+      "sha256": "dafa205aa8204bc9c4447bcd7fc664199a0eb25fe73eca9b6f5edc60ef1aa7c3"
+    },
+    {
+      "file": "lightning-tech-simulation-0.2.2-alpha.4-source.zip",
+      "bytes": 16599209,
+      "sha256": "dcc5d6090df94ca9597f76b6aeb774e6ed41aa67e47156bfe7540b4b21bb995d"
+    }
+  ],
+  "junit": {
+    "tests": 143,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "gametest": [
+    {
+      "stack": "AE2 19.2.18 / AE2LT 2.1.2-beta2 / Thunderbolt 2.0.3-beta2 / JEI 19.44.0.403 / AppliedFlux 2.1.6 + Glodium 2.2",
+      "passed": 558,
+      "log": "build/verification/primordial-alpha4/current-final.log"
+    },
+    {
+      "stack": "AE2 19.2.17 / AE2LT 2.1.0 / Thunderbolt 2.0.0 / JEI 19.44.0.403",
+      "passed": 558,
+      "log": "build/verification/primordial-alpha4/legacy-final.log"
+    }
+  ],
+  "resource_checks": [
+    "multiblock-resources",
+    "laser-resources",
+    "laser-manufacturing",
+    "workstation-resources",
+    "output-interface",
+    "transcendent-crystal"
+  ],
+  "resource_log": "build/verification/primordial-alpha4/resources-final.log",
+  "release_check": "passed: version, licenses, exact packaged resources, fixture exclusion, no bundled dependencies, source ZIP byte parity",
+  "source_zip": {
+    "files": 1044,
+    "includes": [
+      "src",
+      "art",
+      "scripts",
+      "docs",
+      "Gradle wrapper and build configuration"
+    ],
+    "excludes": [
+      "ignored build/runtime/dependency directories",
+      "this release verification records (0.2.2-alpha.4) to avoid hash recursion"
+    ]
+  },
+  "environment": {
+    "java": "21.0.12.1+1",
+    "gradle": "8.8",
+    "neoforge": "21.1.252",
+    "minecraft": "1.21.1",
+    "offline": true
+  },
+  "independent_code_review": "P2 dimension-specific Java material cache reproduced, fixed with ServerLevel identity guard, regression added; follow-up review found no remaining important issues",
+  "red_evidence": [
+    "build/primordial-red.log",
+    "build/primordial-dimension-red.log"
+  ],
+  "visual_acceptance": {
+    "authorized": true,
+    "date": "2026-10-22",
+    "status": "passed for listed scenarios",
+    "runtime": "current upstream stack with JEI 19.44.0.403 and AppliedFlux 2.1.6 / Glodium 2.2; Chinese; GUI scale 2",
+    "window_content_size": "854x480",
+    "world": "copied run-client/saves/alpha24-primordial-review only",
+    "checks": [
+      "native module model and icon",
+      "JEI assembly recipe, Silk Touch tooltip, 100k FE and 32 EHV",
+      "mixed ore/crop/unsupported-mineral outputs",
+      "actual 4000 FE / 8 HV / 4 EHV batch charge and 2 converted / 1 fallback diagnostics",
+      "duplicate and smelting conflict prevent formation and preserve modules",
+      "continued production after saved restart and data reload"
+    ],
+    "fixes": [
+      "chamber status 6 now uses chamber-specific structure-incomplete text rather than shared missing-profile text"
+    ],
+    "client_closed_cleanly": true,
+    "logs": [
+      "build/verification/primordial-alpha4/client.log",
+      "build/verification/primordial-alpha4/client-final.log"
+    ],
+    "screenshots": [
+      "0.2.2-alpha.4/primordial-costs.png",
+      "0.2.2-alpha.4/redstone-ore-output.png",
+      "0.2.2-alpha.4/primordial-duplicates.png",
+      "0.2.2-alpha.4/primordial-assembly.png",
+      "0.2.2-alpha.4/primordial-model.png"
+    ],
+    "fixture": "0.2.2-alpha.4/client-fixture.zip",
+    "fixture_notes": [
+      "initial function manually executed after player join",
+      "a later focus-restoration click accidentally removed only the duplicate-fixture controller after its acceptance; no production code changed for fixtures"
+    ],
+    "preserved_pre_fix_artifacts": "build/verification/primordial-alpha4/before-visual-fix/",
+    "screenshot_integrity": [
+      {
+        "file": "0.2.2-alpha.4/primordial-costs.png",
+        "width": 854,
+        "height": 480,
+        "sha256": "42d91f6e462fc96ab63ddca0deada20ba4b8da471cf2d4695f700ca633291c69"
+      },
+      {
+        "file": "0.2.2-alpha.4/redstone-ore-output.png",
+        "width": 854,
+        "height": 480,
+        "sha256": "df5b63392aa7083699e1dbd1459691d02160efe86a7051aead5ca6c4c910a68c"
+      },
+      {
+        "file": "0.2.2-alpha.4/primordial-duplicates.png",
+        "width": 854,
+        "height": 480,
+        "sha256": "18aef106a0f07ba8a0389ad24337922ca41872c88924c57bc81832fd4dbc84bf"
+      },
+      {
+        "file": "0.2.2-alpha.4/primordial-assembly.png",
+        "width": 854,
+        "height": 480,
+        "sha256": "9f8e6bd66abc126e6fc3eb648a303cbf4fc216e4ec4178f69f72a4603602e8a4"
+      },
+      {
+        "file": "0.2.2-alpha.4/primordial-model.png",
+        "width": 854,
+        "height": 480,
+        "sha256": "89f3006b106f706fa57fc14903f35e8a82339b9b9af9ca0c56af424b5dac5981"
+      }
+    ]
+  },
+  "installed_to_instances": false,
+  "pushed": false,
+  "tag_created": false,
+  "published": false,
+  "package_log": "build/verification/primordial-alpha4/visual-fix-build.log",
+  "final_validation": "After the window-discovered label correction: JUnit 143, current and legacy required GameTests 558 each; full build, sourcesJar, six resources checks and release integrity passed."
+}

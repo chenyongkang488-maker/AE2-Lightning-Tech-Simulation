@@ -10,7 +10,7 @@
     },
     {
       "ingredient": {
-        "item": "ae2lt:flawless_budding_overload_crystal"
+        "tag": "overload_sim:overload_crystal_budding"
       },
       "count": 1
     },

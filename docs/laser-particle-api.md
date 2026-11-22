@@ -1,4 +1,4 @@
-# 激光与粒子 API · 0.2.0-alpha.16
+# 激光与粒子 API · 0.2.2-alpha.1
 
 目标为 Minecraft 1.21.1 / NeoForge 21.1.252 及以上已验证范围。已有模拟室、水晶、线圈及配方 ID 保持原样。激光/粒子设备仍在开发验收阶段；强能工作站控制器已有制造配方。
 
@@ -14,13 +14,15 @@
 
 `LaserAutoConstruction.plan(host)` 与 `build(player, host)` 可用于扩展界面；通用事务和失败退款约定见 [自动搭建 API](construction-api.md)。成型设备的装甲与玻璃网格仅替换客户端显示，服务器仍使用真实建材、碰撞、判定和库存；解体与区块卸载时恢复普通方块显示。
 
-## 四面偏折水晶
+## 六面偏折矩阵（0.2.2-alpha.1）
 
-新偏折矩阵保持世界竖直的 7³ 球壳，控制器在底部，顶部使用框架，只有东、南、西、北四个光口。成型显示的光口直径约三格，中央为带双尖端的六棱粉色水晶。入射光段从输入口到球心，输出段从球心到对应输出口，再向外延伸六格。
+新偏折球壳为 7×7×7，球心相对控制器为世界坐标 `(-2,2,-2)`，控制器相对球心为 `(2,-2,2)`。六个轴向端点均为独立 `PORT`，控制器不作为光学端点。外壳满足 `7 ≤ x²+y²+z² ≤ 12`，六极点半径为3。新设备六面默认关闭，每面按关闭→输入→输出循环；输入、输出掩码各占六位且不能重叠。同批输入合并，向所有启用输出守恒均分；费用、循环限制和超限行为沿用原实现。
 
-`LaserMachineBlockEntity.sideMode(Direction)` 与 `setSideMode(Direction, int)` 使用 `SIDE_OFF=0`、`SIDE_INPUT=1`、`SIDE_OUTPUT=2`。新设备四面默认关闭；界面依次切换关闭、输入、输出，可设置多个输入与输出，无固定输入面。输入、输出掩码采用 `Direction.get3DDataValue()` 对应位，两掩码不重叠；上下方向始终关闭。同批次有效输入先汇总、再守恒分流，全部输出关闭时没有下游输出；已运行的上游发射器与矩阵仍按其原费用规则收费。
+NBT 保存 `OpticalInputMask`、`OpticalOutputMask`、实际 `DeflectorShapeVersion` 与 `DeflectorLegacyLayout`。新建使用版本2；版本1和缺少标记的更旧存档维持原模板、球心、资源和水平模式，上下关闭。布局不随成型状态自动切换。完整六口需拆装控制器重建；拆卸沿用旧规则，本地FE不会保留，不自动迁移世界方块。
 
-NBT 保存 `OpticalInputMask`、`OpticalOutputMask`、`DeflectorShapeVersion=1` 及 `DeflectorLegacyLayout`。旧存档保留原结构、中心锚点和资源，将原水平固定输入及选中的水平输出迁移为明确配置；原上下路由停用。旧竖直结构的侧面控制器占位仍不能通光，可用水平物理端口为三个；需要四个光口时可按新投影重建。原顶部、底部端口不删除，成型时显示为封闭壳体。
+`LaserMachineBlockEntity.deflectorShapeVersion()` 读取布局，`supportsOpticalSide(Direction)` 查询该布局允许的方向。`structureTemplate()`、客户端快照、自动搭建计划和投影缓存均包含布局版本。`LaserStructureGeometry.template` / `centerOffset` 新增末尾 `int deflectorShapeVersion` 重载；原签名保持原模板语义，扩展应优先读取宿主模板。`laserSide` 操作沿用原协议名，方向索引0至5；旧布局拒绝上下配置。客户端与服务端应使用相同模组版本。
+
+四种环状矩阵继续使用六向FACING及视线放置规则。光轴为Y时 `basisUp` 固定为北，环心位于控制器北三格；模型、光效和施工模板使用同一基底。
 
 光束使用独立的 `laser_energy_flow` 64 帧首尾连续粉色纹理，帧间插值只平滑时间变化，空间像素仍按最近邻显示。生产批次不重置纹理时钟；原模拟室光球、坍缩光球和外环符文保持独立材质。
 

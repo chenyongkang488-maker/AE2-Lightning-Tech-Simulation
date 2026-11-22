@@ -11,7 +11,8 @@ NAMES={
  'simulation_efficiency_t3':('模拟效率模块 T3','Simulation Efficiency Module T3'),
  'simulation_fortune_module':('模拟时运模块','Simulation Fortune Module'),
  'simulation_overload_module':('模拟过载模块','Simulation Overload Module'),
- 'simulation_smelting_module':('模拟熔炼模块','Simulation Smelting Module')}
+ 'simulation_smelting_module':('模拟熔炼模块','Simulation Smelting Module'),
+ 'simulation_primordial_module':('原初模块','Primordial Module')}
 def write(path,value):
  path=RES/path;path.parent.mkdir(parents=True,exist_ok=True);path.write_text(json.dumps(value,ensure_ascii=False,indent=2)+'\n',encoding='utf8')
 for block in NAMES:
@@ -20,7 +21,7 @@ write(Path('data/overload_sim/loot_table/blocks/formed_simulation_glass.json'),{
 write(Path('data/minecraft/tags/block/mineable/pickaxe.json'),{'replace':False,'values':['overload_sim:overload_simulation_chamber']+['overload_sim:'+id for id in NAMES]})
 write(Path('data/overload_sim/tags/block/simulation_frames.json'),{'replace':False,'values':['overload_sim:simulation_frame']})
 write(Path('data/overload_sim/tags/block/simulation_glass.json'),{'replace':False,'values':['ae2:quartz_vibrant_glass']})
-write(Path('data/overload_sim/multiblock_simulation/default.json'),{'policy':{'ticks':180,'reduction_cap':104,'fortune_cap':10,'t1':2,'t2':4,'t3':8,'fe':1000,'hv':1,'overload_ehv':1,'smelting_hv':2},'smelting':[{'input':'minecraft:raw_'+s,'result':'minecraft:'+s+'_ingot','count':2} for s in ('iron','gold','copper')],'modules':[]})
+write(Path('data/overload_sim/multiblock_simulation/default.json'),{'policy':{'ticks':180,'reduction_cap':104,'fortune_cap':10,'t1':2,'t2':4,'t3':8,'fe':1000,'hv':1,'overload_ehv':1,'smelting_hv':2,'primordial_hv':2},'smelting':[{'input':'minecraft:raw_'+s,'result':'minecraft:'+s+'_ingot','count':2} for s in ('iron','gold','copper')],'modules':[],'primordial':[]})
 from manufacturing_recipes import write_recipes
 write_recipes()
 for locale,index in [('zh_cn',0),('en_us',1)]:

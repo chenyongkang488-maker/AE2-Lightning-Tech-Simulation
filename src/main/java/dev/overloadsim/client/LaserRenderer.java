@@ -51,7 +51,7 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
         Vec3 apply(double x,double y,double z) { return right.scale(x).add(up.scale(y)).add(forward.scale(z)); }
         Vec3 local(Vec3 world) { return new Vec3(world.dot(right),world.dot(up),world.dot(forward)); }
     }
-    private record Skin(Direction facing,boolean pedestal,long tick,List<BlockPos> openings,
+    private record Skin(Direction facing,boolean pedestal,int deflectorShape,long tick,List<BlockPos> openings,
             List<IndustrialMachineMesh.Surface> mesh,List<ReceiverShellMesh.Quad> glass) {}
     private record Lighting(BlockPos center,Basis basis,PreparedSurfaceLighting samples) {}
     private record Geometry(List<IndustrialMachineMesh.Surface> source,List<ReceiverShellMesh.Quad> glass,
@@ -231,13 +231,12 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
     }
 
     private Skin skin(LaserMachineBlockEntity be,Basis basis) {
-        long tick=be.getLevel().getGameTime();var facing=be.receiverVisualFacing();boolean pedestal=be.receiverPedestalLayout();
+        long tick=be.getLevel().getGameTime();var facing=be.receiverVisualFacing();boolean pedestal=be.receiverPedestalLayout();int deflectorShape=be.deflectorShapeVersion();
         var previous=skins.get(be);
-        if(previous!=null&&previous.tick==tick&&previous.facing==facing&&previous.pedestal==pedestal)return previous;
+        if(previous!=null&&previous.tick==tick&&previous.facing==facing&&previous.pedestal==pedestal&&previous.deflectorShape==deflectorShape)return previous;
         var openings=new ArrayList<BlockPos>();
         for(var entry:be.structureTemplate().entrySet()) {
-            // Custom horizontal collars already contain their apertures. Legacy pole ports
-            // are inert and hidden; clipping them would reopen the closed pole caps.
+            // Custom collars already contain their apertures. Legacy pole ports remain capped.
             if(be.kind()==LaserKind.DEFLECTOR&&entry.getValue()==LaserStructureGeometry.Part.PORT)continue;
             if(entry.getValue()!=LaserStructureGeometry.Part.AIR&&entry.getValue()!=LaserStructureGeometry.Part.FRAME
                     &&entry.getValue()!=LaserStructureGeometry.Part.GLASS) {openings.add(entry.getKey());continue;}
@@ -245,8 +244,8 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
             var pos=be.getBlockPos().offset(entry.getKey());
             if(be.getLevel().getBlockState(pos).getBlock()!=LaserContent.FRAME.get())openings.add(entry.getKey());
         }
-        if(previous!=null&&previous.facing==facing&&previous.pedestal==pedestal&&previous.openings.equals(openings)) {
-            var next=new Skin(facing,pedestal,tick,previous.openings,previous.mesh,previous.glass);
+        if(previous!=null&&previous.facing==facing&&previous.pedestal==pedestal&&previous.deflectorShape==deflectorShape&&previous.openings.equals(openings)) {
+            var next=new Skin(facing,pedestal,deflectorShape,tick,previous.openings,previous.mesh,previous.glass);
             skins.put(be,next);return next;
         }
         var result=new ArrayList<IndustrialMachineMesh.Surface>();
@@ -296,13 +295,13 @@ public final class LaserRenderer implements BlockEntityRenderer<LaserMachineBloc
                 result=new ArrayList<>(IndustrialMachineMesh.withoutCell(result,local.x,local.y,local.z));
             }
         } else if(be.kind()==LaserKind.DEFLECTOR) {
-            result.addAll(DeflectorShellMesh.surfaces());
+            result.addAll(DeflectorShellMesh.surfaces(be.deflectorShapeVersion()>=2));
             for(var opening:openings) {
                 var local=basis.local(Vec3.atLowerCornerOf(opening).subtract(centerOffset));
                 result=new ArrayList<>(IndustrialMachineMesh.withoutCell(result,local.x,local.y,local.z));
             }
         }
-        var next=new Skin(facing,pedestal,tick,List.copyOf(openings),List.copyOf(result),panes);
+        var next=new Skin(facing,pedestal,deflectorShape,tick,List.copyOf(openings),List.copyOf(result),panes);
         skins.put(be,next);lighting.remove(be);return next;
     }
 

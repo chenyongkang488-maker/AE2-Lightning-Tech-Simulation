@@ -30,6 +30,10 @@ public final class LaserMachineGameTests {
             h.getLevel().setBlockAndUpdate(controller.offset(entry.getKey()), state);
         }
         var host = (LaserMachineBlockEntity) h.getLevel().getBlockEntity(controller);
+        if (kind == LaserKind.DEFLECTOR) {
+            var saved=host.saveMachine(h.getLevel().registryAccess()); saved.putInt("DeflectorShapeVersion",1);
+            host.loadMachine(saved,h.getLevel().registryAccess());
+        }
         if (kind == LaserKind.RECEIVER) {
             // This helper represents already-existing spherical machines for runtime regression tests.
             var legacy = host.saveMachine(h.getLevel().registryAccess());

@@ -129,6 +129,9 @@ public final class LaserTargetLifecycleGameTests {
 
     @GameTest(template = "laser_empty")
     public static void blockingAnAcceptedPathRevokesItsTargetOnTheNextSourceTick(GameTestHelper h) {
+        // At a payment boundary source.tick() legitimately starts a new, blocked beam after revocation.
+        // Exercise retained-path invalidation independently of that separate renewal behavior.
+        if(h.getLevel().getGameTime()%20==0){h.runAfterDelay(1,()->blockingAnAcceptedPathRevokesItsTargetOnTheNextSourceTick(h));return;}
         var source = source(h);
         var probe = target(h, source, "test_conflict_block_b");
         try {

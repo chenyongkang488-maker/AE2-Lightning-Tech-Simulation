@@ -12,9 +12,12 @@ item_ids:
   - overload_sim:simulation_fortune_module
   - overload_sim:simulation_overload_module
   - overload_sim:simulation_smelting_module
+  - overload_sim:simulation_primordial_module
 ---
 
 # Multiblock Simulation Chamber
+
+With Mekanism installed, bind fluorite using 24 fluorite storage blocks. Bind sulfur with 24 blocks in the common sulfur ore tag. Stone and deepslate variants can be mixed. Regular simulation yields 2–4 fluorite gems or one sulfur dust per crystal before upgrades. The Primordial Module prefers the ordinary stone ore. Sulfur ore can come from AllTheOres or another mod providing the common tag.
 
 Build an enclosure with equal external width, height and depth from 3 to 7 blocks. The controller stores reusable Perfect Simulation Crystals.
 
@@ -44,6 +47,20 @@ The controller accepts external FE and draws up to 10,000 FE/tick from online Ap
 |Smelting, at most one|Adds 2 HV per crystal; converts raw iron, copper and gold to two ingots, and Ancient Debris to two Netherite Scraps; extra ores use tags or explicit mappings|
 
 A 7×7×7 floor can hold thirteen T3 modules, ten Fortune modules, one Overload and one Smelting module. This gives a 38-tick cycle. With 49 iron crystals it produces 100,352 iron ingots per batch, costing 49,000 FE, 147 HV and 49 EHV.
+
+## Primordial Module
+
+Install one Primordial Module in a floor upgrade position to produce natural ore blocks from mineral crystals. At most one is allowed, and it cannot coexist with Smelting. Invalid combinations prevent formation; automatic construction reports the conflict and preserves the blocks. Efficiency, Fortune and Overload may coexist. This floor module is for the multiblock chamber.
+
+Each converted mineral crystal produces **one ore block per cycle before the chamber Fortune multiplier**. Redstone and lapis normal loot quantities do not become additional ore blocks. A successful conversion adds **2 HV per crystal**, independent of Fortune; FE and duration are unchanged. Mob, crop and tree outputs incur no surcharge. Mining the produced ore can also benefit from tool Fortune; this combination is intentional.
+
+Iron, copper, gold, coal, diamond, emerald, redstone and lapis default to ordinary stone ores. Quartz produces Nether Quartz Ore; netherite produces Ancient Debris. Gold crystals do not record a source dimension, so they default to overworld Gold Ore. Modded minerals use explicit datapack mappings first, otherwise require exactly one valid ore in the material tag. Missing, ambiguous or invalid targets retain normal production without the extra HV. Hover the progress bar for mode, actual batch fees and fallback details.
+
+Started batches retain fixed outputs and costs across module changes and restarts. An invalid structure pauses processing; re-forming resumes the saved batch. Module changes apply to the next batch. Unstarted batches are replanned when the configuration changes.
+
+Recipe: one Simulation Chamber Frame and one Silk Touch enchanted book in the Lightning Assembly Chamber, consuming 100,000 FE and 32 EHV to make one module. The book is consumed. Renamed books and additional enchantments are accepted; ordinary books and enchanted tools are not substitutes.
+
+A `multiblock_simulation` config may specify `"primordial": [{"profile":"overload_sim:iron","block":"minecraft:deepslate_iron_ore"}]`. Set `policy.primordial_hv` to adjust the surcharge; `/reload` applies changes to new batches.
 
 ## Output and stored tasks
 

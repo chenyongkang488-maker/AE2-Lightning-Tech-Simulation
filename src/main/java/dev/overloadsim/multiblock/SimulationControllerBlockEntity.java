@@ -140,6 +140,7 @@ public class SimulationControllerBlockEntity extends AENetworkedBlockEntity impl
             if(NeoForge.EVENT_BUS.post(new MultiblockSimulationEvents.BeforeBatchStart(this,candidate)).isCanceled()||batch!=candidate)return;
             checkStructure();
             if(batch!=candidate||structure==null||!loaded()||!inputsMatch(candidate)||!getMainNode().isActive()||!candidate.fits(outputs))return;
+            if(!candidate.paid&&!candidate.policy.equals(MultiblockData.policy().signature(structure))){batch=null;saveChanges();return;}
             candidate.started=true;saveChanges();markForClientUpdate();
         }
         status=1;

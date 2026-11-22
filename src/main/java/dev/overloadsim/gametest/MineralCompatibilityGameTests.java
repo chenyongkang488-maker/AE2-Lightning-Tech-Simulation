@@ -90,7 +90,16 @@ public class MineralCompatibilityGameTests {
         var osmium=BuiltInRegistries.BLOCK.getOptional(net.minecraft.resources.ResourceLocation.parse("mekanism:block_raw_osmium"));
         if(osmium.isPresent()){
             var actual=MineralSimulationData.resolveBinding(h.getLevel(),osmium.get().defaultBlockState());
-            h.assertTrue(actual.valid()&&actual.mineral().orElseThrow().item().orElseThrow().toString().equals("mekanism:raw_osmium"),"real Mek raw Osmium resolves without dust ambiguity: "+actual.error());
+            var rawTag = net.minecraft.tags.TagKey.create(net.minecraft.core.registries.Registries.ITEM,
+                    net.minecraft.resources.ResourceLocation.parse("c:raw_materials/osmium"));
+            var rawCandidates = BuiltInRegistries.ITEM.getTag(rawTag).orElseThrow();
+            if (rawCandidates.size() > 1) {
+                h.assertTrue(actual.error().equals("ambiguous_material_items:c:osmium"),
+                        "multiple mods' raw osmium items remain ambiguous: " + actual.error());
+            } else {
+                h.assertTrue(actual.valid() && actual.mineral().orElseThrow().item().orElseThrow()
+                        .toString().equals("mekanism:raw_osmium"), "Mek raw osmium ignores refined dust: " + actual.error());
+            }
         }h.succeed();
     }
     static ItemStack bind(GameTestHelper h,Block block){

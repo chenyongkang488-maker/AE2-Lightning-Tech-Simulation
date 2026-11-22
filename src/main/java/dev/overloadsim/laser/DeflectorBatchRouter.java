@@ -232,8 +232,7 @@ final class DeflectorBatchRouter {
         state.put(node, 2); order.add(node);
     }
     private static List<Direction> outputs(LaserMachineBlockEntity matrix) {
-        return Arrays.stream(Direction.values()).filter(d -> d.getAxis() != Direction.Axis.Y
-                && matrix.sideMode(d) == LaserMachineBlockEntity.SIDE_OUTPUT
+        return Arrays.stream(Direction.values()).filter(d -> matrix.sideMode(d) == LaserMachineBlockEntity.SIDE_OUTPUT
                 && !matrix.center().relative(d, 3).equals(matrix.getBlockPos())).toList();
     }
     private static Map<BlockPos, LaserMachineBlockEntity> ports(ServerLevel level, List<LaserMachineBlockEntity> candidates) {
@@ -241,9 +240,9 @@ final class DeflectorBatchRouter {
         for (var node : candidates) {
             if (!node.formed() || !node.enabled()) continue;
             if (node.kind() == LaserKind.CORE) ports.put(node.getBlockPos(), node);
-            else if (node.kind() == LaserKind.DEFLECTOR) for (var side : Direction.Plane.HORIZONTAL) {
+            else if (node.kind() == LaserKind.DEFLECTOR) for (var side : Direction.values()) {
                 var port = node.center().relative(side, 3);
-                if (!port.equals(node.getBlockPos()) && level.getBlockState(port).is(LaserContent.PORT.get())) ports.put(port, node);
+                if (node.supportsOpticalSide(side) && !port.equals(node.getBlockPos()) && level.getBlockState(port).is(LaserContent.PORT.get())) ports.put(port, node);
             }
             else if (node.kind() == LaserKind.RECEIVER) ports.put(node.center().relative(node.forward().getOpposite(), 3), node);
             else if (node.kind() != LaserKind.EMITTER) ports.put(node.center(), node);

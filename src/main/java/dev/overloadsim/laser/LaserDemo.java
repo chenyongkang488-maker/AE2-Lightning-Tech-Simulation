@@ -74,7 +74,7 @@ public final class LaserDemo {
     }
     private static int place(CommandSourceStack source,List<Machine> machines,boolean demo,BlockPos workstation,Direction workstationFacing){
         var level=source.getLevel();var plan=new LinkedHashMap<BlockPos,BlockState>();
-        for(var m:machines)for(var entry:LaserStructureGeometry.template(m.kind(),m.facing(),m.kind()==LaserKind.RECEIVER).entrySet()){
+        for(var m:machines)for(var entry:LaserStructureGeometry.template(m.kind(),m.facing(),m.kind()==LaserKind.RECEIVER,false,2).entrySet()){
             var block=switch(entry.getValue()){
                 case CONTROLLER->LaserContent.machine(m.kind());case FRAME->LaserContent.FRAME.get();case GLASS->LaserContent.GLASS.get();case PORT->LaserContent.PORT.get();case SOURCE->LaserContent.SOURCE.get();case AIR->Blocks.AIR;
             };

@@ -6,10 +6,9 @@ By **qiqi**. A **Minecraft 1.21.1 / NeoForge** addon for AE2 Lightning Tech.
 Grow reusable simulation crystals with lightning, then use an ME network
 to produce minerals, crops, wood and mob loot.
 
-Current release: **0.2.1**, the first public release of the 0.2 series.
-It includes the complete laser and particle production line, automatic construction,
-the high-energy workstation, Transcendent Crystals and the Overload Output Interface.
-0.2.0 was not released separately. See the [full release notes](docs/release/0.2.1.en.md).
+Version **0.2.2** adds six-port deflectors, horizontal ring matrices, JEI structure previews,
+and the Primordial Module. It also supports the newer AE2 Lightning Tech dependency stack.
+Laser resonance processing is planned for a later release. See the [release notes](docs/release/0.2.2.en.md).
 Use **Title screen → Mods → Lightning Tech: Simulation → Config** to tune
 machine values, capacities and the explosion switch. See [configuration instructions](docs/MACHINE_CONFIGURATION.md).
 
@@ -25,18 +24,19 @@ ZIP are development downloads, not game mods.
 | Required component | Supported version |
 | --- | --- |
 | Minecraft | 1.21.1 |
-| NeoForge | ≥21.1.252, <21.2; tested 21.1.252 / 21.1.255 |
+| NeoForge | ≥21.1.252, <21.2; tested 21.1.252 for this release |
 | Applied Energistics 2 | ≥19.2.17, <20; tested 19.2.17 / 19.2.18 |
-| AE2 Lightning Tech | ≥2.1.0, <3; recommended main project 2.1.2-beta2, retaining Reborn 2.1.0 support |
-| Thunderbolt Core | ≥2.0.0, <3; recommended 2.0.3-beta2, retaining 2.0.0 support |
+| AE2 Lightning Tech | ≥2.1.0, <3; recommended main project 2.1.2-beta4, retaining Reborn 2.1.0 support |
+| Thunderbolt Core | ≥2.0.0, <3; recommended 2.0.3-beta3, retaining 2.0.0 support |
 | GuideME | ≥21.1.19, <21.2; tested 21.1.19 |
+| LDLib2 (required by newer AE2LT) | 2.2.42 tested with AE2LT 2.1.2-beta4 |
 
 Metadata admits later updates in these series; tested versions are listed separately.
 Future API changes may still require adaptation, and upstream dependency ranges
 also apply. Reborn and the current main project share mod IDs: install one set,
-never both. See the [compatibility matrix](docs/development-upstream-compatibility.md).
+never both. See the [0.2.2 compatibility matrix](docs/upstream-api-compatibility.md).
 Mekanism is optional; compatibility was tested with 10.7.19.85.
-Mystical Agriculture 8.0.28 and Cucumber 8.0.16 are optional crop test mods.
+Sulfur ore binding requires a provider such as AllTheOres.
 Minecraft and dependency binaries are not distributed by this repository.
 
 ## Features

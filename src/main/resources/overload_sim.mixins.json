@@ -2,6 +2,7 @@
   "required": true,
   "minVersion": "0.8",
   "package": "dev.overloadsim.mixin",
+  "plugin": "dev.overloadsim.mixin.UpstreamMixinPlugin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "CollectorInventoryMixin",
@@ -9,6 +10,7 @@
     "OutputConnectorPacketMixin",
     "CollectorMixin",
     "CoilWorkbenchMixin",
+    "modern.CoilApiEnergyMixin",
     "CoilMiningCommitMixin",
     "FirmamentRecoveryMixin",
     "LaserBlockChangeMixin",
@@ -23,6 +25,10 @@
     "defaultRequire": 1
   },
   "client": [
+    "jei.ModernJeiMultiblockLayoutMixin",
+    "jei.MultiblockCategoryHeightMixin",
+    "jei.MultiblockDetailsMixin",
+    "jei.MultiblockSceneFitMixin",
     "TeslaJeiClickAreaMixin",
     "OutputConnectorRendererMixin",
     "CoilHubScreenMixin",

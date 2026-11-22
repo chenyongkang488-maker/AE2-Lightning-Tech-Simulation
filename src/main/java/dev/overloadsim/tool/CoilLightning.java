@@ -4,7 +4,7 @@ import java.util.Optional;
 import appeng.api.config.Actionable;
 import appeng.api.networking.security.IActionSource;
 import com.moakiee.ae2lt.device.network.RailgunNetworkBinding;
-import com.moakiee.ae2lt.me.key.LightningKey;
+import dev.overloadsim.compat.UpstreamApi;
 import dev.overloadsim.SimulationConfig;
 import dev.overloadsim.config.MachineSettings;
 import net.minecraft.server.level.ServerPlayer;
@@ -36,7 +36,7 @@ public final class CoilLightning {
         if(player.getCooldowns().isOnCooldown(stack.getItem()))return Result.COOLDOWN;
         var target=target(player,self);if(target.isEmpty()||!player.serverLevel().isLoaded(net.minecraft.core.BlockPos.containing(target.get())))return Result.NO_TARGET;
         var binding=RailgunNetworkBinding.INSTANCE.resolve(stack,player);if(!binding.success()||binding.grid()==null)return Result.UNBOUND;
-        boolean natural=CoilSettings.read(stack).natural(stack);var key=natural?LightningKey.EXTREME_HIGH_VOLTAGE:LightningKey.HIGH_VOLTAGE;
+        boolean natural=CoilSettings.read(stack).natural(stack);var key=UpstreamApi.get().key(natural);
         var inventory=binding.grid().getStorageService().getInventory();var source=IActionSource.ofPlayer(player);
         int cost=MachineSettings.intValue(MachineSettings.COIL_LIGHTNING_COST);
         if(inventory.extract(key,cost,Actionable.SIMULATE,source)!=cost)return Result.NO_LIGHTNING;

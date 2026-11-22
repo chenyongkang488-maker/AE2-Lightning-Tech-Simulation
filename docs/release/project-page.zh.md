@@ -4,7 +4,7 @@
 
 用雷击培养可重复使用的模拟水晶，通过模拟室生产矿物、作物、木材和生物战利品。单方块模拟室支持最多 128 并行，多方块模拟室可同时使用最多 49 个水晶；过载雷鸣线圈支持引雷、挖掘与扳手功能。
 
-当前版本 **0.2.1** 还提供整套激光与粒子产线、强能工作站、超限水晶和 36 槽过载输出接口。下方介绍本次新增内容。
+**0.2.2** 新增六面偏折光口、环状矩阵平躺、JEI 结构预览和原初模块，并适配新版闪电科技前置。见 [0.2.2 更新公告](https://github.com/chenyongkang488-maker/AE2-Lightning-Tech-Simulation/releases/tag/v0.2.2)。
 ## 整套激光与粒子产线
 
 新增高能激光发射器，以及约束、强化、爆发、偏折和聚焦矩阵。通过不同矩阵调整激光强度与光路，偏折矩阵可汇合多个输入，再按启用的输出面分流。
@@ -51,9 +51,9 @@ AE2、AE2 Lightning Tech、Thunderbolt Core 和 GuideME 是必需前置。AE2 Li
 
 Applied Flux（应用通量）及其前置为可选组件；通过 ME 网络存取 FE 时，需要应用通量的 FE 存储单元，AE 能源单元只承担网络运行开销。JEI 可选，用于配方展示；Mekanism 和神秘农业等为可选兼容内容。封包样板供应器不是本模组的必需前置。
 
-升级前备份存档，移走旧附属 JAR，再安装 `lightning-tech-simulation-0.2.1.jar`。客户端与服务器同步更新；sources JAR 和源码 ZIP 用于开发，不放入 mods。内部 `overload_sim` ID、资源命名空间和原有注册 ID 保留。
+升级前备份存档，移走旧附属 JAR，再安装 `lightning-tech-simulation-0.2.2.jar`。客户端与服务器同步更新；sources JAR 和源码 ZIP 用于开发，不放入 mods。内部 `overload_sim` ID、资源命名空间和原有注册 ID 保留。
 
-声明的依赖范围及构建命令见 README。后续前置更新仍可能改变 API；推荐组合与本次实际验证结果见 [发布验证记录](https://github.com/chenyongkang488-maker/AE2-Lightning-Tech-Simulation/blob/v0.2.1/docs/releases/0.2.1-verification.md)。
+声明的依赖范围及构建命令见 README。后续前置更新仍可能改变 API；推荐组合与本次实际验证结果见 [发布验证记录](https://github.com/chenyongkang488-maker/AE2-Lightning-Tech-Simulation/blob/v0.2.2/docs/releases/0.2.2-verification.md)。
 
 ## 源码与许可
 

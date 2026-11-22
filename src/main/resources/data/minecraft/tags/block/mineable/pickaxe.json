@@ -12,6 +12,7 @@
     "overload_sim:simulation_smelting_module",
     "#overload_sim:laser_mineable",
     "overload_sim:high_energy_workstation",
-    "overload_sim:overload_output_interface"
+    "overload_sim:overload_output_interface",
+    "overload_sim:simulation_primordial_module"
   ]
 }

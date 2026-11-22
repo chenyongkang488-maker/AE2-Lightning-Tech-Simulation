@@ -12,7 +12,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.*;
 import net.minecraft.world.level.block.state.properties.*;
 public class SimulationPartBlock extends BaseEntityBlock {
-    public enum Kind{FRAME,T1,T2,T3,FORTUNE,OVERLOAD,SMELTING}
+    public enum Kind{FRAME,T1,T2,T3,FORTUNE,OVERLOAD,SMELTING,PRIMORDIAL}
     public static final BooleanProperty FORMED=BooleanProperty.create("formed");
     private final Kind kind;
     public SimulationPartBlock(Kind kind){super(Properties.of().strength(4).sound(SoundType.METAL));this.kind=kind;registerDefaultState(stateDefinition.any().setValue(FORMED,false));}

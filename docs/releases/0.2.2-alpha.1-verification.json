@@ -1,0 +1,40 @@
+{
+  "version": "0.2.2-alpha.1",
+  "artifacts": [
+    {
+      "file": "lightning-tech-simulation-0.2.2-alpha.1.jar",
+      "bytes": 1918419,
+      "sha256": "4c097004c5e26f10876ca4c2fc36c3893013a21d4414dfded5d4592ad901d2f4"
+    },
+    {
+      "file": "lightning-tech-simulation-0.2.2-alpha.1-sources.jar",
+      "bytes": 916184,
+      "sha256": "81b3c4fd875f2fe3b9c4998248a36873e5f99be79382cf7e8bf38349e8392632"
+    }
+  ],
+  "date": "2026-10-15",
+  "base_commit": "1607c85",
+  "branch": "codex/matrix-six-ports",
+  "junit": {
+    "tests": 137,
+    "failures": 0,
+    "errors": 0
+  },
+  "gametest": [
+    {
+      "stack": "AE2 19.2.18 / AE2LT 2.1.2-beta2 / Thunderbolt 2.0.3-beta2 / AppliedFlux 2.1.6 + Glodium 2.2",
+      "passed": 541,
+      "log": "build/verification/alpha22/current-flux-final.log"
+    },
+    {
+      "stack": "AE2 19.2.17 / AE2LT 2.1.0 / Thunderbolt 2.0.0 / no AppliedFlux",
+      "passed": 541,
+      "log": "build/verification/alpha22/old-final.log"
+    }
+  ],
+  "visual_acceptance": "pending_user_permission_for_computer_use",
+  "installed_to_instances": false,
+  "pushed": false,
+  "tag_created": false,
+  "published": false
+}

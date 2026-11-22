@@ -48,7 +48,7 @@ public final class OpticalRoutingGameTests {
     public static void configuredSideInputTurnsThroughCrystalAndConservesSplit(GameTestHelper h) {
         var pair = westInput(h); var source = pair[0]; var deflector = pair[1];
         configure(h, deflector, bit(Direction.WEST), bit(Direction.NORTH) | bit(Direction.SOUTH));
-        source.energy().load(100_000); LaserNetwork.processEmitter(source);
+        source.energy().load(200_000); LaserNetwork.processEmitter(source);
         var center = deflector.center();
         h.assertTrue(deflector.lastPower() == 100_000, "a configured west input accepts eastward travel independently of controller facing");
         h.assertTrue(segment(source,center.west(3),center,100_000), "incoming full energy reaches the crystal along a straight internal axis");

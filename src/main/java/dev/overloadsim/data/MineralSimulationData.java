@@ -25,17 +25,40 @@ public final class MineralSimulationData extends SimpleJsonResourceReloadListene
         public ResolvedMineral resolved(){return new ResolvedMineral(profile.orElseGet(()->autoId(material)),material,binding.id(),item,min,max,ore,smelting,sameBlock);}
     }
     public record Resolution(Optional<ResolvedMineral> mineral,String error){public boolean valid(){return mineral.isPresent()&&error.isEmpty();}}
+    private static final List<Rule> OPTIONAL_DEFAULTS = List.of(
+            mekanismDefault("fluorite", "#c:storage_blocks/fluorite", "fluorite_gem", "fluorite_ore"),
+            mekanismDefault("sulfur", "#c:ores/sulfur", "dust_sulfur", null));
     private static volatile Map<ResourceLocation,Rule> rules=Map.of();
+    private static List<Rule> activeDefaults = List.of();
     private static Map<ResourceLocation,Resolution> materials=Map.of();
     private static Map<Block,List<ResourceLocation>> bindings=Map.of();
     private static Map<ResourceLocation,Resolution> profiles=Map.of();
     private static ServerLevel indexedLevel;private static long indexedRevision=-1;
     public MineralSimulationData(){super(new Gson(),"simulation_mineral");}
-    @Override protected void apply(Map<ResourceLocation,JsonElement> json,ResourceManager manager,ProfilerFiller profiler){var next=new HashMap<ResourceLocation,Rule>();json.forEach((id,j)->next.put(id,Rule.CODEC.parse(JsonOps.INSTANCE,j).getOrThrow()));rules=Map.copyOf(next);SimulationData.invalidate();}
+    @Override
+    protected void apply(Map<ResourceLocation, JsonElement> json, ResourceManager manager, ProfilerFiller profiler) {
+        var next = new HashMap<ResourceLocation, Rule>();
+        json.forEach((id, value) -> next.put(id, Rule.CODEC.parse(JsonOps.INSTANCE, value)
+                .getOrThrow(message -> new IllegalArgumentException(id + ": " + message))));
+        rules = Map.copyOf(next);
+        SimulationData.invalidate();
+    }
     public static Map<ResourceLocation,Rule> rules(){return rules;}
     public static ResourceLocation autoId(ResourceLocation material){return ModContent.id("auto/mineral/"+material.getNamespace()+"/"+material.getPath());}
     private static Resolution bad(String error){return new Resolution(Optional.empty(),error);}
     private static Resolution ok(ResolvedMineral value){return new Resolution(Optional.of(value),"");}
+    private static Rule mekanismDefault(String material, String binding, String item, String ore) {
+        return new Rule(ResourceLocation.parse("c:" + material), Optional.empty(),
+                new SimulationRecipe.Selector(binding, Map.of()), 0, false,
+                Optional.of(ResourceLocation.parse("mekanism:" + item)), 1, 1,
+                Optional.ofNullable(ore).map(name -> ResourceLocation.parse("mekanism:" + name)),
+                Optional.empty(), false);
+    }
+
+    private static boolean registered(Rule rule) {
+        return BuiltInRegistries.ITEM.containsKey(rule.item().orElseThrow())
+                && rule.ore().map(BuiltInRegistries.BLOCK::containsKey).orElse(true);
+    }
     private static List<Item> items(ResourceLocation tag){return BuiltInRegistries.ITEM.getTag(TagKey.create(Registries.ITEM,tag)).map(t->t.stream().map(Holder::value).filter(i->i!=Items.AIR).distinct().toList()).orElse(List.of());}
     private static List<Block> blocks(ResourceLocation tag){return BuiltInRegistries.BLOCK.getTag(TagKey.create(Registries.BLOCK,tag)).map(t->t.stream().map(Holder::value).filter(b->b!=Blocks.AIR).distinct().toList()).orElse(List.of());}
     public static void ensure(ServerLevel level){
@@ -63,6 +86,12 @@ public final class MineralSimulationData extends SimpleJsonResourceReloadListene
             byMaterial.put(key,result);for(var b:bind)byBlock.computeIfAbsent(b,k->new ArrayList<>()).add(key);
         }
         byMaterial.forEach((key,r)->byProfile.put(autoId(key),r));
+        // The built-in compatibility mappings beat tag discovery, but pack JSON and Java resolvers still win.
+        activeDefaults = OPTIONAL_DEFAULTS.stream().filter(MineralSimulationData::registered).toList();
+        for (var rule : activeDefaults) {
+            var mineral = rule.resolved();
+            byProfile.put(mineral.profile(), ok(mineral));
+        }
         // Multiple explicit profiles at the highest priority are also a visible conflict.
         var ruleProfiles=new HashMap<ResourceLocation,List<Rule>>();rules.values().forEach(r->ruleProfiles.computeIfAbsent(r.profile().orElseGet(()->autoId(r.material())),k->new ArrayList<>()).add(r));
         ruleProfiles.forEach((id,list)->{list.sort(Comparator.comparingInt(Rule::priority).reversed());var first=list.getFirst();byProfile.put(id,list.size()>1&&list.get(1).priority()==first.priority()?bad("ambiguous_mineral_profile"):first.disabled()?bad("disabled_mineral"):ok(first.resolved()));});
@@ -83,6 +112,9 @@ public final class MineralSimulationData extends SimpleJsonResourceReloadListene
         var matches=rules.values().stream().filter(r->r.binding().matches(state)).sorted(Comparator.comparingInt(Rule::priority).reversed()).toList();
         if(!matches.isEmpty()){var first=matches.getFirst();return matches.size()>1&&matches.get(1).priority()==first.priority()?bad("ambiguous_mineral_rule"):first.disabled()?bad("disabled_mineral"):canonical(first.resolved());}
         var javaMatches=SimulationExtensions.minerals(level,state);if(javaMatches.size()>1)return bad("ambiguous_java_mineral");if(javaMatches.size()==1)return canonical(javaMatches.getFirst());
+        var defaultMatches = activeDefaults.stream().filter(rule -> rule.binding().matches(state)).toList();
+        if (defaultMatches.size() > 1) return bad("ambiguous_mineral_rule");
+        if (defaultMatches.size() == 1) return canonical(defaultMatches.getFirst().resolved());
         var ids=bindings.getOrDefault(state.getBlock(),List.of()).stream().distinct().toList();if(ids.size()!=1)return bad(ids.isEmpty()?"no_mineral_tags":"ambiguous_material_tags");var automatic=materials.get(ids.getFirst());return automatic.valid()?canonical(automatic.mineral().orElseThrow()):automatic;
     }
     private static Resolution canonical(ResolvedMineral selected){
@@ -93,6 +125,12 @@ public final class MineralSimulationData extends SimpleJsonResourceReloadListene
     public static Map<ResourceLocation,Resolution> audit(ServerLevel level){ensure(level);return profiles;}
     public static Optional<SimulationProfileView> view(ResourceLocation id){
         var resolved=profiles.get(id);if(resolved!=null&&resolved.valid()){var m=resolved.mineral().orElseThrow();return Optional.of(new SimulationProfileView(id,"mineral",m.material().toString(),m.item().orElseGet(()->m.ore().orElseThrow())));}
+        for (var rule : OPTIONAL_DEFAULTS) {
+            if (id.equals(autoId(rule.material())) && registered(rule)) {
+                return Optional.of(new SimulationProfileView(id, "mineral",
+                        rule.material().toString(), rule.item().orElseThrow()));
+            }
+        }
         if(!id.getNamespace().equals(OverloadSimulation.ID)||!id.getPath().startsWith("auto/mineral/"))return Optional.empty();
         var key=id.getPath().substring("auto/mineral/".length());int slash=key.indexOf('/');if(slash<1)return Optional.empty();String ns=key.substring(0,slash),material=key.substring(slash+1);
         for(var prefix:List.of("raw_materials/","gems/","dusts/")){var values=items(ResourceLocation.fromNamespaceAndPath(ns,prefix+material));if(values.size()==1)return Optional.of(new SimulationProfileView(id,"mineral",ns+":"+material,BuiltInRegistries.ITEM.getKey(values.getFirst())));}return Optional.empty();

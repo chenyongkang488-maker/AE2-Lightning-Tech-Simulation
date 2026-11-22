@@ -6,34 +6,51 @@ version = providers.gradleProperty('mod_version').get()
 group = 'dev.overloadsim'
 base { archivesName = 'lightning-tech-simulation' }
 java { toolchain.languageVersion = JavaLanguageVersion.of(21); withSourcesJar() }
-sourceSets { compatibilityFixtures { resources.srcDir 'src/gametest/resources' } }
+sourceSets {
+    compatibilityFixtures { resources.srcDir 'src/gametest/resources' }
+    modernApi {
+        compileClasspath = sourceSets.main.output + sourceSets.main.compileClasspath.filter { it.name != 'ae2lt-2.1.0.jar' } + files('libs/ae2lt-2.1.2-beta4.jar')
+    }
+    jeiCompat {
+        // Isolate optional classes introduced by beta4 / JEI 19.64 from the legacy baseline.
+        compileClasspath = sourceSets.main.output + sourceSets.main.compileClasspath.filter {
+            it.name != 'ae2lt-2.1.0.jar' && !it.name.startsWith('jei-')
+        } + files('libs/ae2lt-2.1.2-beta4.jar', 'libs/jei-1.21.1-neoforge-19.64.0.455.jar',
+                'libs/ldlib2-neoforge-1.21.1-2.2.42-all.jar')
+    }
+}
 repositories { mavenCentral() }
 neoForge {
     version = providers.gradleProperty('neoForgeVersion').getOrElse('21.1.252')
     runs {
         client { client(); gameDirectory = file('run-client'); if (project.hasProperty('uiReviewWorld')) { programArguments.addAll('--quickPlaySingleplayer', project.property('uiReviewWorld').toString()) } }
         server { server(); programArgument '--nogui'; gameDirectory = file('run-server') }
-        gameTestServer { type = 'gameTestServer'; gameDirectory = file('run-gametest'); systemProperty 'neoforge.enabledGameTestNamespaces', 'overload_sim' }
+        gameTestServer { type = 'gameTestServer'; gameDirectory = file(providers.gradleProperty('gameTestDirectory').getOrElse('run-gametest')); systemProperty 'neoforge.enabledGameTestNamespaces', 'overload_sim' }
     }
-    mods { overload_sim { sourceSet sourceSets.main; if (gradle.startParameter.taskNames.any { it.tokenize(':').last() == 'runGameTestServer' }) sourceSet sourceSets.compatibilityFixtures } }
+    mods { overload_sim { sourceSet sourceSets.main; sourceSet sourceSets.modernApi; sourceSet sourceSets.jeiCompat; if (gradle.startParameter.taskNames.any { it.tokenize(':').last() == 'runGameTestServer' }) sourceSet sourceSets.compatibilityFixtures } }
 }
 dependencies {
     compileOnly files('libs/jei-1.21.1-neoforge-19.44.0.403.jar')
+    if(project.hasProperty('jeiTests')) runtimeOnly files("libs/jei-1.21.1-neoforge-${providers.gradleProperty('jeiRuntimeVersion').getOrElse('19.64.0.455')}.jar")
     compileOnly files('libs/Mekanism-1.21.1-10.7.19.85.jar')
     if(project.hasProperty('mekTests')) runtimeOnly files('libs/Mekanism-1.21.1-10.7.19.85.jar')
+    if(project.hasProperty('sulfurTests')) runtimeOnly files('libs/alltheores-3.2.0_neoforge_1.21.1.jar')
     if(project.hasProperty('cropTests')) runtimeOnly files('libs/MysticalAgriculture-1.21.1-8.0.28.jar', 'libs/Cucumber-1.21.1-8.0.16.jar')
     if(project.hasProperty('fluxTests')) runtimeOnly files('libs/AppliedFlux-2.1.6.jar', 'libs/Glodium-2.2.jar')
     implementation files('libs/guideme-21.1.19.jar')
     // Keep one binary compiled against the oldest supported API while testing newer runtimes.
     compileOnly files('libs/appliedenergistics2-19.2.17.jar', 'libs/ae2lt-2.1.0.jar', 'libs/thunderbolt-2.0.0.jar')
     runtimeOnly files("libs/appliedenergistics2-${providers.gradleProperty('ae2RuntimeVersion').getOrElse('19.2.18')}.jar",
-            "libs/ae2lt-${providers.gradleProperty('ae2ltRuntimeVersion').getOrElse('2.1.2-beta2')}.jar",
-            "libs/thunderbolt-${providers.gradleProperty('thunderboltRuntimeVersion').getOrElse('2.0.3-beta2')}.jar")
+            "libs/ae2lt-${providers.gradleProperty('ae2ltRuntimeVersion').getOrElse('2.1.2-beta4')}.jar",
+            "libs/thunderbolt-${providers.gradleProperty('thunderboltRuntimeVersion').getOrElse('2.0.3-beta3')}.jar")
+    if(providers.gradleProperty('ae2ltRuntimeVersion').getOrElse('2.1.2-beta4') == '2.1.2-beta4')
+        runtimeOnly files('libs/ldlib2-neoforge-1.21.1-2.2.42-all.jar')
     testImplementation files('libs/appliedenergistics2-19.2.17.jar', 'libs/ae2lt-2.1.0.jar', 'libs/thunderbolt-2.0.0.jar')
     testImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
     testImplementation 'com.google.code.gson:gson:2.10.1'
     testImplementation 'com.electronwill.night-config:toml:3.8.3'
     testImplementation 'org.apache.maven:maven-artifact:3.8.5'
+    testImplementation 'org.ow2.asm:asm-tree:9.9.1'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 tasks.named('test') { useJUnitPlatform() }
@@ -47,10 +64,14 @@ tasks.named('processResources') {
     from('LICENSES') { into 'META-INF/licenses' }
 }
 tasks.named('sourcesJar') {
+    from(sourceSets.modernApi.allSource)
+    from(sourceSets.jeiCompat.allSource)
     from(['LICENSE', 'LICENSES.md', 'THIRD_PARTY_NOTICES.md', 'art/licenses/AE2LT-LICENSE_ASSETS.md']) { into 'META-INF' }
     from('LICENSES') { into 'META-INF/licenses' }
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
+
+tasks.named('jar') { from(sourceSets.modernApi.output); from(sourceSets.jeiCompat.output) }
 tasks.register('verifyReleaseVersion') {
     group = 'verification'
     description = 'Reject a release tag that does not match the declared mod version.'

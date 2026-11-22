@@ -1,0 +1,106 @@
+{
+  "version": "0.2.2",
+  "tag": "v0.2.2",
+  "artifacts": [
+    {
+      "file": "lightning-tech-simulation-0.2.2.jar",
+      "bytes": 2030993,
+      "sha256": "bb975301e80ea8dfcd9f1004151b0bae732d41a65bdba69d34940cb9cbd09879"
+    },
+    {
+      "file": "lightning-tech-simulation-0.2.2-sources.jar",
+      "bytes": 964138,
+      "sha256": "71c33343472f361b5c81ba02e3ee381585da5e372a61feb5167c26d006754387"
+    }
+  ],
+  "retained_alpha6_files": 927,
+  "checked_source_files": 303,
+  "checked_class_files": 599,
+  "junit": {
+    "tests": 156,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "gametest": {
+    "current-sulfur": {
+      "required": 571,
+      "sha256": "3a92251a167b3756968b40760de121d8e08c3d8139349ab07c4c86d1ffc83777"
+    },
+    "current-mek": {
+      "required": 571,
+      "sha256": "961eb9e5d9c7c988fc5c7faa84e84aba63533ec54e2ddbf77e5b2859593f4566"
+    },
+    "beta2": {
+      "required": 571,
+      "sha256": "f702fd5aff47ed765f88b8ca40c7afde950f6492a0c4e39cb510b52b13b83c51"
+    },
+    "legacy": {
+      "required": 571,
+      "sha256": "581b4ee5cbbce68d4829f7850b303e1511fa2b9efe5885b41adabd90f2d0a325"
+    },
+    "bare": {
+      "required": 571,
+      "sha256": "279eab18e3aed4af7e9d7b61e6e07a038661a0fefccf1a753d389cf308f2f64a",
+      "first_attempt": {
+        "failed_test": "configuredSideInputTurnsThroughCrystalAndConservesSplit",
+        "sha256": "e472500f48c4d0eb18e6a306bd59653d1503433dfecdf782792195f056b2f683"
+      }
+    }
+  },
+  "resource_checks": [
+    "laser-resources",
+    "laser-manufacturing",
+    "multiblock-resources",
+    "output-interface",
+    "transcendent-crystal",
+    "workstation-resources"
+  ],
+  "window": {
+    "status": "passed",
+    "minecraft": "1.21.1",
+    "neoforge": "21.1.252",
+    "upstream": "AE2 Lightning Tech 2.1.2-beta4 / Thunderbolt 2.0.3-beta3 / LDLib2 2.2.42 / JEI 19.64.0.455",
+    "client": "Independent Gradle development client with runtime classes audited against the deliverable JAR",
+    "window": {
+      "size": "854×480",
+      "gui_scale": 2,
+      "maximize_and_restore": "passed at 1920×1008 and restored to 854×480 before the block-picking change"
+    },
+    "migration": {
+      "from": "0.2.1",
+      "world": "private release022-migration-review copy",
+      "prefill_level_dat_sha256": "f16bccbb49b41f72da84b5b93e412b1953a06970e96b2884344a674f1e6e082d",
+      "deflector": "Layout 1, formed state, input mask 4, output mask 8 and identity match before and after save",
+      "chamber": "Iron-profile perfect crystal and 17 raw iron preserved",
+      "chest": "Seven laser source crystals and one iron-profile perfect crystal preserved",
+      "disk_comparison": "build/verification/window-save-check.log"
+    },
+    "workbench": "ME online, installed one Mimic module on a resonance coil through the workbench UI; G device hub displays the installed module",
+    "collector": "Collector with an online HV storage cell: first run logged iron binding and a subsequent strike count of 1. After restarting, manually inserted a blank crystal through the UI, rebuilt the consumed 24-block raw-iron ring and triggered lightning; iron-bound crystal verified in the saved block entity.",
+    "jei": {
+      "preview": "Footer, full-size fit, layer navigation, materials and details scroll through; wheel remains within the panel; restored original window dimensions",
+      "picking": "Clicking a structural glass block opened Details with the block role and coordinates; details scrolled to the fixed-block rule; reset restored fitted view",
+      "addon_structure": "Deflector JEI structure shows controller ×1, frame ×91, optical port ×6; total 98",
+      "laser_recipe": "All four mother rocks shown; 2,000,000 FE and 256 EHV"
+    },
+    "evidence": [
+      "build/verification/old-client/logs/latest.log",
+      "build/verification/new-window-before-picking-latest.log",
+      "run-client/logs/latest.log",
+      "build/verification/workbench-installed.png",
+      "build/verification/device-hub-passed.png",
+      "build/verification/collector-manual-input.png",
+      "build/verification/jei-small-full.png",
+      "build/verification/jei-material-end.png",
+      "build/verification/jei-picked-details.png",
+      "build/verification/jei-details-bottom.png",
+      "build/verification/jei-large.png",
+      "build/verification/jei-reset.png",
+      "build/verification/addon-jei-deflector.png",
+      "build/verification/jei-laser-source-four-ingredients.png"
+    ],
+    "upstream_diagnostics": "The upstream beta4 optional JEI mixin emits a descriptor warning with JEI 19.64. The addon layout and selecting patches worked in the window. Other observed upstream log diagnostics name ae2lt:overloaded_power_supply and ae2lt:assembler/overload_processor.",
+    "shutdown": "Both clients saved their test world and quit. Both original test options files match SHA-256 9118ce335df52eb7f4d0e2b216acea7ab3631fc50a4a891ccaf6abc3395819b5; test MCP port 9876 closed."
+  }
+}

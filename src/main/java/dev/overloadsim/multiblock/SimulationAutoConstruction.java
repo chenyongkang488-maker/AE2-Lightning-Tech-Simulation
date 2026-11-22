@@ -67,7 +67,7 @@ public final class SimulationAutoConstruction {
         BlockState frame = MultiblockContent.FRAME.get().defaultBlockState();
         BlockState glass = BuiltInRegistries.BLOCK.get(VIBRANT_GLASS).defaultBlockState();
         if (glass.isAir()) throw new IllegalArgumentException("unavailable");
-        int interfaces=0,overloads=0,smelting=0;
+        int interfaces=0,overloads=0,smelting=0,primordial=0;
         for (int x=0;x<size;x++) for (int y=0;y<size;y++) for (int z=0;z<size;z++) {
             BlockPos pos = min.offset(x,y,z);
             if (!level.hasChunkAt(pos)) throw new IllegalArgumentException("unloaded");
@@ -97,6 +97,8 @@ public final class SimulationAutoConstruction {
                 if (kind!=null) {
                     if (kind==SimulationPartBlock.Kind.OVERLOAD && ++overloads>1
                             || kind==SimulationPartBlock.Kind.SMELTING && ++smelting>1) throw new IllegalArgumentException("duplicates");
+                    if(kind==SimulationPartBlock.Kind.PRIMORDIAL&&++primordial>1)throw new IllegalArgumentException("primordial_duplicates");
+                    if(primordial>0&&smelting>0)throw new IllegalArgumentException("primordial_smelting_conflict");
                     expected = existing;
                 } else expected = existing.is(FRAMES) ? existing : Blocks.AIR.defaultBlockState();
             } else {

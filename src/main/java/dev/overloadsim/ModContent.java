@@ -61,6 +61,8 @@ public final class ModContent {
         CHAMBER.get().setBlockEntity(SimulationChamberBlockEntity.class,CHAMBER_ENTITY.get(),null,(level,pos,state,be)->be.tick());
         AEBaseBlockEntity.registerBlockEntityItem(CHAMBER_ENTITY.get(),CHAMBER_ITEM.get());
         appeng.api.upgrades.Upgrades.add(appeng.core.definitions.AEItems.SPEED_CARD,CHAMBER_ITEM.get(),4);
+        dev.overloadsim.compat.UpstreamApi.get().register();
+        if(dev.overloadsim.compat.UpstreamApi.modern())return;
         // AE2LT 2.1.0 has no workbench ticker. Charge only our installed device;
         // the original railgun and armor continue using their existing adapters.
         com.moakiee.ae2lt.registry.ModBlocks.OVERLOAD_DEVICE_WORKBENCH.get().setBlockEntity(

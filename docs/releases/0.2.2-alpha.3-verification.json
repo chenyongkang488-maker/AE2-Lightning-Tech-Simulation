@@ -1,0 +1,81 @@
+{
+  "version": "0.2.2-alpha.3",
+  "date": "2026-10-22",
+  "base_commit": "d983584",
+  "branch": "codex/matrix-six-ports",
+  "artifacts": [
+    {
+      "file": "lightning-tech-simulation-0.2.2-alpha.3.jar",
+      "bytes": 1954983,
+      "sha256": "f7d41362c33d75c11b001e144a1d2f71121f6e4c7c6c46e767b5b08ed525f7ad"
+    },
+    {
+      "file": "lightning-tech-simulation-0.2.2-alpha.3-sources.jar",
+      "bytes": 928701,
+      "sha256": "5dc3494a3b736ca959943e52ea38f17ccb982f3c1b49fe3acf85bdd13d0a0ab8"
+    }
+  ],
+  "junit": {
+    "tests": 143,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "gametest": [
+    {
+      "stack": "AE2 19.2.18 / AE2LT 2.1.2-beta2 / Thunderbolt 2.0.3-beta2 / AppliedFlux 2.1.6 + Glodium 2.2 / no JEI runtime",
+      "passed": 545,
+      "log": "build/verification/alpha24/current-flux.log"
+    },
+    {
+      "stack": "AE2 19.2.17 / AE2LT 2.1.0 / Thunderbolt 2.0.0 / no AppliedFlux / JEI 19.44.0.403 runtime",
+      "passed": 545,
+      "log": "build/verification/alpha24/old-jei.log"
+    }
+  ],
+  "resource_checks": [
+    "laser-resources",
+    "laser-manufacturing",
+    "workstation-resources",
+    "output-interface",
+    "multiblock-resources",
+    "transcendent-crystal"
+  ],
+  "release_check": "passed: version, licenses, resource parity, no bundled dependencies",
+  "visual_acceptance": {
+    "authorized": true,
+    "date": "2026-10-22",
+    "status": "passed for listed scenarios",
+    "runtime": "current upstream stack with JEI 19.44.0.403; Chinese; GUI scale 2",
+    "window_sizes": [
+      "854x480 content area",
+      "maximized"
+    ],
+    "checks": [
+      "8 JEI structure pages; simulation chamber excluded",
+      "controller usage and recipe entry",
+      "all required material totals",
+      "block preview; rotation; zoom; layers; reset; hover tooltip",
+      "four flat ring toggles",
+      "six deflector face buttons; vertical side mode cycles",
+      "upward and downward beams through real apertures",
+      "four flat matrices formed and transmitting on independent paths"
+    ],
+    "fixes": [
+      "transform scissor coordinates by JEI recipe pose",
+      "144 high layout with matching input regions"
+    ],
+    "world": "copied run-client/saves/alpha23-review only",
+    "log": "build/verification/alpha23/client-compact.log",
+    "client_closed_cleanly": true,
+    "screenshots": [
+      "0.2.2-alpha.3/vertical-ports.png",
+      "0.2.2-alpha.3/flat-matrices.png"
+    ]
+  },
+  "independent_code_review": "no verified findings after checking local GuiGraphics source and all layout/input coordinates",
+  "installed_to_instances": false,
+  "pushed": false,
+  "tag_created": false,
+  "published": false
+}

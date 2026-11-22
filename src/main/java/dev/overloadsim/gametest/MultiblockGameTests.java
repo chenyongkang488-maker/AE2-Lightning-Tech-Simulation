@@ -131,10 +131,13 @@ public class MultiblockGameTests {
         var c=build(h,h.absolutePos(new net.minecraft.core.BlockPos(2,1,2)),3);c.checkStructure();var input=ironCrystal();
         c.fixedRoll(0,input,()->java.util.List.of(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.RAW_IRON)));
         String before=dev.overloadsim.multiblock.MultiblockData.policy().signature(c.structure());
-        try{var method=dev.overloadsim.multiblock.MultiblockData.class.getDeclaredMethod("apply",java.util.Map.class,net.minecraft.server.packs.resources.ResourceManager.class,net.minecraft.util.profiling.ProfilerFiller.class);method.setAccessible(true);method.invoke(new dev.overloadsim.multiblock.MultiblockData(),java.util.Map.of(),null,null);}catch(ReflectiveOperationException e){throw new RuntimeException(e);}
-        var roll=c.fixedRoll(0,input,()->java.util.List.of(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.RAW_GOLD)));
-        h.assertTrue(roll.getFirst().is(net.minecraft.world.item.Items.RAW_GOLD),"unpaid cached outcome refreshed after data reload");
-        h.assertTrue(!before.equals(dev.overloadsim.multiblock.MultiblockData.policy().signature(c.structure())),"unpaid batch policy detects data reload");h.succeed();
+        var original=PrimordialModuleGameTests.configResources(h);
+        try{
+            PrimordialModuleGameTests.reload(java.util.Map.of());
+            var roll=c.fixedRoll(0,input,()->java.util.List.of(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.RAW_GOLD)));
+            h.assertTrue(roll.getFirst().is(net.minecraft.world.item.Items.RAW_GOLD),"unpaid cached outcome refreshed after data reload");
+            h.assertTrue(!before.equals(dev.overloadsim.multiblock.MultiblockData.policy().signature(c.structure())),"unpaid batch policy detects data reload");
+        }finally{PrimordialModuleGameTests.reload(original);}h.succeed();
     }
     @GameTest(template="empty")
     public static void removedMembersStayRemovedAndReplacementsSurvive(GameTestHelper h){

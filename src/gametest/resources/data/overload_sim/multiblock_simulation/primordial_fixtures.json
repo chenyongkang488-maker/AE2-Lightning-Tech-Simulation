@@ -1,0 +1,8 @@
+{
+  "modules": [{"block":"overload_sim:test_primordial_alias","kind":"primordial"}],
+  "primordial": [
+    {"profile":"overload_sim:test_natural_profile","block":"minecraft:deepslate_iron_ore"},
+    {"profile":"overload_sim:auto/mineral/example/coldium","block":"overload_sim:nonexistent_ore"},
+    {"profile":"overload_sim:wheat","block":"minecraft:diamond_ore"}
+  ]
+}

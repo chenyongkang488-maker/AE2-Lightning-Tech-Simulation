@@ -1,0 +1,27 @@
+{
+  "type": "ae2lt:lightning_assembly",
+  "priority": 0,
+  "inputs": [
+    {
+      "ingredient": {
+        "item": "overload_sim:simulation_frame"
+      },
+      "count": 1
+    },
+    {
+      "ingredient": {
+        "type": "overload_sim:enchanted_book",
+        "enchantment": "minecraft:silk_touch",
+        "min_level": 1
+      },
+      "count": 1
+    }
+  ],
+  "result": {
+    "id": "overload_sim:simulation_primordial_module",
+    "count": 1
+  },
+  "totalEnergy": 100000,
+  "lightningCost": 32,
+  "lightningTier": "extreme_high_voltage"
+}

@@ -11,7 +11,7 @@
   "policy": {
     "ticks": 180, "reduction_cap": 104, "fortune_cap": 10,
     "t1": 2, "t2": 4, "t3": 8,
-    "fe": 1000, "hv": 1, "overload_ehv": 1, "smelting_hv": 2
+    "fe": 1000, "hv": 1, "overload_ehv": 1, "smelting_hv": 2, "primordial_hv": 2
   },
   "smelting": [
     {"input": "yourmod:raw_metal", "result": "yourmod:metal_ingot", "count": 2}
@@ -22,13 +22,33 @@
 }
 ```
 
-策略应在一个覆盖文件中声明，避免不同数据包各定义一份策略造成竞争。产物倍率上限最多 10 次翻倍；数值边界会在资源重载时检查。模块 kind 为 FRAME、T1、T2、T3、FORTUNE、OVERLOAD、SMELTING。模块别名只改变底面识别，外观由别名方块自身决定。
+策略应在一个覆盖文件中声明，避免不同数据包各定义一份策略造成竞争。产物倍率上限最多 10 次翻倍；数值边界会在资源重载时检查。模块 kind 为 FRAME、T1、T2、T3、FORTUNE、OVERLOAD、SMELTING、PRIMORDIAL。模块别名只改变底面识别，外观由别名方块自身决定。
 
 模拟档案/产物配方仍使用现有 simulation_profile 和 overload_sim:overload_simulation 类型。多方块固定以每个水晶执行一次产物抽取，忽略旧单方块 production 中的 ticks/fe/lightning/input 字段。生物战利品抽取一次后才乘时运倍率。
 
 结构材料标签为 overload_sim:simulation_frames 和 overload_sim:simulation_glass（路径 tags/block）。新增玻璃材料成型后同样保存原 BlockState，解体恢复。带库存或复杂方块实体的材料不适合作为玻璃别名；转换只保存方块状态，默认玻璃无独立库存。
 
 默认直接映射原铁、原铜、原金为各两锭，远古残骸为两个下界合金碎片；额外原矿可以声明 smelting 映射。缺少映射但在 c:raw_materials（含子标签）中时，寻找所有匹配熔炉配方，只有结果一致、无组件、原版配方数量一、产物属于 c:ingots 时默认转换为两锭。冲突或不标准配方保留原物品；作者可用显式矿物/机器熔炼映射覆盖。详见 [兼容 API](compatibility-api.md)。
+
+## 原初模块（0.2.2-alpha.4）
+
+`overload_sim:simulation_primordial_module` 为底座实体升级，每座最多一个，与熔炼模块互斥；数据包 `PRIMORDIAL` 别名同样受约束。冲突返回 `primordial_smelting_conflict`，重复返回 `primordial_duplicates`；自动搭建保留已有方块并拒绝冲突。
+
+顶层可选映射：
+
+```json
+{"primordial": [{"profile": "overload_sim:iron", "block": "minecraft:deepslate_iron_ore"}]}
+```
+
+明确 profile 映射优先于原版十种默认映射，随后才按有效矿物 material 的 `c:ores/<material path>` 方块标签寻找唯一候选。候选必须非空气且有物品形式；缺失、无效或多候选时回退原产物，不加原初费用。实体水晶、作物和树木不会因映射而转换。矿物身份由 profile kind 识别，不依赖所选生产配方的 mineral 字段；`block_loot` 仍只决定普通矿物掉落。
+
+成功转换使用基础一个方块再乘模拟室时运倍率，忽略普通掉落数量和概率。默认映射为铁、铜、金、煤、钻石、绿宝石、红石、青金石的普通石质矿石，石英为下界石英矿石，下界合金为远古残骸。金水晶不记录来源维度，默认不会选择下界金矿石。不同目标可通过数据包指定。
+
+`policy.primordial_hv` 默认 2；每颗成功转换水晶以基础 HV 加附加 HV 后应用闪电费用百分比并向上取整，普通水晶独立取整，再累加批次总费用。费用不随时运倍率增加。原初不额外修改 FE、EHV 或时间。多个配置资源按资源 ID 稳定排序，同一个资源路径仍由数据包优先级决定；推荐覆盖同一个配置文件。
+
+`SimulationStructure` 增加 `primordial()`，`MultiblockData.Policy` 增加 `primordialHv()` 与 `cost(crystals, converted, structure)`；原公共构造和 `cost(crystals, structure)` 保留，后者为基础费用，不含需要实际矿物计数才能确定的原初附加费。`SimulationBatch` 的新构造保存原初标志、转换数、回退数及首个回退原因；旧构造与旧 NBT 默认均为 false/0/空字符串。`ResolvedMineral`、水晶组件和生产配方 codec 不变。
+
+已开始批次保持保存的输出、费用和模块状态，即使更换模块、重载映射或重启；无效结构暂停。未开始批次在策略签名变化后重规划。沿用结算版本 2，于完成时扣费，不提前收费。控制器以批次快照显示实际费用和模式，下一批配置单独提示。控制器拆除资源规则保持原行为。
 
 ## Java API
 

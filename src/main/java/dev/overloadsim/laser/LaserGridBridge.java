@@ -4,7 +4,7 @@ import appeng.api.config.Actionable;
 import appeng.api.networking.GridHelper;
 import appeng.api.networking.IGridConnection;
 import appeng.api.networking.security.IActionSource;
-import com.moakiee.ae2lt.me.key.LightningKey;
+import dev.overloadsim.compat.UpstreamApi;
 import dev.overloadsim.api.LaserExtensions;
 import dev.overloadsim.compat.AppliedFluxEnergy;
 import dev.overloadsim.compat.GridConnections;
@@ -52,8 +52,7 @@ public final class LaserGridBridge {
         if (amount <= 0 || host.kind() == LaserKind.CORE) return 0;
         var grid = host.getMainNode().getGrid();
         if (grid == null || !host.getMainNode().isActive()) return 0;
-        long extracted = grid.getStorageService().getInventory().extract(LightningKey.EXTREME_HIGH_VOLTAGE, amount,
-                simulate ? Actionable.SIMULATE : Actionable.MODULATE, IActionSource.ofMachine(host));
+        long extracted = UpstreamApi.get().extract(host,true,amount,simulate,IActionSource.ofMachine(host));
         return Math.clamp(extracted, 0L, amount);
     }
 
@@ -61,7 +60,7 @@ public final class LaserGridBridge {
         if (amount <= 0 || host.kind() == LaserKind.CORE) return 0;
         var grid = host.getMainNode().getGrid();
         if (grid == null) return 0;
-        return Math.clamp(grid.getStorageService().getInventory().insert(LightningKey.EXTREME_HIGH_VOLTAGE, amount,
+        return Math.clamp(grid.getStorageService().getInventory().insert(UpstreamApi.get().key(true), amount,
                 Actionable.MODULATE, IActionSource.ofMachine(host)), 0L, amount);
     }
 

@@ -17,7 +17,7 @@ ASSEMBLY_RECIPES = [
     ('laser_burst_matrix',2_000_000,128,E,[(S+'laser_frame',4),(A+'lightning_collapse_matrix',4),(A+'firmament_superconducting_wire',16)]),
     ('laser_focus_matrix',800_000,64,E,[(S+'laser_frame',8),(S+'laser_glass',8),(A+'overload_processor',32)]),
     ('laser_deflector_matrix',400_000,32,E,[(S+'laser_frame',8),(S+'laser_glass',32),(A+'overload_crystal_block',32)]),
-    ('laser_source_crystal',2_000_000,256,E,[(S+'laser_frame',2),(A+'flawless_budding_overload_crystal',1),(A+'overload_crystal_block',32)]),
+    ('laser_source_crystal',2_000_000,256,E,[(S+'laser_frame',2),('#'+S+'overload_crystal_budding',1),(A+'overload_crystal_block',32)]),
     ('collapse_core',2_000_000,256,E,[(S+'laser_frame',2),(M+'heavy_core',1),('ae2:singularity',512),(M+'netherite_block',64)]),
     # User clarified "苍穹超导合金" to mean firmament alloy ingots, not wire.
     ('particle_constrainer',2_000_000,256,E,[(S+'laser_frame',8),(M+'heavy_core',1),(A+'overload_processor',64),('ae2:dense_energy_cell',64),(A+'firmament_alloy_ingot',64)]),
@@ -25,7 +25,7 @@ ASSEMBLY_RECIPES = [
 ]
 
 def counted_inputs(materials):
-    return [{'ingredient':{'item':item},'count':count} for item,count in materials]
+    return [{'ingredient':({'tag':item[1:]} if item.startswith('#') else {'item':item}),'count':count} for item,count in materials]
 
 def recipe_data():
     recipes = {}

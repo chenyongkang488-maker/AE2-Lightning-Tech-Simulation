@@ -17,6 +17,7 @@ public final class LaserAutoConstruction {
         var level=host.getLevel();var identity=host.identity();var controller=host.getBlockPos();
         var kind=host.kind();var facing=host.getBlockState().getValue(LaserMachineBlock.FACING);
         boolean receiverPedestalLayout=host.receiverPedestalLayout();
+        int deflectorShapeVersion=host.deflectorShapeVersion(); boolean deflectorLegacy=host.deflectorLegacyLayout();
         var cells=new LinkedHashMap<BlockPos,BlockState>();int interfaces=0;
         for(var entry:host.structureTemplate().entrySet()) {
             var pos=controller.offset(entry.getKey());
@@ -39,6 +40,7 @@ public final class LaserAutoConstruction {
                 &&host.identity().equals(identity)&&level.hasChunkAt(controller)&&level.getBlockEntity(controller)==host
                 &&host.getBlockState().getValue(LaserMachineBlock.FACING)==facing
                 &&host.receiverPedestalLayout()==receiverPedestalLayout
+                &&host.deflectorShapeVersion()==deflectorShapeVersion&&host.deflectorLegacyLayout()==deflectorLegacy
                 &&cells.keySet().stream().noneMatch(pos->LaserStructureIndex.occupied(level,pos,host)||LaserStructureIndex.touching(level,pos,host)));
     }
     public static AutomaticConstruction.Result build(ServerPlayer player,LaserMachineBlockEntity host) {

@@ -37,7 +37,7 @@ class ExportIndustrialWorkshop {
                 group(names.get(i),()->{for(var face:visible){int tile=face.tile();int index=tile==5?0:tile==7||tile==44?1:tile==41?2:tile==40||tile==42?3:4;if(index==groupIndex)mesh(face.quad(),tile,false);}});
             }
         } else if(deflector){
-            group("01 · 四个三格光口与封闭顶盖",()->{for(var face:IndustrialMachineMesh.withoutCell(DeflectorShellMesh.surfaces(),0,-3,0))mesh(face.quad(),face.tile(),false);});
+            group("01 · 六个三格光口与侧角控制器开口",()->{for(var face:IndustrialMachineMesh.withoutCell(DeflectorShellMesh.surfaces(),2,-2,2))mesh(face.quad(),face.tile(),false);});
             group("02 · 中央六棱粉色偏折水晶",()->{for(var face:DeflectorCrystalMesh.surfaces())mesh(face.quad(),face.tile(),false);});
         } else {
         group("01 · 分段装甲骨架", () -> {

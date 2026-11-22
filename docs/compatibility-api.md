@@ -33,6 +33,8 @@ alpha.13 耕地作物自动发现、神秘农业采收和成熟状态接口见 [
 
 外部存档使用自定义 profile ID 时，应提供 `simulation_profile` 的名称/图标及客户端翻译；自动材料 ID 可通过已同步的公共物品标签显示。缺少模组或映射时保留水晶，停止新生产。
 
+0.2.2 内置通用机械氟石和硫矿规则，使用稳定档案 `overload_sim:auto/mineral/c/fluorite`、`overload_sim:auto/mineral/c/sulfur`。氟石匹配 `c:storage_blocks/fluorite` 并读取普通氟石矿石掉落表。硫匹配 `c:ores/sulfur` 并直接产出通用机械硫粉，整合包可通过同标签接入其他硫矿。内置规则只在对应 Mekanism 注册项存在时启用，优先于自动标签，低于数据包和 Java 扩展。原初模块仍优先数据包映射，再优先各自的普通石质矿石。普通矿石不存在或未加入矿石标签时，沿用唯一候选与歧义回退规则。
+
 ## 生物规则
 
 记录资格为存活的 LivingEntity，并且属于 Mob、有注册刷怪蛋、或获 Java eligibility 允许；玩家排除。只保存类型，不复制实际生物装备/NBT。通用实体掉落使用未加入世界的临时实体；默认中性玩家击杀上下文、无抢夺、Luck=0，调用正常 NeoForge 掉落入口，GLM 一次。岩浆怪使用 size=2，史莱姆 size=1。

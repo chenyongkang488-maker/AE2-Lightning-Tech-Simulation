@@ -43,6 +43,7 @@ public final class LaserMenu extends AEBaseMenu implements FrequencyBindingMenuH
     @GuiSync(51) public long boostMaximum=9_000_000;
     @GuiSync(52) public long boostStep=100_000;
     @GuiSync(53) public int burstMultiplier=2;
+    @GuiSync(55) public int deflectorShapeVersion;
     @GuiSync(54) public int outputRange=6;
     private final LaserMachineBlockEntity host;
     private final java.util.UUID hostIdentity;
@@ -59,7 +60,7 @@ public final class LaserMenu extends AEBaseMenu implements FrequencyBindingMenuH
         this.host = host;
         hostIdentity=host.identity();
         frameAnchor=dev.overloadsim.multiblock.FrameMenuAccess.openingAnchor(host);
-        inputMask=host.inputMask();
+        inputMask=host.inputMask(); deflectorShapeVersion=host.deflectorShapeVersion();
         if (host.kind() == LaserKind.RECEIVER) {
             var fuel = host.fuelInput();
             var wrapped = new PlatformInventoryWrapper(fuel);
@@ -94,7 +95,7 @@ public final class LaserMenu extends AEBaseMenu implements FrequencyBindingMenuH
             host.setBoost(Math.clamp(value + step * MachineSettings.boostStep(), MachineSettings.boostMinimum(), MachineSettings.boostMaximum()));
         });
         registerClientAction("laserSide", Integer.class, side -> {
-            if (side == null || side < 2 || side >= 6 || !validAction()
+            if (side == null || side < 0 || side >= 6 || !validAction()
                     || host.kind() != LaserKind.DEFLECTOR) return;
             var direction=net.minecraft.core.Direction.from3DDataValue(side);
             host.setSideMode(direction,(host.sideMode(direction)+1)%3);
@@ -136,7 +137,7 @@ public final class LaserMenu extends AEBaseMenu implements FrequencyBindingMenuH
             boost = host.boost(); power = host.currentPower();
             energy = host.energy().stored(); energyCapacity = host.energy().capacity();
             particleCount = host.particles().stored(); coreRemainder = host.coreRemainder();
-            outputMask = host.outputMask(); inputMask = host.inputMask();
+            outputMask = host.outputMask(); inputMask = host.inputMask(); deflectorShapeVersion=host.deflectorShapeVersion();
             fuelRemaining = host.fuelRemaining(); particleRemaining = host.particleRemaining();
             activeFuel = host.activeFuel(); status = host.status(); extremeLightning = host.extremeLightning();
             frequency = host.getFrequencyId();

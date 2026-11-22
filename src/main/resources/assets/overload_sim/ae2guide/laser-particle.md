@@ -30,6 +30,8 @@ Ordinary straight devices send light opposite the controller's facing direction 
 
 The emitter fits within 5×5×5. Its controller is at the rear center; the source crystal is two blocks forward and the output port another two blocks forward. Use the automatic-build projection for the frame positions.
 
+The Lightning Assembly Chamber consumes any one of the four grades of budding overload crystal for a Laser Source Crystal. It also requires two laser frames, 32 overload crystal blocks, 2,000,000 FE, and 256 extreme high-voltage lightning.
+
 Constraint, enhancement, burst and focus matrices use the same 7×7×1 ring. F=laser frame, C=matrix controller, .=air. Seen from the controller side:
 
 ```
@@ -44,7 +46,7 @@ F.....F
 
 The optical center is three blocks along construction-up from the controller. Construction-up is world-up for horizontal light and north for vertical light.
 
-The deflector is a world-upright 7×7×7 structure. Its center is three blocks above the bottom controller. Relative to the center, fill shell cells satisfying 7 ≤ x²+y²+z² ≤ 12 with frames. Replace the east, south, west and north face centers with optical ports; the top stays frame and the bottom is the controller. Other cells stay empty. Only horizontal ports transmit light.
+The deflector is a 7×7×7 sphere. Relative to its center, fill shell cells satisfying 7 ≤ x²+y²+z² ≤ 12 with frames. All six face centers are optical ports. The controller occupies the shell corner at world offset (2,-2,2): two east, two down and two south of the center. The center is two west, two up and two north of the controller. Leave other cells empty. All six directions transmit light.
 
 The constrainer's default layout is 7×9×7. Build a two-layer 7×7 frame plinth with its controller at the front center of the upper layer. Relative to the controller, the plinth extends 0–6 blocks forward, three blocks to each side and one block down. The sphere center is three blocks forward and four blocks construction-up. Relative to that center, x/y/z range from -3 to 3. Shell cells satisfy 7 ≤ x²+y²+z² ≤ 12: use frames if any coordinate is zero, otherwise glass; leave other cells empty. Replace the upstream face-center frame with an optical port. The default materials are 138 frames, 56 glass, one port and one controller. Additional horizontal sphere-face centers may use optical ports. Align the core with an actual port and aim the port toward it.
 
@@ -56,12 +58,12 @@ The constrainer's default layout is 7×9×7. Build a two-layer 7×7 frame plinth
 |Constraint matrix|Pays 100,000 FE and renews six blocks of range|
 |Enhancement matrix|Adds and pays the selected 100,000–9,000,000 FE, in steps of 100,000|
 |Burst matrix|Pays 64 EHV and doubles beam strength|
-|Deflector|Routes horizontal inputs equally across enabled outputs|
+|Deflector|Merges six-direction inputs and divides them equally across enabled outputs|
 |Focus matrix|Focuses on the collapse core at the seventh block ahead|
 
 Enhancement and burst preserve the remaining range. Maximum individual beam strength is 1P FE. Matrices without valid incoming light pay no running cost.
 
-Each deflector direction button cycles off, input and output. New deflectors start with all four directions off. Multiple input and output directions are allowed. Closing all outputs stops downstream light; active upstream devices still follow their own charging rules. Top and bottom cannot be selected.
+Each deflector direction button cycles off, input and output. New deflectors start with all six directions off. Multiple input and output directions are allowed. Closing all outputs stops downstream light; active upstream devices still follow their own charging rules. Top and bottom have the same independent modes as the horizontal ports.
 
 Valid inputs in the same batch merge into one total, divided equally among enabled outputs. Downstream devices receive the combined beam. Repeated updates do not charge the same batch again. Removing one source leaves the remaining contributions active. A total above 1P FE stops that deflector's outputs.
 
@@ -119,3 +121,13 @@ Fuel rules are `data/<namespace>/particle_conversion/<id>.json`, reloaded with `
 For interval-based rules, use `particle_interval_ticks` instead of `input_energy_per_batch`. The fields are mutually exclusive. The interval must not exceed the paid duration. Removed or incompatible active rules pause paid work; missing optional materials skip only their own rules. `ParticleFuelData.diagnostics()` reports rule errors.
 
 Register Java hooks through `dev.overloadsim.api.LaserExtensions` during common setup. `registerModifier` changes beam strength/range; `registerTarget` handles a beam and `deactivate` releases its source; `registerFuelProvider` supplies stable `match/resolve` fuel IDs; `registerEnergySink` returns the actually accepted long FE amount and must not mutate resources when simulating. Duplicate IDs are rejected. The reference is `docs/laser-particle-api.md`.
+
+## Flat rings and historical deflectors
+
+Constraint, enhancement, burst and focus matrices retain view-based placement: look up or down to place a flat ring for vertical light; look horizontally for an upright ring. For vertical light, construction-up is north and the ring center is three blocks north of the controller. Check the projection before automatic construction. Wrench rotation revalidates the structure; it does not move existing shell blocks.
+
+Saved deflectors retain their original center, shell and horizontal port settings. Their vertical ports remain disabled. To obtain six ports, stop the beam, handle stored resources, remove the controller and rebuild from the new projection, then configure the ports again. To preserve the old sphere center, place the new controller two east, two down and two south of it; replace the former bottom controller and top frame with ports. Existing dismantling rules apply: local FE is not preserved. No automatic block relocation or lossless energy migration occurs.
+
+## JEI structure previews
+
+With JEI installed, press U on a controller and select Multiblock Structure (also indexed in R lookups). It covers the emitter, all five matrices, the particle constrainer and the high-energy workstation. The simulation chamber is excluded. Drag with the left mouse button to rotate, use the wheel to zoom and right-click to reset. Arrows select one layer; the middle button restores all layers. The four ring matrices can switch between upright and flat placement. Material totals include one controller, exclude air and do not change with the selected layer. Hover blocks for their names, controller-relative positions and legal optional replacements. At most one Overloaded Interface is allowed; each extra optical port replaces one frame.

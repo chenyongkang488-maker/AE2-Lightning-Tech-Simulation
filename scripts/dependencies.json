@@ -1,5 +1,25 @@
 [
   {
+    "file": "ae2lt-2.1.2-beta4.jar",
+    "url": "https://github.com/AE2-Lightning-Tech-Reborn/AE2-Lightning-Tech-Reborn/releases/download/2.1.2-beta4/ae2lt-2.1.2-beta4.jar",
+    "sha256": "132a8b673980ba5bb2ab0de9c1e8822bc2d25fff7190626054537b2a97f8c3cd"
+  },
+  {
+    "file": "thunderbolt-2.0.3-beta3.jar",
+    "url": "https://github.com/AE2-Lightning-Tech-Reborn/Thunderbolt-Core-Reborn/releases/download/2.0.3-beta3/thunderbolt-2.0.3-beta3.jar",
+    "sha256": "e144f82af76bebc7d575a4d56069cc664268745f447d9f2cadfe94d099f705cb"
+  },
+  {
+    "file": "ldlib2-neoforge-1.21.1-2.2.42-all.jar",
+    "url": "https://maven.firstdark.dev/snapshots/com/lowdragmc/ldlib2/ldlib2-neoforge-1.21.1/2.2.42/ldlib2-neoforge-1.21.1-2.2.42-all.jar",
+    "sha256": "3f8e6a8e129cdde6c706b2386ec33003b9988e3961549ea723d4c252fda69a85"
+  },
+  {
+    "file": "jei-1.21.1-neoforge-19.64.0.455.jar",
+    "url": "https://maven.blamejared.com/mezz/jei/jei-1.21.1-neoforge/19.64.0.455/jei-1.21.1-neoforge-19.64.0.455.jar",
+    "sha256": "f7a9de3d7ee07eed8d293a1a1a0f6afaac556eb43c103523457bd07ebb551e7b"
+  },
+  {
     "file": "ae2lt-2.1.2-beta2.jar",
     "url": "https://cdn.modrinth.com/data/ArHeh5Fz/versions/Hj7rsUUQ/ae2lt-2.1.2-beta2.jar",
     "sha256": "710954ace5c346df6a4ec8aa050745636c031d89dace3b05ac85475fa25d49fb"

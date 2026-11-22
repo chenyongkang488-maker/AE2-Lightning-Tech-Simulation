@@ -106,6 +106,27 @@ public final class LaserManufacturingRecipeGameTests {
     }
 
     @GameTest(template="empty")
+    public static void laserSourceAcceptsEveryBuddingOverloadCrystalGrade(GameTestHelper h) {
+        var specification = ASSEMBLIES.stream().filter(s -> s.id.equals("laser_source_crystal")).findFirst().orElseThrow();
+        var recipe = assembly(h, specification.id);
+        for (String grade : List.of("cracked", "damaged", "flawed", "flawless")) {
+            var inventory = inventory(specification);
+            inventory.setStackInSlot(1, stack("ae2lt:" + grade + "_budding_overload_crystal", 2));
+            var input = LightningAssemblyRecipeInput.fromInventory(inventory);
+            h.assertTrue(recipe.matches(input, h.getLevel()), grade + " mother rock must match");
+            h.assertTrue(recipe.planMatch(input).orElseThrow().getConsumptionForSlot(1) == 1,
+                    grade + " mother rock must consume one item");
+            h.assertTrue(recipe.assemble(input, h.getLevel().registryAccess()).getCount() == 1,
+                    grade + " mother rock must produce one source crystal");
+        }
+        var inventory = inventory(specification);
+        inventory.setStackInSlot(1, stack("minecraft:budding_amethyst", 1));
+        h.assertTrue(!recipe.matches(LightningAssemblyRecipeInput.fromInventory(inventory), h.getLevel()),
+                "vanilla budding amethyst is not an overload crystal mother rock");
+        h.succeed();
+    }
+
+    @GameTest(template="empty")
     public static void collapseCoreRequires512SingularitiesAcrossLargeNativeSlots(GameTestHelper h) {
         var specification = ASSEMBLIES.stream().filter(s -> s.id.equals("collapse_core")).findFirst().orElseThrow();
         var recipe = assembly(h, specification.id);

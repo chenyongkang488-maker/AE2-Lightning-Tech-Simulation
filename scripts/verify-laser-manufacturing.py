@@ -17,7 +17,7 @@ ASSEMBLY = {
     'laser_burst_matrix': (2_000_000,128,E,[(S+'laser_frame',4),(A+'lightning_collapse_matrix',4),(A+'firmament_superconducting_wire',16)]),
     'laser_focus_matrix': (800_000,64,E,[(S+'laser_frame',8),(S+'laser_glass',8),(A+'overload_processor',32)]),
     'laser_deflector_matrix': (400_000,32,E,[(S+'laser_frame',8),(S+'laser_glass',32),(A+'overload_crystal_block',32)]),
-    'laser_source_crystal': (2_000_000,256,E,[(S+'laser_frame',2),(A+'flawless_budding_overload_crystal',1),(A+'overload_crystal_block',32)]),
+    'laser_source_crystal': (2_000_000,256,E,[(S+'laser_frame',2),('#'+S+'overload_crystal_budding',1),(A+'overload_crystal_block',32)]),
     'collapse_core': (2_000_000,256,E,[(S+'laser_frame',2),(M+'heavy_core',1),('ae2:singularity',512),(M+'netherite_block',64)]),
     'particle_constrainer': (2_000_000,256,E,[(S+'laser_frame',8),(M+'heavy_core',1),(A+'overload_processor',64),('ae2:dense_energy_cell',64),(A+'firmament_alloy_ingot',64)]),
     'high_energy_workstation': (2_000_000,256,E,[(A+'overload_processing_factory',64),(A+'lightning_collapse_matrix',16),(A+'overload_processor',64)]),
@@ -33,7 +33,7 @@ def verify():
             errors.append(f'{name}: recipe differs from requested costs/materials/native schema')
     for name, (fe, lightning, tier, ingredients) in ASSEMBLY.items():
         check(name, {'type':A+'lightning_assembly','priority':0,
-                     'inputs':[{'ingredient':{'item':item},'count':count} for item,count in ingredients],
+                     'inputs':[{'ingredient':({'tag':item[1:]} if item.startswith('#') else {'item':item}),'count':count} for item,count in ingredients],
                      'result':{'id':S+name,'count':1},'totalEnergy':fe,'lightningCost':lightning,'lightningTier':tier})
     check('laser_frame', {'type':A+'overload_processing','priority':0,
         'inputs':[{'ingredient':{'item':item},'count':count} for item,count in [(A+'overload_alloy_plate',8),(M+'netherite_ingot',2),(M+'iron_block',2)]],
@@ -49,6 +49,15 @@ def verify():
         check(name, {'type':A+('lightning_simulation' if name=='blank_simulation_crystal' else 'lightning_assembly'),'priority':0,
                      'inputs':[{'ingredient':item if isinstance(item,dict) else {'item':item},'count':count} for item,count in materials],
                      'result':{'id':S+name,'count':1},'totalEnergy':fe,'lightningCost':lightning,'lightningTier':tier})
+    tag = DIRECTORY.parent / 'tags/item/overload_crystal_budding.json'
+    mothers = {A+grade+'_budding_overload_crystal' for grade in ('cracked','damaged','flawed','flawless')}
+    if not tag.is_file() or json.loads(tag.read_text(encoding='utf8')) != {'replace':False,'values':sorted(mothers)}:
+        errors.append('Laser source must accept exactly the four default mother-rock variants')
+    for version in ('2.1.0','2.1.2-beta2','2.1.2-beta4'):
+        with zipfile.ZipFile(ROOT/'libs'/f'ae2lt-{version}.jar') as jar:
+            for item in mothers:
+                if f'assets/ae2lt/models/item/{item.split(":")[1]}.json' not in jar.namelist():
+                    errors.append(f'Missing mother rock {item} in AE2LT {version}')
     translations = {
         'item.ae2lt.firmament_alloy_ingot':'苍穹合金锭',
         'item.ae2lt.firmament_superconducting_wire':'苍穹超导丝',

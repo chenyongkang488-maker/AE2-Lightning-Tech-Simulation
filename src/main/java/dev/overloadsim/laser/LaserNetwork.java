@@ -89,9 +89,9 @@ public final class LaserNetwork {
             if(!node.formed()||!node.enabled()||node==root)continue;
             if(node.kind()==LaserKind.CORE)ports.put(node.getBlockPos(),node);
             else if(node.kind()==LaserKind.DEFLECTOR){
-                for(var side:Direction.Plane.HORIZONTAL){
+                for(var side:Direction.values()){
                     var port=node.center().relative(side,3);
-                    if(!port.equals(node.getBlockPos())&&level.getBlockState(port).is(LaserContent.PORT.get()))ports.put(port,node);
+                    if(node.supportsOpticalSide(side)&&!port.equals(node.getBlockPos())&&level.getBlockState(port).is(LaserContent.PORT.get()))ports.put(port,node);
                 }
             }
             else if(node.kind()==LaserKind.RECEIVER)ports.put(node.center().relative(node.forward().getOpposite(),3),node);
@@ -146,7 +146,7 @@ public final class LaserNetwork {
                         // Owned apertures are solid ports; internal axes are validated by the structure,
                         // never added as external clear cells or rendered as a diagonal through the shell.
                         add(lines,pos,target.center(),beam.energy(),false,false);
-                        var faces=Arrays.stream(Direction.values()).filter(d->d.getAxis()!=Direction.Axis.Y&&target.sideMode(d)==LaserMachineBlockEntity.SIDE_OUTPUT
+                        var faces=Arrays.stream(Direction.values()).filter(d->target.sideMode(d)==LaserMachineBlockEntity.SIDE_OUTPUT
                                 &&!target.center().relative(d,3).equals(target.getBlockPos())).toList();
                         if(!faces.isEmpty()){
                             var split=LaserMath.split(power,faces.size());

@@ -9,7 +9,8 @@
     "fe": 1000,
     "hv": 1,
     "overload_ehv": 1,
-    "smelting_hv": 2
+    "smelting_hv": 2,
+    "primordial_hv": 2
   },
   "smelting": [
     {
@@ -28,5 +29,6 @@
       "count": 2
     }
   ],
-  "modules": []
+  "modules": [],
+  "primordial": []
 }

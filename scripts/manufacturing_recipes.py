@@ -22,6 +22,7 @@ RECIPES = [
     ('simulation_fortune_module',1_600_000,256,E,[(A+'lightning_collapse_matrix',8),(A+'overload_singularity',64),(M+'dragon_egg',1),(A+'firmament_alloy_ingot',64),(S+'simulation_frame',1)]),
     ('simulation_overload_module',200_000,64,E,[(A+'lightning_collapse_matrix',1),(M+'netherite_block',16),(S+'simulation_frame',1)]),
     ('simulation_smelting_module',100_000,32,E,[(M+'blast_furnace',64),(S+'simulation_frame',1)]),
+    ('simulation_primordial_module',100_000,32,E,[(S+'simulation_frame',1),(BOOK,1)]),
     ('extreme_voltage_module',200_000,64,E,[(A+'overload_module_base',1),(A+'lightning_collapse_matrix',1),(A+'tesla_coil',1),(A+'thunderstorm_condensate',1)]),
     ('mimic_tool_module',200_000,32,E,[(A+'overload_module_base',1),(M+'diamond',64),(M+'netherite_ingot',8),(A+'overload_processor',4)]),
     ('ultimate_destruction_module',800_000,256,E,[(A+'overload_module_base',1),(A+'lightning_collapse_matrix',1),(A+'overload_tnt',64),(M+'respawn_anchor',16),(M+'heart_of_the_sea',1)]),

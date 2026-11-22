@@ -24,13 +24,14 @@ public final class SimulationStructureValidator {
                 default->p;};
             var result=validate(controller,min,n);
             if(result.valid())return result;
+            if(result.error.equals("primordial_smelting_conflict")||result.error.equals("primordial_duplicates"))return result;
             if(!result.error.equals("edge"))last=result;
         }return last;
     }
     public static Result validate(SimulationControllerBlockEntity controller,BlockPos min,int n){
         if(n<3||n>7)return new Result(null,"size",min);
         Level level=controller.getLevel();var members=new ArrayList<BlockPos>();var glass=new ArrayList<BlockPos>();
-        int c=0,interfaces=0,t1=0,t2=0,t3=0,f=0,o=0,s=0;BlockPos port=null;
+        int c=0,interfaces=0,t1=0,t2=0,t3=0,f=0,o=0,s=0,primordial=0;BlockPos port=null;
         for(int pass=0;pass<2;pass++)for(int x=0;x<n;x++)for(int y=0;y<n;y++)for(int z=0;z<n;z++){
             int boundaries=(x==0||x==n-1?1:0)+(y==0||y==n-1?1:0)+(z==0||z==n-1?1:0);
             boolean edge=boundaries>=2;if((pass==0)!=edge)continue;
@@ -52,7 +53,7 @@ public final class SimulationStructureValidator {
             }else if(y==0){
                 var kind=MultiblockData.module(block);
                 if(kind!=null)switch(kind){
-                    case FRAME->{}case T1->t1++;case T2->t2++;case T3->t3++;case FORTUNE->f++;case OVERLOAD->o++;case SMELTING->s++;
+                    case FRAME->{}case T1->t1++;case T2->t2++;case T3->t3++;case FORTUNE->f++;case OVERLOAD->o++;case SMELTING->s++;case PRIMORDIAL->primordial++;
                 }else if(!state.isAir()&&!state.is(FRAMES))return new Result(null,"floor",p);
             }else{
                 if(block==MultiblockContent.GLASS.get()){
@@ -62,6 +63,8 @@ public final class SimulationStructureValidator {
             }
         }
         if(c!=1||interfaces>1||o>1||s>1)return new Result(null,"duplicates",min);
-        return new Result(new SimulationStructure(min,n,members,glass,port,t1,t2,t3,f,o==1,s==1),"",null);
+        if(primordial>1)return new Result(null,"primordial_duplicates",min);
+        if(primordial>0&&s>0)return new Result(null,"primordial_smelting_conflict",min);
+        return new Result(new SimulationStructure(min,n,members,glass,port,t1,t2,t3,f,o==1,s==1,primordial==1),"",null);
     }
 }

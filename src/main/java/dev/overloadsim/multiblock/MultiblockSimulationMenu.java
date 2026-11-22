@@ -36,6 +36,12 @@ public class MultiblockSimulationMenu extends AEBaseMenu implements FrequencyBin
     @GuiSync(46) public String constructionFeedback="";
     @GuiSync(47) public int feCapacity=2_000_000;
     @GuiSync(48) public int outputSlotLimit=1024;
+    @GuiSync(49) public boolean primordialInstalled;
+    @GuiSync(50) public boolean primordialBatch;
+    @GuiSync(51) public int convertedCrystals;
+    @GuiSync(52) public int fallbackCrystals;
+    @GuiSync(53) public String fallbackReason="";
+    @GuiSync(54) public long primordialHv;
     private final SimulationControllerBlockEntity host;
     private final UUID hostIdentity;
     private final net.minecraft.core.BlockPos frameAnchor;
@@ -136,6 +142,17 @@ public class MultiblockSimulationMenu extends AEBaseMenu implements FrequencyBin
             var s=host.structure();capacity=s==null?0:s.capacity();fe=host.energy().getEnergyStored();feCapacity=host.energy().getMaxEnergyStored();outputSlotLimit=host.outputs().slotLimit();status=host.status();
             var batch=host.batch();remaining=batch==null?0:batch.remaining;duration=batch==null?s==null?180:MultiblockData.policy().duration(s):batch.duration;
             participants=batch==null?0:batch.inputs.size();multiplier=s==null?1:MultiblockData.policy().multiplier(s);
+            primordialInstalled=s!=null&&s.primordial();primordialBatch=batch==null?primordialInstalled:batch.primordial;
+            convertedCrystals=batch==null?0:batch.convertedCrystals;fallbackCrystals=batch==null?0:batch.fallbackCrystals;fallbackReason=batch==null?"":batch.fallbackReason;
+            primordialHv=s==null||!s.primordial()?0:MultiblockData.policy().cost(1,1,s).hv()-MultiblockData.policy().cost(1,s).hv();
+            if(batch==null&&primordialInstalled&&host.getLevel() instanceof net.minecraft.server.level.ServerLevel server){
+                for(int i=0;i<capacity;i++){
+                    var item=host.crystals().getStackInSlot(i);if(!item.is(ModContent.PERFECT.get()))continue;
+                    var data=dev.overloadsim.api.CrystalDataAccess.read(item);if(data.isEmpty())continue;
+                    var ore=PrimordialOreResolver.resolve(server,data.get());
+                    if(ore.fallback()){fallbackCrystals++;if(fallbackReason.isEmpty())fallbackReason=ore.reason();}
+                }
+            }
             // Totals are no longer part of this UI; avoid simulating a full network extraction every tick.
             hv=0;ehv=0;refresh();
             problem=host.diagnostic();var cost=batch!=null?batch.cost:s==null?new MultiblockRules.Costs(1000,1,0):MultiblockData.policy().cost(1,s);feCost=cost.fe();hvCost=cost.hv();ehvCost=cost.ehv();frequency=host.getFrequencyId();

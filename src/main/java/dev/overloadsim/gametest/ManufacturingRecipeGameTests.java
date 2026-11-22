@@ -21,7 +21,7 @@ import net.neoforged.neoforge.gametest.*;
 @GameTestHolder(OverloadSimulation.ID)
 @PrefixGameTestTemplate(false)
 public class ManufacturingRecipeGameTests {
-    private static final List<String> ASSEMBLED=List.of("overload_simulation_chamber","resonance_coil","simulation_controller","simulation_frame","simulation_efficiency_t1","simulation_efficiency_t2","simulation_efficiency_t3","simulation_fortune_module","simulation_overload_module","simulation_smelting_module","extreme_voltage_module","mimic_tool_module","ultimate_destruction_module","efficiency_module","fortune_module","silk_touch_module","wrench_module");
+    private static final List<String> ASSEMBLED=List.of("overload_simulation_chamber","resonance_coil","simulation_controller","simulation_frame","simulation_efficiency_t1","simulation_efficiency_t2","simulation_efficiency_t3","simulation_fortune_module","simulation_overload_module","simulation_smelting_module","simulation_primordial_module","extreme_voltage_module","mimic_tool_module","ultimate_destruction_module","efficiency_module","fortune_module","silk_touch_module","wrench_module");
     private static Recipe<?> recipe(GameTestHelper h,String id){return h.getLevel().getRecipeManager().byKey(ModContent.id(id)).orElseThrow().value();}
     private static LightningAssemblyRecipe assembly(GameTestHelper h,String id){var recipe=recipe(h,id);h.assertTrue(recipe instanceof LightningAssemblyRecipe,"recipe must load through native lightning assembly serializer: "+id);return (LightningAssemblyRecipe)recipe;}
     private static ItemStack stack(String id,int count){return new ItemStack(BuiltInRegistries.ITEM.getOptional(ResourceLocation.parse(id)).orElseThrow(),count);}
@@ -45,6 +45,17 @@ public class ManufacturingRecipeGameTests {
         for(int slot=0;slot<5;slot++){var original=inventory.getStackInSlot(slot).copy();var insufficient=original.copy();insufficient.shrink(1);inventory.setStackInSlot(slot,insufficient);h.assertTrue(!recipe.matches(LightningAssemblyRecipeInput.fromInventory(inventory),h.getLevel()),"each listed material and quantity is required");inventory.setStackInSlot(slot,original);}h.succeed();
     }
     private static ItemStack book(GameTestHelper h,boolean silk,boolean extra){var stack=new ItemStack(Items.ENCHANTED_BOOK);var registry=h.getLevel().registryAccess().registryOrThrow(Registries.ENCHANTMENT);if(silk)stack.enchant(registry.getHolderOrThrow(Enchantments.SILK_TOUCH),1);if(extra)stack.enchant(registry.getHolderOrThrow(Enchantments.EFFICIENCY),5);return stack;}
+    @GameTest(template="empty")
+    public static void primordialAssemblyRequiresFrameAndSilkBook(GameTestHelper h){
+        var recipe=assembly(h,"simulation_primordial_module");var inventory=new LightningAssemblyChamberInventory(null);
+        inventory.setStackInSlot(0,stack("overload_sim:simulation_frame",1));inventory.setStackInSlot(1,book(h,true,true));
+        h.assertTrue(recipe.matches(LightningAssemblyRecipeInput.fromInventory(inventory),h.getLevel()),"frame and silk book match");
+        h.assertTrue(recipe.totalEnergy()==100000&&recipe.lightningCost()==32&&recipe.lightningTier()==LightningKey.Tier.EXTREME_HIGH_VOLTAGE,"primordial assembly energy");
+        h.assertTrue(recipe.getResultStack().is(dev.overloadsim.multiblock.MultiblockContent.PRIMORDIAL.get().asItem())&&recipe.getResultStack().getCount()==1,"one primordial module");
+        for(var invalid:List.of(new ItemStack(Items.BOOK),book(h,false,true),new ItemStack(Items.DIAMOND_PICKAXE))){inventory.setStackInSlot(1,invalid);h.assertTrue(!recipe.matches(LightningAssemblyRecipeInput.fromInventory(inventory),h.getLevel()),"requires actual silk book");}
+        var buffer=new RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.buffer(),h.getLevel().registryAccess());
+        try{var codec=new LightningAssemblyRecipe.Serializer().streamCodec();codec.encode(buffer,recipe);var decoded=codec.decode(buffer);inventory.setStackInSlot(1,book(h,true,false));h.assertTrue(decoded.matches(LightningAssemblyRecipeInput.fromInventory(inventory),h.getLevel()),"network recipe preserves silk ingredient");}finally{buffer.release();}h.succeed();
+    }
     @GameTest(template="empty")
     public static void silkTouchRequiresActualBookEnchantment(GameTestHelper h){
         var recipe=assembly(h,"silk_touch_module");var inventory=new LightningAssemblyChamberInventory(null);inventory.setStackInSlot(0,stack("ae2lt:overload_module_base",1));

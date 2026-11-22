@@ -5,7 +5,6 @@ import appeng.api.networking.security.IActionSource;
 import appeng.api.stacks.AEItemKey;
 import appeng.api.networking.GridHelper;
 import appeng.blockentity.grid.AENetworkedBlockEntity;
-import com.moakiee.ae2lt.me.key.LightningKey;
 import dev.overloadsim.multiblock.SimulationControllerBlockEntity;
 import net.minecraft.core.BlockPos;
 public final class SimulationGridBridge implements SimulationLightningPayment.Storage {
@@ -29,12 +28,12 @@ public final class SimulationGridBridge implements SimulationLightningPayment.St
     public void disconnect(){var previous=connection;boolean owned=ownedConnection;connection=null;ownedConnection=false;port=null;GridConnections.destroyOwned(previous,owned);}
     @Override public long extract(boolean extreme,long amount,boolean simulate){
         if(amount<=0)return 0;
-        var grid=host.getMainNode().getGrid();if(grid==null||!host.getMainNode().isActive())return 0;
-        return grid.getStorageService().getInventory().extract(extreme?LightningKey.EXTREME_HIGH_VOLTAGE:LightningKey.HIGH_VOLTAGE,amount,simulate?Actionable.SIMULATE:Actionable.MODULATE,IActionSource.ofMachine(host));
+        return UpstreamApi.get().extract(host,extreme,amount,simulate,IActionSource.ofMachine(host));
     }
     @Override public long insert(boolean extreme,long amount){
         if(amount<=0)return 0;var grid=host.getMainNode().getGrid();if(grid==null)return 0;
-        return grid.getStorageService().getInventory().insert(extreme?LightningKey.EXTREME_HIGH_VOLTAGE:LightningKey.HIGH_VOLTAGE,amount,Actionable.MODULATE,IActionSource.ofMachine(host));
+        // Task refunds must work even while the attached grid is inactive.
+        return grid.getStorageService().getInventory().insert(UpstreamApi.get().key(extreme),amount,Actionable.MODULATE,IActionSource.ofMachine(host));
     }
     public void export(){
         refresh();

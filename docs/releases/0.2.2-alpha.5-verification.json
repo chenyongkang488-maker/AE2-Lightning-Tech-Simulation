@@ -1,0 +1,44 @@
+{
+  "version": "0.2.2-alpha.5",
+  "tag": "v0.2.2-alpha.5",
+  "artifacts": [
+    {
+      "file": "lightning-tech-simulation-0.2.2-alpha.5.jar",
+      "bytes": 1982572,
+      "sha256": "b4a9fe02e2dac2125f53d1554a27f3b4ddf1de98abe2d039e803980b849b07ba"
+    },
+    {
+      "file": "lightning-tech-simulation-0.2.2-alpha.5-sources.jar",
+      "bytes": 942271,
+      "sha256": "0b227163d743131b47cff8574e0260331aedbf94b7c6c8c5ec29b6b43b611088"
+    },
+    {
+      "file": "lightning-tech-simulation-0.2.2-alpha.5-source.zip",
+      "bytes": 17009023,
+      "sha256": "2fff98c9da60fd6db42405719e92f06230f3b8d5740dc44ab4086d62ee42ecc0"
+    }
+  ],
+  "date": "2026-10-22",
+  "changes": "Reference pink-and-white frame with a centered solid 12x12 green square, identical pixels outside this square to the smelting module texture; editable Blockbench embedded image synchronized.",
+  "junit": {
+    "tests": 143,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "multiblock_resources": "passed: 22 projects, 25 embedded PNGs, 21 runtime models",
+  "build": "verifyReleaseVersion build sourcesJar passed",
+  "runtime_entries_changed_from_alpha4": [
+    "META-INF/neoforge.mods.toml",
+    "assets/overload_sim/textures/block/simulation_primordial_module.png"
+  ],
+  "alpha4_artifacts": "preserved byte-for-byte",
+  "source_zip_files": 1052,
+  "gametest": "not rerun for this asset-only revision; Java class bytes are identical to accepted alpha.4",
+  "visual_acceptance": {
+    "status": "offline model preview inspected; windowed client not started in this turn",
+    "preview": "0.2.2-alpha.5/primordial-module-preview.png"
+  },
+  "installed_to_instances": false,
+  "published": false
+}

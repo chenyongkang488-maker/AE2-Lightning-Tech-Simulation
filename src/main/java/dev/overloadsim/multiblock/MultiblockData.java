@@ -12,17 +12,28 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.*;
 import net.minecraft.world.level.block.Block;
 public final class MultiblockData extends SimpleJsonResourceReloadListener {
-    public record Policy(int ticks,int reductionCap,int fortuneCap,int t1,int t2,int t3,long fe,long hv,long overloadEhv,long smeltingHv){
+    public record Policy(int ticks,int reductionCap,int fortuneCap,int t1,int t2,int t3,long fe,long hv,long overloadEhv,long smeltingHv,long primordialHv){
+        public Policy(int ticks,int reductionCap,int fortuneCap,int t1,int t2,int t3,long fe,long hv,long overloadEhv,long smeltingHv){this(ticks,reductionCap,fortuneCap,t1,t2,t3,fe,hv,overloadEhv,smeltingHv,2);}
         public int duration(SimulationStructure s){long reduction=Math.min(reductionCap,s.t1()*(long)t1+s.t2()*(long)t2+s.t3()*(long)t3);long time=Math.max(1,ticks-reduction);long base=s.overload()?(time+1)/2:time;return (int)Math.min(1_000_000,SimulationRules.scalePercent(base,MachineSettings.intValue(MachineSettings.MULTIBLOCK_TIME_PERCENT)));}
         public long multiplier(SimulationStructure s){return 1L<<Math.min(s.fortune(),fortuneCap);}
         public MultiblockRules.Costs cost(int n,SimulationStructure s){int lightningPercent=MachineSettings.intValue(MachineSettings.MULTIBLOCK_LIGHTNING_COST_PERCENT);return new MultiblockRules.Costs(Math.multiplyExact(n,SimulationRules.scalePercent(fe,MachineSettings.intValue(MachineSettings.MULTIBLOCK_ENERGY_COST_PERCENT))),Math.multiplyExact(n,SimulationRules.scalePercent(Math.addExact(hv,s.smelting()?smeltingHv:0),lightningPercent)),Math.multiplyExact(n,SimulationRules.scalePercent(s.overload()?overloadEhv:0,lightningPercent)));}
-        public String signature(SimulationStructure s){return toString()+":"+s.capacity()+":"+s.t1()+":"+s.t2()+":"+s.t3()+":"+s.fortune()+":"+s.overload()+":"+s.smelting()+":"+MachineSettings.intValue(MachineSettings.MULTIBLOCK_MAX_CRYSTALS)+":"+MachineSettings.intValue(MachineSettings.MULTIBLOCK_TIME_PERCENT)+":"+MachineSettings.intValue(MachineSettings.MULTIBLOCK_ENERGY_COST_PERCENT)+":"+MachineSettings.intValue(MachineSettings.MULTIBLOCK_LIGHTNING_COST_PERCENT)+":"+generation();}
+        /** Ordinary and converted per-crystal HV are rounded before aggregation, just like legacy costs. */
+        public MultiblockRules.Costs cost(int n,int converted,SimulationStructure s){
+            if(converted<0||converted>n||converted>0&&!s.primordial())throw new IllegalArgumentException("converted crystal count");
+            var base=cost(n,s);if(converted==0)return base;
+            int percent=MachineSettings.intValue(MachineSettings.MULTIBLOCK_LIGHTNING_COST_PERCENT);
+            long regular=SimulationRules.scalePercent(hv,percent),ore=SimulationRules.scalePercent(Math.addExact(hv,primordialHv),percent);
+            return new MultiblockRules.Costs(base.fe(),Math.addExact(base.hv(),Math.multiplyExact(converted,ore-regular)),base.ehv());
+        }
+        public String signature(SimulationStructure s){return toString()+":"+s.capacity()+":"+s.t1()+":"+s.t2()+":"+s.t3()+":"+s.fortune()+":"+s.overload()+":"+s.smelting()+":"+s.primordial()+":"+MachineSettings.intValue(MachineSettings.MULTIBLOCK_MAX_CRYSTALS)+":"+MachineSettings.intValue(MachineSettings.MULTIBLOCK_TIME_PERCENT)+":"+MachineSettings.intValue(MachineSettings.MULTIBLOCK_ENERGY_COST_PERCENT)+":"+MachineSettings.intValue(MachineSettings.MULTIBLOCK_LIGHTNING_COST_PERCENT)+":"+generation();}
     }
     public record Smelt(ResourceLocation result,int count){}
     private static final Policy DEFAULT=new Policy(180,104,10,2,4,8,1000,1,1,2);
     private static volatile Policy policy=DEFAULT;
     private static volatile Map<ResourceLocation,Smelt> smelts=defaults();
     private static volatile Map<ResourceLocation,SimulationPartBlock.Kind> aliases=Map.of();
+    private static volatile Map<ResourceLocation,ResourceLocation> primordial=Map.of();
+    public static Optional<ResourceLocation> primordialOverride(ResourceLocation profile){return Optional.ofNullable(primordial.get(profile));}
     private static volatile long revision;
     private static final UUID SESSION=UUID.randomUUID();
     public static String generation(){return SESSION+":"+revision+":"+dev.overloadsim.data.SimulationData.revision();}
@@ -32,11 +43,12 @@ public final class MultiblockData extends SimpleJsonResourceReloadListener {
     private static Map<ResourceLocation,Smelt> defaults(){var map=new HashMap<ResourceLocation,Smelt>();for(var metal:List.of("iron","gold","copper"))map.put(ResourceLocation.parse("minecraft:raw_"+metal),new Smelt(ResourceLocation.parse("minecraft:"+metal+"_ingot"),2));map.put(ResourceLocation.parse("minecraft:ancient_debris"),new Smelt(ResourceLocation.parse("minecraft:netherite_scrap"),2));return Map.copyOf(map);}
     private static int number(JsonObject j,String key,int fallback,int max){int n=j.has(key)?j.get(key).getAsInt():fallback;if(n<0||n>max)throw new IllegalArgumentException("invalid "+key);return n;}
     @Override protected void apply(Map<ResourceLocation,JsonElement> files,ResourceManager manager,ProfilerFiller profiler){
-        Policy next=DEFAULT;var mappings=new HashMap<>(defaults());var modules=new HashMap<ResourceLocation,SimulationPartBlock.Kind>();
-        for(var entry:files.entrySet()){
+        Policy next=DEFAULT;var mappings=new HashMap<>(defaults());var modules=new HashMap<ResourceLocation,SimulationPartBlock.Kind>();var ores=new HashMap<ResourceLocation,ResourceLocation>();
+        // Stable ordering for distinct config files; pack priority still resolves the same resource ID.
+        for(var entry:new TreeMap<>(files).entrySet()){
             var j=entry.getValue().getAsJsonObject();
             if(j.has("policy")){
-                var p=j.getAsJsonObject("policy");next=new Policy(Math.max(1,number(p,"ticks",180,1_000_000)),number(p,"reduction_cap",104,1_000_000),number(p,"fortune_cap",10,10),number(p,"t1",2,1_000_000),number(p,"t2",4,1_000_000),number(p,"t3",8,1_000_000),number(p,"fe",1000,1_000_000),number(p,"hv",1,1_000_000),number(p,"overload_ehv",1,1_000_000),number(p,"smelting_hv",2,1_000_000));
+                var p=j.getAsJsonObject("policy");next=new Policy(Math.max(1,number(p,"ticks",180,1_000_000)),number(p,"reduction_cap",104,1_000_000),number(p,"fortune_cap",10,10),number(p,"t1",2,1_000_000),number(p,"t2",4,1_000_000),number(p,"t3",8,1_000_000),number(p,"fe",1000,1_000_000),number(p,"hv",1,1_000_000),number(p,"overload_ehv",1,1_000_000),number(p,"smelting_hv",2,1_000_000),number(p,"primordial_hv",2,1_000_000));
             }
             if(j.has("smelting"))for(var value:j.getAsJsonArray("smelting")){
                 var s=value.getAsJsonObject();mappings.put(ResourceLocation.parse(s.get("input").getAsString()),new Smelt(ResourceLocation.parse(s.get("result").getAsString()),Math.max(1,number(s,"count",2,64))));
@@ -44,7 +56,10 @@ public final class MultiblockData extends SimpleJsonResourceReloadListener {
             if(j.has("modules"))for(var value:j.getAsJsonArray("modules")){
                 var m=value.getAsJsonObject();modules.put(ResourceLocation.parse(m.get("block").getAsString()),SimulationPartBlock.Kind.valueOf(m.get("kind").getAsString().toUpperCase(java.util.Locale.ROOT)));
             }
-        }policy=next;smelts=Map.copyOf(mappings);aliases=Map.copyOf(modules);revision++;
+            if(j.has("primordial"))for(var value:j.getAsJsonArray("primordial")){
+                var ore=value.getAsJsonObject();ores.put(ResourceLocation.parse(ore.get("profile").getAsString()),ResourceLocation.parse(ore.get("block").getAsString()));
+            }
+        }policy=next;smelts=Map.copyOf(mappings);aliases=Map.copyOf(modules);primordial=Map.copyOf(ores);revision++;PrimordialOreResolver.invalidate();
     }
     public static Smelt smelt(ServerLevel level,ItemStack stack){
         var mapping=smelts.get(BuiltInRegistries.ITEM.getKey(stack.getItem()));if(mapping!=null)return mapping;

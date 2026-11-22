@@ -95,7 +95,9 @@ public final class MultiblockSimulationScreen extends AEBaseScreen<MultiblockSim
         g.drawString(font,title,8,6,color,false);
         g.drawString(font,menu.capacity==0?Component.translatable("gui.overload_sim.multiblock.unformed_size",menu.buildSize,menu.buildSize,menu.buildSize):Component.translatable("gui.overload_sim.multiblock.crystals",present,menu.capacity),10,20,color,false);
         g.drawString(font,Component.translatable("gui.overload_sim.multiblock.outputs",menu.page+1),right,20,color,false);
-        g.drawString(font,Component.literal(menu.duration+" tick · ×"+menu.multiplier),right,128,color,false);
+        var cycle=Component.literal(menu.duration+"t · ×"+menu.multiplier);
+        if(menu.primordialBatch)cycle.append(" · ").append(Component.translatable("gui.overload_sim.multiblock.primordial"));
+        g.drawString(font,font.plainSubstrByWidth(cycle.getString(),144),right,128,color,false);
         g.drawString(font,Component.literal("FE "+menu.fe+" / "+menu.feCapacity),right,141,color,false);
     }
     @Override public void renderSlot(GuiGraphics g,Slot slot){
@@ -116,7 +118,16 @@ public final class MultiblockSimulationScreen extends AEBaseScreen<MultiblockSim
     @Override public void render(GuiGraphics g,int mx,int my,float partial){
         super.render(g,mx,my,partial);var slot=getSlotUnderMouse();
         if(slot!=null&&slot.index>=49&&slot.index<81&&!slot.getItem().isEmpty())g.renderTooltip(font,java.util.List.of(slot.getItem().getHoverName(),Component.literal(menu.quantity(slot.index-49)+" / "+menu.outputSlotLimit),Component.translatable("gui.overload_sim.multiblock.take")),java.util.Optional.empty(),mx,my);
-        int px=leftPos+layout.progressLeft();if(mx>=px-2&&mx<px+8&&my>=topPos+32&&my<topPos+154)
-            g.renderTooltip(font,java.util.List.of(Component.translatable("status.overload_sim."+menu.status),Component.translatable("gui.overload_sim.multiblock.error",menu.problem),Component.literal("FE "+menu.feCost+" · HV "+menu.hvCost+" · EHV "+menu.ehvCost),Component.translatable("gui.overload_sim.multiblock.frequency",menu.frequency)),java.util.Optional.empty(),mx,my);
+        int px=leftPos+layout.progressLeft();if(mx>=px-2&&mx<px+8&&my>=topPos+32&&my<topPos+154){
+            var diagnosis=menu.problem.startsWith("primordial_")?Component.translatable("message.overload_sim.construction."+menu.problem.split(" ")[0]):Component.literal(menu.problem);
+            var lines=new java.util.ArrayList<Component>();lines.add(Component.translatable(menu.status==6?"gui.overload_sim.multiblock.structure_paused":"status.overload_sim."+menu.status));lines.add(Component.translatable("gui.overload_sim.multiblock.error",diagnosis));
+            lines.add(Component.translatable(menu.participants>0?"gui.overload_sim.multiblock.batch_cost":"gui.overload_sim.multiblock.base_cost",menu.feCost,menu.hvCost,menu.ehvCost));
+            lines.add(Component.translatable("gui.overload_sim.multiblock.frequency",menu.frequency));
+            if(menu.primordialBatch)lines.add(Component.translatable("gui.overload_sim.multiblock.primordial_converted",menu.convertedCrystals));
+            if(menu.primordialInstalled)lines.add(Component.translatable("gui.overload_sim.multiblock.primordial_fee",menu.primordialHv));
+            if(menu.participants>0&&menu.primordialInstalled!=menu.primordialBatch)lines.add(Component.translatable("gui.overload_sim.multiblock.primordial_next_batch"));
+            if(menu.fallbackCrystals>0)lines.add(Component.translatable("gui.overload_sim.multiblock.primordial_fallback",menu.fallbackCrystals,Component.translatable("gui.overload_sim.multiblock."+menu.fallbackReason)));
+            g.renderTooltip(font,lines,java.util.Optional.empty(),mx,my);
+        }
     }
 }

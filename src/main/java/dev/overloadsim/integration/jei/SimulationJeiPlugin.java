@@ -9,6 +9,7 @@ import dev.overloadsim.ModContent;
 import dev.overloadsim.client.HighEnergyWorkstationScreen;
 import dev.overloadsim.client.LaserScreen;
 import dev.overloadsim.config.MachineSettings;
+import dev.overloadsim.construction.StructurePreviewCatalog;
 import dev.overloadsim.workstation.WorkstationContent;
 import dev.overloadsim.workstation.WorkstationRecipes;
 import java.util.Arrays;
@@ -45,13 +46,14 @@ public final class SimulationJeiPlugin implements IModPlugin {
 
     @Override public void registerCategories(IRecipeCategoryRegistration registration) {
         var gui = registration.getJeiHelpers().getGuiHelper();
-        registration.addRecipeCategories(new WorkstationCategory(gui), new TranscendentTeslaCategory(gui));
+        registration.addRecipeCategories(new WorkstationCategory(gui), new TranscendentTeslaCategory(gui),new StructurePreviewCategory(gui));
     }
 
     @Override public void registerRecipes(IRecipeRegistration registration) {
         var level = Minecraft.getInstance().level;
         if (level != null) registration.addRecipes(WORKSTATION, WorkstationRecipes.recipes(level.getRecipeManager()));
         registration.addRecipes(TESLA, List.of(new TeslaRecipe()));
+        registration.addRecipes(StructurePreviewCategory.TYPE,StructurePreviewCatalog.layouts());
     }
 
     @Override public void registerRecipeCatalysts(IRecipeCatalystRegistration registration) {

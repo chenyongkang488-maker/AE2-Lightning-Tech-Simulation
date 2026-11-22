@@ -1,0 +1,56 @@
+{
+  "version": "0.2.2-alpha.2",
+  "date": "2026-10-21",
+  "base_commit": "3fe8437667c98697d4e77d59d465a153e27e605c",
+  "branch": "codex/matrix-six-ports",
+  "artifacts": [
+    {
+      "file": "lightning-tech-simulation-0.2.2-alpha.2.jar",
+      "bytes": 1954771,
+      "sha256": "0521d877ccb93a37c0906dedc7c0febcb448f0536628579751d958df94b61865"
+    },
+    {
+      "file": "lightning-tech-simulation-0.2.2-alpha.2-sources.jar",
+      "bytes": 928567,
+      "sha256": "885dba492ab85e932e5a401f67a3a8825901afea2cb7442820e7872108d909f4"
+    }
+  ],
+  "scope": {
+    "multiblock_controllers": 8,
+    "simulation_chamber": false,
+    "viewer": "JEI"
+  },
+  "junit": {
+    "tests": 143,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "gametest": [
+    {
+      "stack": "AE2 19.2.18 / AE2LT 2.1.2-beta2 / Thunderbolt 2.0.3-beta2 / AppliedFlux 2.1.6 + Glodium 2.2 / no JEI runtime",
+      "passed": 545,
+      "log": "build/verification/alpha23/current-flux.log"
+    },
+    {
+      "stack": "AE2 19.2.17 / AE2LT 2.1.0 / Thunderbolt 2.0.0 / no AppliedFlux / JEI 19.44.0.403 runtime",
+      "passed": 545,
+      "log": "build/verification/alpha23/old-jei.log"
+    }
+  ],
+  "resource_checks": [
+    "laser-resources",
+    "laser-manufacturing",
+    "workstation-resources",
+    "output-interface",
+    "multiblock-resources",
+    "transcendent-crystal"
+  ],
+  "release_check": "passed: version, licenses, resource parity, no bundled dependencies",
+  "independent_code_review": "no verified findings; client appearance and interaction not accepted by static review",
+  "visual_acceptance": "pending; user declined computer use on 2026-10-21; no client launched",
+  "installed_to_instances": false,
+  "pushed": false,
+  "tag_created": false,
+  "published": false
+}

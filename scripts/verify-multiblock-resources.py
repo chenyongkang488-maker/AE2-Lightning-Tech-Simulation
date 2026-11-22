@@ -4,7 +4,7 @@ from PIL import Image
 import base64, hashlib, json, struct
 ROOT=Path(__file__).resolve().parents[1]
 ASSETS=ROOT/'src/main/resources/assets/overload_sim'
-names=['simulation_controller','simulation_frame','simulation_efficiency_t1','simulation_efficiency_t2','simulation_efficiency_t3','simulation_fortune_module','simulation_overload_module','simulation_smelting_module','simulation_frame_formed','simulation_emitter','simulation_shell_atlas','simulation_energy_orb','simulation_energy_orb_orange','simulation_controller_ecg']+['simulation_glass_'+f for f in ('north','south','east','west','up','down')]
+names=['simulation_controller','simulation_frame','simulation_efficiency_t1','simulation_efficiency_t2','simulation_efficiency_t3','simulation_fortune_module','simulation_overload_module','simulation_smelting_module','simulation_primordial_module','simulation_frame_formed','simulation_emitter','simulation_shell_atlas','simulation_energy_orb','simulation_energy_orb_orange','simulation_controller_ecg']+['simulation_glass_'+f for f in ('north','south','east','west','up','down')]
 checked=0
 for name in names+['multiblock_simulation_assembly']:
     project=json.loads((ROOT/'art'/f'{name}.bbmodel').read_text(encoding='utf8'))

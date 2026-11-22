@@ -4,7 +4,7 @@ By qiqi. An independent Minecraft 1.21.1 / NeoForge addon for AE2 Lightning Tech
 
 Grow reusable simulation crystals with lightning, then produce minerals, crops, wood and mob loot in simulation chambers. Single-block chambers support up to 128 parallel operations; multiblock chambers hold up to 49 crystals. The modular Overload Thunder Coil offers lightning, mining and wrench functions.
 
-Current version **0.2.1** also includes the complete laser and particle production line, high-energy workstation, Transcendent Crystals and the 36-slot Overload Output Interface. The additions are described below.
+Version **0.2.2** adds six-port deflectors, horizontal ring matrices, JEI structure previews and the Primordial Module. It also supports the newer upstream dependency stack. See the [0.2.2 release notes](https://github.com/chenyongkang488-maker/AE2-Lightning-Tech-Simulation/releases/tag/v0.2.2).
 ## Laser and particle production
 
 Build a high-energy laser emitter and route its beam through constraint, enhancement, burst, deflection and focusing matrices. Deflectors combine multiple inputs and distribute their energy across enabled output faces. A focused beam feeds the collapse core; emitted particles continue towards the particle constrainer, which converts them into FE using compatible consumables.
@@ -40,7 +40,7 @@ Recommended stack: NeoForge 21.1.255, AE2 19.2.18, AE2 Lightning Tech 2.1.2-beta
 
 AE2, AE2 Lightning Tech, Thunderbolt Core and GuideME are required and are separate projects. Install one copy of each dependency; Reborn and the current main projects use the same mod IDs. Applied Flux and its dependencies are optional, but ME-network FE transfer requires Applied Flux FE storage cells. Ordinary AE energy cells only power the network. JEI, Mekanism and Mystical Agriculture integrations are optional; the Packaged Pattern Provider addon is not required.
 
-Back up worlds and remove the older addon JAR before installing `lightning-tech-simulation-0.2.1.jar` on both client and server. Sources JARs and source ZIPs are development files. Existing `overload_sim` registry and save IDs are retained. See README for declared dependency ranges, and [release verification record](https://github.com/chenyongkang488-maker/AE2-Lightning-Tech-Simulation/blob/v0.2.1/docs/releases/0.2.1-verification.md) for the actual release checks.
+Back up worlds and remove the older addon JAR before installing `lightning-tech-simulation-0.2.2.jar` on both client and server. Sources JARs and source ZIPs are development files. Existing `overload_sim` registry and save IDs are retained. See README for declared dependency ranges, and [release verification record](https://github.com/chenyongkang488-maker/AE2-Lightning-Tech-Simulation/blob/v0.2.2/docs/releases/0.2.2-verification.md) for the actual release checks.
 
 ## Source and licenses
 

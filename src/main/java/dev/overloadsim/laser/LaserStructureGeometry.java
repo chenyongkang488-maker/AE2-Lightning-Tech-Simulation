@@ -26,8 +26,14 @@ public final class LaserStructureGeometry {
     }
 
     public static BlockPos centerOffset(LaserKind kind, Direction facing, boolean receiverPedestalLayout, boolean deflectorLegacyLayout) {
+        return centerOffset(kind, facing, receiverPedestalLayout, deflectorLegacyLayout, 1);
+    }
+
+    /** Shape 2 moves only new deflectors to a corner anchor, leaving historical signatures unchanged. */
+    public static BlockPos centerOffset(LaserKind kind, Direction facing, boolean receiverPedestalLayout, boolean deflectorLegacyLayout, int deflectorShapeVersion) {
         Direction forward = facing.getOpposite();
         if (kind == LaserKind.CORE) return BlockPos.ZERO;
+        if (kind == LaserKind.DEFLECTOR && deflectorShapeVersion >= 2) return new BlockPos(-2, 2, -2);
         if (kind == LaserKind.DEFLECTOR && !deflectorLegacyLayout) return BlockPos.ZERO.above(3);
         if (kind == LaserKind.RECEIVER && receiverPedestalLayout)
             return BlockPos.ZERO.relative(forward, 3).relative(basisUp(forward), 4);
@@ -60,13 +66,17 @@ public final class LaserStructureGeometry {
 
     /** Saved deflectors retain their original anchor and inert vertical shell ports. */
     public static Map<BlockPos, Part> template(LaserKind kind, Direction facing, boolean receiverPedestalLayout, boolean deflectorLegacyLayout) {
+        return template(kind, facing, receiverPedestalLayout, deflectorLegacyLayout, 1);
+    }
+
+    public static Map<BlockPos, Part> template(LaserKind kind, Direction facing, boolean receiverPedestalLayout, boolean deflectorLegacyLayout, int deflectorShapeVersion) {
         var result = new LinkedHashMap<BlockPos, Part>();
         if (kind == LaserKind.CORE) { result.put(BlockPos.ZERO, Part.CONTROLLER); return Collections.unmodifiableMap(result); }
         Direction forward = kind == LaserKind.DEFLECTOR && !deflectorLegacyLayout ? Direction.NORTH : facing.getOpposite();
         Direction up = basisUp(forward);
         var u = up.getNormal(); var f = forward.getNormal();
         var right = new BlockPos(u.getY() * f.getZ() - u.getZ() * f.getY(), u.getZ() * f.getX() - u.getX() * f.getZ(), u.getX() * f.getY() - u.getY() * f.getX());
-        BlockPos center = centerOffset(kind, facing, receiverPedestalLayout, deflectorLegacyLayout);
+        BlockPos center = centerOffset(kind, facing, receiverPedestalLayout, deflectorLegacyLayout, deflectorShapeVersion);
         int radius = kind == LaserKind.EMITTER ? 2 : 3;
         boolean ring = kind == LaserKind.CONSTRAINT || kind == LaserKind.ENHANCEMENT || kind == LaserKind.BURST || kind == LaserKind.FOCUS;
         for (int x = -radius; x <= radius; x++) for (int y = -radius; y <= radius; y++) for (int z = ring ? 0 : -radius; z <= (ring ? 0 : radius); z++) {
@@ -86,7 +96,7 @@ public final class LaserStructureGeometry {
                 int distance = x * x + y * y + z * z;
                 part = distance >= 7 && distance <= 12 ? Part.FRAME : Part.AIR;
                 if (Math.abs(x) + Math.abs(y) + Math.abs(z) == 3 && (Math.abs(x) == 3 || Math.abs(y) == 3 || Math.abs(z) == 3))
-                    part = deflectorLegacyLayout || y == 0 ? Part.PORT : Part.FRAME;
+                    part = deflectorShapeVersion >= 2 || deflectorLegacyLayout || y == 0 ? Part.PORT : Part.FRAME;
             } else {
                 int distance = x * x + y * y + z * z;
                 boolean shell = distance >= 7 && distance <= 12;

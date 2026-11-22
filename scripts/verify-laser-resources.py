@@ -111,6 +111,16 @@ def verify():
     assert deflector['meta']['model_format']=='free' and 100<len(deflector['elements'])<7000
     assert len(deflector['outliner'])==2 and len(deflector['outliner'][1]['children'])==18, 'Central prism must be editable as its own group'
     assert base64.b64decode(deflector['textures'][0]['source'].split(',',1)[1])==native_atlas
+    shell_ids=set(deflector['outliner'][0]['children'])
+    for element in deflector['elements']:
+        if element['uuid'] not in shell_ids:
+            continue
+        vertices=list(element['vertices'].values())
+        center=[sum(p[axis] for p in vertices)/len(vertices)/16 for axis in range(3)]
+        for axis in range(3):
+            transverse=sum(center[j]**2 for j in range(3) if j!=axis)
+            assert not (abs(center[axis])>2.85 and transverse<1.45**2), 'Exported deflector shell must leave every full-width axial aperture clear'
+
     laser_png=(ASSETS/'textures/block/laser_energy_flow.png').read_bytes()
     laser=read(ROOT/'art/blockbench/laser-energy-flow.bbmodel')
     assert base64.b64decode(laser['textures'][0]['source'].split(',',1)[1])==laser_png

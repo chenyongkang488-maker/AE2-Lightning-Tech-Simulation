@@ -1,5 +1,49 @@
 # Changelog / 更新记录
 
+## [0.2.2]
+
+- 偏折矩阵支持六面独立光口，四种环状矩阵可平躺安装。为模拟室以外的多方块提供 JEI 结构预览与材料表。
+- 多方块模拟室新增原初模块，支持把匹配的矿物直接模拟为自然矿石。新增通用机械氟石与硫粉模拟，硫使用公共硫矿石标签绑定。
+- 激光源水晶可使用任意一档过载水晶母岩，费用和其他材料沿用原配方。
+- 适配 AE2 Lightning Tech 2.1.2-beta4 的集雷器、工作台和闪电 API，修复新版 JEI 多方块预览在小窗口中的截断和方块选中。
+- Added six-port deflectors, horizontal matrix placement, multiblock JEI previews, the Primordial Module, Mekanism mineral simulation, all-grade laser source ingredients and beta4 compatibility.
+
+## [0.2.2-alpha.6]
+
+- 原初模块中央改为竖向绿色菱形，添加浅绿色折线纹路，保留粉白框架并同步可编辑模型。
+- Changed the Primordial Module emblem to an upright green diamond with a subtle light-green motif.
+
+## [0.2.2-alpha.5]
+
+- 原初模块采用与其它模拟室模块相同的粉白框架，中央改为实心绿色方块，同步物品图标和可编辑 Blockbench 工程。
+- Restyled the Primordial Module with the shared pink-and-white frame and a solid green center square.
+
+## [0.2.2-alpha.4]
+
+- 新增多方块模拟室原初模块：与熔炼模块互斥，矿物按每颗水晶基础一个自然矿石方块生产，再应用模拟室时运倍率。
+- 成功转换每颗水晶额外消耗 2 高压；不支持或存在歧义的矿物回退普通产物，不加费。生物、作物和树木保持原规则。
+- 新增数据包矿石映射、原初费用配置、固定批次保存和控制器诊断。新增框架与精准采集书制造配方、独立模型纹理及中英文说明。
+- 修正模拟室结构未成型时误用“档案缺失”的状态标题，保留具体互斥与重复模块诊断。
+- Added the Primordial Module, ore mapping overrides and conversion-only HV accounting, preserving started batch outcomes and existing public constructors.
+
+## [0.2.2-alpha.3]
+
+- 修复 JEI 三维结构预览使用局部裁剪坐标导致结构消失或只显示一角的问题。
+- 压缩结构页高度，确保 854×480、GUI 缩放 2 的窗口可以完整显示材料与操作控件。
+
+## [0.2.2-alpha.2]
+
+- 为模拟室以外的八种多方块控制器新增JEI结构页：可旋转、缩放、逐层查看真实搭建方块，并显示含控制器的完整材料数量。
+- 约束、强化、爆发、聚焦矩阵可在结构页切换竖立和平躺；偏折使用新版六口布局，粒子约束器计入完整底座。
+- 区分必需材料与可选过载接口／额外光口，结构预览共用实际施工模板；未安装JEI时仍可正常加载。
+
+## [0.2.2-alpha.1]
+
+- 偏折矩阵恢复上下独立光口，六面均可配置关闭、输入、输出；新建默认全关，多输入合并后守恒均分。
+- 新偏折控制器移至球壳下部斜角，六个面中心均使用真实光口；自动搭建、投影和成型模型同步适配。
+- 保留旧偏折设备的原球心、结构与水平口配置；旧布局上下仍禁用，完整六口需按新投影重建。
+- 补充约束、强化、爆发、聚焦矩阵六向摆放与竖直光路回归，以及平躺放置说明。
+
 ## [0.2.1] — 2026-10-11
 
 本次为 0.2 系列首次公开更新，合并未单独发布的 0.2.0 激光产线和 0.2.1 过载输出接口，基于 alpha.7 的最终实现。

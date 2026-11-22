@@ -90,6 +90,7 @@ public final class ConstructionProjection {
         final Direction laserFacing;
         final boolean receiverPedestal;
         final boolean deflectorLegacy;
+        final int deflectorShapeVersion;
         final int size;
         final List<Cell> cells;
         final List<BlockPos> chunkAnchors;
@@ -104,6 +105,7 @@ public final class ConstructionProjection {
             laserFacing = host instanceof LaserMachineBlockEntity laser ? laser.receiverVisualFacing() : null;
             receiverPedestal = host instanceof LaserMachineBlockEntity laser && laser.receiverPedestalLayout();
             deflectorLegacy = host instanceof LaserMachineBlockEntity laser && laser.deflectorLegacyLayout();
+            deflectorShapeVersion = host instanceof LaserMachineBlockEntity laser ? laser.deflectorShapeVersion() : 0;
             this.size = size;
             this.cells = List.copyOf(cells);
             chunkAnchors = cells.stream().map(cell -> new BlockPos(cell.position().getX() & ~15,
@@ -198,7 +200,8 @@ public final class ConstructionProjection {
         if (preview.host instanceof LaserMachineBlockEntity laser && (laser.formed()
                 || laser.receiverVisualFacing() != preview.laserFacing
                 || laser.receiverPedestalLayout() != preview.receiverPedestal
-                || laser.deflectorLegacyLayout() != preview.deflectorLegacy)) return false;
+                || laser.deflectorLegacyLayout() != preview.deflectorLegacy
+                || laser.deflectorShapeVersion() != preview.deflectorShapeVersion)) return false;
         if (preview.host instanceof SimulationControllerBlockEntity chamber && chamber.visualSize() > 0) return false;
         if (preview.host instanceof dev.overloadsim.workstation.HighEnergyWorkstationBlockEntity station && station.formed()) return false;
         for (var pos : preview.chunkAnchors) if (!loaded(preview.level, pos)) return false;
@@ -250,7 +253,7 @@ public final class ConstructionProjection {
             if (preview.host instanceof LaserMachineBlockEntity laser && (receiverPart==LaserStructureGeometry.Part.FRAME
                     || receiverPart==null&&cell.expected().is(LaserContent.FRAME.get()))) {
                 var center = laser.getBlockPos().offset(LaserStructureGeometry.centerOffset(
-                        laser.kind(), preview.laserFacing, preview.receiverPedestal, preview.deflectorLegacy));
+                        laser.kind(), preview.laserFacing, preview.receiverPedestal, preview.deflectorLegacy, preview.deflectorShapeVersion));
                 var relative = cell.position().subtract(center);
                 var normal = preview.laserFacing.getOpposite().getNormal();
                 return relative.getX() * normal.getX() + relative.getY() * normal.getY() + relative.getZ() * normal.getZ() <= 0;
